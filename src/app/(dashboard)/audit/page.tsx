@@ -30,7 +30,8 @@ async function fetchAuditLogs(search: string, resourceType: string, startDate: s
   const { data, error } = await query;
   if (error) throw error;
 
-  const logs = data as AuditLog[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const logs = (data as any) as AuditLog[];
   if (search) {
     return logs.filter((l) =>
       l.action?.toLowerCase().includes(search.toLowerCase()) ||

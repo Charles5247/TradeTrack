@@ -42,14 +42,15 @@ async function fetchSales(filters: {
       `invoice_number.ilike.%${filters.search}%,customer_name.ilike.%${filters.search}%`
     );
   }
-  if (filters.status && filters.status !== 'all') query = query.eq('status', filters.status);
-  if (filters.payment_method && filters.payment_method !== 'all') query = query.eq('payment_method', filters.payment_method);
+  if (filters.status && filters.status !== 'all') query = query.eq('status', filters.status as 'completed' | 'pending' | 'cancelled' | 'refunded');
+  if (filters.payment_method && filters.payment_method !== 'all') query = query.eq('payment_method', filters.payment_method as import('@/lib/supabase/types').PaymentMethod);
   if (filters.start_date) query = query.gte('created_at', filters.start_date);
   if (filters.end_date) query = query.lte('created_at', filters.end_date + 'T23:59:59');
 
   const { data, error } = await query;
   if (error) throw error;
-  return data as Sale[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (data as any) as Sale[];
 }
 
 function exportToCSV(sales: Sale[]) {

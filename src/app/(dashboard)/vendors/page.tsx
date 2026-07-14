@@ -33,7 +33,8 @@ async function fetchVendors() {
     `)
     .order('created_at', { ascending: false });
   if (error) throw error;
-  return data as VendorTransaction[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (data as any) as VendorTransaction[];
 }
 
 export default function VendorsPage() {

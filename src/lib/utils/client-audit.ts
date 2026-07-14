@@ -1,8 +1,13 @@
-'use client';
+/**
+ * TradeTrack - Client-Side Audit Logging
+ *
+ * Writes audit entries via an API route (not directly to Supabase)
+ * to avoid RLS 403 errors from the browser client.
+ *
+ * Falls back gracefully if the endpoint is unavailable.
+ */
 
-import { createClient } from '@/lib/supabase/client';
-
-interface AuditEntry {
+export interface AuditEntry {
   organization_id: string;
   user_id: string;
   action: string;
@@ -13,11 +18,20 @@ interface AuditEntry {
   reason?: string;
 }
 
-export async function createAuditEntry(entry: AuditEntry) {
-  const supabase = createClient();
-  await supabase.from('audit_logs').insert({
-    ...entry,
-    ip_address: null,
-    user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
-  });
+/**
+ * Log an audit entry from client-side code.
+ * Uses the /api/audit route which uses the service role key.
+ * Non-blocking: never throws — errors are silently logged.
+ */
+export async function createAuditEntry(entry: AuditEntry): Promise<void> {
+  try {
+    await fetch('/api/audit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(entry),
+    });
+  } catch (err) {
+    // Audit logging should never break the main flow
+    console.warn('[audit] Failed to write audit entry:', err);
+  }
 }

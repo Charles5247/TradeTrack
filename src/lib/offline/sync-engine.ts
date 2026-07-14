@@ -11,6 +11,7 @@ import {
   getPendingSyncItems,
   saveToOfflineDB,
   clearOfflineStore,
+  type SyncQueueRecord,
 } from './db';
 
 type SyncStatus = 'idle' | 'syncing' | 'error' | 'offline';
@@ -94,7 +95,6 @@ class SyncEngine {
         return;
       }
 
-      // Get user profile to get org
       const { data: profile } = await supabase
         .from('users')
         .select('organization_id')
@@ -108,10 +108,7 @@ class SyncEngine {
 
       const orgId = profile.organization_id;
 
-      // 1. Push pending changes
       await this.pushChanges();
-
-      // 2. Pull latest data
       await this.pullData(orgId, supabase);
 
       this.setState({
@@ -135,14 +132,11 @@ class SyncEngine {
 
     for (const item of pendingItems) {
       try {
-        // Mark as syncing
         await db.put('sync_queue', { ...item, status: 'syncing' });
 
         const { error } = await this.executeSyncOperation(supabase, item);
-
         if (error) throw error;
 
-        // Mark as synced
         await db.put('sync_queue', {
           ...item,
           status: 'synced',
@@ -160,18 +154,23 @@ class SyncEngine {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async executeSyncOperation(supabase: ReturnType<typeof createClient>, item: any) {
+  private async executeSyncOperation(
+    supabase: ReturnType<typeof createClient>,
+    item: SyncQueueRecord
+  ) {
+    // Use type assertion to allow dynamic table name
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const client = supabase as any;
     switch (item.operation) {
       case 'INSERT':
-        return supabase.from(item.table_name).insert(item.payload);
+        return client.from(item.table_name).insert(item.payload);
       case 'UPDATE':
-        return supabase
+        return client
           .from(item.table_name)
           .update(item.payload)
           .eq('id', item.record_id);
       case 'DELETE':
-        return supabase
+        return client
           .from(item.table_name)
           .delete()
           .eq('id', item.record_id);
@@ -185,7 +184,6 @@ class SyncEngine {
     const lastSync = this.state.lastSync;
     const since = lastSync ? lastSync.toISOString() : '1970-01-01T00:00:00Z';
 
-    // Pull products
     const { data: products } = await supabase
       .from('products')
       .select('*')
@@ -196,7 +194,6 @@ class SyncEngine {
       await saveToOfflineDB('products', products);
     }
 
-    // Pull inventory
     const { data: inventory } = await supabase
       .from('inventory')
       .select('*')
@@ -207,7 +204,6 @@ class SyncEngine {
       await saveToOfflineDB('inventory', inventory);
     }
 
-    // Pull warehouses
     const { data: warehouses } = await supabase
       .from('warehouses')
       .select('*')
@@ -218,7 +214,6 @@ class SyncEngine {
       await saveToOfflineDB('warehouses', warehouses);
     }
 
-    // Pull categories
     const { data: categories } = await supabase
       .from('categories')
       .select('*')
@@ -236,7 +231,6 @@ class SyncEngine {
   }
 }
 
-// Singleton instance
 export const syncEngine = typeof window !== 'undefined' ? new SyncEngine() : null;
 
 export function useSyncEngine() {

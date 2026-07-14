@@ -29,15 +29,19 @@ import { Badge } from '@/components/ui/badge';
 import { useUIStore, useAuthStore, useNotificationStore, useSyncStore } from '@/store';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils/cn';
+import { useOnlineStatus } from '@/hooks/use-online-status';
+import { clearCachedSession } from '@/lib/offline/db';
 
 export function Header() {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const { toggleSidebar } = useUIStore();
-  const { user } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const { unreadCount } = useNotificationStore();
-  const { syncStatus, lastSync } = useSyncStore();
+  const { syncStatus } = useSyncStore();
   const [searchQuery, setSearchQuery] = useState('');
+  // Reactive online status (not static navigator.onLine)
+  const isOnline = useOnlineStatus();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,14 +54,18 @@ export function Header() {
     try {
       const { createClient } = await import('@/lib/supabase/client');
       const supabase = createClient();
+      // Clear offline cache
+      if (user?.id) {
+        await clearCachedSession(user.id);
+      }
       await supabase.auth.signOut();
+      setUser(null);
       router.push('/login');
     } catch {
+      setUser(null);
       router.push('/login');
     }
   };
-
-  const isOnline = typeof window !== 'undefined' ? navigator.onLine : true;
 
   return (
     <header className="h-16 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center gap-4 px-4 lg:px-6 shrink-0">
@@ -84,14 +92,15 @@ export function Header() {
       </form>
 
       <div className="ml-auto flex items-center gap-2">
-        {/* Online/Offline Status */}
+        {/* Online/Offline Status — reactive */}
         <div
           className={cn(
-            'hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium',
+            'hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-colors',
             isOnline
               ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
               : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
           )}
+          title={isOnline ? 'Connected to internet' : 'Working offline — changes will sync when reconnected'}
         >
           {isOnline ? (
             <Wifi className="h-3 w-3" />
@@ -103,7 +112,7 @@ export function Header() {
 
         {/* Sync Status */}
         {syncStatus === 'syncing' && (
-          <Button variant="ghost" size="icon-sm" className="text-muted-foreground">
+          <Button variant="ghost" size="icon-sm" className="text-muted-foreground" title="Syncing...">
             <RefreshCw className="h-4 w-4 animate-spin" />
           </Button>
         )}
@@ -113,6 +122,7 @@ export function Header() {
           variant="ghost"
           size="icon"
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          title="Toggle theme"
         >
           <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
@@ -125,6 +135,7 @@ export function Header() {
           size="icon"
           className="relative"
           onClick={() => router.push('/notifications')}
+          title="Notifications"
         >
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
@@ -156,6 +167,13 @@ export function Header() {
                 <p className="text-xs text-muted-foreground capitalize">
                   {user?.role?.replace('_', ' ')}
                 </p>
+                {/* Offline indicator in user menu */}
+                {!isOnline && (
+                  <p className="text-xs text-amber-600 flex items-center gap-1 mt-1">
+                    <WifiOff className="h-3 w-3" />
+                    Working offline
+                  </p>
+                )}
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />

@@ -10,7 +10,6 @@ import {
   XCircle,
   Users,
   ArrowLeftRight,
-  Clock,
   DollarSign,
 } from 'lucide-react';
 import {
@@ -21,23 +20,24 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  BarChart,
-  Bar,
-  Legend,
 } from 'recharts';
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { createClient } from '@/lib/supabase/client';
-import { formatCurrency, formatDateTime, formatRelativeTime } from '@/lib/utils/format';
+import { formatCurrency, formatRelativeTime } from '@/lib/utils/format';
 import { useAuthStore } from '@/store';
-import type { Sale, Product, VendorTransaction, WarehouseTransfer } from '@/types';
+import type { Sale } from '@/types';
 
 async function fetchDashboardData() {
   const supabase = createClient();
   const today = new Date();
-  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+  const todayStart = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate()
+  ).toISOString();
   const weekStart = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
 
@@ -46,20 +46,34 @@ async function fetchDashboardData() {
     weeklySales,
     monthlySales,
     products,
-    lowStock,
-    outOfStock,
+    allInventory,
     pendingVendors,
     pendingTransfers,
     recentSales,
     revenueData,
   ] = await Promise.all([
-    supabase.from('sales').select('total').gte('created_at', todayStart).eq('status', 'completed'),
-    supabase.from('sales').select('total').gte('created_at', weekStart).eq('status', 'completed'),
-    supabase.from('sales').select('total').gte('created_at', monthStart).eq('status', 'completed'),
+    supabase
+      .from('sales')
+      .select('total')
+      .gte('created_at', todayStart)
+      .eq('status', 'completed'),
+    supabase
+      .from('sales')
+      .select('total')
+      .gte('created_at', weekStart)
+      .eq('status', 'completed'),
+    supabase
+      .from('sales')
+      .select('total')
+      .gte('created_at', monthStart)
+      .eq('status', 'completed'),
     supabase.from('products').select('id').eq('status', 'active'),
-    supabase.from('inventory').select('id').lt('quantity', supabase.rpc as never).filter('quantity', 'lt', 5).filter('quantity', 'gt', 0),
-    supabase.from('inventory').select('id').eq('quantity', 0),
-    supabase.from('vendor_transactions').select('id,total_value,amount_paid').eq('status', 'pending'),
+    // Fixed: fetch all inventory rows with quantity + min_stock_level
+    supabase.from('inventory').select('id, quantity, min_stock_level'),
+    supabase
+      .from('vendor_transactions')
+      .select('id,total_value,amount_paid')
+      .eq('status', 'pending'),
     supabase.from('warehouse_transfers').select('id').eq('status', 'pending'),
     supabase
       .from('sales')
@@ -74,15 +88,36 @@ async function fetchDashboardData() {
       .order('created_at', { ascending: true }),
   ]);
 
-  const todayRevenue = (todaySales.data || []).reduce((s, r) => s + (r.total || 0), 0);
-  const weeklyRevenue = (weeklySales.data || []).reduce((s, r) => s + (r.total || 0), 0);
-  const monthlyRevenue = (monthlySales.data || []).reduce((s, r) => s + (r.total || 0), 0);
-  const pendingDebt = (pendingVendors.data || []).reduce((s, r) => s + ((r.total_value || 0) - (r.amount_paid || 0)), 0);
+  const todayRevenue = (todaySales.data || []).reduce(
+    (s, r) => s + (r.total || 0),
+    0
+  );
+  const weeklyRevenue = (weeklySales.data || []).reduce(
+    (s, r) => s + (r.total || 0),
+    0
+  );
+  const monthlyRevenue = (monthlySales.data || []).reduce(
+    (s, r) => s + (r.total || 0),
+    0
+  );
+  const pendingDebt = (pendingVendors.data || []).reduce(
+    (s, r) => s + ((r.total_value || 0) - (r.amount_paid || 0)),
+    0
+  );
+
+  // Fixed low/out of stock calculation
+  const inventoryRows = allInventory.data || [];
+  const outOfStockCount = inventoryRows.filter((r) => r.quantity === 0).length;
+  const lowStockCount = inventoryRows.filter(
+    (r) => r.quantity > 0 && r.quantity <= (r.min_stock_level || 5)
+  ).length;
 
   // Process revenue chart data by day
   const dayMap: Record<string, number> = {};
   (revenueData.data || []).forEach((sale) => {
-    const day = new Date(sale.created_at).toLocaleDateString('en-NG', { weekday: 'short' });
+    const day = new Date(sale.created_at).toLocaleDateString('en-NG', {
+      weekday: 'short',
+    });
     dayMap[day] = (dayMap[day] || 0) + sale.total;
   });
 
@@ -98,8 +133,8 @@ async function fetchDashboardData() {
       weekly_revenue: weeklyRevenue,
       monthly_revenue: monthlyRevenue,
       total_products: products.data?.length || 0,
-      low_stock_count: lowStock.data?.length || 0,
-      out_of_stock_count: outOfStock.data?.length || 0,
+      low_stock_count: lowStockCount,
+      out_of_stock_count: outOfStockCount,
       pending_vendor_debts: pendingDebt,
       pending_transfers: pendingTransfers.data?.length || 0,
     },
@@ -113,7 +148,8 @@ export default function DashboardPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard'],
     queryFn: fetchDashboardData,
-    refetchInterval: 60000, // Refresh every minute
+    refetchInterval: 60000,
+    retry: 2,
   });
 
   const stats = data?.stats;
@@ -328,30 +364,25 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <a href="/pos" className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:bg-accent transition-colors text-center group">
-              <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <ShoppingCart className="h-5 w-5 text-blue-600" />
-              </div>
-              <span className="text-sm font-medium">New Sale</span>
-            </a>
-            <a href="/inventory" className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:bg-accent transition-colors text-center group">
-              <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Package className="h-5 w-5 text-green-600" />
-              </div>
-              <span className="text-sm font-medium">Stock In</span>
-            </a>
-            <a href="/transfers" className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:bg-accent transition-colors text-center group">
-              <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <ArrowLeftRight className="h-5 w-5 text-purple-600" />
-              </div>
-              <span className="text-sm font-medium">Transfer</span>
-            </a>
-            <a href="/reports" className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:bg-accent transition-colors text-center group">
-              <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <TrendingUp className="h-5 w-5 text-amber-600" />
-              </div>
-              <span className="text-sm font-medium">Reports</span>
-            </a>
+            {[
+              { href: '/pos', icon: ShoppingCart, label: 'New Sale', color: 'blue' },
+              { href: '/inventory', icon: Package, label: 'Stock In', color: 'green' },
+              { href: '/transfers', icon: ArrowLeftRight, label: 'Transfer', color: 'purple' },
+              { href: '/reports', icon: TrendingUp, label: 'Reports', color: 'amber' },
+            ].map(({ href, icon: Icon, label, color }) => (
+              <a
+                key={href}
+                href={href}
+                className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:bg-accent transition-colors text-center group"
+              >
+                <div
+                  className={`w-10 h-10 rounded-lg bg-${color}-100 dark:bg-${color}-900/30 flex items-center justify-center group-hover:scale-105 transition-transform`}
+                >
+                  <Icon className={`h-5 w-5 text-${color}-600`} />
+                </div>
+                <span className="text-sm font-medium">{label}</span>
+              </a>
+            ))}
           </div>
         </CardContent>
       </Card>

@@ -4,15 +4,20 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { Loader2, Upload } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { productSchema, type ProductFormData } from '@/lib/validations';
+import { ImageUpload } from './image-upload';
+import { productSchema } from '@/lib/validations';
 import { createClient } from '@/lib/supabase/client';
+import { createAuditEntry } from '@/lib/utils/client-audit';
 import type { Product } from '@/types';
+import type { z } from 'zod';
+
+type ProductFormData = z.infer<typeof productSchema>;
 
 interface ProductFormProps {
   product?: Product | null;
@@ -23,9 +28,16 @@ interface ProductFormProps {
 
 export function ProductForm({ product, categories, onSuccess, onCancel }: ProductFormProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(product?.image_url ?? null);
 
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<ProductFormData>({
-    resolver: zodResolver(productSchema),
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<ProductFormData>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(productSchema) as any,
     defaultValues: {
       name: product?.name || '',
       make: product?.make || '',
@@ -35,7 +47,7 @@ export function ProductForm({ product, categories, onSuccess, onCancel }: Produc
       selling_price: product?.selling_price || 0,
       cost_price: product?.cost_price || 0,
       category_id: product?.category_id || null,
-      status: product?.status || 'active',
+      status: (product?.status as ProductFormData['status']) || 'active',
     },
   });
 
@@ -46,51 +58,73 @@ export function ProductForm({ product, categories, onSuccess, onCancel }: Produc
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { data: profile } = await supabase.from('users').select('organization_id').eq('id', user.id).single();
+      const { data: profile } = await supabase
+        .from('users')
+        .select('organization_id')
+        .eq('id', user.id)
+        .single();
+
+      const orgId = profile?.organization_id ?? '';
 
       const payload = {
-        ...data,
-        organization_id: profile?.organization_id,
-        created_by: user.id,
+        name: data.name,
+        make: data.make || null,
+        description: data.description || null,
+        sku: data.sku,
+        barcode: data.barcode || null,
+        selling_price: data.selling_price,
+        cost_price: data.cost_price,
         category_id: data.category_id || null,
         supplier_id: null,
+        status: data.status,
+        organization_id: orgId,
+        created_by: user.id,
+        image_url: imageUrl || null,
       };
 
       if (product?.id) {
-        // Update
-        const { error } = await supabase.from('products').update(payload).eq('id', product.id);
+        const { error } = await supabase
+          .from('products')
+          .update({ ...payload, updated_at: new Date().toISOString() })
+          .eq('id', product.id);
         if (error) throw error;
 
-        // Audit log
-        await supabase.from('audit_logs').insert({
-          organization_id: profile?.organization_id,
+        await createAuditEntry({
+          organization_id: orgId,
           user_id: user.id,
-          action: 'UPDATE',
+          action: 'UPDATE_PRODUCT',
           resource_type: 'product',
           resource_id: product.id,
-          old_values: { name: product.name, selling_price: product.selling_price, status: product.status },
-          new_values: { name: data.name, selling_price: data.selling_price, status: data.status },
+          old_values: {
+            name: product.name,
+            selling_price: product.selling_price,
+            status: product.status,
+            image_url: product.image_url,
+          },
+          new_values: {
+            name: data.name,
+            selling_price: data.selling_price,
+            status: data.status,
+            image_url: imageUrl,
+          },
         });
 
         toast.success('Product updated successfully');
       } else {
-        // Create
         const { data: newProduct, error } = await supabase
           .from('products')
           .insert(payload)
           .select()
           .single();
-
         if (error) throw error;
 
-        // Audit log
-        await supabase.from('audit_logs').insert({
-          organization_id: profile?.organization_id,
+        await createAuditEntry({
+          organization_id: orgId,
           user_id: user.id,
-          action: 'CREATE',
+          action: 'CREATE_PRODUCT',
           resource_type: 'product',
-          resource_id: newProduct.id,
-          new_values: data,
+          resource_id: newProduct?.id ?? '',
+          new_values: { ...data, image_url: imageUrl },
         });
 
         toast.success('Product created successfully');
@@ -106,21 +140,42 @@ export function ProductForm({ product, categories, onSuccess, onCancel }: Produc
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit as Parameters<typeof handleSubmit>[0])} className="space-y-4">
+      {/* Image Upload */}
+      <div className="space-y-2">
+        <Label>Product Image</Label>
+        <ImageUpload
+          currentImageUrl={imageUrl}
+          productId={product?.id}
+          onImageUploaded={(url) => setImageUrl(url)}
+          onImageRemoved={() => setImageUrl(null)}
+        />
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="name">Product Name *</Label>
-          <Input id="name" {...register('name')} error={errors.name?.message} />
+          <Input
+            id="name"
+            {...register('name')}
+            error={errors.name?.message}
+            placeholder="e.g., Rice (50kg bag)"
+          />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="make">Make/Brand</Label>
+          <Label htmlFor="make">Make / Brand</Label>
           <Input id="make" {...register('make')} placeholder="e.g., Samsung, Nike" />
         </div>
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="description">Description</Label>
-        <Textarea id="description" {...register('description')} rows={2} />
+        <Textarea
+          id="description"
+          {...register('description')}
+          rows={2}
+          placeholder="Optional product description"
+        />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -163,15 +218,17 @@ export function ProductForm({ product, categories, onSuccess, onCancel }: Produc
         <div className="space-y-2">
           <Label>Category</Label>
           <Select
-            defaultValue={product?.category_id || undefined}
-            onValueChange={(val) => setValue('category_id', val)}
+            defaultValue={product?.category_id ?? undefined}
+            onValueChange={(val) => setValue('category_id', val || null)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
             <SelectContent>
               {categories.map((cat) => (
-                <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                <SelectItem key={cat.id} value={cat.id}>
+                  {cat.name}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -199,7 +256,7 @@ export function ProductForm({ product, categories, onSuccess, onCancel }: Produc
           Cancel
         </Button>
         <Button type="submit" className="flex-1" disabled={isLoading}>
-          {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+          {isLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
           {product ? 'Update Product' : 'Create Product'}
         </Button>
       </div>

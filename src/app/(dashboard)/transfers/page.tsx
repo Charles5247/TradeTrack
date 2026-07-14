@@ -33,7 +33,8 @@ async function fetchTransfers() {
     `)
     .order('created_at', { ascending: false });
   if (error) throw error;
-  return data as WarehouseTransfer[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (data as any) as WarehouseTransfer[];
 }
 
 async function fetchWarehousesAndProducts() {
@@ -120,7 +121,8 @@ async function updateTransferStatus(id: string, status: 'received' | 'cancelled'
     }
   }
 
-  const { error } = await supabase.from('warehouse_transfers').update(updates).eq('id', id);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await supabase.from('warehouse_transfers').update(updates as any).eq('id', id);
   if (error) throw error;
 }
 

@@ -219,7 +219,8 @@ export default function ReportsPage() {
                     outerRadius={80}
                     dataKey="total"
                     nameKey="method"
-                    label={({ method, percent }) => `${method} ${(percent * 100).toFixed(0)}%`}
+                    // @ts-ignore
+                    label={(props) => `${props.method} ${((props.percent ?? 0) * 100).toFixed(0)}%`}
                     labelLine={false}
                   >
                     {(data?.pmChartData || []).map((_, i) => (

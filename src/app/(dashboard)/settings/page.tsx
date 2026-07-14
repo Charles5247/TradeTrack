@@ -1,10 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Save, User, Building, Globe, Bell, Palette } from 'lucide-react';
+import { Save, User, Building, Globe, Palette, Lock, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,13 +11,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuthStore } from '@/store';
 import { createClient } from '@/lib/supabase/client';
-import { SUPPORTED_LOCALES } from '@/i18n';
+import { SUPPORTED_LOCALES, useI18n } from '@/i18n';
 import { useTheme } from 'next-themes';
+import type { Locale } from '@/types';
+import { cacheUserSession } from '@/lib/offline/db';
 
 export default function SettingsPage() {
-  const { user } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const { theme, setTheme } = useTheme();
-  const [isLoading, setIsLoading] = useState(false);
+  const { locale, setLocale } = useI18n();
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
+  const [isOrgLoading, setIsOrgLoading] = useState(false);
+  const [isPwdLoading, setIsPwdLoading] = useState(false);
 
   const [profileData, setProfileData] = useState({
     full_name: user?.full_name || '',
@@ -32,48 +35,138 @@ export default function SettingsPage() {
     email: '',
     address: '',
     currency: 'NGN',
+    timezone: 'Africa/Lagos',
   });
 
+  const [pwdData, setPwdData] = useState({
+    newPassword: '',
+    confirmPassword: '',
+  });
+
+  // Load organization data
+  useEffect(() => {
+    async function loadOrg() {
+      if (!user?.organization_id) return;
+      const supabase = createClient();
+      const { data } = await supabase
+        .from('organizations')
+        .select('*')
+        .eq('id', user.organization_id)
+        .single();
+      if (data) {
+        setOrgData({
+          name: data.name || '',
+          phone: data.phone || '',
+          email: data.email || '',
+          address: data.address || '',
+          currency: data.currency || 'NGN',
+          timezone: data.timezone || 'Africa/Lagos',
+        });
+      }
+    }
+    loadOrg();
+  }, [user?.organization_id]);
+
+  // Keep form in sync with user store
+  useEffect(() => {
+    if (user) {
+      setProfileData({ full_name: user.full_name || '', phone: user.phone || '' });
+    }
+  }, [user]);
+
   const handleUpdateProfile = async () => {
-    setIsLoading(true);
+    if (!profileData.full_name.trim()) {
+      toast.error('Full name is required');
+      return;
+    }
+    setIsProfileLoading(true);
     try {
       const supabase = createClient();
-      const { error } = await supabase
+      const { data: updatedProfile, error } = await supabase
         .from('users')
-        .update({ full_name: profileData.full_name, phone: profileData.phone })
-        .eq('id', user?.id);
+        .update({
+          full_name: profileData.full_name.trim(),
+          phone: profileData.phone.trim() || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user?.id ?? '')
+        .select('*')
+        .single();
+
       if (error) throw error;
+
+      // Update Zustand store
+      if (updatedProfile) {
+        setUser(updatedProfile as typeof user);
+        // Update offline cache
+        await cacheUserSession(updatedProfile.id, updatedProfile as Record<string, unknown>);
+      }
+
       toast.success('Profile updated successfully');
-    } catch {
-      toast.error('Failed to update profile');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to update profile. Please try again.');
     } finally {
-      setIsLoading(false);
+      setIsProfileLoading(false);
     }
   };
 
-  const handleChangePassword = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const data = new FormData(form);
-    const newPwd = String(data.get('newPassword'));
-    const confirm = String(data.get('confirmPassword'));
+  const handleUpdateOrg = async () => {
+    if (!orgData.name.trim()) {
+      toast.error('Business name is required');
+      return;
+    }
+    setIsOrgLoading(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from('organizations')
+        .update({
+          name: orgData.name.trim(),
+          phone: orgData.phone.trim() || null,
+          email: orgData.email.trim() || null,
+          address: orgData.address.trim() || null,
+          currency: orgData.currency,
+          timezone: orgData.timezone,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user?.organization_id ?? '');
 
-    if (newPwd !== confirm) {
+      if (error) throw error;
+      toast.success('Organization settings saved');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to save organization settings');
+    } finally {
+      setIsOrgLoading(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!pwdData.newPassword) {
+      toast.error('New password is required');
+      return;
+    }
+    if (pwdData.newPassword.length < 8) {
+      toast.error('Password must be at least 8 characters');
+      return;
+    }
+    if (pwdData.newPassword !== pwdData.confirmPassword) {
       toast.error('Passwords do not match');
       return;
     }
-
-    setIsLoading(true);
+    setIsPwdLoading(true);
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.updateUser({ password: newPwd });
+      const { error } = await supabase.auth.updateUser({ password: pwdData.newPassword });
       if (error) throw error;
       toast.success('Password changed successfully');
-      form.reset();
-    } catch {
-      toast.error('Failed to change password');
+      setPwdData({ newPassword: '', confirmPassword: '' });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to change password';
+      toast.error(msg);
     } finally {
-      setIsLoading(false);
+      setIsPwdLoading(false);
     }
   };
 
@@ -86,126 +179,195 @@ export default function SettingsPage() {
 
       <Tabs defaultValue="profile">
         <TabsList className="grid grid-cols-4 w-full max-w-lg">
-          <TabsTrigger value="profile"><User className="h-4 w-4 mr-1" />Profile</TabsTrigger>
-          <TabsTrigger value="organization"><Building className="h-4 w-4 mr-1" />Organization</TabsTrigger>
-          <TabsTrigger value="appearance"><Palette className="h-4 w-4 mr-1" />Appearance</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
+          <TabsTrigger value="profile">
+            <User className="h-4 w-4 mr-1.5" />
+            Profile
+          </TabsTrigger>
+          <TabsTrigger value="organization">
+            <Building className="h-4 w-4 mr-1.5" />
+            Business
+          </TabsTrigger>
+          <TabsTrigger value="appearance">
+            <Palette className="h-4 w-4 mr-1.5" />
+            Display
+          </TabsTrigger>
+          <TabsTrigger value="security">
+            <Lock className="h-4 w-4 mr-1.5" />
+            Security
+          </TabsTrigger>
         </TabsList>
 
-        {/* Profile Tab */}
+        {/* ── Profile Tab ─────────────────────────────────── */}
         <TabsContent value="profile" className="mt-6">
           <Card>
             <CardHeader>
               <CardTitle>Personal Information</CardTitle>
-              <CardDescription>Update your personal details</CardDescription>
+              <CardDescription>Update your name and contact details</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Avatar */}
               <div className="flex items-center gap-4 pb-4 border-b">
                 <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-2xl font-bold text-primary">
-                  {user?.full_name?.charAt(0)?.toUpperCase()}
+                  {user?.full_name?.charAt(0)?.toUpperCase() || 'U'}
                 </div>
                 <div>
                   <p className="font-medium">{user?.full_name}</p>
                   <p className="text-sm text-muted-foreground">{user?.email}</p>
-                  <p className="text-xs text-muted-foreground capitalize">{user?.role?.replace('_', ' ')}</p>
+                  <p className="text-xs text-muted-foreground capitalize mt-0.5">
+                    {user?.role?.replace('_', ' ')}
+                  </p>
                 </div>
               </div>
+
               <div className="space-y-2">
-                <Label>Full Name</Label>
+                <Label htmlFor="full_name">Full Name *</Label>
                 <Input
+                  id="full_name"
                   value={profileData.full_name}
                   onChange={(e) => setProfileData({ ...profileData, full_name: e.target.value })}
+                  placeholder="Your full name"
                 />
               </div>
+
               <div className="space-y-2">
-                <Label>Phone Number</Label>
+                <Label htmlFor="phone">Phone Number</Label>
                 <Input
+                  id="phone"
+                  type="tel"
                   value={profileData.phone}
                   onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                  placeholder="+234 800 000 0000"
                 />
               </div>
+
               <div className="space-y-2">
                 <Label>Email Address</Label>
-                <Input value={user?.email} disabled className="bg-muted" />
-                <p className="text-xs text-muted-foreground">Email cannot be changed</p>
+                <Input value={user?.email || ''} disabled className="bg-muted" />
+                <p className="text-xs text-muted-foreground">Email cannot be changed here</p>
               </div>
-              <Button onClick={handleUpdateProfile} disabled={isLoading}>
-                <Save className="h-4 w-4 mr-2" />
+
+              <Button onClick={handleUpdateProfile} disabled={isProfileLoading}>
+                {isProfileLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
                 Save Changes
               </Button>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Organization Tab */}
+        {/* ── Organization Tab ─────────────────────────────── */}
         <TabsContent value="organization" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Organization Settings</CardTitle>
-              <CardDescription>Update your business information</CardDescription>
+              <CardTitle>Business Information</CardTitle>
+              <CardDescription>Update your business details and preferences</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Business Name</Label>
+                <Label htmlFor="org_name">Business Name *</Label>
                 <Input
+                  id="org_name"
                   value={orgData.name}
                   onChange={(e) => setOrgData({ ...orgData, name: e.target.value })}
                   placeholder="Your business name"
                 />
               </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Phone</Label>
+                  <Label htmlFor="org_phone">Phone</Label>
                   <Input
+                    id="org_phone"
+                    type="tel"
                     value={orgData.phone}
                     onChange={(e) => setOrgData({ ...orgData, phone: e.target.value })}
+                    placeholder="+234 800 000 0000"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Email</Label>
+                  <Label htmlFor="org_email">Email</Label>
                   <Input
+                    id="org_email"
                     type="email"
                     value={orgData.email}
                     onChange={(e) => setOrgData({ ...orgData, email: e.target.value })}
+                    placeholder="business@email.com"
                   />
                 </div>
               </div>
+
               <div className="space-y-2">
-                <Label>Address</Label>
+                <Label htmlFor="org_address">Address</Label>
                 <Input
+                  id="org_address"
                   value={orgData.address}
                   onChange={(e) => setOrgData({ ...orgData, address: e.target.value })}
+                  placeholder="Business address"
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Currency</Label>
-                <Select value={orgData.currency} onValueChange={(v) => setOrgData({ ...orgData, currency: v })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="NGN">Nigerian Naira (₦)</SelectItem>
-                    <SelectItem value="USD">US Dollar ($)</SelectItem>
-                    <SelectItem value="GBP">British Pound (£)</SelectItem>
-                  </SelectContent>
-                </Select>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Currency</Label>
+                  <Select
+                    value={orgData.currency}
+                    onValueChange={(v) => setOrgData({ ...orgData, currency: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="NGN">Nigerian Naira (₦)</SelectItem>
+                      <SelectItem value="USD">US Dollar ($)</SelectItem>
+                      <SelectItem value="GBP">British Pound (£)</SelectItem>
+                      <SelectItem value="EUR">Euro (€)</SelectItem>
+                      <SelectItem value="GHS">Ghanaian Cedi (₵)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Timezone</Label>
+                  <Select
+                    value={orgData.timezone}
+                    onValueChange={(v) => setOrgData({ ...orgData, timezone: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Africa/Lagos">Africa/Lagos (WAT)</SelectItem>
+                      <SelectItem value="Africa/Accra">Africa/Accra (GMT)</SelectItem>
+                      <SelectItem value="Africa/Nairobi">Africa/Nairobi (EAT)</SelectItem>
+                      <SelectItem value="UTC">UTC</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <Button>
-                <Save className="h-4 w-4 mr-2" />
-                Save Organization Settings
+
+              <Button onClick={handleUpdateOrg} disabled={isOrgLoading}>
+                {isOrgLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
+                Save Business Settings
               </Button>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Appearance Tab */}
+        {/* ── Appearance Tab ──────────────────────────────── */}
         <TabsContent value="appearance" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Appearance</CardTitle>
-              <CardDescription>Customize your display preferences</CardDescription>
+              <CardTitle>Display Preferences</CardTitle>
+              <CardDescription>Customize how TradeTrack looks and feels</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Theme */}
               <div className="space-y-3">
                 <Label>Theme</Label>
                 <div className="grid grid-cols-3 gap-3">
@@ -214,7 +376,9 @@ export default function SettingsPage() {
                       key={t}
                       onClick={() => setTheme(t)}
                       className={`border-2 rounded-lg p-3 text-sm font-medium capitalize transition-all ${
-                        theme === t ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/50'
+                        theme === t
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-border hover:border-primary/50 text-muted-foreground'
                       }`}
                     >
                       {t === 'light' ? '☀️ Light' : t === 'dark' ? '🌙 Dark' : '💻 System'}
@@ -223,46 +387,79 @@ export default function SettingsPage() {
                 </div>
               </div>
 
+              {/* Language — connected to i18n context */}
               <div className="space-y-3">
                 <Label>Language</Label>
-                <Select defaultValue="en">
-                  <SelectTrigger>
+                <Select
+                  value={locale}
+                  onValueChange={(v) => setLocale(v as Locale)}
+                >
+                  <SelectTrigger className="max-w-xs">
+                    <Globe className="h-4 w-4 mr-2 text-muted-foreground" />
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {SUPPORTED_LOCALES.map((locale) => (
-                      <SelectItem key={locale.code} value={locale.code}>
-                        {locale.name} — {locale.native}
+                    {SUPPORTED_LOCALES.map((l) => (
+                      <SelectItem key={l.code} value={l.code}>
+                        {l.name} — {l.native}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground">
+                  Language changes apply immediately and are saved automatically.
+                </p>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Security Tab */}
+        {/* ── Security Tab ─────────────────────────────────── */}
         <TabsContent value="security" className="mt-6">
           <Card>
             <CardHeader>
               <CardTitle>Change Password</CardTitle>
-              <CardDescription>Update your account password</CardDescription>
+              <CardDescription>Update your account password. Use at least 8 characters.</CardDescription>
             </CardHeader>
-            <CardContent>
-              <form onSubmit={handleChangePassword} className="space-y-4">
-                <div className="space-y-2">
-                  <Label>New Password</Label>
-                  <Input type="password" name="newPassword" placeholder="••••••••" required minLength={8} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Confirm New Password</Label>
-                  <Input type="password" name="confirmPassword" placeholder="••••••••" required minLength={8} />
-                </div>
-                <Button type="submit" disabled={isLoading}>
-                  Change Password
-                </Button>
-              </form>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="newPassword">New Password</Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  placeholder="••••••••"
+                  value={pwdData.newPassword}
+                  onChange={(e) => setPwdData({ ...pwdData, newPassword: e.target.value })}
+                  minLength={8}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="••••••••"
+                  value={pwdData.confirmPassword}
+                  onChange={(e) => setPwdData({ ...pwdData, confirmPassword: e.target.value })}
+                  minLength={8}
+                  error={
+                    pwdData.confirmPassword && pwdData.newPassword !== pwdData.confirmPassword
+                      ? 'Passwords do not match'
+                      : undefined
+                  }
+                />
+              </div>
+              <Button
+                onClick={handleChangePassword}
+                disabled={isPwdLoading}
+              >
+                {isPwdLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <Lock className="h-4 w-4 mr-2" />
+                )}
+                Change Password
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>

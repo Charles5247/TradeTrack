@@ -22,7 +22,8 @@ async function fetchWarehouses() {
     .select(`*, inventory(quantity)`)
     .order('is_main', { ascending: false });
   if (error) throw error;
-  return data as (WarehouseType & { inventory: { quantity: number }[] })[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (data as any) as (WarehouseType & { inventory: { quantity: number }[] })[];
 }
 
 export default function WarehousesPage() {

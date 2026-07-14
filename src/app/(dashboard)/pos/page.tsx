@@ -39,7 +39,8 @@ async function searchProducts(query: string, warehouseId: string) {
   }
 
   const { data } = await q.limit(20);
-  return (data || []).map((p: Product & { inventory: Array<{quantity: number; warehouse_id: string}> }) => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (data || []).map((p: any) => ({
     ...p,
     available_quantity: p.inventory?.[0]?.quantity || 0,
   }));
@@ -107,7 +108,7 @@ async function completeSale(payload: {
       total: payload.total,
       amount_paid: payload.amount_paid,
       change_amount: payload.change_amount,
-      payment_method: payload.payment_method,
+      payment_method: payload.payment_method as import('@/lib/supabase/types').PaymentMethod,
       payment_status: payload.amount_paid >= payload.total ? 'paid' : 'partial',
       status: 'completed',
       notes: payload.notes || null,
@@ -466,7 +467,7 @@ export default function POSPage() {
           {/* Payment Method */}
           <Select
             value={cart.payment_method}
-            onValueChange={(v) => cart.setPaymentMethod(v as CartItem['product'] extends never ? never : typeof v)}
+            onValueChange={(v) => cart.setPaymentMethod(v as import('@/lib/supabase/types').PaymentMethod)}
           >
             <SelectTrigger className="h-8 text-xs">
               <SelectValue />
