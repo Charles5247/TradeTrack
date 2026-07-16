@@ -150,14 +150,17 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            {/* Demo credentials */}
-            <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-              <p className="text-xs font-medium text-muted-foreground mb-2">Demo Credentials:</p>
-              <div className="space-y-1 text-xs text-muted-foreground">
-                <p><span className="font-medium">Admin:</span> admin@demo.com / demo1234</p>
-                <p><span className="font-medium">Cashier:</span> cashier@demo.com / demo1234</p>
+            {/* Demo credentials - development only, never shown in production */}
+            {process.env.NODE_ENV !== 'production' && (
+              <div className="mt-6 p-4 bg-muted/50 rounded-lg">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Demo Credentials:</p>
+                <div className="space-y-1 text-xs text-muted-foreground">
+                  <p><span className="font-medium">Admin:</span> admin@demo.com / demo1234</p>
+                  <p><span className="font-medium">Manager:</span> manager@demo.com / demo1234</p>
+                  <p><span className="font-medium">Cashier:</span> cashier@demo.com / demo1234</p>
+                </div>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
 

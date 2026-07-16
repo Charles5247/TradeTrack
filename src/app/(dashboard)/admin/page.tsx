@@ -181,7 +181,7 @@ export default function AdminPage() {
         .limit(200);
       if (error) {
         console.error('invoices query error:', error);
-        return generateMockRevenue();
+        return [];
       }
       // Group by month
       const monthMap = new Map<string, { revenue: number; invoices: number }>();
@@ -190,8 +190,7 @@ export default function AdminPage() {
         const existing = monthMap.get(month) ?? { revenue: 0, invoices: 0 };
         monthMap.set(month, { revenue: existing.revenue + inv.amount, invoices: existing.invoices + 1 });
       });
-      const result = Array.from(monthMap.entries()).map(([month, v]) => ({ month, ...v }));
-      return result.length ? result : generateMockRevenue();
+      return Array.from(monthMap.entries()).map(([month, v]) => ({ month, ...v }));
     },
     enabled: isOwnerOrAdmin,
   });
@@ -207,7 +206,7 @@ export default function AdminPage() {
         .limit(200);
       if (error) {
         console.error('merchant acquisition query error:', error);
-        return generateMockAcquisition();
+        return [];
       }
       const monthMap = new Map<string, { merchants: number; active: number }>();
       ((data as any[]) ?? []).forEach((m: { created_at: string; status: string }) => {
@@ -218,8 +217,7 @@ export default function AdminPage() {
           active:    existing.active + (m.status === 'active' ? 1 : 0),
         });
       });
-      const result = Array.from(monthMap.entries()).map(([month, v]) => ({ month, ...v }));
-      return result.length ? result : generateMockAcquisition();
+      return Array.from(monthMap.entries()).map(([month, v]) => ({ month, ...v }));
     },
     enabled: isOwnerOrAdmin,
   });
@@ -359,6 +357,11 @@ export default function AdminPage() {
               <CardContent>
                 {revenueLoading ? (
                   <Skeleton className="h-64 w-full" />
+                ) : (revenueData ?? []).length === 0 ? (
+                  <EmptyChartState
+                    title="No Revenue Data Yet"
+                    description="This chart will populate automatically once paid invoices start coming in."
+                  />
                 ) : (
                   <ResponsiveContainer width="100%" height={260}>
                     <AreaChart data={revenueData ?? []}>
@@ -395,6 +398,11 @@ export default function AdminPage() {
               <CardContent>
                 {acquisitionLoading ? (
                   <Skeleton className="h-64 w-full" />
+                ) : (acquisitionData ?? []).length === 0 ? (
+                  <EmptyChartState
+                    title="No Merchant Data Yet"
+                    description="New merchant sign-ups will appear here as they register on the platform."
+                  />
                 ) : (
                   <ResponsiveContainer width="100%" height={260}>
                     <BarChart data={acquisitionData ?? []}>
@@ -534,6 +542,11 @@ export default function AdminPage() {
             <CardContent>
               {revenueLoading ? (
                 <Skeleton className="h-80 w-full" />
+              ) : (revenueData ?? []).length === 0 ? (
+                <EmptyChartState
+                  title="No Revenue Data Yet"
+                  description="This chart is not showing demo or simulated data. It will populate once paid invoices exist for your merchants."
+                />
               ) : (
                 <ResponsiveContainer width="100%" height={320}>
                   <AreaChart data={revenueData ?? []}>
@@ -647,21 +660,21 @@ function StatusSummaryCard({
   );
 }
 
-// ─── Mock data helpers (used when DB is empty) ────────────────────────────────
-function generateMockRevenue(): RevenuePoint[] {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  let base = 150000;
-  return months.map((month, i) => {
-    base = base * (1 + 0.05 + Math.random() * 0.1);
-    return { month: `${month} '25`, revenue: Math.round(base), invoices: Math.floor(i * 2 + 5) };
-  });
-}
-
-function generateMockAcquisition(): AcquisitionPoint[] {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-  return months.map((month, i) => ({
-    month: `${month} '25`,
-    merchants: Math.floor(Math.random() * 15) + 5 + i * 2,
-    active:    Math.floor(Math.random() * 10) + 3 + i,
-  }));
+// ─── Empty Chart State ─────────────────────────────────────────────────────────
+// Shown instead of a chart when there is genuinely no data in the database yet.
+// This is intentionally NOT populated with mock/simulated data - an honest
+// empty state is preferable to a misleading fake chart.
+function EmptyChartState({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center h-64 text-center px-6">
+      <div className="p-3 bg-muted rounded-full mb-3">
+        <BarChart3 className="h-8 w-8 text-muted-foreground" />
+      </div>
+      <p className="text-sm font-semibold">{title}</p>
+      <p className="text-xs text-muted-foreground mt-1 max-w-xs">{description}</p>
+      <p className="text-[10px] text-muted-foreground/70 mt-3 uppercase tracking-wide">
+        This chart is not showing demo or simulated data
+      </p>
+    </div>
+  );
 }
