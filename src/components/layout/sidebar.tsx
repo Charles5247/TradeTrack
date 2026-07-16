@@ -21,6 +21,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Store,
+  Building2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { useUIStore, useAuthStore } from '@/store';
@@ -48,6 +49,8 @@ const navItems: NavItem[] = [
   { title: 'Notifications', href: '/notifications', icon: Bell },
   { title: 'Users', href: '/users', icon: Users, roles: ['super_admin'] },
   { title: 'Subscriptions', href: '/subscriptions', icon: CreditCard, roles: ['super_admin'] },
+  { title: 'Owner Dashboard', href: '/admin', icon: LayoutDashboard, roles: ['super_admin', 'admin', 'owner'] },
+  { title: 'Merchants', href: '/merchants', icon: Building2, roles: ['super_admin', 'admin', 'owner'] },
   { title: 'Settings', href: '/settings', icon: Settings },
 ];
 

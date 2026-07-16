@@ -71,6 +71,8 @@ export const ha = {
     settings: 'Saituna',
     users: 'Masu amfani',
     subscriptions: 'Biyan kuɗi',
+    admin: 'Allon Mai Gida',
+    merchants: 'Yan Kasuwa',
   },
   dashboard: {
     today_sales: "Siyarwar yau",

@@ -70,6 +70,8 @@ export const en = {
     settings: 'Settings',
     users: 'Users',
     subscriptions: 'Subscriptions',
+    admin: 'Owner Dashboard',
+    merchants: 'Merchants',
   },
   dashboard: {
     today_sales: "Today's Sales",
