@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "seed:auth": "node scripts/seed-auth-users.mjs"
   },
   "dependencies": {
     "@hookform/error-message": "^2.0.1",
@@ -28,7 +30,7 @@
     "@radix-ui/react-toast": "^1.2.19",
     "@radix-ui/react-tooltip": "^1.2.12",
     "@supabase/ssr": "^0.12.3",
-    "@supabase/supabase-js": "^2.110.5",
+    "@supabase/supabase-js": "^2.110.7",
     "@tanstack/react-query": "^5.101.2",
     "@tanstack/react-query-devtools": "^5.101.2",
     "class-variance-authority": "^0.7.1",

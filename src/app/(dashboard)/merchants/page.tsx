@@ -679,8 +679,8 @@ export default function MerchantsPage() {
         .select('*')
         .order('created_at', { ascending: false });
 
-      // Admins & owners see all; others see their org only
-      if ((user?.role as string) !== 'owner' && user?.role !== 'super_admin') {
+      // Platform super_admin sees all merchants; org admins see their org only
+      if (user?.role !== 'super_admin') {
         query.eq('organization_id', orgId);
       }
 

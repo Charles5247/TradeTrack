@@ -31,6 +31,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils/cn';
 import { useOnlineStatus } from '@/hooks/use-online-status';
 import { clearCachedSession } from '@/lib/offline/db';
+import { useI18n } from '@/i18n';
 
 export function Header() {
   const router = useRouter();
@@ -39,8 +40,8 @@ export function Header() {
   const { user, setUser } = useAuthStore();
   const { unreadCount } = useNotificationStore();
   const { syncStatus } = useSyncStore();
+  const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState('');
-  // Reactive online status (not static navigator.onLine)
   const isOnline = useOnlineStatus();
 
   const handleSearch = (e: React.FormEvent) => {
@@ -54,7 +55,6 @@ export function Header() {
     try {
       const { createClient } = await import('@/lib/supabase/client');
       const supabase = createClient();
-      // Clear offline cache
       if (user?.id) {
         await clearCachedSession(user.id);
       }
@@ -69,21 +69,20 @@ export function Header() {
 
   return (
     <header className="h-16 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center gap-4 px-4 lg:px-6 shrink-0">
-      {/* Mobile menu toggle */}
       <Button
         variant="ghost"
         size="icon"
         className="lg:hidden"
         onClick={toggleSidebar}
+        aria-label="Toggle menu"
       >
         <Menu className="h-5 w-5" />
       </Button>
 
-      {/* Search */}
       <form onSubmit={handleSearch} className="flex-1 max-w-md">
         <Input
           type="search"
-          placeholder="Search products, sales, invoices..."
+          placeholder={t.app.search_placeholder}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           leftIcon={<Search className="h-4 w-4" />}
@@ -92,7 +91,6 @@ export function Header() {
       </form>
 
       <div className="ml-auto flex items-center gap-2">
-        {/* Online/Offline Status — reactive */}
         <div
           className={cn(
             'hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-colors',
@@ -100,42 +98,39 @@ export function Header() {
               ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
               : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
           )}
-          title={isOnline ? 'Connected to internet' : 'Working offline — changes will sync when reconnected'}
+          title={isOnline ? t.header.online : t.header.offline_hint}
         >
           {isOnline ? (
             <Wifi className="h-3 w-3" />
           ) : (
             <WifiOff className="h-3 w-3" />
           )}
-          <span>{isOnline ? 'Online' : 'Offline'}</span>
+          <span>{isOnline ? t.header.online : t.header.offline}</span>
         </div>
 
-        {/* Sync Status */}
         {syncStatus === 'syncing' && (
-          <Button variant="ghost" size="icon-sm" className="text-muted-foreground" title="Syncing...">
+          <Button variant="ghost" size="icon-sm" className="text-muted-foreground" title={t.header.syncing}>
             <RefreshCw className="h-4 w-4 animate-spin" />
           </Button>
         )}
 
-        {/* Theme toggle */}
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          title="Toggle theme"
+          title={t.header.toggle_theme}
         >
           <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-          <span className="sr-only">Toggle theme</span>
+          <span className="sr-only">{t.header.toggle_theme}</span>
         </Button>
 
-        {/* Notifications */}
         <Button
           variant="ghost"
           size="icon"
           className="relative"
           onClick={() => router.push('/notifications')}
-          title="Notifications"
+          title={t.header.notifications}
         >
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
@@ -148,7 +143,6 @@ export function Header() {
           )}
         </Button>
 
-        {/* User menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full">
@@ -167,11 +161,10 @@ export function Header() {
                 <p className="text-xs text-muted-foreground capitalize">
                   {user?.role?.replace('_', ' ')}
                 </p>
-                {/* Offline indicator in user menu */}
                 {!isOnline && (
                   <p className="text-xs text-amber-600 flex items-center gap-1 mt-1">
                     <WifiOff className="h-3 w-3" />
-                    Working offline
+                    {t.header.working_offline}
                   </p>
                 )}
               </div>
@@ -179,11 +172,11 @@ export function Header() {
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => router.push('/settings')}>
               <User className="mr-2 h-4 w-4" />
-              Profile
+              {t.header.profile}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => router.push('/settings')}>
               <Settings className="mr-2 h-4 w-4" />
-              Settings
+              {t.header.settings}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -191,7 +184,7 @@ export function Header() {
               className="text-destructive focus:text-destructive"
             >
               <LogOut className="mr-2 h-4 w-4" />
-              Sign out
+              {t.header.sign_out}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

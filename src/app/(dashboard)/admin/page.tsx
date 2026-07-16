@@ -149,7 +149,7 @@ export default function AdminPage() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   // ── Access guard ─────────────────────────────────────────────────────────
-  const isOwnerOrAdmin = (user?.role as string) === 'owner' || user?.role === 'super_admin' || user?.role === 'admin';
+  const isPlatformAdmin = user?.role === 'super_admin';
 
   // ── Merchants query ───────────────────────────────────────────────────────
   const { data: merchants, isLoading: merchantsLoading } = useQuery({
@@ -166,7 +166,7 @@ export default function AdminPage() {
       }
       return (data as any) as MerchantRow[];
     },
-    enabled: isOwnerOrAdmin,
+    enabled: isPlatformAdmin,
   });
 
   // ── Subscriptions / revenue query ─────────────────────────────────────────
@@ -181,7 +181,7 @@ export default function AdminPage() {
         .limit(200);
       if (error) {
         console.error('invoices query error:', error);
-        return generateMockRevenue();
+        return [];
       }
       // Group by month
       const monthMap = new Map<string, { revenue: number; invoices: number }>();
@@ -193,7 +193,7 @@ export default function AdminPage() {
       const result = Array.from(monthMap.entries()).map(([month, v]) => ({ month, ...v }));
       return result.length ? result : generateMockRevenue();
     },
-    enabled: isOwnerOrAdmin,
+    enabled: isPlatformAdmin,
   });
 
   // ── Acquisition query ─────────────────────────────────────────────────────
@@ -221,7 +221,7 @@ export default function AdminPage() {
       const result = Array.from(monthMap.entries()).map(([month, v]) => ({ month, ...v }));
       return result.length ? result : generateMockAcquisition();
     },
-    enabled: isOwnerOrAdmin,
+    enabled: isPlatformAdmin,
   });
 
   // ── Audit logs stream ─────────────────────────────────────────────────────
@@ -239,7 +239,7 @@ export default function AdminPage() {
       }
       return (data as any) as AuditLogRow[];
     },
-    enabled: isOwnerOrAdmin,
+    enabled: isPlatformAdmin,
     refetchInterval: 30000, // refresh every 30s
   });
 

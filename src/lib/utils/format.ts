@@ -2,13 +2,25 @@
  * TradeTrack - Formatting Utilities
  */
 
+let appCurrency = 'NGN';
+
+/** Set org currency from OrganizationProvider so formatCurrency() reflects settings. */
+export function setAppCurrency(currency: string): void {
+  appCurrency = currency || 'NGN';
+}
+
+export function getAppCurrency(): string {
+  return appCurrency;
+}
+
 /**
- * Format currency in Nigerian Naira
+ * Format currency using org setting (via setAppCurrency) unless overridden.
  */
-export function formatCurrency(amount: number, currency = 'NGN'): string {
+export function formatCurrency(amount: number, currency?: string): string {
+  const resolved = currency ?? appCurrency;
   return new Intl.NumberFormat('en-NG', {
     style: 'currency',
-    currency,
+    currency: resolved,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);
