@@ -3,7 +3,7 @@
 // ============================================================
 
 // ── User & Auth ──────────────────────────────────────────────
-export type UserRole = 'super_admin' | 'admin' | 'cashier';
+export type UserRole = 'super_admin' | 'admin' | 'owner' | 'manager' | 'cashier';
 
 export type UserStatus = 'active' | 'suspended' | 'inactive';
 
