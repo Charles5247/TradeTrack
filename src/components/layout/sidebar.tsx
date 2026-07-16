@@ -26,9 +26,10 @@ import {
 import { cn } from '@/lib/utils/cn';
 import { useUIStore, useAuthStore } from '@/store';
 import { Badge } from '@/components/ui/badge';
+import { useI18n } from '@/i18n';
 
 interface NavItem {
-  title: string;
+  navKey: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   badge?: number;
@@ -36,28 +37,29 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { title: 'Products', href: '/products', icon: Package, roles: ['super_admin', 'admin'] },
-  { title: 'Inventory', href: '/inventory', icon: Warehouse, roles: ['super_admin', 'admin'] },
-  { title: 'Point of Sale', href: '/pos', icon: ShoppingCart },
-  { title: 'Sales History', href: '/sales', icon: History, roles: ['super_admin', 'admin'] },
-  { title: 'Warehouses', href: '/warehouses', icon: Warehouse, roles: ['super_admin', 'admin'] },
-  { title: 'Transfers', href: '/transfers', icon: ArrowLeftRight, roles: ['super_admin', 'admin'] },
-  { title: 'Vendor Sales', href: '/vendors', icon: UserCheck, roles: ['super_admin', 'admin'] },
-  { title: 'Reports', href: '/reports', icon: BarChart3, roles: ['super_admin', 'admin'] },
-  { title: 'Audit Trail', href: '/audit', icon: ClipboardList, roles: ['super_admin', 'admin'] },
-  { title: 'Notifications', href: '/notifications', icon: Bell },
-  { title: 'Users', href: '/users', icon: Users, roles: ['super_admin'] },
-  { title: 'Subscriptions', href: '/subscriptions', icon: CreditCard, roles: ['super_admin'] },
-  { title: 'Owner Dashboard', href: '/admin', icon: LayoutDashboard, roles: ['super_admin', 'admin', 'owner'] },
-  { title: 'Merchants', href: '/merchants', icon: Building2, roles: ['super_admin', 'admin', 'owner'] },
-  { title: 'Settings', href: '/settings', icon: Settings },
+  { navKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { navKey: 'products', href: '/products', icon: Package, roles: ['super_admin', 'admin'] },
+  { navKey: 'inventory', href: '/inventory', icon: Warehouse, roles: ['super_admin', 'admin'] },
+  { navKey: 'pos', href: '/pos', icon: ShoppingCart },
+  { navKey: 'sales', href: '/sales', icon: History, roles: ['super_admin', 'admin'] },
+  { navKey: 'warehouses', href: '/warehouses', icon: Warehouse, roles: ['super_admin', 'admin'] },
+  { navKey: 'transfers', href: '/transfers', icon: ArrowLeftRight, roles: ['super_admin', 'admin'] },
+  { navKey: 'vendors', href: '/vendors', icon: UserCheck, roles: ['super_admin', 'admin'] },
+  { navKey: 'reports', href: '/reports', icon: BarChart3, roles: ['super_admin', 'admin'] },
+  { navKey: 'audit', href: '/audit', icon: ClipboardList, roles: ['super_admin', 'admin'] },
+  { navKey: 'notifications', href: '/notifications', icon: Bell },
+  { navKey: 'users', href: '/users', icon: Users, roles: ['super_admin'] },
+  { navKey: 'subscriptions', href: '/subscriptions', icon: CreditCard, roles: ['super_admin'] },
+  { navKey: 'admin', href: '/admin', icon: LayoutDashboard, roles: ['super_admin', 'admin', 'owner'] },
+  { navKey: 'merchants', href: '/merchants', icon: Building2, roles: ['super_admin', 'admin', 'owner'] },
+  { navKey: 'settings', href: '/settings', icon: Settings },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const { sidebarOpen, setSidebarOpen } = useUIStore();
   const { user } = useAuthStore();
+  const { t } = useI18n();
 
   const filteredItems = navItems.filter((item) => {
     if (!item.roles) return true;
@@ -131,6 +133,7 @@ export function Sidebar() {
             const isActive = pathname === item.href ||
               (item.href !== '/dashboard' && pathname.startsWith(item.href));
             const Icon = item.icon;
+            const label = t.nav[item.navKey as keyof typeof t.nav] ?? item.navKey;
 
             return (
               <Link
@@ -150,7 +153,7 @@ export function Sidebar() {
                 <Icon className={cn('h-4 w-4 shrink-0', isActive ? 'text-primary-foreground' : '')} />
                 {sidebarOpen && (
                   <>
-                    <span className="flex-1 truncate">{item.title}</span>
+                    <span className="flex-1 truncate">{label}</span>
                     {item.badge && item.badge > 0 && (
                       <Badge variant="destructive" className="text-xs py-0 px-1.5 h-5">
                         {item.badge > 99 ? '99+' : item.badge}
@@ -161,7 +164,7 @@ export function Sidebar() {
                 {/* Tooltip for collapsed state */}
                 {!sidebarOpen && (
                   <div className="absolute left-full ml-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded-md shadow-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
-                    {item.title}
+                    {label}
                   </div>
                 )}
               </Link>

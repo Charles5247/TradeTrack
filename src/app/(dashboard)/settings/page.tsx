@@ -19,7 +19,7 @@ import { cacheUserSession } from '@/lib/offline/db';
 export default function SettingsPage() {
   const { user, setUser } = useAuthStore();
   const { theme, setTheme } = useTheme();
-  const { locale, setLocale } = useI18n();
+  const { t, locale, setLocale } = useI18n();
   const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [isOrgLoading, setIsOrgLoading] = useState(false);
   const [isPwdLoading, setIsPwdLoading] = useState(false);
@@ -76,7 +76,7 @@ export default function SettingsPage() {
 
   const handleUpdateProfile = async () => {
     if (!profileData.full_name.trim()) {
-      toast.error('Full name is required');
+      toast.error(t.settings.full_name_required);
       return;
     }
     setIsProfileLoading(true);
@@ -102,10 +102,10 @@ export default function SettingsPage() {
         await cacheUserSession(updatedProfile.id, updatedProfile as Record<string, unknown>);
       }
 
-      toast.success('Profile updated successfully');
+      toast.success(t.settings.profile_updated);
     } catch (err) {
       console.error(err);
-      toast.error('Failed to update profile. Please try again.');
+      toast.error(t.settings.profile_update_failed);
     } finally {
       setIsProfileLoading(false);
     }
@@ -113,7 +113,7 @@ export default function SettingsPage() {
 
   const handleUpdateOrg = async () => {
     if (!orgData.name.trim()) {
-      toast.error('Business name is required');
+      toast.error(t.settings.business_name_required);
       return;
     }
     setIsOrgLoading(true);
@@ -133,10 +133,10 @@ export default function SettingsPage() {
         .eq('id', user?.organization_id ?? '');
 
       if (error) throw error;
-      toast.success('Organization settings saved');
+      toast.success(t.settings.org_settings_saved);
     } catch (err) {
       console.error(err);
-      toast.error('Failed to save organization settings');
+      toast.error(t.settings.org_settings_save_failed);
     } finally {
       setIsOrgLoading(false);
     }
@@ -144,15 +144,15 @@ export default function SettingsPage() {
 
   const handleChangePassword = async () => {
     if (!pwdData.newPassword) {
-      toast.error('New password is required');
+      toast.error(t.settings.password_required);
       return;
     }
     if (pwdData.newPassword.length < 8) {
-      toast.error('Password must be at least 8 characters');
+      toast.error(t.settings.password_min_length);
       return;
     }
     if (pwdData.newPassword !== pwdData.confirmPassword) {
-      toast.error('Passwords do not match');
+      toast.error(t.settings.passwords_do_not_match);
       return;
     }
     setIsPwdLoading(true);
@@ -160,10 +160,10 @@ export default function SettingsPage() {
       const supabase = createClient();
       const { error } = await supabase.auth.updateUser({ password: pwdData.newPassword });
       if (error) throw error;
-      toast.success('Password changed successfully');
+      toast.success(t.settings.password_changed);
       setPwdData({ newPassword: '', confirmPassword: '' });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to change password';
+      const msg = err instanceof Error ? err.message : t.settings.password_change_failed;
       toast.error(msg);
     } finally {
       setIsPwdLoading(false);
@@ -173,27 +173,27 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6 max-w-3xl">
       <div>
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-muted-foreground text-sm">Manage your account and application preferences</p>
+        <h1 className="text-2xl font-bold">{t.settings.title}</h1>
+        <p className="text-muted-foreground text-sm">{t.settings.subtitle}</p>
       </div>
 
       <Tabs defaultValue="profile">
         <TabsList className="grid grid-cols-4 w-full max-w-lg">
           <TabsTrigger value="profile">
             <User className="h-4 w-4 mr-1.5" />
-            Profile
+            {t.settings.tab_profile}
           </TabsTrigger>
           <TabsTrigger value="organization">
             <Building className="h-4 w-4 mr-1.5" />
-            Business
+            {t.settings.tab_business}
           </TabsTrigger>
           <TabsTrigger value="appearance">
             <Palette className="h-4 w-4 mr-1.5" />
-            Display
+            {t.settings.tab_display}
           </TabsTrigger>
           <TabsTrigger value="security">
             <Lock className="h-4 w-4 mr-1.5" />
-            Security
+            {t.settings.tab_security}
           </TabsTrigger>
         </TabsList>
 
@@ -201,8 +201,8 @@ export default function SettingsPage() {
         <TabsContent value="profile" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Personal Information</CardTitle>
-              <CardDescription>Update your name and contact details</CardDescription>
+              <CardTitle>{t.settings.personal_information}</CardTitle>
+              <CardDescription>{t.settings.personal_information_desc}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Avatar */}
@@ -220,17 +220,17 @@ export default function SettingsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="full_name">Full Name *</Label>
+                <Label htmlFor="full_name">{t.settings.full_name}</Label>
                 <Input
                   id="full_name"
                   value={profileData.full_name}
                   onChange={(e) => setProfileData({ ...profileData, full_name: e.target.value })}
-                  placeholder="Your full name"
+                  placeholder={t.settings.full_name_placeholder}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
+                <Label htmlFor="phone">{t.settings.phone_number}</Label>
                 <Input
                   id="phone"
                   type="tel"
@@ -241,9 +241,9 @@ export default function SettingsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Email Address</Label>
+                <Label>{t.settings.email_address}</Label>
                 <Input value={user?.email || ''} disabled className="bg-muted" />
-                <p className="text-xs text-muted-foreground">Email cannot be changed here</p>
+                <p className="text-xs text-muted-foreground">{t.settings.email_cannot_change}</p>
               </div>
 
               <Button onClick={handleUpdateProfile} disabled={isProfileLoading}>
@@ -252,7 +252,7 @@ export default function SettingsPage() {
                 ) : (
                   <Save className="h-4 w-4 mr-2" />
                 )}
-                Save Changes
+                {t.settings.save_changes}
               </Button>
             </CardContent>
           </Card>
@@ -262,23 +262,23 @@ export default function SettingsPage() {
         <TabsContent value="organization" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Business Information</CardTitle>
-              <CardDescription>Update your business details and preferences</CardDescription>
+              <CardTitle>{t.settings.business_information}</CardTitle>
+              <CardDescription>{t.settings.business_information_desc}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="org_name">Business Name *</Label>
+                <Label htmlFor="org_name">{t.settings.business_name}</Label>
                 <Input
                   id="org_name"
                   value={orgData.name}
                   onChange={(e) => setOrgData({ ...orgData, name: e.target.value })}
-                  placeholder="Your business name"
+                  placeholder={t.settings.business_name_placeholder}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="org_phone">Phone</Label>
+                  <Label htmlFor="org_phone">{t.common.phone}</Label>
                   <Input
                     id="org_phone"
                     type="tel"
@@ -288,30 +288,30 @@ export default function SettingsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="org_email">Email</Label>
+                  <Label htmlFor="org_email">{t.common.email}</Label>
                   <Input
                     id="org_email"
                     type="email"
                     value={orgData.email}
                     onChange={(e) => setOrgData({ ...orgData, email: e.target.value })}
-                    placeholder="business@email.com"
+                    placeholder={t.settings.business_email_placeholder}
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="org_address">Address</Label>
+                <Label htmlFor="org_address">{t.settings.business_address}</Label>
                 <Input
                   id="org_address"
                   value={orgData.address}
                   onChange={(e) => setOrgData({ ...orgData, address: e.target.value })}
-                  placeholder="Business address"
+                  placeholder={t.settings.business_address_placeholder}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Currency</Label>
+                  <Label>{t.settings.currency}</Label>
                   <Select
                     value={orgData.currency}
                     onValueChange={(v) => setOrgData({ ...orgData, currency: v })}
@@ -329,7 +329,7 @@ export default function SettingsPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Timezone</Label>
+                  <Label>{t.settings.timezone}</Label>
                   <Select
                     value={orgData.timezone}
                     onValueChange={(v) => setOrgData({ ...orgData, timezone: v })}
@@ -353,7 +353,7 @@ export default function SettingsPage() {
                 ) : (
                   <Save className="h-4 w-4 mr-2" />
                 )}
-                Save Business Settings
+                {t.settings.save_business_settings}
               </Button>
             </CardContent>
           </Card>
@@ -363,25 +363,25 @@ export default function SettingsPage() {
         <TabsContent value="appearance" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Display Preferences</CardTitle>
-              <CardDescription>Customize how TradeTrack looks and feels</CardDescription>
+              <CardTitle>{t.settings.display_preferences}</CardTitle>
+              <CardDescription>{t.settings.display_preferences_desc}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Theme */}
               <div className="space-y-3">
-                <Label>Theme</Label>
+                <Label>{t.settings.theme}</Label>
                 <div className="grid grid-cols-3 gap-3">
-                  {(['light', 'dark', 'system'] as const).map((t) => (
+                  {(['light', 'dark', 'system'] as const).map((themeOption) => (
                     <button
-                      key={t}
-                      onClick={() => setTheme(t)}
+                      key={themeOption}
+                      onClick={() => setTheme(themeOption)}
                       className={`border-2 rounded-lg p-3 text-sm font-medium capitalize transition-all ${
-                        theme === t
+                        theme === themeOption
                           ? 'border-primary bg-primary/10 text-primary'
                           : 'border-border hover:border-primary/50 text-muted-foreground'
                       }`}
                     >
-                      {t === 'light' ? '☀️ Light' : t === 'dark' ? '🌙 Dark' : '💻 System'}
+                      {themeOption === 'light' ? `☀️ ${t.settings.theme_light}` : themeOption === 'dark' ? `🌙 ${t.settings.theme_dark}` : `💻 ${t.settings.theme_system}`}
                     </button>
                   ))}
                 </div>
@@ -389,7 +389,7 @@ export default function SettingsPage() {
 
               {/* Language — connected to i18n context */}
               <div className="space-y-3">
-                <Label>Language</Label>
+                <Label>{t.settings.language}</Label>
                 <Select
                   value={locale}
                   onValueChange={(v) => setLocale(v as Locale)}
@@ -407,7 +407,7 @@ export default function SettingsPage() {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  Language changes apply immediately and are saved automatically.
+                  {t.settings.language_hint}
                 </p>
               </div>
             </CardContent>
@@ -418,12 +418,12 @@ export default function SettingsPage() {
         <TabsContent value="security" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Change Password</CardTitle>
-              <CardDescription>Update your account password. Use at least 8 characters.</CardDescription>
+              <CardTitle>{t.settings.change_password}</CardTitle>
+              <CardDescription>{t.settings.change_password_desc}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="newPassword">New Password</Label>
+                <Label htmlFor="newPassword">{t.settings.new_password}</Label>
                 <Input
                   id="newPassword"
                   type="password"
@@ -434,7 +434,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <Label htmlFor="confirmPassword">{t.settings.confirm_new_password}</Label>
                 <Input
                   id="confirmPassword"
                   type="password"
@@ -444,7 +444,7 @@ export default function SettingsPage() {
                   minLength={8}
                   error={
                     pwdData.confirmPassword && pwdData.newPassword !== pwdData.confirmPassword
-                      ? 'Passwords do not match'
+                      ? t.settings.passwords_do_not_match
                       : undefined
                   }
                 />
@@ -458,7 +458,7 @@ export default function SettingsPage() {
                 ) : (
                   <Lock className="h-4 w-4 mr-2" />
                 )}
-                Change Password
+                {t.settings.change_password}
               </Button>
             </CardContent>
           </Card>

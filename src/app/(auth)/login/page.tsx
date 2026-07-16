@@ -12,9 +12,11 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { loginSchema, type LoginFormData } from '@/lib/validations';
 import { createClient } from '@/lib/supabase/client';
+import { useI18n } from '@/i18n';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -36,15 +38,15 @@ export default function LoginPage() {
       });
 
       if (error) {
-        toast.error(error.message || 'Invalid email or password');
+        toast.error(error.message || t.auth.invalid_credentials);
         return;
       }
 
-      toast.success('Signed in successfully');
+      toast.success(t.auth.sign_in_success);
       router.push('/dashboard');
       router.refresh();
     } catch {
-      toast.error('An unexpected error occurred');
+      toast.error(t.auth.unexpected_error);
     } finally {
       setIsLoading(false);
     }
@@ -65,19 +67,19 @@ export default function LoginPage() {
             <TrendingUp className="h-8 w-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-foreground">TradeTrack</h1>
-          <p className="text-muted-foreground mt-1">POS & Inventory Management</p>
+          <p className="text-muted-foreground mt-1">{t.auth.tagline}</p>
         </div>
 
         <Card className="shadow-xl border-0 bg-card/80 backdrop-blur">
           <CardHeader className="pb-2">
-            <CardTitle className="text-2xl">Welcome Back</CardTitle>
-            <CardDescription>Sign in to your TradeTrack account</CardDescription>
+            <CardTitle className="text-2xl">{t.auth.welcome_back}</CardTitle>
+            <CardDescription>{t.auth.sign_in_subtitle}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               {/* Email */}
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="email">{t.auth.email}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -91,12 +93,12 @@ export default function LoginPage() {
               {/* Password */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">{t.auth.password}</Label>
                   <a
                     href="/forgot-password"
                     className="text-xs text-primary hover:underline"
                   >
-                    Forgot password?
+                    {t.auth.forgot_password}
                   </a>
                 </div>
                 <Input
@@ -131,7 +133,7 @@ export default function LoginPage() {
                   className="rounded border-input"
                 />
                 <Label htmlFor="remember" className="text-sm font-normal cursor-pointer">
-                  Remember me for 30 days
+                  {t.auth.remember_me_30_days}
                 </Label>
               </div>
 
@@ -144,16 +146,16 @@ export default function LoginPage() {
                 {isLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Signing in...
+                    {t.auth.signing_in}
                   </>
-                ) : 'Sign In'}
+                ) : t.auth.sign_in}
               </Button>
             </form>
 
             {/* Demo credentials - development only, never shown in production */}
             {process.env.NODE_ENV !== 'production' && (
               <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-                <p className="text-xs font-medium text-muted-foreground mb-2">Demo Credentials:</p>
+                <p className="text-xs font-medium text-muted-foreground mb-2">{t.auth.demo_credentials_label}</p>
                 <div className="space-y-1 text-xs text-muted-foreground">
                   <p><span className="font-medium">Admin:</span> admin@demo.com / demo1234</p>
                   <p><span className="font-medium">Manager:</span> manager@demo.com / demo1234</p>
@@ -165,7 +167,7 @@ export default function LoginPage() {
         </Card>
 
         <p className="text-center text-xs text-muted-foreground mt-6">
-          © {new Date().getFullYear()} TradeTrack. All rights reserved.
+          © {new Date().getFullYear()} {t.auth.copyright}
         </p>
       </div>
     </div>

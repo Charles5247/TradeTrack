@@ -39,6 +39,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store';
 import { formatCurrency } from '@/lib/utils/format';
+import { useI18n } from '@/i18n';
 
 const supabase = createClient();
 
@@ -145,6 +146,7 @@ interface AcquisitionPoint {
 // ─── Page Component ───────────────────────────────────────────────────────────
 export default function AdminPage() {
   const { user } = useAuthStore();
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState('overview');
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -258,9 +260,9 @@ export default function AdminPage() {
           <div className="p-4 bg-red-50 rounded-full inline-block">
             <ShieldCheck className="h-12 w-12 text-red-500" />
           </div>
-          <h2 className="text-xl font-semibold">Access Restricted</h2>
+          <h2 className="text-xl font-semibold">{t.admin.access_restricted}</h2>
           <p className="text-muted-foreground max-w-sm">
-            This dashboard is restricted to platform owners and super-administrators only.
+            {t.admin.access_restricted_desc}
           </p>
         </div>
       </div>
@@ -274,10 +276,10 @@ export default function AdminPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <BarChart3 className="h-6 w-6 text-primary" />
-            Owner Dashboard
+            {t.admin.title}
           </h1>
           <p className="text-muted-foreground mt-1">
-            Platform-wide analytics, merchant management, and system health
+            {t.admin.subtitle}
           </p>
         </div>
         <Button
@@ -287,48 +289,48 @@ export default function AdminPage() {
           className="gap-2"
         >
           <RefreshCw className="h-4 w-4" />
-          Refresh
+          {t.admin.refresh}
         </Button>
       </div>
 
       {/* ── System Health Banner ───────────────────────────────────────────── */}
       <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
         <CheckCircle className="h-4 w-4 text-green-600" />
-        <span className="text-sm text-green-800 font-medium">All systems operational</span>
-        <span className="text-xs text-green-600 ml-auto">Last checked: {new Date().toLocaleTimeString()}</span>
+        <span className="text-sm text-green-800 font-medium">{t.admin.systems_operational}</span>
+        <span className="text-xs text-green-600 ml-auto">{t.admin.last_checked}: {new Date().toLocaleTimeString()}</span>
       </div>
 
       {/* ── KPI Cards ─────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
-          title="Total Merchants"
+          title={t.admin.total_merchants}
           value={totalMerchants}
-          subtitle={`${activeMerchants} active · ${pendingMerchants} pending`}
+          subtitle={`${activeMerchants} ${t.admin.active.toLowerCase()} · ${pendingMerchants} ${t.admin.pending.toLowerCase()}`}
           icon={<Building2 className="h-4 w-4" />}
           color="blue"
           loading={merchantsLoading}
         />
         <KPICard
-          title="Active Subscriptions"
+          title={t.admin.active_subscriptions}
           value={activeMerchants}
-          subtitle={`${suspendedMerchants} suspended`}
+          subtitle={`${suspendedMerchants} ${t.admin.suspended.toLowerCase()}`}
           icon={<Users className="h-4 w-4" />}
           color="green"
           loading={merchantsLoading}
         />
         <KPICard
-          title="MRR"
+          title={t.admin.mrr}
           value={formatCurrency(mrr)}
-          subtitle="Monthly Recurring Revenue"
+          subtitle={t.admin.monthly_recurring_revenue}
           icon={<DollarSign className="h-4 w-4" />}
           trend={8.3}
           color="purple"
           loading={revenueLoading}
         />
         <KPICard
-          title="ARR"
+          title={t.admin.arr}
           value={formatCurrency(arr)}
-          subtitle={`Total collected: ${formatCurrency(totalRevenue)}`}
+          subtitle={`${t.admin.total_collected}: ${formatCurrency(totalRevenue)}`}
           icon={<TrendingUp className="h-4 w-4" />}
           trend={12.1}
           color="orange"
@@ -339,10 +341,10 @@ export default function AdminPage() {
       {/* ── Tabs ──────────────────────────────────────────────────────────── */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="merchants">Merchants</TabsTrigger>
-          <TabsTrigger value="revenue">Revenue</TabsTrigger>
-          <TabsTrigger value="audit">Audit Log</TabsTrigger>
+          <TabsTrigger value="overview">{t.admin.overview}</TabsTrigger>
+          <TabsTrigger value="merchants">{t.admin.merchants}</TabsTrigger>
+          <TabsTrigger value="revenue">{t.admin.revenue}</TabsTrigger>
+          <TabsTrigger value="audit">{t.admin.audit_log}</TabsTrigger>
         </TabsList>
 
         {/* ── OVERVIEW TAB ──────────────────────────────────────────────── */}
@@ -351,16 +353,17 @@ export default function AdminPage() {
             {/* Revenue Growth AreaChart */}
             <Card>
               <CardHeader>
-                <CardTitle>Revenue Growth</CardTitle>
-                <CardDescription>Monthly recurring revenue over time (NGN)</CardDescription>
+                <CardTitle>{t.admin.revenue_growth}</CardTitle>
+                <CardDescription>{t.admin.revenue_growth_desc}</CardDescription>
               </CardHeader>
               <CardContent>
                 {revenueLoading ? (
                   <Skeleton className="h-64 w-full" />
                 ) : (revenueData ?? []).length === 0 ? (
                   <EmptyChartState
-                    title="No Revenue Data Yet"
-                    description="This chart will populate automatically once paid invoices start coming in."
+                    title={t.admin.no_revenue_title}
+                    description={t.admin.no_revenue_desc}
+                    disclaimer={t.admin.no_data_disclaimer}
                   />
                 ) : (
                   <ResponsiveContainer width="100%" height={260}>
@@ -392,16 +395,17 @@ export default function AdminPage() {
             {/* Merchant Acquisition BarChart */}
             <Card>
               <CardHeader>
-                <CardTitle>Merchant Acquisition</CardTitle>
-                <CardDescription>New merchants registered per month</CardDescription>
+                <CardTitle>{t.admin.merchant_acquisition}</CardTitle>
+                <CardDescription>{t.admin.merchant_acquisition_desc}</CardDescription>
               </CardHeader>
               <CardContent>
                 {acquisitionLoading ? (
                   <Skeleton className="h-64 w-full" />
                 ) : (acquisitionData ?? []).length === 0 ? (
                   <EmptyChartState
-                    title="No Merchant Data Yet"
-                    description="New merchant sign-ups will appear here as they register on the platform."
+                    title={t.admin.no_merchant_data_title}
+                    description={t.admin.no_merchant_data_desc}
+                    disclaimer={t.admin.no_data_disclaimer}
                   />
                 ) : (
                   <ResponsiveContainer width="100%" height={260}>
@@ -423,25 +427,25 @@ export default function AdminPage() {
           {/* Status overview cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <StatusSummaryCard
-              label="Active"
+              label={t.admin.active}
               count={activeMerchants}
               icon={<CheckCircle className="h-4 w-4 text-green-600" />}
               bg="bg-green-50"
             />
             <StatusSummaryCard
-              label="Pending"
+              label={t.admin.pending}
               count={pendingMerchants}
               icon={<Clock className="h-4 w-4 text-yellow-600" />}
               bg="bg-yellow-50"
             />
             <StatusSummaryCard
-              label="Suspended"
+              label={t.admin.suspended}
               count={suspendedMerchants}
               icon={<Ban className="h-4 w-4 text-red-600" />}
               bg="bg-red-50"
             />
             <StatusSummaryCard
-              label="Onboarded"
+              label={t.admin.onboarded}
               count={merchants?.filter(m => m.onboarding_completed).length ?? 0}
               icon={<Activity className="h-4 w-4 text-blue-600" />}
               bg="bg-blue-50"
@@ -453,8 +457,8 @@ export default function AdminPage() {
         <TabsContent value="merchants">
           <Card>
             <CardHeader>
-              <CardTitle>All Merchants</CardTitle>
-              <CardDescription>Platform-wide merchant list ({totalMerchants} total)</CardDescription>
+              <CardTitle>{t.admin.all_merchants}</CardTitle>
+              <CardDescription>{t.admin.merchant_list_desc} ({totalMerchants} total)</CardDescription>
             </CardHeader>
             <CardContent>
               {merchantsLoading ? (
@@ -466,20 +470,20 @@ export default function AdminPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Business</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Verification</TableHead>
-                        <TableHead>Onboarded</TableHead>
-                        <TableHead>Joined</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead>{t.admin.business}</TableHead>
+                        <TableHead>{t.admin.email}</TableHead>
+                        <TableHead>{t.admin.status}</TableHead>
+                        <TableHead>{t.admin.verification}</TableHead>
+                        <TableHead>{t.admin.onboarded}</TableHead>
+                        <TableHead>{t.admin.joined}</TableHead>
+                        <TableHead className="text-right">{t.admin.actions}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {(merchants ?? []).length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
-                            No merchants registered yet
+                            {t.admin.no_merchants}
                           </TableCell>
                         </TableRow>
                       ) : (merchants ?? []).map(merchant => (
@@ -490,8 +494,8 @@ export default function AdminPage() {
                           <TableCell><StatusBadge status={merchant.verification_status} /></TableCell>
                           <TableCell>
                             {merchant.onboarding_completed
-                              ? <span className="text-green-600 text-sm">✓ Complete</span>
-                              : <span className="text-yellow-600 text-sm">In Progress</span>
+                              ? <span className="text-green-600 text-sm">✓ {t.admin.complete}</span>
+                              : <span className="text-yellow-600 text-sm">{t.admin.in_progress}</span>
                             }
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
@@ -517,19 +521,19 @@ export default function AdminPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card>
               <CardContent className="p-6 text-center">
-                <p className="text-sm text-muted-foreground mb-1">Total Revenue</p>
+                <p className="text-sm text-muted-foreground mb-1">{t.admin.total_revenue}</p>
                 <p className="text-2xl font-bold text-green-600">{formatCurrency(totalRevenue)}</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-6 text-center">
-                <p className="text-sm text-muted-foreground mb-1">Current MRR</p>
+                <p className="text-sm text-muted-foreground mb-1">{t.admin.current_mrr}</p>
                 <p className="text-2xl font-bold text-purple-600">{formatCurrency(mrr)}</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-6 text-center">
-                <p className="text-sm text-muted-foreground mb-1">ARR Projection</p>
+                <p className="text-sm text-muted-foreground mb-1">{t.admin.arr_projection}</p>
                 <p className="text-2xl font-bold text-blue-600">{formatCurrency(arr)}</p>
               </CardContent>
             </Card>
@@ -537,15 +541,16 @@ export default function AdminPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Revenue Trend (12 months)</CardTitle>
+              <CardTitle>{t.admin.revenue_trend}</CardTitle>
             </CardHeader>
             <CardContent>
               {revenueLoading ? (
                 <Skeleton className="h-80 w-full" />
               ) : (revenueData ?? []).length === 0 ? (
                 <EmptyChartState
-                  title="No Revenue Data Yet"
-                  description="This chart is not showing demo or simulated data. It will populate once paid invoices exist for your merchants."
+                  title={t.admin.no_revenue_title}
+                  description={t.admin.no_revenue_desc}
+                  disclaimer={t.admin.no_data_disclaimer}
                 />
               ) : (
                 <ResponsiveContainer width="100%" height={320}>
@@ -591,15 +596,15 @@ export default function AdminPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>Live Audit Stream</CardTitle>
-                <CardDescription>Latest 20 platform events · auto-refreshes every 30s</CardDescription>
+                <CardTitle>{t.admin.live_audit_stream}</CardTitle>
+                <CardDescription>{t.admin.live_audit_desc}</CardDescription>
               </div>
               <div className="flex items-center gap-1">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                 </span>
-                <span className="text-xs text-muted-foreground ml-1">Live</span>
+                <span className="text-xs text-muted-foreground ml-1">{t.admin.live}</span>
               </div>
             </CardHeader>
             <CardContent>
@@ -610,7 +615,7 @@ export default function AdminPage() {
               ) : (
                 <div className="space-y-2">
                   {(auditLogs ?? []).length === 0 ? (
-                    <p className="text-center py-10 text-muted-foreground">No audit events yet</p>
+                    <p className="text-center py-10 text-muted-foreground">{t.admin.no_audit_events}</p>
                   ) : (auditLogs ?? []).map(log => (
                     <div
                       key={log.id}
@@ -664,7 +669,9 @@ function StatusSummaryCard({
 // Shown instead of a chart when there is genuinely no data in the database yet.
 // This is intentionally NOT populated with mock/simulated data - an honest
 // empty state is preferable to a misleading fake chart.
-function EmptyChartState({ title, description }: { title: string; description: string }) {
+function EmptyChartState({
+  title, description, disclaimer,
+}: { title: string; description: string; disclaimer?: string }) {
   return (
     <div className="flex flex-col items-center justify-center h-64 text-center px-6">
       <div className="p-3 bg-muted rounded-full mb-3">
@@ -672,9 +679,11 @@ function EmptyChartState({ title, description }: { title: string; description: s
       </div>
       <p className="text-sm font-semibold">{title}</p>
       <p className="text-xs text-muted-foreground mt-1 max-w-xs">{description}</p>
-      <p className="text-[10px] text-muted-foreground/70 mt-3 uppercase tracking-wide">
-        This chart is not showing demo or simulated data
-      </p>
+      {disclaimer && (
+        <p className="text-[10px] text-muted-foreground/70 mt-3 uppercase tracking-wide">
+          {disclaimer}
+        </p>
+      )}
     </div>
   );
 }

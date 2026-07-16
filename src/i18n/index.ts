@@ -4,15 +4,18 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import type { Locale } from '@/types';
 import { en } from './locales/en';
 import { ha } from './locales/ha';
+import { yo } from './locales/yo';
+import { ig } from './locales/ig';
+import { pcm } from './locales/pcm';
 
 type TranslationSet = typeof en;
 
 const translations: Record<Locale, TranslationSet> = {
   en,
   ha,
-  yo: en,   // Fallback to English until Yoruba is added
-  ig: en,   // Fallback to English until Igbo is added
-  pcm: en,  // Fallback to English until Pidgin is added
+  yo,   // Currently mirrors English - see src/i18n/locales/yo.ts
+  ig,   // Currently mirrors English - see src/i18n/locales/ig.ts
+  pcm,  // Currently mirrors English - see src/i18n/locales/pcm.ts
 };
 
 const LOCALE_STORAGE_KEY = 'tradetrack-locale';

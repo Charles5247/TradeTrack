@@ -28,6 +28,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency, formatRelativeTime } from '@/lib/utils/format';
 import { useAuthStore } from '@/store';
+import { useI18n } from '@/i18n';
 import type { Sale } from '@/types';
 
 async function fetchDashboardData() {
@@ -145,6 +146,7 @@ async function fetchDashboardData() {
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
+  const { t } = useI18n();
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard'],
     queryFn: fetchDashboardData,
@@ -161,17 +163,17 @@ export default function DashboardPage() {
       {/* Page Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">
-          Good {getGreeting()}, {user?.full_name?.split(' ')[0]} 👋
+          {t.dashboard.greeting.replace('{time}', getGreeting(t)).replace('{name}', user?.full_name?.split(' ')[0] ?? '')} 👋
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Here&apos;s what&apos;s happening with your business today
+          {t.dashboard.subtitle}
         </p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
-          title="Today's Sales"
+          title={t.dashboard.today_sales}
           value={stats ? stats.today_sales : 0}
           subtitle={formatCurrency(stats?.today_revenue || 0)}
           icon={ShoppingCart}
@@ -180,7 +182,7 @@ export default function DashboardPage() {
           loading={isLoading}
         />
         <StatsCard
-          title="Weekly Revenue"
+          title={t.dashboard.weekly_revenue}
           value={formatCurrency(stats?.weekly_revenue || 0)}
           icon={TrendingUp}
           iconColor="text-green-600"
@@ -188,7 +190,7 @@ export default function DashboardPage() {
           loading={isLoading}
         />
         <StatsCard
-          title="Monthly Revenue"
+          title={t.dashboard.monthly_revenue}
           value={formatCurrency(stats?.monthly_revenue || 0)}
           icon={DollarSign}
           iconColor="text-purple-600"
@@ -196,7 +198,7 @@ export default function DashboardPage() {
           loading={isLoading}
         />
         <StatsCard
-          title="Total Products"
+          title={t.dashboard.total_products}
           value={stats?.total_products || 0}
           icon={Package}
           iconColor="text-indigo-600"
@@ -208,9 +210,9 @@ export default function DashboardPage() {
       {/* Alert Row */}
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
-          title="Low Stock Items"
+          title={t.dashboard.low_stock}
           value={stats?.low_stock_count || 0}
-          subtitle="Need restocking soon"
+          subtitle={t.dashboard.need_restocking}
           icon={AlertTriangle}
           iconColor="text-amber-600"
           iconBg="bg-amber-100 dark:bg-amber-900/30"
@@ -218,9 +220,9 @@ export default function DashboardPage() {
           loading={isLoading}
         />
         <StatsCard
-          title="Out of Stock"
+          title={t.dashboard.out_of_stock}
           value={stats?.out_of_stock_count || 0}
-          subtitle="Requires immediate attention"
+          subtitle={t.dashboard.requires_attention}
           icon={XCircle}
           iconColor="text-red-600"
           iconBg="bg-red-100 dark:bg-red-900/30"
@@ -228,9 +230,9 @@ export default function DashboardPage() {
           loading={isLoading}
         />
         <StatsCard
-          title="Pending Vendor Debts"
+          title={t.dashboard.pending_debts}
           value={formatCurrency(stats?.pending_vendor_debts || 0)}
-          subtitle="Awaiting payment"
+          subtitle={t.dashboard.awaiting_payment}
           icon={Users}
           iconColor="text-orange-600"
           iconBg="bg-orange-100 dark:bg-orange-900/30"
@@ -238,9 +240,9 @@ export default function DashboardPage() {
           loading={isLoading}
         />
         <StatsCard
-          title="Pending Transfers"
+          title={t.dashboard.pending_transfers}
           value={stats?.pending_transfers || 0}
-          subtitle="Warehouse transfers"
+          subtitle={t.dashboard.warehouse_transfers}
           icon={ArrowLeftRight}
           iconColor="text-cyan-600"
           iconBg="bg-cyan-100 dark:bg-cyan-900/30"
@@ -253,8 +255,8 @@ export default function DashboardPage() {
         {/* Revenue Chart */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Revenue Overview</CardTitle>
-            <CardDescription>Last 7 days revenue trend</CardDescription>
+            <CardTitle>{t.dashboard.revenue_chart}</CardTitle>
+            <CardDescription>{t.dashboard.revenue_chart_desc}</CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -305,8 +307,8 @@ export default function DashboardPage() {
         {/* Recent Transactions */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Recent Transactions</CardTitle>
-            <CardDescription>Latest sales activity</CardDescription>
+            <CardTitle className="text-base">{t.dashboard.recent_transactions}</CardTitle>
+            <CardDescription>{t.dashboard.recent_transactions_desc}</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             {isLoading ? (
@@ -324,7 +326,7 @@ export default function DashboardPage() {
             ) : recentSales.length === 0 ? (
               <div className="p-6 text-center">
                 <ShoppingCart className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">No sales yet today</p>
+                <p className="text-sm text-muted-foreground">{t.dashboard.no_sales_today}</p>
               </div>
             ) : (
               <div className="divide-y">
@@ -359,16 +361,16 @@ export default function DashboardPage() {
       {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>Common tasks for today</CardDescription>
+          <CardTitle>{t.dashboard.quick_actions}</CardTitle>
+          <CardDescription>{t.dashboard.quick_actions_desc}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { href: '/pos', icon: ShoppingCart, label: 'New Sale', color: 'blue' },
-              { href: '/inventory', icon: Package, label: 'Stock In', color: 'green' },
-              { href: '/transfers', icon: ArrowLeftRight, label: 'Transfer', color: 'purple' },
-              { href: '/reports', icon: TrendingUp, label: 'Reports', color: 'amber' },
+              { href: '/pos', icon: ShoppingCart, label: t.dashboard.new_sale, color: 'blue' },
+              { href: '/inventory', icon: Package, label: t.dashboard.stock_in, color: 'green' },
+              { href: '/transfers', icon: ArrowLeftRight, label: t.nav.transfers, color: 'purple' },
+              { href: '/reports', icon: TrendingUp, label: t.nav.reports, color: 'amber' },
             ].map(({ href, icon: Icon, label, color }) => (
               <a
                 key={href}
@@ -390,9 +392,9 @@ export default function DashboardPage() {
   );
 }
 
-function getGreeting() {
+function getGreeting(t: ReturnType<typeof useI18n>['t']) {
   const hour = new Date().getHours();
-  if (hour < 12) return 'morning';
-  if (hour < 17) return 'afternoon';
-  return 'evening';
+  if (hour < 12) return t.dashboard.morning;
+  if (hour < 17) return t.dashboard.afternoon;
+  return t.dashboard.evening;
 }

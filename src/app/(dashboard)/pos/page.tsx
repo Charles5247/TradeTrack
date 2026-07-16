@@ -18,6 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency } from '@/lib/utils/format';
 import { useCartStore, useAuthStore } from '@/store';
+import { useI18n } from '@/i18n';
 import type { Product, Warehouse, CartItem } from '@/types';
 import Image from 'next/image';
 
@@ -178,6 +179,7 @@ async function completeSale(payload: {
 
 export default function POSPage() {
   const { user } = useAuthStore();
+  const { t } = useI18n();
   const cart = useCartStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [amountPaid, setAmountPaid] = useState('');
@@ -217,10 +219,10 @@ export default function POSPage() {
       setCustomerName('');
       setCustomerPhone('');
       setNotes('');
-      toast.success(`Sale completed! Invoice: ${sale.invoice_number}`);
+      toast.success(t.pos.sale_completed_toast.replace('{invoice}', sale.invoice_number));
     },
     onError: (err) => {
-      toast.error(err instanceof Error ? err.message : 'Failed to complete sale');
+      toast.error(err instanceof Error ? err.message : t.pos.complete_sale_failed);
     },
   });
 
@@ -229,7 +231,7 @@ export default function POSPage() {
     const currentQty = existingItem?.quantity || 0;
 
     if (currentQty >= product.available_quantity) {
-      toast.error(`Only ${product.available_quantity} units available`);
+      toast.error(t.pos.only_units_available.replace('{count}', String(product.available_quantity)));
       return;
     }
 
@@ -242,14 +244,14 @@ export default function POSPage() {
   }, [cart]);
 
   const handleCheckout = () => {
-    if (!user) return toast.error('Not authenticated');
-    if (cart.items.length === 0) return toast.error('Cart is empty');
+    if (!user) return toast.error(t.pos.not_authenticated);
+    if (cart.items.length === 0) return toast.error(t.pos.cart_is_empty_toast);
 
     const total = cart.getTotal();
     const paid = parseFloat(amountPaid) || 0;
 
     if (cart.payment_method !== 'partial' && paid < total) {
-      toast.error('Amount paid is less than the total');
+      toast.error(t.pos.amount_less_than_total);
       return;
     }
 
@@ -297,7 +299,7 @@ export default function POSPage() {
           <div className="flex-1">
             <Input
               ref={searchRef}
-              placeholder="Search product or scan barcode..."
+              placeholder={t.pos.search_product}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               leftIcon={<Search className="h-4 w-4" />}
@@ -305,7 +307,7 @@ export default function POSPage() {
           </div>
           <Select value={cart.warehouse_id} onValueChange={cart.setWarehouse}>
             <SelectTrigger className="w-48">
-              <SelectValue placeholder="Select warehouse" />
+              <SelectValue placeholder={t.pos.select_warehouse} />
             </SelectTrigger>
             <SelectContent>
               {warehouses.map((w: Warehouse) => (
@@ -327,7 +329,7 @@ export default function POSPage() {
             <div className="h-48 flex flex-col items-center justify-center text-muted-foreground gap-3">
               <Package className="h-12 w-12 opacity-30" />
               <p className="text-sm">
-                {searchQuery ? 'No products found' : 'Select a warehouse to see products'}
+                {searchQuery ? t.pos.no_products_found : t.pos.select_warehouse_prompt}
               </p>
             </div>
           ) : (
@@ -357,7 +359,7 @@ export default function POSPage() {
                   </p>
                   <div className="flex items-center justify-between mt-1">
                     <span className={`text-xs ${product.available_quantity <= 5 ? 'text-amber-500' : 'text-muted-foreground'}`}>
-                      {product.available_quantity} left
+                      {product.available_quantity} {t.pos.units_left}
                     </span>
                     {product.available_quantity <= 5 && (
                       <AlertCircle className="h-3 w-3 text-amber-500" />
@@ -376,7 +378,7 @@ export default function POSPage() {
         <div className="p-4 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ShoppingCart className="h-4 w-4" />
-            <span className="font-semibold">Cart</span>
+            <span className="font-semibold">{t.pos.cart}</span>
             {cart.items.length > 0 && (
               <Badge variant="secondary">{cart.items.length}</Badge>
             )}
@@ -398,8 +400,8 @@ export default function POSPage() {
           {cart.items.length === 0 ? (
             <div className="h-32 flex flex-col items-center justify-center text-muted-foreground">
               <ShoppingCart className="h-8 w-8 opacity-30 mb-2" />
-              <p className="text-sm">Cart is empty</p>
-              <p className="text-xs">Click products to add them</p>
+              <p className="text-sm">{t.pos.empty_cart}</p>
+              <p className="text-xs">{t.pos.click_products_to_add}</p>
             </div>
           ) : (
             cart.items.map((item: CartItem) => (
@@ -451,13 +453,13 @@ export default function POSPage() {
           {/* Customer */}
           <div className="grid grid-cols-2 gap-2">
             <Input
-              placeholder="Customer name"
+              placeholder={t.pos.customer_name_short}
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
               className="h-8 text-xs"
             />
             <Input
-              placeholder="Phone"
+              placeholder={t.pos.phone_short}
               value={customerPhone}
               onChange={(e) => setCustomerPhone(e.target.value)}
               className="h-8 text-xs"
@@ -473,41 +475,41 @@ export default function POSPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="cash">Cash</SelectItem>
-              <SelectItem value="transfer">Bank Transfer</SelectItem>
-              <SelectItem value="pos_terminal">POS Terminal</SelectItem>
-              <SelectItem value="split">Split Payment</SelectItem>
-              <SelectItem value="partial">Partial Payment</SelectItem>
+              <SelectItem value="cash">{t.pos.cash}</SelectItem>
+              <SelectItem value="transfer">{t.pos.bank_transfer}</SelectItem>
+              <SelectItem value="pos_terminal">{t.pos.pos_terminal}</SelectItem>
+              <SelectItem value="split">{t.pos.split}</SelectItem>
+              <SelectItem value="partial">{t.pos.partial}</SelectItem>
             </SelectContent>
           </Select>
 
           {/* Totals */}
           <div className="space-y-1 text-sm">
             <div className="flex justify-between text-muted-foreground">
-              <span>Subtotal</span>
+              <span>{t.pos.subtotal}</span>
               <span>{formatCurrency(cart.getSubtotal())}</span>
             </div>
             {cart.discount > 0 && (
               <div className="flex justify-between text-green-600">
-                <span>Discount ({cart.discount}%)</span>
+                <span>{t.pos.discount} ({cart.discount}%)</span>
                 <span>-{formatCurrency(cart.getDiscountAmount())}</span>
               </div>
             )}
             {cart.tax_rate > 0 && (
               <div className="flex justify-between text-muted-foreground">
-                <span>Tax ({cart.tax_rate}%)</span>
+                <span>{t.pos.tax} ({cart.tax_rate}%)</span>
                 <span>{formatCurrency(cart.getTaxAmount())}</span>
               </div>
             )}
             <div className="flex justify-between font-bold text-base border-t border-border pt-2">
-              <span>Total</span>
+              <span>{t.common.total}</span>
               <span className="text-primary">{formatCurrency(total)}</span>
             </div>
           </div>
 
           {/* Amount Paid */}
           <div className="space-y-1">
-            <Label className="text-xs">Amount Paid (₦)</Label>
+            <Label className="text-xs">{t.pos.amount_paid_currency}</Label>
             <Input
               type="number"
               value={amountPaid}
@@ -518,7 +520,7 @@ export default function POSPage() {
             {paid > 0 && paid >= total && (
               <p className="text-xs text-green-600 flex items-center gap-1">
                 <Check className="h-3 w-3" />
-                Change: {formatCurrency(change)}
+                {t.pos.change}: {formatCurrency(change)}
               </p>
             )}
           </div>
@@ -530,11 +532,11 @@ export default function POSPage() {
             disabled={cart.items.length === 0 || saleMutation.isPending}
           >
             {saleMutation.isPending ? (
-              <>Processing...</>
+              <>{t.pos.processing}</>
             ) : (
               <>
                 <CreditCard className="h-4 w-4 mr-2" />
-                Complete Sale
+                {t.pos.complete_sale}
               </>
             )}
           </Button>
@@ -549,9 +551,9 @@ export default function POSPage() {
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
                 <Check className="h-6 w-6 text-green-600" />
               </div>
-              <h3 className="font-bold text-lg">Sale Complete!</h3>
+              <h3 className="font-bold text-lg">{t.pos.sale_complete}</h3>
               <p className="text-sm text-muted-foreground">
-                Invoice: {String(lastSale.invoice_number)}
+                {t.pos.invoice_label}: {String(lastSale.invoice_number)}
               </p>
               <p className="text-2xl font-bold text-primary mt-2">
                 {formatCurrency(Number(lastSale.total))}
@@ -564,7 +566,7 @@ export default function POSPage() {
                 onClick={() => window.print()}
               >
                 <Printer className="h-4 w-4 mr-2" />
-                Print
+                {t.common.print}
               </Button>
               <Button
                 className="flex-1"
@@ -573,7 +575,7 @@ export default function POSPage() {
                   setLastSale(null);
                 }}
               >
-                New Sale
+                {t.pos.new_sale}
               </Button>
             </div>
           </div>
