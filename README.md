@@ -52,12 +52,20 @@ cp .env.example .env.local
 # Edit .env.local with your Supabase credentials
 
 # 4. Run Supabase migrations
-# In your Supabase dashboard → SQL Editor, run:
+# In your Supabase dashboard → SQL Editor, run in order:
 # supabase/migrations/001_initial_schema.sql
 # supabase/migrations/002_rls_policies.sql
-# supabase/seed/001_seed_data.sql
+# supabase/migrations/003_payment_and_improvements.sql
+# supabase/migrations/004_owner_payments_merchants.sql
+# supabase/migrations/005_add_missing_roles.sql
+# supabase/seed/001_seed_data.sql (optional demo data)
 
-# 5. Start development server
+# 5. Create demo Supabase Auth users matching the seed data
+# (required - the seed SQL only inserts profile rows, it does NOT
+# create real Auth accounts, so login will not work without this step)
+npm run setup:demo
+
+# 6. Start development server
 npm run dev
 ```
 
@@ -73,8 +81,26 @@ npm run dev
 -- Run in Supabase SQL Editor:
 -- 1. supabase/migrations/001_initial_schema.sql
 -- 2. supabase/migrations/002_rls_policies.sql
--- 3. supabase/seed/001_seed_data.sql (optional demo data)
+-- 3. supabase/migrations/003_payment_and_improvements.sql
+-- 4. supabase/migrations/004_owner_payments_merchants.sql
+-- 5. supabase/migrations/005_add_missing_roles.sql
+-- 6. supabase/seed/001_seed_data.sql (optional demo data)
 ```
+
+4. Create demo Supabase Auth users so the seeded demo profiles can
+   actually sign in (development/staging only - never run this
+   against a production database):
+
+```bash
+npm run setup:demo
+```
+
+This script (`scripts/setup-demo-users.ts`) uses the Supabase Admin
+API (`SUPABASE_SERVICE_ROLE_KEY`) to create confirmed Auth users for
+`superadmin@tradetrack.ng`, `admin@demo.com`, `manager@demo.com`, and
+`cashier@demo.com`, all with the password `demo1234`, and keeps their
+`users` table profile rows in sync. It is safe to re-run - existing
+users are detected and updated instead of duplicated.
 
 ### Environment Variables
 
@@ -87,16 +113,27 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 ## 👥 User Roles
 
+TradeTrack uses a 5-tier role hierarchy:
+`super_admin > owner > admin > manager > cashier`
+
 | Role | Permissions |
 |------|------------|
-| **Super Admin** | Full access: create users, manage subscriptions, view all data |
-| **Admin** | Manage products, inventory, sales, reports, vendors, warehouses |
+| **Super Admin** | Full platform access: create users, manage subscriptions, view all data across every organization |
+| **Owner** | Business owner: platform-wide merchant/revenue dashboard (`/admin`), merchant management (`/merchants`) |
+| **Admin** | Manage products, inventory, sales, reports, vendors, warehouses for their organization |
+| **Manager** | Day-to-day operational management: inventory, sales, reports (no user/billing management) |
 | **Cashier** | Create sales, view inventory, print receipts |
 
-### Demo Credentials
+### Demo Credentials (development only)
+
+Demo credentials are only ever displayed in the app when
+`NODE_ENV !== 'production'`, and only exist once you've run
+`npm run setup:demo` (see Database Setup above):
+
 ```
-Super Admin: superadmin@tradetrack.ng
+Super Admin: superadmin@tradetrack.ng / demo1234
 Admin:       admin@demo.com / demo1234
+Manager:     manager@demo.com / demo1234
 Cashier:     cashier@demo.com / demo1234
 ```
 
