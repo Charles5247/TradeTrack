@@ -79,8 +79,20 @@ interface DemoUser {
 
 // These UUIDs match supabase/seed/001_seed_data.sql exactly so the
 // Auth user's id lines up with the pre-existing profile row.
-// manager@demo.com is new (no manager existed in the original seed
-// data) and uses a fresh, non-conflicting UUID.
+// owner@demo.com and manager@demo.com are new (no owner/manager existed
+// in the original seed data) and use fresh, non-conflicting UUIDs.
+//
+// Role hierarchy (highest to lowest privilege):
+//   super_admin  - platform operator, sees /admin (Owner Dashboard) across
+//                  ALL merchants/organizations. organization_id is NULL.
+//   owner        - business owner for a single organization. Sees /admin
+//                  and /merchants for THEIR org, full settings access.
+//   admin        - organization administrator. Manages users, products,
+//                  inventory, settings for their org (no platform-wide view).
+//   manager       - store/warehouse manager. Manages inventory, transfers,
+//                  vendors, staff schedules, but not billing/org settings.
+//   cashier      - point-of-sale operator. Access limited to POS, sales
+//                  history, and their own profile.
 const DEMO_USERS: DemoUser[] = [
   {
     id: '22222222-2222-2222-2222-222222222222',
@@ -88,6 +100,13 @@ const DEMO_USERS: DemoUser[] = [
     full_name: 'Super Admin',
     role: 'super_admin',
     organization_id: null,
+  },
+  {
+    id: 'a6000000-0000-0000-0000-000000000001',
+    email: 'owner@demo.com',
+    full_name: 'Demo Owner',
+    role: 'owner',
+    organization_id: DEMO_ORG_ID,
   },
   {
     id: '33333333-3333-3333-3333-333333333333',

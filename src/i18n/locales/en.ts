@@ -62,6 +62,11 @@ export const en = {
     unexpected_error: 'An unexpected error occurred',
     demo_credentials_label: 'Demo Credentials:',
     copyright: 'TradeTrack. All rights reserved.',
+    role_super_admin: 'Super Admin',
+    role_owner: 'Owner',
+    role_admin: 'Admin',
+    role_manager: 'Manager',
+    role_cashier: 'Cashier',
   },
   nav: {
     dashboard: 'Dashboard',

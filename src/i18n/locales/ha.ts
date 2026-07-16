@@ -63,6 +63,11 @@ export const ha = {
     unexpected_error: 'An samu kuskure da ba a zata ba',
     demo_credentials_label: 'Bayanan Shiga Na Gwaji:',
     copyright: 'TradeTrack. Duk hakkoki an kiyaye su.',
+    role_super_admin: 'Babban Manaja',
+    role_owner: 'Mai Shago',
+    role_admin: 'Admin',
+    role_manager: 'Manaja',
+    role_cashier: 'Mai Karba Kuɗi',
   },
   nav: {
     dashboard: 'Allon dashboard',

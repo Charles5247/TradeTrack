@@ -13,9 +13,14 @@ INSERT INTO organizations (id, name, slug, currency, timezone, subscription_stat
   ('11111111-1111-1111-1111-111111111111', 'Demo Store', 'demo-store', 'NGN', 'Africa/Lagos', 'active');
 
 -- Demo Users (passwords set via Supabase Auth, these are profile records)
+-- NOTE: This INSERT only creates the profile rows. It does NOT create
+-- matching Supabase Auth accounts. Run `npm run setup:demo` after applying
+-- migrations to create working Auth logins for every role below.
 INSERT INTO users (id, email, full_name, role, status, organization_id) VALUES
   ('22222222-2222-2222-2222-222222222222', 'superadmin@tradetrack.ng', 'Super Admin', 'super_admin', 'active', NULL),
+  ('a6000000-0000-0000-0000-000000000001', 'owner@demo.com', 'Demo Owner', 'owner', 'active', '11111111-1111-1111-1111-111111111111'),
   ('33333333-3333-3333-3333-333333333333', 'admin@demo.com', 'Demo Admin', 'admin', 'active', '11111111-1111-1111-1111-111111111111'),
+  ('a5000000-0000-0000-0000-000000000001', 'manager@demo.com', 'Demo Manager', 'manager', 'active', '11111111-1111-1111-1111-111111111111'),
   ('44444444-4444-4444-4444-444444444444', 'cashier@demo.com', 'Demo Cashier', 'cashier', 'active', '11111111-1111-1111-1111-111111111111');
 
 -- Demo Warehouses

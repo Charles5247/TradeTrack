@@ -97,10 +97,11 @@ npm run setup:demo
 
 This script (`scripts/setup-demo-users.ts`) uses the Supabase Admin
 API (`SUPABASE_SERVICE_ROLE_KEY`) to create confirmed Auth users for
-`superadmin@tradetrack.ng`, `admin@demo.com`, `manager@demo.com`, and
-`cashier@demo.com`, all with the password `demo1234`, and keeps their
-`users` table profile rows in sync. It is safe to re-run - existing
-users are detected and updated instead of duplicated.
+all five roles — `superadmin@tradetrack.ng`, `owner@demo.com`,
+`admin@demo.com`, `manager@demo.com`, and `cashier@demo.com` — all with
+the password `demo1234`, and keeps their `users` table profile rows in
+sync. It is safe to re-run - existing users are detected and updated
+instead of duplicated.
 
 ### Environment Variables
 
@@ -128,10 +129,20 @@ TradeTrack uses a 5-tier role hierarchy:
 
 Demo credentials are only ever displayed in the app when
 `NODE_ENV !== 'production'`, and only exist once you've run
-`npm run setup:demo` (see Database Setup above):
+`npm run setup:demo` (see Database Setup above). Every one of the five
+roles has a working login:
+
+| Role | Email | Password | Organization |
+|------|-------|----------|--------------|
+| **Super Admin** | `superadmin@tradetrack.ng` | `demo1234` | None (platform-wide) |
+| **Owner** | `owner@demo.com` | `demo1234` | Demo Store |
+| **Admin** | `admin@demo.com` | `demo1234` | Demo Store |
+| **Manager** | `manager@demo.com` | `demo1234` | Demo Store |
+| **Cashier** | `cashier@demo.com` | `demo1234` | Demo Store |
 
 ```
 Super Admin: superadmin@tradetrack.ng / demo1234
+Owner:       owner@demo.com / demo1234
 Admin:       admin@demo.com / demo1234
 Manager:     manager@demo.com / demo1234
 Cashier:     cashier@demo.com / demo1234
