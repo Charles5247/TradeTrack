@@ -151,7 +151,8 @@ export default function AdminPage() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   // ── Access guard ─────────────────────────────────────────────────────────
-  const isOwnerOrAdmin = (user?.role as string) === 'owner' || user?.role === 'super_admin' || user?.role === 'admin';
+  // Platform super_admin AND org owners can view this dashboard (5-tier RBAC).
+  const isOwnerOrAdmin = user?.role === 'super_admin' || user?.role === 'owner';
 
   // ── Merchants query ───────────────────────────────────────────────────────
   const { data: merchants, isLoading: merchantsLoading } = useQuery({

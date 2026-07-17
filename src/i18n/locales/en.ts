@@ -85,6 +85,16 @@ export const en = {
     subscriptions: 'Subscriptions',
     admin: 'Owner Dashboard',
     merchants: 'Merchants',
+    platform: 'Platform',
+  },
+  app: {
+    name: 'TradeTrack',
+    tagline: 'POS & Inventory',
+    search_placeholder: 'Search products, sales, invoices...',
+    demo_credentials: 'Demo Credentials',
+    demo_admin: 'Admin',
+    demo_cashier: 'Cashier',
+    demo_super_admin: 'Platform Owner',
   },
   dashboard: {
     greeting: 'Good {time}, {name}',
@@ -114,6 +124,10 @@ export const en = {
     quick_actions_desc: 'Common tasks for today',
     new_sale: 'New Sale',
     stock_in: 'Stock In',
+    transfer: 'Transfer',
+    view_reports: 'Reports',
+    no_transactions: 'No recent transactions',
+    transactions: 'transactions',
   },
   products: {
     title: 'Products',

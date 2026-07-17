@@ -22,36 +22,41 @@ import {
   ChevronRight,
   Store,
   Building2,
+  Shield,
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
-import { useUIStore, useAuthStore, useOrgStore } from '@/store';
+import { useUIStore, useAuthStore } from '@/store';
 import { Badge } from '@/components/ui/badge';
 import { useI18n } from '@/i18n';
+import { useOrganization } from '@/components/shared/organization-provider';
+import type { UserRole } from '@/types';
 
 interface NavItem {
   navKey: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   badge?: number;
-  roles?: string[];
+  roles?: UserRole[];
+  /** Platform-level routes intended for org owners / platform super_admin (not regular admin/manager/cashier) */
+  platformOnly?: boolean;
 }
 
 const navItems: NavItem[] = [
   { navKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { navKey: 'products', href: '/products', icon: Package, roles: ['super_admin', 'admin'] },
-  { navKey: 'inventory', href: '/inventory', icon: Warehouse, roles: ['super_admin', 'admin'] },
+  { navKey: 'products', href: '/products', icon: Package, roles: ['super_admin', 'owner', 'admin'] },
+  { navKey: 'inventory', href: '/inventory', icon: Warehouse, roles: ['super_admin', 'owner', 'admin'] },
   { navKey: 'pos', href: '/pos', icon: ShoppingCart },
-  { navKey: 'sales', href: '/sales', icon: History, roles: ['super_admin', 'admin'] },
-  { navKey: 'warehouses', href: '/warehouses', icon: Warehouse, roles: ['super_admin', 'admin'] },
-  { navKey: 'transfers', href: '/transfers', icon: ArrowLeftRight, roles: ['super_admin', 'admin'] },
-  { navKey: 'vendors', href: '/vendors', icon: UserCheck, roles: ['super_admin', 'admin'] },
-  { navKey: 'reports', href: '/reports', icon: BarChart3, roles: ['super_admin', 'admin'] },
-  { navKey: 'audit', href: '/audit', icon: ClipboardList, roles: ['super_admin', 'admin'] },
+  { navKey: 'sales', href: '/sales', icon: History, roles: ['super_admin', 'owner', 'admin'] },
+  { navKey: 'warehouses', href: '/warehouses', icon: Warehouse, roles: ['super_admin', 'owner', 'admin'] },
+  { navKey: 'transfers', href: '/transfers', icon: ArrowLeftRight, roles: ['super_admin', 'owner', 'admin'] },
+  { navKey: 'vendors', href: '/vendors', icon: UserCheck, roles: ['super_admin', 'owner', 'admin'] },
+  { navKey: 'reports', href: '/reports', icon: BarChart3, roles: ['super_admin', 'owner', 'admin'] },
+  { navKey: 'audit', href: '/audit', icon: ClipboardList, roles: ['super_admin', 'owner', 'admin'] },
   { navKey: 'notifications', href: '/notifications', icon: Bell },
-  { navKey: 'users', href: '/users', icon: Users, roles: ['super_admin'] },
-  { navKey: 'subscriptions', href: '/subscriptions', icon: CreditCard, roles: ['super_admin'] },
-  { navKey: 'admin', href: '/admin', icon: LayoutDashboard, roles: ['super_admin', 'admin', 'owner'] },
-  { navKey: 'merchants', href: '/merchants', icon: Building2, roles: ['super_admin', 'admin', 'owner'] },
+  { navKey: 'users', href: '/users', icon: Users, roles: ['super_admin', 'owner'] },
+  { navKey: 'subscriptions', href: '/subscriptions', icon: CreditCard, roles: ['super_admin', 'owner'] },
+  { navKey: 'admin', href: '/admin', icon: Shield, roles: ['super_admin', 'owner'], platformOnly: true },
+  { navKey: 'merchants', href: '/merchants', icon: Building2, roles: ['super_admin', 'owner'], platformOnly: true },
   { navKey: 'settings', href: '/settings', icon: Settings },
 ];
 
@@ -59,13 +64,16 @@ export function Sidebar() {
   const pathname = usePathname();
   const { sidebarOpen, setSidebarOpen } = useUIStore();
   const { user } = useAuthStore();
-  const { organizationName } = useOrgStore();
+  const { organization } = useOrganization();
   const { t } = useI18n();
+
+  const orgLabel =
+    organization?.name ?? (user?.role === 'super_admin' ? 'TradeTrack Platform' : t.app.name);
 
   const filteredItems = navItems.filter((item) => {
     if (!item.roles) return true;
     if (!user) return false;
-    return item.roles.includes(user.role);
+    return item.roles.includes(user.role as UserRole);
   });
 
   return (
@@ -96,8 +104,8 @@ export function Sidebar() {
             </div>
             {sidebarOpen && (
               <div className="min-w-0">
-                <p className="font-bold text-sm leading-none truncate">{organizationName || 'TradeTrack'}</p>
-                <p className="text-xs text-muted-foreground truncate">POS & Inventory</p>
+                <p className="font-bold text-sm leading-none truncate">{t.app.name}</p>
+                <p className="text-xs text-muted-foreground truncate">{t.app.tagline}</p>
               </div>
             )}
           </div>
@@ -107,6 +115,7 @@ export function Sidebar() {
               'ml-auto p-1 rounded-md hover:bg-accent transition-colors shrink-0',
               !sidebarOpen && 'mx-auto'
             )}
+            aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
           >
             {sidebarOpen ? (
               <ChevronLeft className="h-4 w-4" />
@@ -122,7 +131,7 @@ export function Sidebar() {
             <div className="flex items-center gap-2">
               <Store className="h-4 w-4 text-muted-foreground shrink-0" />
               <span className="text-xs font-medium text-muted-foreground truncate">
-                Demo Store
+                {orgLabel}
               </span>
             </div>
           </div>

@@ -86,6 +86,16 @@ export const ha = {
     subscriptions: 'Biyan kuɗi',
     admin: 'Allon Mai Gida',
     merchants: 'Yan Kasuwa',
+    platform: 'Dandali',
+  },
+  app: {
+    name: 'TradeTrack',
+    tagline: 'POS & Adadin kaya',
+    search_placeholder: 'Nemo kaya, siyarwa, takardun biya...',
+    demo_credentials: 'Bayanan demo',
+    demo_admin: 'Admin',
+    demo_cashier: 'Cashier',
+    demo_super_admin: 'Mai dandali',
   },
   dashboard: {
     greeting: 'Ina kwana {time}, {name}',
@@ -115,6 +125,10 @@ export const ha = {
     quick_actions_desc: 'Ayyukan yau da kullum na yau',
     new_sale: 'Sabon Siyarwa',
     stock_in: 'Shigar da Kaya',
+    transfer: 'Canja wuri',
+    view_reports: 'Rahotanni',
+    no_transactions: 'Babu siyarwar kwanan nan',
+    transactions: 'siyarwa',
   },
   products: {
     title: 'Kaya',

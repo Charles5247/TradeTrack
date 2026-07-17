@@ -42,7 +42,6 @@ export function Header() {
   const { syncStatus } = useSyncStore();
   const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState('');
-  // Reactive online status (not static navigator.onLine)
   const isOnline = useOnlineStatus();
 
   const handleSearch = (e: React.FormEvent) => {
@@ -56,7 +55,6 @@ export function Header() {
     try {
       const { createClient } = await import('@/lib/supabase/client');
       const supabase = createClient();
-      // Clear offline cache
       if (user?.id) {
         await clearCachedSession(user.id);
       }
@@ -71,17 +69,16 @@ export function Header() {
 
   return (
     <header className="h-16 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center gap-4 px-4 lg:px-6 shrink-0">
-      {/* Mobile menu toggle */}
       <Button
         variant="ghost"
         size="icon"
         className="lg:hidden"
         onClick={toggleSidebar}
+        aria-label="Toggle menu"
       >
         <Menu className="h-5 w-5" />
       </Button>
 
-      {/* Search */}
       <form onSubmit={handleSearch} className="flex-1 max-w-md">
         <Input
           type="search"
@@ -94,7 +91,6 @@ export function Header() {
       </form>
 
       <div className="ml-auto flex items-center gap-2">
-        {/* Online/Offline Status — reactive */}
         <div
           className={cn(
             'hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-colors',
@@ -112,14 +108,12 @@ export function Header() {
           <span>{isOnline ? t.header.online : t.header.offline}</span>
         </div>
 
-        {/* Sync Status */}
         {syncStatus === 'syncing' && (
           <Button variant="ghost" size="icon-sm" className="text-muted-foreground" title={t.header.syncing}>
             <RefreshCw className="h-4 w-4 animate-spin" />
           </Button>
         )}
 
-        {/* Theme toggle */}
         <Button
           variant="ghost"
           size="icon"
@@ -131,7 +125,6 @@ export function Header() {
           <span className="sr-only">{t.header.toggle_theme}</span>
         </Button>
 
-        {/* Notifications */}
         <Button
           variant="ghost"
           size="icon"
@@ -150,7 +143,6 @@ export function Header() {
           )}
         </Button>
 
-        {/* User menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full">
@@ -169,7 +161,6 @@ export function Header() {
                 <p className="text-xs text-muted-foreground capitalize">
                   {user?.role?.replace('_', ' ')}
                 </p>
-                {/* Offline indicator in user menu */}
                 {!isOnline && (
                   <p className="text-xs text-amber-600 flex items-center gap-1 mt-1">
                     <WifiOff className="h-3 w-3" />

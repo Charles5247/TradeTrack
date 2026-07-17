@@ -3,6 +3,25 @@
  */
 
 /**
+ * In-memory org currency, settable synchronously by whichever provider
+ * loads the organization first (OrganizationProvider on dashboard mount,
+ * or AuthProvider/Settings via useOrgStore). Consulted by getOrgCurrency()
+ * before falling back to the persisted useOrgStore value in localStorage.
+ */
+let appCurrency = 'NGN';
+let appCurrencyExplicitlySet = false;
+
+/** Set org currency (e.g. from OrganizationProvider) so formatCurrency() reflects it immediately. */
+export function setAppCurrency(currency: string): void {
+  appCurrency = currency || 'NGN';
+  appCurrencyExplicitlySet = true;
+}
+
+export function getAppCurrency(): string {
+  return appCurrency;
+}
+
+/**
  * Locale to use per currency code, so amounts render with the
  * correct symbol/placement/grouping for that currency rather than
  * always using Nigerian locale conventions.
@@ -24,9 +43,10 @@ const CURRENCY_LOCALES: Record<string, string> = {
 /**
  * Format currency using the organization's configured currency by default.
  * Pass an explicit `currency` (ISO 4217 code, e.g. 'USD', 'GHS') to override.
- * When no currency is passed, falls back to the organization's currency
- * stored in useOrgStore (read via getOrgCurrency at call time), or 'NGN'
- * if unavailable (e.g. server-side rendering).
+ * When no currency is passed, resolves in this order:
+ *   1. In-memory appCurrency, if explicitly set via setAppCurrency()
+ *   2. The persisted useOrgStore value in localStorage
+ *   3. 'NGN' (default / SSR fallback)
  */
 export function formatCurrency(amount: number, currency?: string): string {
   const resolvedCurrency = currency || getOrgCurrency();
@@ -50,11 +70,14 @@ export function formatCurrency(amount: number, currency?: string): string {
 }
 
 /**
- * Reads the organization's configured currency directly from the
- * persisted Zustand store (client-side only). Falls back to 'NGN'
- * during SSR or before the store has hydrated.
+ * Resolves the organization's configured currency. Prefers the in-memory
+ * appCurrency (set synchronously via setAppCurrency, e.g. by
+ * OrganizationProvider) when available, otherwise reads the persisted
+ * Zustand useOrgStore value directly from localStorage (client-side only).
+ * Falls back to 'NGN' during SSR or before either source has hydrated.
  */
 function getOrgCurrency(): string {
+  if (appCurrencyExplicitlySet) return appCurrency;
   if (typeof window === 'undefined') return 'NGN';
   try {
     const raw = localStorage.getItem('tradetrack-org');
