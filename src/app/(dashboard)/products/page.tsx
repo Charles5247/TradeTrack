@@ -25,6 +25,7 @@ import { formatCurrency, formatDate } from '@/lib/utils/format';
 import type { Product } from '@/types';
 import { ProductForm } from '@/components/products/product-form';
 import { createAuditEntry } from '@/lib/utils/client-audit';
+import { useI18n } from '@/i18n';
 
 async function fetchProducts(search?: string, categoryId?: string) {
   const supabase = createClient();
@@ -59,6 +60,7 @@ async function deleteProduct(id: string) {
 }
 
 export default function ProductsPage() {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -80,13 +82,13 @@ export default function ProductsPage() {
     mutationFn: deleteProduct,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
-      toast.success('Product deleted successfully');
+      toast.success(t.products.deleted_success);
     },
-    onError: () => toast.error('Failed to delete product'),
+    onError: () => toast.error(t.products.delete_failed),
   });
 
   const handleDelete = (product: Product) => {
-    if (confirm(`Delete "${product.name}"? This action cannot be undone.`)) {
+    if (confirm(t.products.delete_confirm.replace('{name}', product.name))) {
       deleteMutation.mutate(product.id);
     }
   };
@@ -105,14 +107,14 @@ export default function ProductsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Products</h1>
+          <h1 className="text-2xl font-bold">{t.products.title}</h1>
           <p className="text-muted-foreground text-sm">
-            Manage your product catalogue ({products.length} products)
+            {t.products.subtitle.replace('{count}', String(products.length))}
           </p>
         </div>
         <Button onClick={() => { setEditProduct(null); setIsFormOpen(true); }}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Product
+          {t.products.add_product}
         </Button>
       </div>
 
@@ -122,7 +124,7 @@ export default function ProductsPage() {
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1">
               <Input
-                placeholder="Search by name, SKU, or barcode..."
+                placeholder={t.products.search_placeholder}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 leftIcon={<Search className="h-4 w-4" />}
@@ -130,10 +132,10 @@ export default function ProductsPage() {
             </div>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="All Categories" />
+                <SelectValue placeholder={t.products.all_categories} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="all">{t.products.all_categories}</SelectItem>
                 {categories.map((cat: { id: string; name: string }) => (
                   <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                 ))}
@@ -149,14 +151,14 @@ export default function ProductsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-16">Image</TableHead>
-                <TableHead>Product</TableHead>
-                <TableHead>SKU</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Cost Price</TableHead>
-                <TableHead>Selling Price</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="w-16">{t.products.image}</TableHead>
+                <TableHead>{t.products.product_name}</TableHead>
+                <TableHead>{t.products.sku}</TableHead>
+                <TableHead>{t.products.category}</TableHead>
+                <TableHead>{t.products.cost_price}</TableHead>
+                <TableHead>{t.products.selling_price}</TableHead>
+                <TableHead>{t.products.product_status}</TableHead>
+                <TableHead className="text-right">{t.common.actions}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -173,9 +175,9 @@ export default function ProductsPage() {
                   <TableCell colSpan={8} className="h-32 text-center">
                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
                       <Package className="h-8 w-8" />
-                      <p>No products found</p>
+                      <p>{t.products.no_products}</p>
                       <Button variant="outline" size="sm" onClick={() => setIsFormOpen(true)}>
-                        Add your first product
+                        {t.products.add_first_product}
                       </Button>
                     </div>
                   </TableCell>
@@ -230,16 +232,16 @@ export default function ProductsPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => setViewProduct(product)}>
-                            <Eye className="h-4 w-4 mr-2" /> View Details
+                            <Eye className="h-4 w-4 mr-2" /> {t.products.view_details}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => { setEditProduct(product); setIsFormOpen(true); }}>
-                            <Edit className="h-4 w-4 mr-2" /> Edit
+                            <Edit className="h-4 w-4 mr-2" /> {t.products.edit}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-destructive focus:text-destructive"
                             onClick={() => handleDelete(product)}
                           >
-                            <Trash2 className="h-4 w-4 mr-2" /> Delete
+                            <Trash2 className="h-4 w-4 mr-2" /> {t.products.delete}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -256,7 +258,7 @@ export default function ProductsPage() {
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
+            <DialogTitle>{editProduct ? t.products.edit_product : t.products.add_product}</DialogTitle>
           </DialogHeader>
           <ProductForm
             product={editProduct}
@@ -279,7 +281,7 @@ export default function ProductsPage() {
         <Dialog open={!!viewProduct} onOpenChange={() => setViewProduct(null)}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Product Details</DialogTitle>
+              <DialogTitle>{t.products.product_details}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="flex gap-4">
@@ -297,18 +299,18 @@ export default function ProductsPage() {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <div><span className="text-muted-foreground">SKU:</span> <span className="font-medium">{viewProduct.sku}</span></div>
-                <div><span className="text-muted-foreground">Barcode:</span> <span className="font-medium">{viewProduct.barcode || '—'}</span></div>
-                <div><span className="text-muted-foreground">Cost:</span> <span className="font-medium">{formatCurrency(viewProduct.cost_price)}</span></div>
-                <div><span className="text-muted-foreground">Price:</span> <span className="font-semibold text-green-600">{formatCurrency(viewProduct.selling_price)}</span></div>
-                <div><span className="text-muted-foreground">Margin:</span> <span className="font-medium">
+                <div><span className="text-muted-foreground">{t.products.sku}:</span> <span className="font-medium">{viewProduct.sku}</span></div>
+                <div><span className="text-muted-foreground">{t.products.barcode}:</span> <span className="font-medium">{viewProduct.barcode || '—'}</span></div>
+                <div><span className="text-muted-foreground">{t.products.cost_price}:</span> <span className="font-medium">{formatCurrency(viewProduct.cost_price)}</span></div>
+                <div><span className="text-muted-foreground">{t.products.selling_price}:</span> <span className="font-semibold text-green-600">{formatCurrency(viewProduct.selling_price)}</span></div>
+                <div><span className="text-muted-foreground">{t.products.margin}:</span> <span className="font-medium">
                   {viewProduct.selling_price > 0 ? Math.round(((viewProduct.selling_price - viewProduct.cost_price) / viewProduct.selling_price) * 100) : 0}%
                 </span></div>
-                <div><span className="text-muted-foreground">Added:</span> <span className="font-medium">{formatDate(viewProduct.created_at)}</span></div>
+                <div><span className="text-muted-foreground">{t.products.added}:</span> <span className="font-medium">{formatDate(viewProduct.created_at)}</span></div>
               </div>
               {viewProduct.description && (
                 <div>
-                  <p className="text-sm text-muted-foreground">Description</p>
+                  <p className="text-sm text-muted-foreground">{t.products.description}</p>
                   <p className="text-sm mt-1">{viewProduct.description}</p>
                 </div>
               )}

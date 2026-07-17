@@ -18,6 +18,7 @@ import { createClient } from '@/lib/supabase/client';
 import { formatCurrency, formatDateTime } from '@/lib/utils/format';
 import { useAuthStore } from '@/store';
 import type { Warehouse } from '@/types';
+import { useI18n } from '@/i18n';
 
 async function fetchInventory(warehouseId: string, filter: string, search: string) {
   const supabase = createClient();
@@ -115,6 +116,7 @@ async function adjustStock(payload: {
 }
 
 export default function InventoryPage() {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const [warehouseFilter, setWarehouseFilter] = useState('all');
@@ -147,16 +149,16 @@ export default function InventoryPage() {
       setAdjustDialog(null);
       setAdjustQty('');
       setAdjustNotes('');
-      toast.success('Stock adjusted successfully');
+      toast.success(t.inventory.adjusted_success);
     },
-    onError: () => toast.error('Failed to adjust stock'),
+    onError: () => toast.error(t.inventory.adjust_failed),
   });
 
   const handleAdjust = () => {
     if (!adjustDialog || !user) return;
     const qty = parseInt(adjustQty);
     if (isNaN(qty) || qty <= 0) {
-      toast.error('Please enter a valid quantity');
+      toast.error(t.inventory.invalid_quantity);
       return;
     }
     const change = adjustType === 'out' ? -qty : qty;
@@ -174,9 +176,9 @@ export default function InventoryPage() {
   };
 
   const getStockBadge = (qty: number, min: number) => {
-    if (qty === 0) return <Badge variant="destructive">Out of Stock</Badge>;
-    if (qty <= min) return <Badge variant="warning">Low Stock</Badge>;
-    return <Badge variant="success">In Stock</Badge>;
+    if (qty === 0) return <Badge variant="destructive">{t.inventory.out_of_stock}</Badge>;
+    if (qty <= min) return <Badge variant="warning">{t.inventory.low_stock}</Badge>;
+    return <Badge variant="success">{t.inventory.in_stock}</Badge>;
   };
 
   const stats = {
@@ -190,8 +192,8 @@ export default function InventoryPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Inventory</h1>
-          <p className="text-muted-foreground text-sm">Track stock levels across all warehouses</p>
+          <h1 className="text-2xl font-bold">{t.inventory.title}</h1>
+          <p className="text-muted-foreground text-sm">{t.inventory.subtitle}</p>
         </div>
       </div>
 
@@ -201,7 +203,7 @@ export default function InventoryPage() {
           <CardContent className="p-4 flex items-center gap-3">
             <Package className="h-8 w-8 text-blue-600 bg-blue-100 dark:bg-blue-900/30 rounded-lg p-1.5" />
             <div>
-              <p className="text-sm text-muted-foreground">Total Items</p>
+              <p className="text-sm text-muted-foreground">{t.inventory.total_items}</p>
               <p className="text-2xl font-bold">{stats.total}</p>
             </div>
           </CardContent>
@@ -210,7 +212,7 @@ export default function InventoryPage() {
           <CardContent className="p-4 flex items-center gap-3">
             <TrendingUp className="h-8 w-8 text-green-600 bg-green-100 dark:bg-green-900/30 rounded-lg p-1.5" />
             <div>
-              <p className="text-sm text-muted-foreground">In Stock</p>
+              <p className="text-sm text-muted-foreground">{t.inventory.in_stock}</p>
               <p className="text-2xl font-bold text-green-600">{stats.inStock}</p>
             </div>
           </CardContent>
@@ -219,7 +221,7 @@ export default function InventoryPage() {
           <CardContent className="p-4 flex items-center gap-3">
             <AlertTriangle className="h-8 w-8 text-amber-600 bg-amber-100 dark:bg-amber-900/30 rounded-lg p-1.5" />
             <div>
-              <p className="text-sm text-muted-foreground">Low Stock</p>
+              <p className="text-sm text-muted-foreground">{t.inventory.low_stock}</p>
               <p className="text-2xl font-bold text-amber-600">{stats.low}</p>
             </div>
           </CardContent>
@@ -228,7 +230,7 @@ export default function InventoryPage() {
           <CardContent className="p-4 flex items-center gap-3">
             <XCircle className="h-8 w-8 text-red-600 bg-red-100 dark:bg-red-900/30 rounded-lg p-1.5" />
             <div>
-              <p className="text-sm text-muted-foreground">Out of Stock</p>
+              <p className="text-sm text-muted-foreground">{t.inventory.out_of_stock}</p>
               <p className="text-2xl font-bold text-red-600">{stats.out}</p>
             </div>
           </CardContent>
@@ -238,17 +240,17 @@ export default function InventoryPage() {
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
         <Input
-          placeholder="Search product..."
+          placeholder={t.inventory.search_placeholder}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-60"
         />
         <Select value={warehouseFilter} onValueChange={setWarehouseFilter}>
           <SelectTrigger className="w-48">
-            <SelectValue placeholder="All Warehouses" />
+            <SelectValue placeholder={t.inventory.all_warehouses} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Warehouses</SelectItem>
+            <SelectItem value="all">{t.inventory.all_warehouses}</SelectItem>
             {warehouses.map((w: Warehouse) => (
               <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
             ))}
@@ -256,12 +258,12 @@ export default function InventoryPage() {
         </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="All Stock" />
+            <SelectValue placeholder={t.inventory.all_stock} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Stock</SelectItem>
-            <SelectItem value="low">Low Stock</SelectItem>
-            <SelectItem value="out">Out of Stock</SelectItem>
+            <SelectItem value="all">{t.inventory.all_stock}</SelectItem>
+            <SelectItem value="low">{t.inventory.low_stock}</SelectItem>
+            <SelectItem value="out">{t.inventory.out_of_stock}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -272,14 +274,14 @@ export default function InventoryPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>SKU</TableHead>
-                <TableHead>Warehouse</TableHead>
-                <TableHead>Quantity</TableHead>
-                <TableHead>Min Stock</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Last Updated</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t.inventory.product}</TableHead>
+                <TableHead>{t.inventory.sku}</TableHead>
+                <TableHead>{t.inventory.warehouse}</TableHead>
+                <TableHead>{t.inventory.quantity}</TableHead>
+                <TableHead>{t.inventory.min_stock}</TableHead>
+                <TableHead>{t.common.status}</TableHead>
+                <TableHead>{t.inventory.last_updated}</TableHead>
+                <TableHead className="text-right">{t.common.actions}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -294,7 +296,7 @@ export default function InventoryPage() {
               ) : inventory.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
-                    No inventory records found
+                    {t.inventory.no_inventory}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -326,7 +328,7 @@ export default function InventoryPage() {
                             className="h-7 text-xs text-green-600 border-green-200"
                             onClick={() => { setAdjustDialog(item); setAdjustType('in'); }}
                           >
-                            <TrendingUp className="h-3 w-3 mr-1" /> Stock In
+                            <TrendingUp className="h-3 w-3 mr-1" /> {t.inventory.stock_in}
                           </Button>
                           <Button
                             variant="outline"
@@ -334,7 +336,7 @@ export default function InventoryPage() {
                             className="h-7 text-xs text-red-600 border-red-200"
                             onClick={() => { setAdjustDialog(item); setAdjustType('out'); }}
                           >
-                            <TrendingDown className="h-3 w-3 mr-1" /> Out
+                            <TrendingDown className="h-3 w-3 mr-1" /> {t.inventory.stock_out}
                           </Button>
                         </div>
                       </TableCell>
@@ -352,65 +354,65 @@ export default function InventoryPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {adjustType === 'in' ? 'Stock In' : adjustType === 'out' ? 'Stock Out' : 'Adjust Stock'}
+              {adjustType === 'in' ? t.inventory.stock_in : adjustType === 'out' ? t.inventory.stock_out : t.inventory.adjust_stock}
             </DialogTitle>
           </DialogHeader>
           {adjustDialog && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Product: <span className="font-medium text-foreground">
+                {t.inventory.product_label} <span className="font-medium text-foreground">
                   {(adjustDialog.product as {name: string} | null)?.name}
                 </span>
               </p>
               <p className="text-sm text-muted-foreground">
-                Current Stock: <span className="font-medium text-foreground">{String(adjustDialog.quantity)}</span>
+                {t.inventory.current_stock_label} <span className="font-medium text-foreground">{String(adjustDialog.quantity)}</span>
               </p>
               <div className="space-y-2">
-                <Label>Movement Type</Label>
+                <Label>{t.inventory.movement_type}</Label>
                 <Select value={adjustType} onValueChange={(v) => setAdjustType(v as typeof adjustType)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="in">Stock In (+)</SelectItem>
-                    <SelectItem value="out">Stock Out (-)</SelectItem>
-                    <SelectItem value="adjustment">Manual Adjustment</SelectItem>
+                    <SelectItem value="in">{t.inventory.stock_in_plus}</SelectItem>
+                    <SelectItem value="out">{t.inventory.stock_out_minus}</SelectItem>
+                    <SelectItem value="adjustment">{t.inventory.manual_adjustment}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Quantity *</Label>
+                <Label>{t.inventory.quantity_required}</Label>
                 <Input
                   type="number"
                   min="1"
                   value={adjustQty}
                   onChange={(e) => setAdjustQty(e.target.value)}
-                  placeholder="Enter quantity"
+                  placeholder={t.inventory.enter_quantity}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Reason (required for audit)</Label>
+                <Label>{t.inventory.reason_required}</Label>
                 <Input
                   value={adjustReason}
                   onChange={(e) => setAdjustReason(e.target.value)}
-                  placeholder="e.g., New delivery, damaged goods"
+                  placeholder={t.inventory.reason_placeholder}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Notes</Label>
+                <Label>{t.common.notes}</Label>
                 <Textarea
                   value={adjustNotes}
                   onChange={(e) => setAdjustNotes(e.target.value)}
                   rows={2}
-                  placeholder="Additional notes..."
+                  placeholder={t.inventory.notes_placeholder}
                 />
               </div>
               <div className="flex gap-3">
                 <Button variant="outline" className="flex-1" onClick={() => setAdjustDialog(null)}>
-                  Cancel
+                  {t.common.cancel}
                 </Button>
                 <Button className="flex-1" onClick={handleAdjust} disabled={adjustMutation.isPending}>
-                  Confirm Adjustment
+                  {t.inventory.confirm_adjustment}
                 </Button>
               </div>
             </div>
