@@ -9,7 +9,10 @@
     "lint": "eslint",
     "setup:demo": "tsx scripts/setup-demo-users.ts",
     "verify:env": "tsx scripts/verify-env.ts",
-    "deploy:check": "bash deploy-check.sh"
+    "deploy:check": "bash deploy-check.sh",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui"
   },
   "dependencies": {
     "@hookform/error-message": "^2.0.1",
@@ -65,10 +68,12 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/ui": "^4.1.10",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",
     "tsx": "^4.23.1",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.10"
   }
 }

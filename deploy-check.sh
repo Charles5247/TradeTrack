@@ -7,7 +7,7 @@
 # early.
 #
 # Usage:
-#   ./deploy-check.sh          # full check: env + typecheck + lint + build
+#   ./deploy-check.sh                # full check: env + typecheck + lint + tests + build
 #   ./deploy-check.sh --skip-build   # skip the (slow) production build step
 #
 # Exits non-zero on the first failing step.
@@ -41,11 +41,14 @@ npx tsx scripts/verify-env.ts || fail "environment verification"
 step "2/4  Type-checking (tsc --noEmit)"
 npx tsc --noEmit || fail "TypeScript type-check"
 
-step "3/4  Linting"
+step "3/5  Linting"
 npm run lint || fail "ESLint"
 
+step "4/5  Running test suite"
+npm run test || fail "vitest test suite"
+
 if [ "$SKIP_BUILD" = false ]; then
-  step "4/4  Production build"
+  step "5/5  Production build"
   npm run build || fail "production build"
 else
   echo ""

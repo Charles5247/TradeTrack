@@ -286,6 +286,23 @@ TradeTrack is also an installable **Progressive Web App**:
 
 Change language in **Settings → Appearance → Language**
 
+## 🧪 Testing
+
+Unit tests use [Vitest](https://vitest.dev) and cover pure business/formatting
+logic — currency/date/phone formatting, invoice number generation, and every
+Zod validation schema (including role-enum regression coverage for the
+owner/manager role-gap fix).
+
+```bash
+npm run test        # run once (CI mode)
+npm run test:watch  # watch mode for local development
+npm run test:ui     # interactive Vitest UI
+```
+
+Test files live alongside the code they test, in `__tests__/` subfolders
+(e.g. `src/lib/utils/__tests__/format.test.ts`). `npm run deploy:check` runs
+the full suite as part of the pre-deployment gate.
+
 ## 🔒 Security
 
 - Row Level Security (RLS) on all tables

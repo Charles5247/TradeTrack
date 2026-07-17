@@ -23,7 +23,7 @@ export const resetPasswordSchema = z.object({
 export const createUserSchema = z.object({
   email: z.string().email('Invalid email address'),
   full_name: z.string().min(2, 'Name must be at least 2 characters'),
-  role: z.enum(['super_admin', 'admin', 'cashier']),
+  role: z.enum(['super_admin', 'owner', 'admin', 'manager', 'cashier']),
   phone: z.string().optional(),
   organization_id: z.string().uuid().optional(),
   password: z.string().min(8, 'Password must be at least 8 characters'),
@@ -33,7 +33,7 @@ export const updateUserSchema = z.object({
   full_name: z.string().min(2).optional(),
   phone: z.string().optional(),
   status: z.enum(['active', 'suspended', 'inactive']).optional(),
-  role: z.enum(['super_admin', 'admin', 'cashier']).optional(),
+  role: z.enum(['super_admin', 'owner', 'admin', 'manager', 'cashier']).optional(),
 });
 
 // ── Products ──────────────────────────────────────────────────
