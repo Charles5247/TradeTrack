@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { createClient } from '@/lib/supabase/client';
 import { formatDateTime } from '@/lib/utils/format';
 import type { AuditLog } from '@/types';
+import { useI18n } from '@/i18n';
 
 async function fetchAuditLogs(search: string, resourceType: string, startDate: string, endDate: string) {
   const supabase = createClient();
@@ -52,6 +53,7 @@ const actionColors: Record<string, string> = {
 };
 
 export default function AuditPage() {
+  const { t } = useI18n();
   const [search, setSearch] = useState('');
   const [resourceType, setResourceType] = useState('all');
   const [startDate, setStartDate] = useState('');
@@ -86,14 +88,14 @@ export default function AuditPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Audit Trail</h1>
+          <h1 className="text-2xl font-bold">{t.audit.title}</h1>
           <p className="text-muted-foreground text-sm">
-            Complete immutable history of all system changes
+            {t.audit.subtitle}
           </p>
         </div>
         <Button variant="outline" onClick={exportLogs}>
           <Download className="h-4 w-4 mr-2" />
-          Export CSV
+          {t.audit.export_csv}
         </Button>
       </div>
 
@@ -102,7 +104,7 @@ export default function AuditPage() {
         <CardContent className="p-4">
           <div className="flex flex-wrap gap-3">
             <Input
-              placeholder="Search action, user..."
+              placeholder={t.audit.search_placeholder}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               leftIcon={<Search className="h-4 w-4" />}
@@ -110,22 +112,22 @@ export default function AuditPage() {
             />
             <Select value={resourceType} onValueChange={setResourceType}>
               <SelectTrigger className="w-40">
-                <SelectValue placeholder="Resource Type" />
+                <SelectValue placeholder={t.audit.title} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Resources</SelectItem>
-                <SelectItem value="product">Products</SelectItem>
-                <SelectItem value="inventory">Inventory</SelectItem>
-                <SelectItem value="sale">Sales</SelectItem>
-                <SelectItem value="user">Users</SelectItem>
-                <SelectItem value="warehouse">Warehouses</SelectItem>
-                <SelectItem value="vendor_transaction">Vendor Transactions</SelectItem>
-                <SelectItem value="warehouse_transfer">Transfers</SelectItem>
+                <SelectItem value="all">{t.audit.all_resources}</SelectItem>
+                <SelectItem value="product">{t.audit.resource_products}</SelectItem>
+                <SelectItem value="inventory">{t.audit.resource_inventory}</SelectItem>
+                <SelectItem value="sale">{t.audit.resource_sales}</SelectItem>
+                <SelectItem value="user">{t.audit.resource_users}</SelectItem>
+                <SelectItem value="warehouse">{t.audit.resource_warehouses}</SelectItem>
+                <SelectItem value="vendor_transaction">{t.audit.resource_vendor_transactions}</SelectItem>
+                <SelectItem value="warehouse_transfer">{t.audit.resource_transfers}</SelectItem>
               </SelectContent>
             </Select>
             <div className="flex items-center gap-2">
               <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-36" />
-              <span className="text-xs text-muted-foreground">to</span>
+              <span className="text-xs text-muted-foreground">{t.audit.to_separator}</span>
               <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-36" />
             </div>
           </div>
@@ -138,13 +140,13 @@ export default function AuditPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Timestamp</TableHead>
-                <TableHead>User</TableHead>
-                <TableHead>Action</TableHead>
-                <TableHead>Resource</TableHead>
-                <TableHead>IP Address</TableHead>
-                <TableHead>Changes</TableHead>
-                <TableHead className="text-right">Details</TableHead>
+                <TableHead>{t.audit.timestamp}</TableHead>
+                <TableHead>{t.audit.user}</TableHead>
+                <TableHead>{t.audit.action}</TableHead>
+                <TableHead>{t.audit.resource}</TableHead>
+                <TableHead>{t.audit.ip_address}</TableHead>
+                <TableHead>{t.audit.changes}</TableHead>
+                <TableHead className="text-right">{t.audit.details}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -161,7 +163,7 @@ export default function AuditPage() {
                   <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
                     <div className="flex flex-col items-center gap-2">
                       <ClipboardList className="h-8 w-8 opacity-30" />
-                      <p>No audit logs found</p>
+                      <p>{t.audit.no_logs}</p>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -192,10 +194,10 @@ export default function AuditPage() {
                     <TableCell>
                       {log.old_values && log.new_values ? (
                         <span className="text-xs text-muted-foreground">
-                          {Object.keys(log.new_values).length} field(s) changed
+                          {t.audit.fields_changed.replace('{count}', String(Object.keys(log.new_values).length))}
                         </span>
                       ) : log.new_values ? (
-                        <span className="text-xs text-muted-foreground">New record created</span>
+                        <span className="text-xs text-muted-foreground">{t.audit.new_record}</span>
                       ) : (
                         <span className="text-xs text-muted-foreground">—</span>
                       )}
@@ -207,7 +209,7 @@ export default function AuditPage() {
                         onClick={() => setViewLog(log)}
                         className="text-xs h-7"
                       >
-                        View
+                        {t.audit.view}
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -223,25 +225,25 @@ export default function AuditPage() {
         <Dialog open={!!viewLog} onOpenChange={() => setViewLog(null)}>
           <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle>Audit Log Details</DialogTitle>
+              <DialogTitle>{t.audit.dialog_title}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 text-sm">
               <div className="grid grid-cols-2 gap-3">
-                <div><span className="text-muted-foreground">Timestamp:</span><br /><span className="font-medium">{formatDateTime(viewLog.created_at)}</span></div>
-                <div><span className="text-muted-foreground">Action:</span><br />
+                <div><span className="text-muted-foreground">{t.audit.timestamp}:</span><br /><span className="font-medium">{formatDateTime(viewLog.created_at)}</span></div>
+                <div><span className="text-muted-foreground">{t.audit.action}:</span><br />
                   <Badge variant={(actionColors[viewLog.action] || 'outline') as Parameters<typeof Badge>[0]['variant']}>{viewLog.action}</Badge>
                 </div>
-                <div><span className="text-muted-foreground">User:</span><br /><span className="font-medium">{(viewLog.user as { full_name?: string } | null)?.full_name}</span></div>
-                <div><span className="text-muted-foreground">Resource:</span><br /><span className="font-medium capitalize">{viewLog.resource_type}</span></div>
-                <div><span className="text-muted-foreground">IP Address:</span><br /><span className="font-mono text-xs">{viewLog.ip_address || '—'}</span></div>
-                <div><span className="text-muted-foreground">Browser:</span><br /><span className="text-xs truncate">{viewLog.user_agent?.split(' ')[0] || '—'}</span></div>
+                <div><span className="text-muted-foreground">{t.audit.user}:</span><br /><span className="font-medium">{(viewLog.user as { full_name?: string } | null)?.full_name}</span></div>
+                <div><span className="text-muted-foreground">{t.audit.resource}:</span><br /><span className="font-medium capitalize">{viewLog.resource_type}</span></div>
+                <div><span className="text-muted-foreground">{t.audit.ip_address}:</span><br /><span className="font-mono text-xs">{viewLog.ip_address || '—'}</span></div>
+                <div><span className="text-muted-foreground">{t.audit.browser}:</span><br /><span className="text-xs truncate">{viewLog.user_agent?.split(' ')[0] || '—'}</span></div>
               </div>
               {viewLog.reason && (
-                <div><span className="text-muted-foreground">Reason:</span><br /><span className="font-medium">{viewLog.reason}</span></div>
+                <div><span className="text-muted-foreground">{t.audit.reason}:</span><br /><span className="font-medium">{viewLog.reason}</span></div>
               )}
               {viewLog.old_values && (
                 <div>
-                  <p className="text-muted-foreground mb-1">Previous Values:</p>
+                  <p className="text-muted-foreground mb-1">{t.audit.previous_values}:</p>
                   <pre className="bg-muted rounded p-3 text-xs overflow-auto">
                     {JSON.stringify(viewLog.old_values, null, 2)}
                   </pre>
@@ -249,7 +251,7 @@ export default function AuditPage() {
               )}
               {viewLog.new_values && (
                 <div>
-                  <p className="text-muted-foreground mb-1">New Values:</p>
+                  <p className="text-muted-foreground mb-1">{t.audit.new_values}:</p>
                   <pre className="bg-muted rounded p-3 text-xs overflow-auto">
                     {JSON.stringify(viewLog.new_values, null, 2)}
                   </pre>
