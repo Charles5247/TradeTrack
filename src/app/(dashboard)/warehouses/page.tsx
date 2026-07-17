@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store';
 import type { Warehouse as WarehouseType } from '@/types';
+import { useI18n } from '@/i18n';
 
 async function fetchWarehouses() {
   const supabase = createClient();
@@ -27,6 +28,7 @@ async function fetchWarehouses() {
 }
 
 export default function WarehousesPage() {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -54,9 +56,9 @@ export default function WarehousesPage() {
       queryClient.invalidateQueries({ queryKey: ['warehouses-full'] });
       setIsFormOpen(false);
       setEditWarehouse(null);
-      toast.success(editWarehouse ? 'Warehouse updated' : 'Warehouse created');
+      toast.success(editWarehouse ? t.warehouse.updated_success : t.warehouse.created_success);
     },
-    onError: () => toast.error('Failed to save warehouse'),
+    onError: () => toast.error(t.warehouse.save_failed),
   });
 
   const deleteMutation = useMutation({
@@ -67,9 +69,9 @@ export default function WarehousesPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['warehouses-full'] });
-      toast.success('Warehouse deleted');
+      toast.success(t.warehouse.deleted_success);
     },
-    onError: () => toast.error('Cannot delete — warehouse may have inventory'),
+    onError: () => toast.error(t.warehouse.delete_failed_inventory),
   });
 
   const openCreate = () => {
@@ -88,12 +90,12 @@ export default function WarehousesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Warehouses</h1>
-          <p className="text-muted-foreground text-sm">{warehouses.length} locations</p>
+          <h1 className="text-2xl font-bold">{t.warehouse.title}</h1>
+          <p className="text-muted-foreground text-sm">{t.warehouse.locations_count.replace('{count}', String(warehouses.length))}</p>
         </div>
         <Button onClick={openCreate}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Warehouse
+          {t.warehouse.add_warehouse}
         </Button>
       </div>
 
@@ -118,7 +120,7 @@ export default function WarehousesPage() {
                       <CardTitle className="text-base">{w.name}</CardTitle>
                       {w.is_main && (
                         <Badge variant="default" className="text-xs mt-0.5">
-                          <Star className="h-2.5 w-2.5 mr-1" />Main
+                          <Star className="h-2.5 w-2.5 mr-1" />{t.warehouse.main_badge}
                         </Badge>
                       )}
                     </div>
@@ -133,7 +135,7 @@ export default function WarehousesPage() {
                         size="icon-sm"
                         className="text-destructive"
                         onClick={() => {
-                          if (confirm(`Delete "${w.name}"?`)) deleteMutation.mutate(w.id);
+                          if (confirm(t.warehouse.delete_confirm.replace('{name}', w.name))) deleteMutation.mutate(w.id);
                         }}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -150,7 +152,7 @@ export default function WarehousesPage() {
                   <p className="text-xs text-muted-foreground mb-3">📍 {w.address}</p>
                 )}
                 <div className="flex items-center justify-between bg-muted/50 rounded-lg p-3">
-                  <span className="text-sm text-muted-foreground">Total Stock</span>
+                  <span className="text-sm text-muted-foreground">{t.warehouse.total_stock}</span>
                   <span className="font-bold text-lg">{totalStock.toLocaleString()}</span>
                 </div>
               </CardContent>
@@ -162,19 +164,19 @@ export default function WarehousesPage() {
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editWarehouse ? 'Edit Warehouse' : 'Create Warehouse'}</DialogTitle>
+            <DialogTitle>{editWarehouse ? t.warehouse.edit_warehouse : t.warehouse.create_warehouse}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Warehouse Name *</Label>
+              <Label>{t.warehouse.warehouse_name_required}</Label>
               <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>Description</Label>
+              <Label>{t.warehouse.description}</Label>
               <Textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={2} />
             </div>
             <div className="space-y-2">
-              <Label>Address</Label>
+              <Label>{t.warehouse.address}</Label>
               <Input value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
             </div>
             <div className="flex items-center gap-2">
@@ -185,12 +187,12 @@ export default function WarehousesPage() {
                 onChange={(e) => setFormData({ ...formData, is_main: e.target.checked })}
                 className="rounded"
               />
-              <Label htmlFor="is_main" className="font-normal cursor-pointer">Main warehouse</Label>
+              <Label htmlFor="is_main" className="font-normal cursor-pointer">{t.warehouse.main_warehouse_checkbox}</Label>
             </div>
             <div className="flex gap-3">
-              <Button variant="outline" className="flex-1" onClick={() => setIsFormOpen(false)}>Cancel</Button>
+              <Button variant="outline" className="flex-1" onClick={() => setIsFormOpen(false)}>{t.warehouse.cancel}</Button>
               <Button className="flex-1" onClick={() => saveMutation.mutate(formData)} disabled={saveMutation.isPending}>
-                {editWarehouse ? 'Update' : 'Create'}
+                {editWarehouse ? t.warehouse.update : t.warehouse.create}
               </Button>
             </div>
           </div>

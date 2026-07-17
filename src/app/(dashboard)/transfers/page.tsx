@@ -18,6 +18,7 @@ import { createClient } from '@/lib/supabase/client';
 import { formatDateTime } from '@/lib/utils/format';
 import { useAuthStore } from '@/store';
 import type { WarehouseTransfer, Warehouse, Product } from '@/types';
+import { useI18n } from '@/i18n';
 
 async function fetchTransfers() {
   const supabase = createClient();
@@ -127,6 +128,7 @@ async function updateTransferStatus(id: string, status: 'received' | 'cancelled'
 }
 
 export default function TransfersPage() {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -154,9 +156,9 @@ export default function TransfersPage() {
       queryClient.invalidateQueries({ queryKey: ['transfers'] });
       setIsFormOpen(false);
       setFormData({ from_warehouse_id: '', to_warehouse_id: '', product_id: '', quantity: '', notes: '' });
-      toast.success('Transfer created successfully');
+      toast.success(t.transfers.created_success);
     },
-    onError: () => toast.error('Failed to create transfer'),
+    onError: () => toast.error(t.transfers.create_failed),
   });
 
   const updateMutation = useMutation({
@@ -164,24 +166,24 @@ export default function TransfersPage() {
       updateTransferStatus(id, status, user?.id || ''),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transfers'] });
-      toast.success('Transfer updated successfully');
+      toast.success(t.transfers.updated_success);
     },
-    onError: () => toast.error('Failed to update transfer'),
+    onError: () => toast.error(t.transfers.update_failed),
   });
 
   const handleCreate = () => {
     if (!user) return;
     if (!formData.from_warehouse_id || !formData.to_warehouse_id || !formData.product_id) {
-      toast.error('Please fill all required fields');
+      toast.error(t.transfers.fill_required);
       return;
     }
     if (formData.from_warehouse_id === formData.to_warehouse_id) {
-      toast.error('From and To warehouses must be different');
+      toast.error(t.transfers.different_warehouses);
       return;
     }
     const qty = parseInt(formData.quantity);
     if (isNaN(qty) || qty <= 0) {
-      toast.error('Enter a valid quantity');
+      toast.error(t.transfers.valid_quantity);
       return;
     }
     createMutation.mutate({
@@ -210,20 +212,20 @@ export default function TransfersPage() {
     );
   };
 
-  const pendingCount = transfers.filter((t) => t.status === 'pending').length;
+  const pendingCount = transfers.filter((tr) => tr.status === 'pending').length;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Warehouse Transfers</h1>
+          <h1 className="text-2xl font-bold">{t.transfers.title}</h1>
           <p className="text-muted-foreground text-sm">
-            {pendingCount} pending transfer{pendingCount !== 1 ? 's' : ''}
+            {t.transfers.subtitle_pending.replace('{count}', String(pendingCount))}
           </p>
         </div>
         <Button onClick={() => setIsFormOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          New Transfer
+          {t.transfers.new_transfer}
         </Button>
       </div>
 
@@ -232,15 +234,15 @@ export default function TransfersPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>From</TableHead>
-                <TableHead>To</TableHead>
-                <TableHead>Quantity</TableHead>
-                <TableHead>Sent By</TableHead>
-                <TableHead>Received By</TableHead>
-                <TableHead>Date Sent</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t.transfers.product}</TableHead>
+                <TableHead>{t.transfers.from}</TableHead>
+                <TableHead>{t.transfers.to}</TableHead>
+                <TableHead>{t.transfers.quantity}</TableHead>
+                <TableHead>{t.transfers.sent_by}</TableHead>
+                <TableHead>{t.transfers.received_by}</TableHead>
+                <TableHead>{t.transfers.date_sent}</TableHead>
+                <TableHead>{t.common.status}</TableHead>
+                <TableHead className="text-right">{t.common.actions}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -255,48 +257,48 @@ export default function TransfersPage() {
               ) : transfers.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">
-                    No transfers found
+                    {t.transfers.no_transfers}
                   </TableCell>
                 </TableRow>
               ) : (
-                transfers.map((t) => (
-                  <TableRow key={t.id}>
+                transfers.map((tr) => (
+                  <TableRow key={tr.id}>
                     <TableCell>
                       <div>
-                        <p className="font-medium text-sm">{(t.product as { name?: string } | null)?.name}</p>
-                        <p className="text-xs text-muted-foreground">{(t.product as { sku?: string } | null)?.sku}</p>
+                        <p className="font-medium text-sm">{(tr.product as { name?: string } | null)?.name}</p>
+                        <p className="text-xs text-muted-foreground">{(tr.product as { sku?: string } | null)?.sku}</p>
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm">{(t.from_warehouse as { name?: string } | null)?.name}</TableCell>
+                    <TableCell className="text-sm">{(tr.from_warehouse as { name?: string } | null)?.name}</TableCell>
                     <TableCell className="text-sm">
                       <span className="flex items-center gap-1">
                         <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                        {(t.to_warehouse as { name?: string } | null)?.name}
+                        {(tr.to_warehouse as { name?: string } | null)?.name}
                       </span>
                     </TableCell>
-                    <TableCell className="font-semibold">{t.quantity}</TableCell>
-                    <TableCell className="text-sm">{(t.sender as { full_name?: string } | null)?.full_name}</TableCell>
-                    <TableCell className="text-sm">{(t.receiver as { full_name?: string } | null)?.full_name || '—'}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{formatDateTime(t.date_sent)}</TableCell>
-                    <TableCell>{statusBadge(t.status)}</TableCell>
+                    <TableCell className="font-semibold">{tr.quantity}</TableCell>
+                    <TableCell className="text-sm">{(tr.sender as { full_name?: string } | null)?.full_name}</TableCell>
+                    <TableCell className="text-sm">{(tr.receiver as { full_name?: string } | null)?.full_name || '—'}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{formatDateTime(tr.date_sent)}</TableCell>
+                    <TableCell>{statusBadge(tr.status)}</TableCell>
                     <TableCell className="text-right">
-                      {t.status === 'pending' && (
+                      {tr.status === 'pending' && (
                         <div className="flex items-center justify-end gap-1">
                           <Button
                             size="sm"
                             variant="outline"
                             className="h-7 text-xs text-green-600 border-green-200"
-                            onClick={() => updateMutation.mutate({ id: t.id, status: 'received' })}
+                            onClick={() => updateMutation.mutate({ id: tr.id, status: 'received' })}
                           >
-                            <CheckCircle className="h-3 w-3 mr-1" /> Receive
+                            <CheckCircle className="h-3 w-3 mr-1" /> {t.transfers.receive}
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
                             className="h-7 text-xs text-red-600 border-red-200"
-                            onClick={() => updateMutation.mutate({ id: t.id, status: 'cancelled' })}
+                            onClick={() => updateMutation.mutate({ id: tr.id, status: 'cancelled' })}
                           >
-                            Cancel
+                            {t.transfers.cancel_action}
                           </Button>
                         </div>
                       )}
@@ -313,15 +315,15 @@ export default function TransfersPage() {
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create Warehouse Transfer</DialogTitle>
+            <DialogTitle>{t.transfers.create_dialog_title}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>From Warehouse *</Label>
+                <Label>{t.transfers.from_warehouse}</Label>
                 <Select onValueChange={(v) => setFormData({ ...formData, from_warehouse_id: v })}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select..." />
+                    <SelectValue placeholder={t.transfers.select_placeholder} />
                   </SelectTrigger>
                   <SelectContent>
                     {warehouses.map((w: Warehouse) => (
@@ -331,10 +333,10 @@ export default function TransfersPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>To Warehouse *</Label>
+                <Label>{t.transfers.to_warehouse}</Label>
                 <Select onValueChange={(v) => setFormData({ ...formData, to_warehouse_id: v })}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select..." />
+                    <SelectValue placeholder={t.transfers.select_placeholder} />
                   </SelectTrigger>
                   <SelectContent>
                     {warehouses.map((w: Warehouse) => (
@@ -345,10 +347,10 @@ export default function TransfersPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Product *</Label>
+              <Label>{t.transfers.product_required}</Label>
               <Select onValueChange={(v) => setFormData({ ...formData, product_id: v })}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select product" />
+                  <SelectValue placeholder={t.transfers.select_product} />
                 </SelectTrigger>
                 <SelectContent>
                   {products.map((p: Product) => (
@@ -358,30 +360,30 @@ export default function TransfersPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Quantity *</Label>
+              <Label>{t.transfers.quantity_required}</Label>
               <Input
                 type="number"
                 min="1"
                 value={formData.quantity}
                 onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                placeholder="Enter quantity"
+                placeholder={t.transfers.enter_quantity}
               />
             </div>
             <div className="space-y-2">
-              <Label>Notes</Label>
+              <Label>{t.transfers.notes}</Label>
               <Textarea
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 rows={2}
-                placeholder="Optional notes..."
+                placeholder={t.transfers.notes_placeholder}
               />
             </div>
             <div className="flex gap-3">
               <Button variant="outline" className="flex-1" onClick={() => setIsFormOpen(false)}>
-                Cancel
+                {t.transfers.cancel}
               </Button>
               <Button className="flex-1" onClick={handleCreate} disabled={createMutation.isPending}>
-                Create Transfer
+                {t.transfers.create_transfer}
               </Button>
             </div>
           </div>
