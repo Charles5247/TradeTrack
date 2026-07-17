@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency, formatDateTime } from '@/lib/utils/format';
 import type { Sale, SaleItem } from '@/types';
+import { useI18n } from '@/i18n';
 
 async function fetchSales(filters: {
   search: string;
@@ -76,6 +77,7 @@ function exportToCSV(sales: Sale[]) {
 }
 
 export default function SalesPage() {
+  const { t } = useI18n();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
   const [paymentMethod, setPaymentMethod] = useState('all');
@@ -115,14 +117,14 @@ export default function SalesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Sales History</h1>
+          <h1 className="text-2xl font-bold">{t.sales.title}</h1>
           <p className="text-muted-foreground text-sm">
-            {sales.length} transactions · {formatCurrency(totalRevenue)} revenue
+            {t.sales.subtitle.replace('{count}', String(sales.length)).replace('{revenue}', formatCurrency(totalRevenue))}
           </p>
         </div>
         <Button variant="outline" onClick={() => exportToCSV(sales)}>
           <Download className="h-4 w-4 mr-2" />
-          Export CSV
+          {t.sales.export_csv}
         </Button>
       </div>
 
@@ -131,7 +133,7 @@ export default function SalesPage() {
         <CardContent className="p-4">
           <div className="flex flex-wrap gap-3">
             <Input
-              placeholder="Search invoice, customer..."
+              placeholder={t.sales.search_placeholder}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               leftIcon={<Search className="h-4 w-4" />}
@@ -139,32 +141,32 @@ export default function SalesPage() {
             />
             <Select value={status} onValueChange={setStatus}>
               <SelectTrigger className="w-36">
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder={t.common.status} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-                <SelectItem value="refunded">Refunded</SelectItem>
+                <SelectItem value="all">{t.sales.all_status}</SelectItem>
+                <SelectItem value="completed">{t.sales.status_completed}</SelectItem>
+                <SelectItem value="pending">{t.sales.status_pending}</SelectItem>
+                <SelectItem value="cancelled">{t.sales.status_cancelled}</SelectItem>
+                <SelectItem value="refunded">{t.sales.status_refunded}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={paymentMethod} onValueChange={setPaymentMethod}>
               <SelectTrigger className="w-40">
-                <SelectValue placeholder="Payment" />
+                <SelectValue placeholder={t.sales.payment} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Payments</SelectItem>
-                <SelectItem value="cash">Cash</SelectItem>
-                <SelectItem value="transfer">Transfer</SelectItem>
-                <SelectItem value="pos_terminal">POS Terminal</SelectItem>
-                <SelectItem value="split">Split</SelectItem>
-                <SelectItem value="partial">Partial</SelectItem>
+                <SelectItem value="all">{t.sales.all_payments}</SelectItem>
+                <SelectItem value="cash">{t.sales.payment_cash}</SelectItem>
+                <SelectItem value="transfer">{t.sales.payment_transfer}</SelectItem>
+                <SelectItem value="pos_terminal">{t.sales.payment_pos_terminal}</SelectItem>
+                <SelectItem value="split">{t.sales.payment_split}</SelectItem>
+                <SelectItem value="partial">{t.sales.payment_partial}</SelectItem>
               </SelectContent>
             </Select>
             <div className="flex items-center gap-2">
               <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-36" />
-              <span className="text-muted-foreground text-sm">to</span>
+              <span className="text-muted-foreground text-sm">{t.sales.to_separator}</span>
               <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-36" />
             </div>
           </div>
@@ -177,15 +179,15 @@ export default function SalesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Invoice</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Cashier</TableHead>
-                <TableHead>Items</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Payment</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t.sales.invoice}</TableHead>
+                <TableHead>{t.sales.customer}</TableHead>
+                <TableHead>{t.sales.cashier}</TableHead>
+                <TableHead>{t.sales.items}</TableHead>
+                <TableHead>{t.sales.total}</TableHead>
+                <TableHead>{t.sales.payment}</TableHead>
+                <TableHead>{t.common.status}</TableHead>
+                <TableHead>{t.sales.date}</TableHead>
+                <TableHead className="text-right">{t.sales.actions}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -202,7 +204,7 @@ export default function SalesPage() {
                   <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">
                     <div className="flex flex-col items-center gap-2">
                       <Receipt className="h-8 w-8 opacity-30" />
-                      <p>No sales found</p>
+                      <p>{t.sales.no_sales}</p>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -214,9 +216,9 @@ export default function SalesPage() {
                         {sale.invoice_number}
                       </code>
                     </TableCell>
-                    <TableCell>{sale.customer_name || <span className="text-muted-foreground text-xs">Walk-in</span>}</TableCell>
+                    <TableCell>{sale.customer_name || <span className="text-muted-foreground text-xs">{t.sales.walk_in}</span>}</TableCell>
                     <TableCell className="text-sm">{(sale.cashier as { full_name?: string } | null)?.full_name || '—'}</TableCell>
-                    <TableCell>{(sale.items as SaleItem[] | undefined)?.length || 0} items</TableCell>
+                    <TableCell>{t.sales.items_count.replace('{count}', String((sale.items as SaleItem[] | undefined)?.length || 0))}</TableCell>
                     <TableCell className="font-semibold">{formatCurrency(sale.total)}</TableCell>
                     <TableCell>{paymentBadge(sale.payment_method)}</TableCell>
                     <TableCell>{statusBadge(sale.status)}</TableCell>
@@ -241,26 +243,26 @@ export default function SalesPage() {
         <Dialog open={!!viewSale} onOpenChange={() => setViewSale(null)}>
           <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Sale Details - {viewSale.invoice_number}</DialogTitle>
+              <DialogTitle>{t.sales.sale_details_title.replace('{invoice}', viewSale.invoice_number)}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <div><span className="text-muted-foreground">Date:</span> <span className="font-medium">{formatDateTime(viewSale.created_at)}</span></div>
-                <div><span className="text-muted-foreground">Cashier:</span> <span className="font-medium">{(viewSale.cashier as { full_name?: string } | null)?.full_name}</span></div>
-                <div><span className="text-muted-foreground">Customer:</span> <span className="font-medium">{viewSale.customer_name || 'Walk-in'}</span></div>
-                <div><span className="text-muted-foreground">Phone:</span> <span className="font-medium">{viewSale.customer_phone || '—'}</span></div>
-                <div><span className="text-muted-foreground">Payment:</span> <span className="font-medium capitalize">{viewSale.payment_method.replace('_', ' ')}</span></div>
-                <div><span className="text-muted-foreground">Status:</span> {statusBadge(viewSale.status)}</div>
+                <div><span className="text-muted-foreground">{t.sales.date}:</span> <span className="font-medium">{formatDateTime(viewSale.created_at)}</span></div>
+                <div><span className="text-muted-foreground">{t.sales.cashier}:</span> <span className="font-medium">{(viewSale.cashier as { full_name?: string } | null)?.full_name}</span></div>
+                <div><span className="text-muted-foreground">{t.sales.customer}:</span> <span className="font-medium">{viewSale.customer_name || t.sales.walk_in}</span></div>
+                <div><span className="text-muted-foreground">{t.sales.phone}:</span> <span className="font-medium">{viewSale.customer_phone || '—'}</span></div>
+                <div><span className="text-muted-foreground">{t.sales.payment}:</span> <span className="font-medium capitalize">{viewSale.payment_method.replace('_', ' ')}</span></div>
+                <div><span className="text-muted-foreground">{t.common.status}:</span> {statusBadge(viewSale.status)}</div>
               </div>
 
               <div className="border border-border rounded-lg overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Product</TableHead>
-                      <TableHead>Qty</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead>Total</TableHead>
+                      <TableHead>{t.sales.item_product}</TableHead>
+                      <TableHead>{t.sales.item_qty}</TableHead>
+                      <TableHead>{t.sales.item_price}</TableHead>
+                      <TableHead>{t.sales.item_total}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -277,20 +279,20 @@ export default function SalesPage() {
               </div>
 
               <div className="space-y-1 text-sm border-t pt-3">
-                <div className="flex justify-between"><span>Subtotal</span><span>{formatCurrency(viewSale.subtotal)}</span></div>
-                {viewSale.discount > 0 && <div className="flex justify-between text-green-600"><span>Discount</span><span>-{formatCurrency(viewSale.discount)}</span></div>}
-                {viewSale.tax > 0 && <div className="flex justify-between"><span>Tax</span><span>{formatCurrency(viewSale.tax)}</span></div>}
+                <div className="flex justify-between"><span>{t.sales.subtotal}</span><span>{formatCurrency(viewSale.subtotal)}</span></div>
+                {viewSale.discount > 0 && <div className="flex justify-between text-green-600"><span>{t.sales.discount}</span><span>-{formatCurrency(viewSale.discount)}</span></div>}
+                {viewSale.tax > 0 && <div className="flex justify-between"><span>{t.sales.tax}</span><span>{formatCurrency(viewSale.tax)}</span></div>}
                 <div className="flex justify-between font-bold text-base border-t pt-2">
-                  <span>Total</span>
+                  <span>{t.sales.total}</span>
                   <span>{formatCurrency(viewSale.total)}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Amount Paid</span>
+                  <span>{t.sales.amount_paid}</span>
                   <span>{formatCurrency(viewSale.amount_paid)}</span>
                 </div>
                 {viewSale.change_amount > 0 && (
                   <div className="flex justify-between text-green-600">
-                    <span>Change</span>
+                    <span>{t.sales.change}</span>
                     <span>{formatCurrency(viewSale.change_amount)}</span>
                   </div>
                 )}
