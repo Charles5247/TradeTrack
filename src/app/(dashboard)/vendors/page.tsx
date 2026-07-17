@@ -18,6 +18,7 @@ import { createClient } from '@/lib/supabase/client';
 import { formatCurrency, formatDate } from '@/lib/utils/format';
 import { useAuthStore } from '@/store';
 import type { VendorTransaction, Product } from '@/types';
+import { useI18n } from '@/i18n';
 
 async function fetchVendors() {
   const supabase = createClient();
@@ -38,6 +39,7 @@ async function fetchVendors() {
 }
 
 export default function VendorsPage() {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -123,9 +125,9 @@ export default function VendorsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vendors'] });
       setIsFormOpen(false);
-      toast.success('Vendor transaction created');
+      toast.success(t.vendors.new_transaction);
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : 'Failed to create'),
+    onError: (e) => toast.error(e instanceof Error ? e.message : t.vendors.no_transactions),
   });
 
   const markPaidMutation = useMutation({
@@ -138,13 +140,13 @@ export default function VendorsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vendors'] });
-      toast.success('Payment recorded');
+      toast.success(t.vendors.mark_paid);
     },
   });
 
   const statusBadge = (status: string, expectedDate?: string) => {
     const isOverdue = expectedDate && new Date(expectedDate) < new Date() && status === 'pending';
-    if (isOverdue) return <Badge variant="destructive"><AlertCircle className="h-3 w-3 mr-1" />Overdue</Badge>;
+    if (isOverdue) return <Badge variant="destructive"><AlertCircle className="h-3 w-3 mr-1" />{t.vendors.overdue}</Badge>;
     const map: Record<string, Parameters<typeof Badge>[0]['variant']> = {
       pending: 'warning',
       completed: 'success',
@@ -162,14 +164,14 @@ export default function VendorsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Vendor Sales</h1>
+          <h1 className="text-2xl font-bold">{t.vendors.title}</h1>
           <p className="text-muted-foreground text-sm">
-            Outstanding debt: <span className="font-semibold text-amber-600">{formatCurrency(totalPending)}</span>
+            {t.vendors.subtitle_debt.split(':')[0]}: <span className="font-semibold text-amber-600">{formatCurrency(totalPending)}</span>
           </p>
         </div>
         <Button onClick={() => setIsFormOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          New Vendor Transaction
+          {t.vendors.new_transaction}
         </Button>
       </div>
 
@@ -178,7 +180,7 @@ export default function VendorsPage() {
         <div className="flex items-center gap-3 p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
           <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
           <p className="text-sm text-amber-800 dark:text-amber-200">
-            You have <strong>{formatCurrency(totalPending)}</strong> in outstanding vendor payments. Follow up to collect.
+            {t.vendors.alert_banner.split('{amount}')[0]}<strong>{formatCurrency(totalPending)}</strong>{t.vendors.alert_banner.split('{amount}')[1]}
           </p>
         </div>
       )}
@@ -188,15 +190,15 @@ export default function VendorsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Vendor</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Date Issued</TableHead>
-                <TableHead>Expected Payment</TableHead>
-                <TableHead>Total Value</TableHead>
-                <TableHead>Amount Paid</TableHead>
-                <TableHead>Balance</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t.vendors.vendor_name}</TableHead>
+                <TableHead>{t.vendors.phone}</TableHead>
+                <TableHead>{t.vendors.date_issued}</TableHead>
+                <TableHead>{t.vendors.expected_payment}</TableHead>
+                <TableHead>{t.vendors.total_value}</TableHead>
+                <TableHead>{t.vendors.amount_paid}</TableHead>
+                <TableHead>{t.vendors.balance}</TableHead>
+                <TableHead>{t.common.status}</TableHead>
+                <TableHead className="text-right">{t.common.actions}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -209,7 +211,7 @@ export default function VendorsPage() {
               ) : vendors.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">
-                    No vendor transactions found
+                    {t.vendors.no_transactions}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -236,7 +238,7 @@ export default function VendorsPage() {
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
                           <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setViewVendor(v)}>
-                            View
+                            {t.vendors.view}
                           </Button>
                           {(v.status === 'pending' || v.status === 'partial') && (
                             <Button
@@ -250,7 +252,7 @@ export default function VendorsPage() {
                                 }
                               }}
                             >
-                              <DollarSign className="h-3 w-3 mr-1" /> Pay
+                              <DollarSign className="h-3 w-3 mr-1" /> {t.vendors.pay}
                             </Button>
                           )}
                         </div>
@@ -268,31 +270,31 @@ export default function VendorsPage() {
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>New Vendor Transaction</DialogTitle>
+            <DialogTitle>{t.vendors.new_transaction}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Vendor Name *</Label>
+                <Label>{t.vendors.vendor_name_required}</Label>
                 <Input value={formData.vendor_name} onChange={(e) => setFormData({ ...formData, vendor_name: e.target.value })} />
               </div>
               <div className="space-y-2">
-                <Label>Phone</Label>
+                <Label>{t.vendors.phone}</Label>
                 <Input value={formData.vendor_phone} onChange={(e) => setFormData({ ...formData, vendor_phone: e.target.value })} />
               </div>
               <div className="space-y-2">
-                <Label>Date Issued</Label>
+                <Label>{t.vendors.date_issued}</Label>
                 <Input type="date" value={formData.date_issued} onChange={(e) => setFormData({ ...formData, date_issued: e.target.value })} />
               </div>
               <div className="space-y-2">
-                <Label>Expected Payment Date</Label>
+                <Label>{t.vendors.expected_payment}</Label>
                 <Input type="date" value={formData.expected_payment_date} onChange={(e) => setFormData({ ...formData, expected_payment_date: e.target.value })} />
               </div>
             </div>
 
             {/* Items */}
             <div>
-              <Label className="mb-2 block">Products *</Label>
+              <Label className="mb-2 block">{t.vendors.products_required}</Label>
               {formData.items.map((item, idx) => (
                 <div key={idx} className="grid grid-cols-3 gap-2 mb-2">
                   <Select onValueChange={(v) => {
@@ -301,7 +303,7 @@ export default function VendorsPage() {
                     items[idx] = { ...items[idx], product_id: v, unit_price: String(p?.selling_price || '') };
                     setFormData({ ...formData, items });
                   }}>
-                    <SelectTrigger><SelectValue placeholder="Product" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t.vendors.product} /></SelectTrigger>
                     <SelectContent>
                       {products.map((p) => (
                         <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
@@ -310,7 +312,7 @@ export default function VendorsPage() {
                   </Select>
                   <Input
                     type="number"
-                    placeholder="Qty"
+                    placeholder={t.vendors.qty}
                     value={item.quantity}
                     onChange={(e) => {
                       const items = [...formData.items];
@@ -320,7 +322,7 @@ export default function VendorsPage() {
                   />
                   <Input
                     type="number"
-                    placeholder="Unit Price"
+                    placeholder={t.vendors.unit_price}
                     value={item.unit_price}
                     onChange={(e) => {
                       const items = [...formData.items];
@@ -336,19 +338,19 @@ export default function VendorsPage() {
                 size="sm"
                 onClick={() => setFormData({ ...formData, items: [...formData.items, { product_id: '', quantity: '', unit_price: '' }] })}
               >
-                <Plus className="h-3 w-3 mr-1" /> Add Item
+                <Plus className="h-3 w-3 mr-1" /> {t.vendors.add_item}
               </Button>
             </div>
 
             <div className="space-y-2">
-              <Label>Notes</Label>
+              <Label>{t.vendors.notes}</Label>
               <Textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} rows={2} />
             </div>
 
             <div className="flex gap-3">
-              <Button variant="outline" className="flex-1" onClick={() => setIsFormOpen(false)}>Cancel</Button>
+              <Button variant="outline" className="flex-1" onClick={() => setIsFormOpen(false)}>{t.vendors.cancel}</Button>
               <Button className="flex-1" onClick={() => createMutation.mutate(formData)} disabled={createMutation.isPending}>
-                Create Transaction
+                {t.vendors.create_transaction}
               </Button>
             </div>
           </div>
@@ -360,19 +362,19 @@ export default function VendorsPage() {
         <Dialog open={!!viewVendor} onOpenChange={() => setViewVendor(null)}>
           <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle>{viewVendor.vendor_name} — Transaction</DialogTitle>
+              <DialogTitle>{t.vendors.view_dialog_title.replace('{name}', viewVendor.vendor_name)}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 text-sm">
               <div className="grid grid-cols-2 gap-2">
-                <div><span className="text-muted-foreground">Status:</span> {statusBadge(viewVendor.status)}</div>
-                <div><span className="text-muted-foreground">Phone:</span> {viewVendor.vendor_phone || '—'}</div>
-                <div><span className="text-muted-foreground">Issued:</span> {formatDate(viewVendor.date_issued)}</div>
-                <div><span className="text-muted-foreground">Expected:</span> {viewVendor.expected_payment_date ? formatDate(viewVendor.expected_payment_date) : '—'}</div>
-                <div><span className="text-muted-foreground">Total:</span> <strong>{formatCurrency(viewVendor.total_value)}</strong></div>
-                <div><span className="text-muted-foreground">Paid:</span> <span className="text-green-600 font-medium">{formatCurrency(viewVendor.amount_paid)}</span></div>
+                <div><span className="text-muted-foreground">{t.common.status}:</span> {statusBadge(viewVendor.status)}</div>
+                <div><span className="text-muted-foreground">{t.vendors.phone}:</span> {viewVendor.vendor_phone || '—'}</div>
+                <div><span className="text-muted-foreground">{t.vendors.issued}:</span> {formatDate(viewVendor.date_issued)}</div>
+                <div><span className="text-muted-foreground">{t.vendors.expected}:</span> {viewVendor.expected_payment_date ? formatDate(viewVendor.expected_payment_date) : '—'}</div>
+                <div><span className="text-muted-foreground">{t.vendors.total}:</span> <strong>{formatCurrency(viewVendor.total_value)}</strong></div>
+                <div><span className="text-muted-foreground">{t.vendors.paid}:</span> <span className="text-green-600 font-medium">{formatCurrency(viewVendor.amount_paid)}</span></div>
               </div>
               <div>
-                <p className="font-medium mb-2">Products:</p>
+                <p className="font-medium mb-2">{t.vendors.products_label}</p>
                 {(viewVendor.items || []).map((item) => (
                   <div key={item.id} className="flex justify-between py-1 border-b border-border/50">
                     <span>{(item.product as { name?: string } | null)?.name}</span>
