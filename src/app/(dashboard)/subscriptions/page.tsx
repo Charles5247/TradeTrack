@@ -26,6 +26,7 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency, formatDate } from '@/lib/utils/format';
 import { useAuthStore } from '@/store';
+import { useI18n } from '@/i18n';
 
 // ── Types ─────────────────────────────────────────────────────
 interface Plan {
@@ -188,6 +189,7 @@ function PlanCard({
   onSelect: (planId: string) => void;
   isLoading: boolean;
 }) {
+  const { t } = useI18n();
   const isCurrent = plan.id === currentPlanId;
   const Icon = plan.is_popular ? Star : plan.name === 'Business' ? Shield : Zap;
 
@@ -203,12 +205,12 @@ function PlanCard({
     >
       {plan.is_popular && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <Badge className="bg-primary text-primary-foreground px-3">Most Popular</Badge>
+          <Badge className="bg-primary text-primary-foreground px-3">{t.subscriptions.most_popular}</Badge>
         </div>
       )}
       {isCurrent && !plan.is_popular && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <Badge variant="success" className="px-3">Current Plan</Badge>
+          <Badge variant="success" className="px-3">{t.subscriptions.current_plan_badge}</Badge>
         </div>
       )}
 
@@ -236,9 +238,8 @@ function PlanCard({
           <span className="text-muted-foreground text-sm">/{plan.billing_cycle}</span>
         </div>
         <CardDescription className="mt-1">
-          {plan.max_cashiers === -1 ? 'Unlimited' : plan.max_cashiers} cashier
-          {plan.max_cashiers !== 1 ? 's' : ''} ·{' '}
-          {plan.max_products ? `${plan.max_products.toLocaleString()} products` : 'Unlimited products'}
+          {plan.max_cashiers === -1 ? t.subscriptions.unlimited : plan.max_cashiers} {t.subscriptions.cashiers_count} ·{' '}
+          {plan.max_products ? t.subscriptions.products_count.replace('{count}', plan.max_products.toLocaleString()) : t.subscriptions.unlimited_products}
         </CardDescription>
       </CardHeader>
 
@@ -258,7 +259,7 @@ function PlanCard({
           disabled={isCurrent || isLoading}
           onClick={() => onSelect(plan.id)}
         >
-          {isCurrent ? 'Current Plan' : 'Select Plan'}
+          {isCurrent ? t.subscriptions.current_plan_badge : t.subscriptions.select_plan}
         </Button>
       </CardContent>
     </Card>
@@ -281,6 +282,7 @@ function StatusBadge({ status }: { status: string }) {
 
 // ── Main Page ─────────────────────────────────────────────────
 export default function SubscriptionsPage() {
+  const { t } = useI18n();
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'overview' | 'plans' | 'billing'>('overview');
@@ -330,10 +332,10 @@ export default function SubscriptionsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
-      toast.success('Subscription updated successfully');
+      toast.success(t.subscriptions.updated_success);
     },
     onError: (e) =>
-      toast.error(e instanceof Error ? e.message : 'Failed to update subscription'),
+      toast.error(e instanceof Error ? e.message : t.subscriptions.update_failed),
   });
 
   // Only super_admin can manage subscriptions
@@ -342,8 +344,8 @@ export default function SubscriptionsPage() {
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <Shield className="h-12 w-12 text-muted-foreground" />
         <div className="text-center">
-          <p className="font-medium">Access Restricted</p>
-          <p className="text-sm text-muted-foreground">Only Super Admins can manage subscriptions.</p>
+          <p className="font-medium">{t.subscriptions.access_restricted}</p>
+          <p className="text-sm text-muted-foreground">{t.subscriptions.super_admin_only}</p>
         </div>
       </div>
     );
@@ -363,14 +365,14 @@ export default function SubscriptionsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Subscription Management</h1>
+          <h1 className="text-2xl font-bold">{t.subscriptions.title}</h1>
           <p className="text-muted-foreground text-sm">
-            Manage your TradeTrack subscription and billing
+            {t.subscriptions.subtitle}
           </p>
         </div>
         <Button variant="outline" onClick={() => queryClient.invalidateQueries({ queryKey: ['subscriptions'] })}>
           <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
+          {t.subscriptions.refresh}
         </Button>
       </div>
 
@@ -404,23 +406,23 @@ export default function SubscriptionsPage() {
               <div className="grid gap-4 md:grid-cols-3">
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardDescription>Current Plan</CardDescription>
+                    <CardDescription>{t.subscriptions.current_plan}</CardDescription>
                     <CardTitle className="text-2xl">
-                      {subscription?.plan?.name || 'No Plan'}
+                      {subscription?.plan?.name || t.subscriptions.no_plan}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     {subscription ? (
                       <StatusBadge status={subscription.status} />
                     ) : (
-                      <Badge variant="outline">Unsubscribed</Badge>
+                      <Badge variant="outline">{t.subscriptions.unsubscribed}</Badge>
                     )}
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardDescription>Subscription Expires</CardDescription>
+                    <CardDescription>{t.subscriptions.subscription_expires}</CardDescription>
                     <CardTitle className="text-lg">
                       {subscription?.expires_at
                         ? formatDate(subscription.expires_at)
@@ -444,8 +446,8 @@ export default function SubscriptionsPage() {
                           <Calendar className="h-4 w-4" />
                         )}
                         {daysRemaining > 0
-                          ? `${daysRemaining} days remaining`
-                          : 'Expired'}
+                          ? t.subscriptions.days_remaining.replace('{count}', String(daysRemaining))
+                          : t.subscriptions.expired}
                       </div>
                     )}
                   </CardContent>
@@ -453,7 +455,7 @@ export default function SubscriptionsPage() {
 
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardDescription>Monthly Cost</CardDescription>
+                    <CardDescription>{t.subscriptions.monthly_cost}</CardDescription>
                     <CardTitle className="text-2xl">
                       {subscription?.plan?.price
                         ? formatCurrency(subscription.plan.price)
@@ -461,7 +463,7 @@ export default function SubscriptionsPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground">Per month</p>
+                    <p className="text-sm text-muted-foreground">{t.subscriptions.per_month}</p>
                   </CardContent>
                 </Card>
               </div>
@@ -473,17 +475,17 @@ export default function SubscriptionsPage() {
                     <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
                     <div className="flex-1">
                       <p className="font-medium text-amber-800 dark:text-amber-400">
-                        Subscription Expiring Soon
+                        {t.subscriptions.expiring_soon}
                       </p>
                       <p className="text-sm text-amber-700 dark:text-amber-500">
-                        Your subscription expires in {daysRemaining} days. Renew now to avoid interruption.
+                        {t.subscriptions.expiring_soon_desc.replace('{count}', String(daysRemaining))}
                       </p>
                     </div>
                     <Button
                       size="sm"
                       onClick={() => setActiveTab('plans')}
                     >
-                      Renew Now
+                      {t.subscriptions.renew_now}
                     </Button>
                   </CardContent>
                 </Card>
@@ -495,13 +497,13 @@ export default function SubscriptionsPage() {
                   <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
                     <CreditCard className="h-12 w-12 text-muted-foreground" />
                     <div>
-                      <p className="font-medium text-lg">No Active Subscription</p>
+                      <p className="font-medium text-lg">{t.subscriptions.no_active_subscription}</p>
                       <p className="text-sm text-muted-foreground mt-1">
-                        Choose a plan to unlock all TradeTrack features
+                        {t.subscriptions.choose_plan_unlock}
                       </p>
                     </div>
                     <Button onClick={() => setActiveTab('plans')}>
-                      View Plans
+                      {t.subscriptions.view_plans}
                     </Button>
                   </CardContent>
                 </Card>
@@ -511,8 +513,8 @@ export default function SubscriptionsPage() {
               {subscription?.plan && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Current Plan Features</CardTitle>
-                    <CardDescription>{subscription.plan.name} plan inclusions</CardDescription>
+                    <CardTitle>{t.subscriptions.current_plan_features}</CardTitle>
+                    <CardDescription>{t.subscriptions.plan_inclusions.replace('{name}', subscription.plan.name)}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -525,10 +527,10 @@ export default function SubscriptionsPage() {
                     </div>
                     <div className="mt-4 pt-4 border-t flex gap-3">
                       <Button variant="outline" onClick={() => setActiveTab('plans')}>
-                        Upgrade Plan
+                        {t.subscriptions.upgrade_plan}
                       </Button>
                       <Button variant="ghost" className="text-destructive hover:text-destructive">
-                        Cancel Subscription
+                        {t.subscriptions.cancel_subscription}
                       </Button>
                     </div>
                   </CardContent>
@@ -543,9 +545,9 @@ export default function SubscriptionsPage() {
       {activeTab === 'plans' && (
         <div className="space-y-6">
           <div>
-            <h2 className="text-lg font-semibold">Choose a Plan</h2>
+            <h2 className="text-lg font-semibold">{t.subscriptions.choose_a_plan}</h2>
             <p className="text-sm text-muted-foreground">
-              Select the plan that best fits your business needs
+              {t.subscriptions.select_plan_desc}
             </p>
           </div>
           {isLoading ? (
@@ -566,8 +568,7 @@ export default function SubscriptionsPage() {
             </div>
           )}
           <p className="text-xs text-center text-muted-foreground">
-            All plans include offline-first functionality, multi-device support, and automatic data sync.
-            Prices are billed monthly in Nigerian Naira (₦).
+            {t.subscriptions.all_plans_notice}
           </p>
         </div>
       )}
@@ -577,12 +578,12 @@ export default function SubscriptionsPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold">Payment History</h2>
-              <p className="text-sm text-muted-foreground">All payment transactions</p>
+              <h2 className="text-lg font-semibold">{t.subscriptions.payment_history}</h2>
+              <p className="text-sm text-muted-foreground">{t.subscriptions.all_transactions}</p>
             </div>
             <Button variant="outline" size="sm">
               <Download className="h-4 w-4 mr-2" />
-              Export
+              {t.subscriptions.export}
             </Button>
           </div>
 
@@ -592,9 +593,9 @@ export default function SubscriptionsPage() {
             <Card className="border-dashed">
               <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
                 <CreditCard className="h-10 w-10 text-muted-foreground" />
-                <p className="font-medium">No Payment Records</p>
+                <p className="font-medium">{t.subscriptions.no_payment_records}</p>
                 <p className="text-sm text-muted-foreground">
-                  Payment history will appear here after your first transaction
+                  {t.subscriptions.no_payment_records_desc}
                 </p>
               </CardContent>
             </Card>
@@ -604,12 +605,12 @@ export default function SubscriptionsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Plan</TableHead>
-                      <TableHead>Reference</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Method</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead>{t.subscriptions.date}</TableHead>
+                      <TableHead>{t.subscriptions.plan}</TableHead>
+                      <TableHead>{t.subscriptions.reference}</TableHead>
+                      <TableHead>{t.subscriptions.amount}</TableHead>
+                      <TableHead>{t.subscriptions.method}</TableHead>
+                      <TableHead>{t.subscriptions.status}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -649,9 +650,9 @@ export default function SubscriptionsPage() {
           <CardContent className="flex items-center gap-3 py-4">
             <XCircle className="h-5 w-5 text-destructive shrink-0" />
             <div>
-              <p className="font-medium text-destructive">Could not load subscription data</p>
+              <p className="font-medium text-destructive">{t.subscriptions.could_not_load}</p>
               <p className="text-sm text-muted-foreground">
-                Showing fallback plan information. Connect to internet to see live data.
+                {t.subscriptions.fallback_notice}
               </p>
             </div>
           </CardContent>
