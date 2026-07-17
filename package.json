@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "setup:demo": "tsx scripts/setup-demo-users.ts"
+    "setup:demo": "tsx scripts/setup-demo-users.ts",
+    "verify:env": "tsx scripts/verify-env.ts",
+    "deploy:check": "bash deploy-check.sh"
   },
   "dependencies": {
     "@hookform/error-message": "^2.0.1",

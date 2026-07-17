@@ -21,7 +21,7 @@
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Next.js 15, React, TypeScript, Tailwind CSS |
+| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS |
 | UI Components | Radix UI + ShadCN pattern |
 | State Management | Zustand |
 | Data Fetching | TanStack Query (React Query) |
@@ -105,11 +105,40 @@ instead of duplicated.
 
 ### Environment Variables
 
+Copy `.env.example` to `.env.local` and fill in real values. See
+`.env.example` for full inline documentation of every variable.
+
 ```env
+# Supabase (required)
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# App config (required)
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+NODE_ENV=development
+
+# Zainpay payment gateway (required for subscription/billing features)
+ZAINPAY_BASE_URL=https://sandbox.zainpay.ng
+ZAINPAY_PUBLIC_KEY=your-zainpay-public-key
+ZAINPAY_PRIVATE_KEY=your-zainpay-private-key
+ZAINPAY_DEFAULT_ZAINBOX=your-default-zainbox-code
+ZAINPAY_WEBHOOK_SECRET=your-zainpay-webhook-secret
+```
+
+Run `npm run verify:env` at any time to check that all required (and
+recommended) environment variables are set — it prints a clear report and
+exits non-zero if anything required is missing.
+
+### Pre-Deployment Check
+
+Before deploying, run the full deploy-readiness gate — it verifies env vars,
+type-checks, lints, and does a production build:
+
+```bash
+npm run deploy:check
+# or skip the (slower) production build step:
+./deploy-check.sh --skip-build
 ```
 
 ## 👥 User Roles
