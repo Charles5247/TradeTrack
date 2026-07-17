@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/client';
 import { formatRelativeTime } from '@/lib/utils/format';
 import { cn } from '@/lib/utils/cn';
 import type { Notification } from '@/types';
+import { useI18n } from '@/i18n';
 
 async function fetchNotifications() {
   const supabase = createClient();
@@ -51,6 +52,7 @@ const colorMap: Record<string, string> = {
 };
 
 export default function NotificationsPage() {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
 
   const { data: notifications = [], isLoading } = useQuery({
@@ -77,9 +79,9 @@ export default function NotificationsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Notifications</h1>
+          <h1 className="text-2xl font-bold">{t.notifications.title}</h1>
           <p className="text-muted-foreground text-sm">
-            {unreadCount > 0 ? `${unreadCount} unread notification${unreadCount !== 1 ? 's' : ''}` : 'All caught up!'}
+            {unreadCount > 0 ? t.notifications.unread_count.replace('{count}', String(unreadCount)) : t.notifications.all_caught_up}
           </p>
         </div>
         {unreadCount > 0 && (
@@ -89,7 +91,7 @@ export default function NotificationsPage() {
             disabled={markAllReadMutation.isPending}
           >
             <CheckCheck className="h-4 w-4 mr-2" />
-            Mark All as Read
+            {t.notifications.mark_all_read}
           </Button>
         )}
       </div>
@@ -111,7 +113,7 @@ export default function NotificationsPage() {
           <Card>
             <CardContent className="py-16 text-center">
               <Bell className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
-              <p className="text-muted-foreground">No notifications yet</p>
+              <p className="text-muted-foreground">{t.notifications.empty_state}</p>
             </CardContent>
           </Card>
         ) : (
