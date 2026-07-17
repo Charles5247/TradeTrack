@@ -36,6 +36,7 @@ import {
 import { formatDateTime } from '@/lib/utils/format';
 import { useAuthStore } from '@/store';
 import type { User } from '@/types';
+import { useI18n } from '@/i18n';
 
 // ── API Helpers ───────────────────────────────────────────────
 
@@ -90,7 +91,9 @@ async function deleteUser(id: string): Promise<void> {
 function RoleBadge({ role }: { role: string }) {
   const map: Record<string, Parameters<typeof Badge>[0]['variant']> = {
     super_admin: 'default',
+    owner: 'default',
     admin: 'info',
+    manager: 'info',
     cashier: 'outline',
   };
   return (
@@ -117,7 +120,7 @@ function StatusBadge({ status }: { status: string }) {
 const defaultForm = {
   email: '',
   full_name: '',
-  role: 'cashier' as 'super_admin' | 'admin' | 'cashier',
+  role: 'cashier' as 'super_admin' | 'owner' | 'admin' | 'manager' | 'cashier',
   phone: '',
   password: '',
 };
@@ -125,6 +128,7 @@ const defaultForm = {
 // ── Main Component ────────────────────────────────────────────
 
 export default function UsersPage() {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const { user: currentUser } = useAuthStore();
 
@@ -153,7 +157,7 @@ export default function UsersPage() {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       setIsCreateOpen(false);
       setFormData(defaultForm);
-      toast.success('User created successfully');
+      toast.success(t.common.success);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : 'Failed to create user'),
   });
@@ -164,7 +168,7 @@ export default function UsersPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       setEditUser(null);
-      toast.success('User updated');
+      toast.success(t.common.success);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : 'Failed to update user'),
   });
@@ -174,7 +178,7 @@ export default function UsersPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       setDeleteTarget(null);
-      toast.success('User deleted');
+      toast.success(t.common.success);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : 'Failed to delete user'),
   });
@@ -187,7 +191,7 @@ export default function UsersPage() {
       setResetPwdUser(null);
       setNewPassword('');
       setConfirmNewPassword('');
-      toast.success('Password reset successfully');
+      toast.success(t.common.success);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : 'Failed to reset password'),
   });
@@ -197,7 +201,7 @@ export default function UsersPage() {
       updateUser(id, { status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
-      toast.success('User status updated');
+      toast.success(t.common.success);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : 'Failed to update status'),
   });
@@ -208,8 +212,8 @@ export default function UsersPage() {
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <ShieldCheck className="h-12 w-12 text-muted-foreground" />
         <div className="text-center">
-          <p className="font-medium">Access Denied</p>
-          <p className="text-sm text-muted-foreground">This page is only accessible to Super Admins.</p>
+          <p className="font-medium">{t.users.access_denied}</p>
+          <p className="text-sm text-muted-foreground">{t.users.access_denied_desc}</p>
         </div>
       </div>
     );
@@ -222,12 +226,12 @@ export default function UsersPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">User Management</h1>
-          <p className="text-muted-foreground text-sm">{users.length} user{users.length !== 1 ? 's' : ''} in your organization</p>
+          <h1 className="text-2xl font-bold">{t.users.title}</h1>
+          <p className="text-muted-foreground text-sm">{t.users.subtitle.replace('{count}', String(users.length))}</p>
         </div>
         <Button onClick={() => setIsCreateOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Add User
+          {t.users.add_user}
         </Button>
       </div>
 
@@ -237,13 +241,13 @@ export default function UsersPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Last Login</TableHead>
-                <TableHead>Joined</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t.users.title.split(' ')[0]}</TableHead>
+                <TableHead>{t.users.role}</TableHead>
+                <TableHead>{t.users.phone}</TableHead>
+                <TableHead>{t.users.status}</TableHead>
+                <TableHead>{t.users.last_login}</TableHead>
+                <TableHead>{t.users.joined}</TableHead>
+                <TableHead className="text-right">{t.users.actions}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -258,7 +262,7 @@ export default function UsersPage() {
               ) : users.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
-                    No users found. Create one to get started.
+                    {t.users.no_users_desc}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -281,7 +285,7 @@ export default function UsersPage() {
                     <TableCell className="text-sm">{u.phone || '—'}</TableCell>
                     <TableCell><StatusBadge status={u.status} /></TableCell>
                     <TableCell className="text-xs text-muted-foreground">
-                      {u.last_login ? formatDateTime(u.last_login) : 'Never'}
+                      {u.last_login ? formatDateTime(u.last_login) : t.users.never}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {formatDateTime(u.created_at)}
@@ -305,7 +309,7 @@ export default function UsersPage() {
                             }}
                           >
                             <Edit className="h-4 w-4 mr-2" />
-                            Edit
+                            {t.users.edit}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => {
@@ -315,7 +319,7 @@ export default function UsersPage() {
                             }}
                           >
                             <Key className="h-4 w-4 mr-2" />
-                            Reset Password
+                            {t.users.reset_password}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           {u.status === 'active' ? (
@@ -324,7 +328,7 @@ export default function UsersPage() {
                               onClick={() => statusMutation.mutate({ id: u.id, status: 'suspended' })}
                             >
                               <UserX className="h-4 w-4 mr-2" />
-                              Suspend
+                              {t.users.suspend_user}
                             </DropdownMenuItem>
                           ) : (
                             <DropdownMenuItem
@@ -332,7 +336,7 @@ export default function UsersPage() {
                               onClick={() => statusMutation.mutate({ id: u.id, status: 'active' })}
                             >
                               <UserCheck className="h-4 w-4 mr-2" />
-                              Activate
+                              {t.users.activate_user}
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuSeparator />
@@ -342,7 +346,7 @@ export default function UsersPage() {
                               onClick={() => setDeleteTarget(u)}
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
+                              {t.users.delete}
                             </DropdownMenuItem>
                           )}
                         </DropdownMenuContent>
@@ -360,14 +364,14 @@ export default function UsersPage() {
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Add New User</DialogTitle>
+            <DialogTitle>{t.users.create_dialog_title}</DialogTitle>
             <DialogDescription>
-              Create a new user account for your organization.
+              {t.users.create_dialog_desc}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="space-y-2">
-              <Label>Full Name *</Label>
+              <Label>{t.users.full_name} *</Label>
               <Input
                 value={formData.full_name}
                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
@@ -375,7 +379,7 @@ export default function UsersPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Email *</Label>
+              <Label>{t.users.email} *</Label>
               <Input
                 type="email"
                 value={formData.email}
@@ -384,7 +388,7 @@ export default function UsersPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Phone</Label>
+              <Label>{t.users.phone}</Label>
               <Input
                 type="tel"
                 value={formData.phone}
@@ -393,7 +397,7 @@ export default function UsersPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Role *</Label>
+              <Label>{t.users.role} *</Label>
               <Select
                 value={formData.role}
                 onValueChange={(v) => setFormData({ ...formData, role: v as typeof formData.role })}
@@ -402,14 +406,16 @@ export default function UsersPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="cashier">Cashier</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="super_admin">Super Admin</SelectItem>
+                  <SelectItem value="cashier">{t.users.cashier}</SelectItem>
+                  <SelectItem value="manager">{t.users.manager}</SelectItem>
+                  <SelectItem value="admin">{t.users.admin}</SelectItem>
+                  <SelectItem value="owner">{t.users.owner}</SelectItem>
+                  <SelectItem value="super_admin">{t.users.super_admin}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Password *</Label>
+              <Label>{t.users.password} *</Label>
               <Input
                 type="password"
                 value={formData.password}
@@ -419,7 +425,7 @@ export default function UsersPage() {
             </div>
             <div className="flex gap-3 pt-2">
               <Button variant="outline" className="flex-1" onClick={() => setIsCreateOpen(false)}>
-                Cancel
+                {t.users.cancel}
               </Button>
               <Button
                 className="flex-1"
@@ -427,13 +433,13 @@ export default function UsersPage() {
                 loading={createMutation.isPending}
                 onClick={() => {
                   if (!formData.email || !formData.full_name || !formData.password) {
-                    toast.error('Please fill in all required fields');
+                    toast.error(t.users.fill_required);
                     return;
                   }
                   createMutation.mutate(formData);
                 }}
               >
-                Create User
+                {t.users.create_user}
               </Button>
             </div>
           </div>
@@ -444,20 +450,20 @@ export default function UsersPage() {
       <Dialog open={!!editUser} onOpenChange={(o) => !o && setEditUser(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>Update user information for {editUser?.full_name}</DialogDescription>
+            <DialogTitle>{t.users.edit_dialog_title}</DialogTitle>
+            <DialogDescription>{t.users.edit_dialog_desc}</DialogDescription>
           </DialogHeader>
           {editUser && (
             <div className="space-y-4 pt-2">
               <div className="space-y-2">
-                <Label>Full Name</Label>
+                <Label>{t.users.full_name}</Label>
                 <Input
                   value={editData.full_name ?? ''}
                   onChange={(e) => setEditData({ ...editData, full_name: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Phone</Label>
+                <Label>{t.users.phone}</Label>
                 <Input
                   type="tel"
                   value={editData.phone ?? ''}
@@ -465,7 +471,7 @@ export default function UsersPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Role</Label>
+                <Label>{t.users.role}</Label>
                 <Select
                   value={editData.role ?? editUser.role}
                   onValueChange={(v) => setEditData({ ...editData, role: v as User['role'] })}
@@ -474,15 +480,17 @@ export default function UsersPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="cashier">Cashier</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="super_admin">Super Admin</SelectItem>
+                    <SelectItem value="cashier">{t.users.cashier}</SelectItem>
+                    <SelectItem value="manager">{t.users.manager}</SelectItem>
+                    <SelectItem value="admin">{t.users.admin}</SelectItem>
+                    <SelectItem value="owner">{t.users.owner}</SelectItem>
+                    <SelectItem value="super_admin">{t.users.super_admin}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="flex gap-3 pt-2">
                 <Button variant="outline" className="flex-1" onClick={() => setEditUser(null)}>
-                  Cancel
+                  {t.users.cancel}
                 </Button>
                 <Button
                   className="flex-1"
@@ -492,7 +500,7 @@ export default function UsersPage() {
                     updateMutation.mutate({ id: editUser.id, data: editData as Record<string, unknown> })
                   }
                 >
-                  Save Changes
+                  {t.users.save_changes}
                 </Button>
               </div>
             </div>
@@ -504,14 +512,14 @@ export default function UsersPage() {
       <Dialog open={!!resetPwdUser} onOpenChange={(o) => !o && setResetPwdUser(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Reset Password</DialogTitle>
+            <DialogTitle>{t.users.reset_password_title}</DialogTitle>
             <DialogDescription>
-              Set a new password for {resetPwdUser?.full_name}
+              {t.users.reset_password_desc}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="space-y-2">
-              <Label>New Password</Label>
+              <Label>{t.users.new_password}</Label>
               <Input
                 type="password"
                 value={newPassword}
@@ -520,7 +528,7 @@ export default function UsersPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Confirm Password</Label>
+              <Label>{t.users.confirm_password}</Label>
               <Input
                 type="password"
                 value={confirmNewPassword}
@@ -528,14 +536,14 @@ export default function UsersPage() {
                 placeholder="Repeat password"
                 error={
                   confirmNewPassword && newPassword !== confirmNewPassword
-                    ? 'Passwords do not match'
+                    ? t.users.passwords_do_not_match
                     : undefined
                 }
               />
             </div>
             <div className="flex gap-3 pt-2">
               <Button variant="outline" className="flex-1" onClick={() => setResetPwdUser(null)}>
-                Cancel
+                {t.users.cancel}
               </Button>
               <Button
                 className="flex-1"
@@ -543,17 +551,17 @@ export default function UsersPage() {
                 loading={resetPwdMutation.isPending}
                 onClick={() => {
                   if (!newPassword || newPassword.length < 8) {
-                    toast.error('Password must be at least 8 characters');
+                    toast.error(t.users.password_min_length);
                     return;
                   }
                   if (newPassword !== confirmNewPassword) {
-                    toast.error('Passwords do not match');
+                    toast.error(t.users.passwords_do_not_match);
                     return;
                   }
                   resetPwdMutation.mutate({ id: resetPwdUser!.id, password: newPassword });
                 }}
               >
-                Reset Password
+                {t.users.reset_password}
               </Button>
             </div>
           </div>
@@ -566,17 +574,15 @@ export default function UsersPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
               <AlertTriangle className="h-5 w-5" />
-              Delete User
+              {t.users.delete_title}
             </DialogTitle>
             <DialogDescription>
-              This action is permanent and cannot be undone. All data associated with
-              <span className="font-medium"> {deleteTarget?.full_name} </span>
-              will be deleted.
+              {t.users.delete_warning}
             </DialogDescription>
           </DialogHeader>
           <div className="flex gap-3 pt-2">
             <Button variant="outline" className="flex-1" onClick={() => setDeleteTarget(null)}>
-              Cancel
+              {t.users.cancel}
             </Button>
             <Button
               variant="destructive"
@@ -585,7 +591,7 @@ export default function UsersPage() {
               loading={deleteMutation.isPending}
               onClick={() => deleteMutation.mutate(deleteTarget!.id)}
             >
-              Delete User
+              {t.users.delete_user}
             </Button>
           </div>
         </DialogContent>
