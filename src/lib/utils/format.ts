@@ -3,15 +3,67 @@
  */
 
 /**
- * Format currency in Nigerian Naira
+ * Locale to use per currency code, so amounts render with the
+ * correct symbol/placement/grouping for that currency rather than
+ * always using Nigerian locale conventions.
  */
-export function formatCurrency(amount: number, currency = 'NGN'): string {
-  return new Intl.NumberFormat('en-NG', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
+const CURRENCY_LOCALES: Record<string, string> = {
+  NGN: 'en-NG',
+  USD: 'en-US',
+  GBP: 'en-GB',
+  EUR: 'de-DE',
+  GHS: 'en-GH',
+  KES: 'en-KE',
+  ZAR: 'en-ZA',
+  XOF: 'fr-SN',
+  XAF: 'fr-CM',
+  CNY: 'zh-CN',
+  INR: 'en-IN',
+};
+
+/**
+ * Format currency using the organization's configured currency by default.
+ * Pass an explicit `currency` (ISO 4217 code, e.g. 'USD', 'GHS') to override.
+ * When no currency is passed, falls back to the organization's currency
+ * stored in useOrgStore (read via getOrgCurrency at call time), or 'NGN'
+ * if unavailable (e.g. server-side rendering).
+ */
+export function formatCurrency(amount: number, currency?: string): string {
+  const resolvedCurrency = currency || getOrgCurrency();
+  const locale = CURRENCY_LOCALES[resolvedCurrency] || 'en-NG';
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: resolvedCurrency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  } catch {
+    // Unknown/invalid ISO currency code — fall back to NGN formatting
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  }
+}
+
+/**
+ * Reads the organization's configured currency directly from the
+ * persisted Zustand store (client-side only). Falls back to 'NGN'
+ * during SSR or before the store has hydrated.
+ */
+function getOrgCurrency(): string {
+  if (typeof window === 'undefined') return 'NGN';
+  try {
+    const raw = localStorage.getItem('tradetrack-org');
+    if (!raw) return 'NGN';
+    const parsed = JSON.parse(raw);
+    return parsed?.state?.currency || 'NGN';
+  } catch {
+    return 'NGN';
+  }
 }
 
 /**

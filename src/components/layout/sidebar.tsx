@@ -24,7 +24,7 @@ import {
   Building2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
-import { useUIStore, useAuthStore } from '@/store';
+import { useUIStore, useAuthStore, useOrgStore } from '@/store';
 import { Badge } from '@/components/ui/badge';
 import { useI18n } from '@/i18n';
 
@@ -59,6 +59,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const { sidebarOpen, setSidebarOpen } = useUIStore();
   const { user } = useAuthStore();
+  const { organizationName } = useOrgStore();
   const { t } = useI18n();
 
   const filteredItems = navItems.filter((item) => {
@@ -95,7 +96,7 @@ export function Sidebar() {
             </div>
             {sidebarOpen && (
               <div className="min-w-0">
-                <p className="font-bold text-sm leading-none truncate">TradeTrack</p>
+                <p className="font-bold text-sm leading-none truncate">{organizationName || 'TradeTrack'}</p>
                 <p className="text-xs text-muted-foreground truncate">POS & Inventory</p>
               </div>
             )}

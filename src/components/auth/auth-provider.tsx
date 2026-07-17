@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { useAuthStore } from '@/store';
+import { useAuthStore, useOrgStore } from '@/store';
 import type { User } from '@/types';
 import {
   cacheUserSession,
@@ -12,9 +12,27 @@ import {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { setUser, setLoading } = useAuthStore();
+  const { setCurrency, setOrganizationName } = useOrgStore();
 
   useEffect(() => {
     const supabase = createClient();
+
+    async function loadOrgSettings(organizationId: string | undefined) {
+      if (!organizationId) return;
+      try {
+        const { data: org } = await supabase
+          .from('organizations')
+          .select('currency, name')
+          .eq('id', organizationId)
+          .single();
+        if (org) {
+          if (org.currency) setCurrency(org.currency);
+          if (org.name) setOrganizationName(org.name);
+        }
+      } catch {
+        // Non-fatal: fall back to persisted/default currency & org name
+      }
+    }
 
     async function loadUser() {
       try {
@@ -33,6 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(profile as User);
             // Cache session for offline use
             await cacheUserSession(user.id, profile as Record<string, unknown>);
+            await loadOrgSettings((profile as User).organization_id);
           } else {
             setUser(null);
           }
@@ -80,6 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (profile) {
               setUser(profile as User);
               await cacheUserSession(session.user.id, profile as Record<string, unknown>);
+              await loadOrgSettings((profile as User).organization_id);
             }
           } catch {
             // ignore
@@ -110,7 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     return () => subscription.unsubscribe();
-  }, [setUser, setLoading]);
+  }, [setUser, setLoading, setCurrency, setOrganizationName]);
 
   return <>{children}</>;
 }

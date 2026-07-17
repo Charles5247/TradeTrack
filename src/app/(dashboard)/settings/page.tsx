@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useAuthStore } from '@/store';
+import { useAuthStore, useOrgStore } from '@/store';
 import { createClient } from '@/lib/supabase/client';
 import { SUPPORTED_LOCALES, useI18n } from '@/i18n';
 import { useTheme } from 'next-themes';
@@ -18,6 +18,7 @@ import { cacheUserSession } from '@/lib/offline/db';
 
 export default function SettingsPage() {
   const { user, setUser } = useAuthStore();
+  const { setCurrency, setOrganizationName } = useOrgStore();
   const { theme, setTheme } = useTheme();
   const { t, locale, setLocale } = useI18n();
   const [isProfileLoading, setIsProfileLoading] = useState(false);
@@ -62,10 +63,12 @@ export default function SettingsPage() {
           currency: data.currency || 'NGN',
           timezone: data.timezone || 'Africa/Lagos',
         });
+        if (data.currency) setCurrency(data.currency);
+        if (data.name) setOrganizationName(data.name);
       }
     }
     loadOrg();
-  }, [user?.organization_id]);
+  }, [user?.organization_id, setCurrency, setOrganizationName]);
 
   // Keep form in sync with user store
   useEffect(() => {
@@ -133,6 +136,8 @@ export default function SettingsPage() {
         .eq('id', user?.organization_id ?? '');
 
       if (error) throw error;
+      setCurrency(orgData.currency);
+      setOrganizationName(orgData.name.trim());
       toast.success(t.settings.org_settings_saved);
     } catch (err) {
       console.error(err);

@@ -17,6 +17,26 @@ export const useAuthStore = create<AuthState>()((set) => ({
   setLoading: (isLoading) => set({ isLoading }),
 }));
 
+// ── Organization Store (currency, org-level settings) ──────────
+interface OrgState {
+  currency: string;
+  organizationName: string;
+  setCurrency: (currency: string) => void;
+  setOrganizationName: (name: string) => void;
+}
+
+export const useOrgStore = create<OrgState>()(
+  persist(
+    (set) => ({
+      currency: 'NGN',
+      organizationName: 'TradeTrack',
+      setCurrency: (currency) => set({ currency }),
+      setOrganizationName: (organizationName) => set({ organizationName }),
+    }),
+    { name: 'tradetrack-org' }
+  )
+);
+
 // ── Cart Store (POS) ──────────────────────────────────────────
 interface CartState extends Cart {
   addItem: (item: Omit<CartItem, 'discount'> & { discount?: number }) => void;
