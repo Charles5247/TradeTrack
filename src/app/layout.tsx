@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 import { QueryProvider } from "@/components/shared/query-provider";
+import { ServiceWorkerRegister } from "@/components/shared/sw-register";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { I18nProvider } from "@/i18n";
 import "./globals.css";
@@ -74,6 +75,7 @@ export default function RootLayout({
                   closeButton
                   duration={4000}
                 />
+                <ServiceWorkerRegister />
               </I18nProvider>
             </AuthProvider>
           </QueryProvider>

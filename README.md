@@ -246,7 +246,7 @@ supabase/
 | Standard | ₦5,000 | 3 | + Receipt printing, Daily summaries |
 | Business | ₦8,000 | Unlimited | + Advanced reports, Priority support |
 
-## 📱 Offline Mode
+## 📱 Offline Mode & PWA
 
 The application works fully offline:
 
@@ -255,6 +255,26 @@ The application works fully offline:
 3. **Sync Engine** pushes changes when connection restores
 4. **Conflict Resolution** — last-write-wins with manual override
 5. **Visual indicators** for online/offline and sync status
+
+TradeTrack is also an installable **Progressive Web App**:
+
+- `public/manifest.json` — app name, icons, theme color, and shortcuts
+  (New Sale, View Inventory) for the "Add to Home Screen" / "Install App"
+  prompt on mobile and desktop.
+- `public/sw.js` — a small, dependency-free service worker (registered via
+  `src/components/shared/sw-register.tsx`, production builds only) that:
+  - Caches the app shell and icons so the app can still launch offline.
+  - Serves page navigations network-first with a cached-page fallback, and
+    finally an `offline.html` fallback page if nothing is cached yet.
+  - Deliberately does **not** intercept `/api/*` or Supabase requests —
+    those stay fully owned by the existing IndexedDB sync engine
+    (`src/lib/offline/sync-engine.ts`) so there's exactly one source of
+    truth for data sync, not two competing caching layers.
+- Note: we intentionally do **not** use the `next-pwa` package — its latest
+  release pins Webpack 4 / Workbox 4, which is incompatible with this
+  project's Next.js 16 (Turbopack) build. The hand-rolled service worker
+  above covers the same installability + offline-shell requirements without
+  that dependency conflict.
 
 ## 🌍 Multilingual Support
 
