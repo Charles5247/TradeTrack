@@ -6,6 +6,7 @@ import { QueryProvider } from "@/components/shared/query-provider";
 import { ServiceWorkerRegister } from "@/components/shared/sw-register";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { I18nProvider } from "@/i18n";
+import { cookies } from "next/headers";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -51,14 +52,43 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Determine the initial locale from a cookie (default to English)
+  const cookieStore = await cookies();
+  const locale =
+    (cookieStore.get("NEXT_LOCALE")?.value as
+      | "en"
+      | "ha"
+      | "yo"
+      | "ig"
+      | "pcm") || "en";
+
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+    <html lang={locale} suppressHydrationWarning>
+      <head>
+        {/* Plain script – avoids React's "script inside component" warning */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var stored = localStorage.getItem('theme');
+                  if (stored === 'dark' || stored === 'light') {
+                    document.documentElement.classList.toggle('dark', stored === 'dark');
+                  } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.classList.add('dark');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body className={inter.className} suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
@@ -67,7 +97,7 @@ export default function RootLayout({
         >
           <QueryProvider>
             <AuthProvider>
-              <I18nProvider>
+              <I18nProvider defaultLocale={locale}>
                 {children}
                 <Toaster
                   position="top-right"

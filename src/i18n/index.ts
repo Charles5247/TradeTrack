@@ -1,34 +1,40 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import type { Locale } from '@/types';
-import { en } from './locales/en';
-import { ha } from './locales/ha';
-import { yo } from './locales/yo';
-import { ig } from './locales/ig';
-import { pcm } from './locales/pcm';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+} from "react";
+import type { Locale } from "@/types";
+import { en } from "./locales/en";
+import { ha } from "./locales/ha";
+import { yo } from "./locales/yo";
+import { ig } from "./locales/ig";
+import { pcm } from "./locales/pcm";
 
 type TranslationSet = typeof en;
 
 const translations: Record<Locale, TranslationSet> = {
   en,
   ha,
-  yo,   // Currently mirrors English - see src/i18n/locales/yo.ts
-  ig,   // Currently mirrors English - see src/i18n/locales/ig.ts
-  pcm,  // Currently mirrors English - see src/i18n/locales/pcm.ts
+  yo, // Currently mirrors English - see src/i18n/locales/yo.ts
+  ig, // Currently mirrors English - see src/i18n/locales/ig.ts
+  pcm, // Currently mirrors English - see src/i18n/locales/pcm.ts
 };
 
-const LOCALE_STORAGE_KEY = 'tradetrack-locale';
+const LOCALE_STORAGE_KEY = "tradetrack-locale";
 
 function getInitialLocale(): Locale {
-  if (typeof window === 'undefined') return 'en';
+  if (typeof window === "undefined") return "en";
   try {
     const stored = localStorage.getItem(LOCALE_STORAGE_KEY);
     if (stored && stored in translations) return stored as Locale;
   } catch {
     // localStorage unavailable
   }
-  return 'en';
+  return "en";
 }
 
 // ── Context ───────────────────────────────────────────────────
@@ -40,7 +46,7 @@ interface I18nContextType {
 }
 
 export const I18nContext = createContext<I18nContextType>({
-  locale: 'en',
+  locale: "en",
   t: en,
   setLocale: () => {},
 });
@@ -54,18 +60,19 @@ export function I18nProvider({
   children: React.ReactNode;
   defaultLocale?: Locale;
 }) {
-  // Initialise from localStorage so language persists across reloads
+  // Use the cookie‑based defaultLocale for the initial render.
+  // If no cookie exists, fall back to localStorage (client) or 'en'.
   const [locale, setLocaleState] = useState<Locale>(() => {
-    // defaultLocale prop takes priority (for SSR), then localStorage, then 'en'
     if (defaultLocale) return defaultLocale;
     return getInitialLocale();
   });
 
-  // Re-read localStorage on mount in case useState ran on SSR
+  // After mount, sync with localStorage (in case it was changed in another tab)
   useEffect(() => {
     const stored = getInitialLocale();
-    if (stored !== locale) setLocaleState(stored);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (stored !== locale) {
+      setLocaleState(stored);
+    }
   }, []);
 
   const setLocale = useCallback((newLocale: Locale) => {
@@ -75,10 +82,18 @@ export function I18nProvider({
     } catch {
       // Storage unavailable
     }
-    // Also update the Zustand UI store so other components stay in sync
-    import('@/store').then(({ useUIStore }) => {
-      useUIStore.getState().setLocale(newLocale);
-    }).catch(() => {});
+
+    // Keep the cookie in sync so the server renders the correct locale on next request
+    if (typeof document !== "undefined") {
+      document.cookie = `NEXT_LOCALE=${newLocale};path=/;max-age=31536000`;
+    }
+
+    // Update Zustand store if needed
+    import("@/store")
+      .then(({ useUIStore }) => {
+        useUIStore.getState().setLocale(newLocale);
+      })
+      .catch(() => {});
   }, []);
 
   const value: I18nContextType = {
@@ -98,10 +113,14 @@ export function useI18n() {
 
 // ── Supported locales ─────────────────────────────────────────
 
-export const SUPPORTED_LOCALES: { code: Locale; name: string; native: string }[] = [
-  { code: 'en', name: 'English', native: 'English' },
-  { code: 'ha', name: 'Hausa', native: 'Hausa' },
-  { code: 'yo', name: 'Yoruba', native: 'Yorùbá' },
-  { code: 'ig', name: 'Igbo', native: 'Igbo' },
-  { code: 'pcm', name: 'Pidgin English', native: 'Pidgin' },
+export const SUPPORTED_LOCALES: {
+  code: Locale;
+  name: string;
+  native: string;
+}[] = [
+  { code: "en", name: "English", native: "English" },
+  { code: "ha", name: "Hausa", native: "Hausa" },
+  { code: "yo", name: "Yoruba", native: "Yorùbá" },
+  { code: "ig", name: "Igbo", native: "Igbo" },
+  { code: "pcm", name: "Pidgin English", native: "Pidgin" },
 ];
