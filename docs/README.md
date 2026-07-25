@@ -20,20 +20,20 @@ TRADETRACK is a Next.js 15 + Supabase SaaS application that provides:
 
 ## Tech Stack
 
-| Layer          | Technology                                  |
-|----------------|---------------------------------------------|
-| Frontend       | Next.js 15, React 19, TypeScript            |
-| Styling        | Tailwind CSS 4, shadcn/ui                   |
-| State          | Zustand, TanStack Query v5                  |
-| Backend        | Next.js API Routes (serverless)             |
-| Database       | Supabase (PostgreSQL 15)                    |
-| Auth           | Supabase Auth (JWT + RLS)                   |
-| Storage        | Supabase Storage (product images)           |
-| Payments       | Zainpay (Nigerian payment gateway)          |
-| Offline        | IndexedDB via idb library                   |
-| Charts         | Recharts                                    |
-| Forms          | React Hook Form + Zod                       |
-| Notifications  | Sonner toast library                        |
+| Layer         | Technology                         |
+| ------------- | ---------------------------------- |
+| Frontend      | Next.js 15, React 19, TypeScript   |
+| Styling       | Tailwind CSS 4, shadcn/ui          |
+| State         | Zustand, TanStack Query v5         |
+| Backend       | Next.js API Routes (serverless)    |
+| Database      | Supabase (PostgreSQL 15)           |
+| Auth          | Supabase Auth (JWT + RLS)          |
+| Storage       | Supabase Storage (product images)  |
+| Payments      | Zainpay (Nigerian payment gateway) |
+| Offline       | IndexedDB via idb library          |
+| Charts        | Recharts                           |
+| Forms         | React Hook Form + Zod              |
+| Notifications | Sonner toast library               |
 
 ---
 
@@ -83,7 +83,7 @@ ZAINPAY_BASE_URL=https://sandbox.zainpay.ng
 ZAINPAY_DEFAULT_ZAINBOX=your-zainbox-code
 
 # Application
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_APP_URL=http://localhost:3008
 ```
 
 ---
@@ -147,13 +147,13 @@ tradetrack/
 
 ## User Roles
 
-| Role          | Permissions                                              |
-|---------------|----------------------------------------------------------|
-| `super_admin` | Full platform access, owner dashboard, all merchants    |
-| `owner`       | Full organization access, merchant management           |
-| `admin`       | Manage users, products, reports                         |
-| `manager`     | View reports, approve transfers, manage inventory       |
-| `cashier`     | POS access only                                         |
+| Role          | Permissions                                          |
+| ------------- | ---------------------------------------------------- |
+| `super_admin` | Full platform access, owner dashboard, all merchants |
+| `owner`       | Full organization access, merchant management        |
+| `admin`       | Manage users, products, reports                      |
+| `manager`     | View reports, approve transfers, manage inventory    |
+| `cashier`     | POS access only                                      |
 
 ---
 

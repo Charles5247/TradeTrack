@@ -33,6 +33,7 @@ supabase/migrations/004_owner_payments_merchants.sql
 1. Go to Storage → Create bucket: `product-images` (public)
 2. Create bucket: `org-logos` (public)
 3. Add RLS policy on `product-images`:
+
 ```sql
 CREATE POLICY "authenticated_upload" ON storage.objects
   FOR INSERT WITH CHECK (auth.role() = 'authenticated');
@@ -170,7 +171,7 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
 
     location / {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://localhost:3008;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -231,6 +232,7 @@ npm run build
 ```
 
 Expected output:
+
 ```
 ✓ Compiled successfully
 ✓ Linting and checking validity of types

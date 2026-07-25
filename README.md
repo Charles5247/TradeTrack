@@ -19,17 +19,17 @@
 
 ## 🛠 Technology Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS |
-| UI Components | Radix UI + ShadCN pattern |
-| State Management | Zustand |
-| Data Fetching | TanStack Query (React Query) |
-| Forms | React Hook Form + Zod |
-| Charts | Recharts |
-| Backend | Supabase (PostgreSQL, Auth, Storage, Realtime) |
-| Offline | IndexedDB (idb), Service Worker |
-| Deployment | Vercel |
+| Layer            | Technology                                     |
+| ---------------- | ---------------------------------------------- |
+| Frontend         | Next.js 16, React 19, TypeScript, Tailwind CSS |
+| UI Components    | Radix UI + ShadCN pattern                      |
+| State Management | Zustand                                        |
+| Data Fetching    | TanStack Query (React Query)                   |
+| Forms            | React Hook Form + Zod                          |
+| Charts           | Recharts                                       |
+| Backend          | Supabase (PostgreSQL, Auth, Storage, Realtime) |
+| Offline          | IndexedDB (idb), Service Worker                |
+| Deployment       | Vercel                                         |
 
 ## 📋 Prerequisites
 
@@ -115,7 +115,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
 # App config (required)
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_APP_URL=http://localhost:3008
 NODE_ENV=development
 
 # Zainpay payment gateway (required for subscription/billing features)
@@ -146,13 +146,13 @@ npm run deploy:check
 TradeTrack uses a 5-tier role hierarchy:
 `super_admin > owner > admin > manager > cashier`
 
-| Role | Permissions |
-|------|------------|
-| **Super Admin** | Full platform access: create users, manage subscriptions, view all data across every organization |
-| **Owner** | Business owner: platform-wide merchant/revenue dashboard (`/admin`), merchant management (`/merchants`) |
-| **Admin** | Manage products, inventory, sales, reports, vendors, warehouses for their organization |
-| **Manager** | Day-to-day operational management: inventory, sales, reports (no user/billing management) |
-| **Cashier** | Create sales, view inventory, print receipts |
+| Role            | Permissions                                                                                             |
+| --------------- | ------------------------------------------------------------------------------------------------------- |
+| **Super Admin** | Full platform access: create users, manage subscriptions, view all data across every organization       |
+| **Owner**       | Business owner: platform-wide merchant/revenue dashboard (`/admin`), merchant management (`/merchants`) |
+| **Admin**       | Manage products, inventory, sales, reports, vendors, warehouses for their organization                  |
+| **Manager**     | Day-to-day operational management: inventory, sales, reports (no user/billing management)               |
+| **Cashier**     | Create sales, view inventory, print receipts                                                            |
 
 ### Demo Credentials (development only)
 
@@ -161,13 +161,13 @@ Demo credentials are only ever displayed in the app when
 `npm run setup:demo` (see Database Setup above). Every one of the five
 roles has a working login:
 
-| Role | Email | Password | Organization |
-|------|-------|----------|--------------|
+| Role            | Email                      | Password   | Organization         |
+| --------------- | -------------------------- | ---------- | -------------------- |
 | **Super Admin** | `superadmin@tradetrack.ng` | `demo1234` | None (platform-wide) |
-| **Owner** | `owner@demo.com` | `demo1234` | Demo Store |
-| **Admin** | `admin@demo.com` | `demo1234` | Demo Store |
-| **Manager** | `manager@demo.com` | `demo1234` | Demo Store |
-| **Cashier** | `cashier@demo.com` | `demo1234` | Demo Store |
+| **Owner**       | `owner@demo.com`           | `demo1234` | Demo Store           |
+| **Admin**       | `admin@demo.com`           | `demo1234` | Demo Store           |
+| **Manager**     | `manager@demo.com`         | `demo1234` | Demo Store           |
+| **Cashier**     | `cashier@demo.com`         | `demo1234` | Demo Store           |
 
 ```
 Super Admin: superadmin@tradetrack.ng / demo1234
@@ -222,6 +222,7 @@ supabase/
 ## 🗃 Database Schema
 
 ### Core Tables
+
 - `organizations` — Multi-tenant support
 - `users` — User profiles with roles
 - `products` — Product catalogue
@@ -240,11 +241,11 @@ supabase/
 
 ## 💳 Subscription Plans
 
-| Plan | Price/Month | Cashiers | Features |
-|------|------------|----------|---------|
-| Basic | ₦3,000 | 1 | Inventory, Sales, Reports |
-| Standard | ₦5,000 | 3 | + Receipt printing, Daily summaries |
-| Business | ₦8,000 | Unlimited | + Advanced reports, Priority support |
+| Plan     | Price/Month | Cashiers  | Features                             |
+| -------- | ----------- | --------- | ------------------------------------ |
+| Basic    | ₦3,000      | 1         | Inventory, Sales, Reports            |
+| Standard | ₦5,000      | 3         | + Receipt printing, Daily summaries  |
+| Business | ₦8,000      | Unlimited | + Advanced reports, Priority support |
 
 ## 📱 Offline Mode & PWA
 
@@ -280,9 +281,9 @@ TradeTrack is also an installable **Progressive Web App**:
 
 - English (en)
 - Hausa (ha)
-- Yoruba (yo) — *in progress*
-- Igbo (ig) — *in progress*
-- Pidgin English (pcm) — *in progress*
+- Yoruba (yo) — _in progress_
+- Igbo (ig) — _in progress_
+- Pidgin English (pcm) — _in progress_
 
 Change language in **Settings → Appearance → Language**
 

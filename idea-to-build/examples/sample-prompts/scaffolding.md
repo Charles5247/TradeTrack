@@ -92,7 +92,7 @@ docs/
   :root {
     /* paste all tokens from design.md here */
   }
-  [data-theme='light'] {
+  [data-theme="light"] {
     /* paste light mode overrides */
   }
 }
@@ -180,7 +180,7 @@ I'll verify this implementation automatically. I can:
 
 For manual testing, I'll guide you step-by-step through:
 
-- Open `localhost:3000` in development mode → check the terminal for any Firebase initialization errors.
+- Open `localhost:3008` in development mode → check the terminal for any Firebase initialization errors.
 - Open browser DevTools → Network tab → look for any Firebase SDK requests confirming the client is initialized.
 
 Then give me your honest assessment of:
