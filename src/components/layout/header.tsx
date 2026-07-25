@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Bell,
   Search,
@@ -14,9 +14,11 @@ import {
   RefreshCw,
   Wifi,
   WifiOff,
-} from 'lucide-react';
-import { useTheme } from 'next-themes';
-import { Button } from '@/components/ui/button';
+  Upload,
+} from "lucide-react";
+import { syncEngine } from "@/lib/offline/sync-engine";
+import { useTheme } from "next-themes";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,14 +26,19 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
-import { useUIStore, useAuthStore, useNotificationStore, useSyncStore } from '@/store';
-import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils/cn';
-import { useOnlineStatus } from '@/hooks/use-online-status';
-import { clearCachedSession } from '@/lib/offline/db';
-import { useI18n } from '@/i18n';
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import {
+  useUIStore,
+  useAuthStore,
+  useNotificationStore,
+  useSyncStore,
+} from "@/store";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils/cn";
+import { useOnlineStatus } from "@/hooks/use-online-status";
+import { clearCachedSession } from "@/lib/offline/db";
+import { useI18n } from "@/i18n";
 
 export function Header() {
   const router = useRouter();
@@ -39,9 +46,9 @@ export function Header() {
   const { toggleSidebar } = useUIStore();
   const { user, setUser } = useAuthStore();
   const { unreadCount } = useNotificationStore();
-  const { syncStatus } = useSyncStore();
+  const { syncStatus, pendingCount } = useSyncStore();
   const { t } = useI18n();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const isOnline = useOnlineStatus();
 
   const handleSearch = (e: React.FormEvent) => {
@@ -51,19 +58,27 @@ export function Header() {
     }
   };
 
+  const handleManualSync = () => {
+    // Push any queued offline changes (and pull the latest data) right now,
+    // on demand — the cashier doesn't have to wait for auto-sync or a
+    // network reconnect event to fire. Safe to call even if already syncing
+    // or offline; syncEngine.sync() no-ops in those cases.
+    syncEngine?.sync();
+  };
+
   const handleSignOut = async () => {
     try {
-      const { createClient } = await import('@/lib/supabase/client');
+      const { createClient } = await import("@/lib/supabase/client");
       const supabase = createClient();
       if (user?.id) {
         await clearCachedSession(user.id);
       }
       await supabase.auth.signOut();
       setUser(null);
-      router.push('/login');
+      router.push("/login");
     } catch {
       setUser(null);
-      router.push('/login');
+      router.push("/login");
     }
   };
 
@@ -93,10 +108,10 @@ export function Header() {
       <div className="ml-auto flex items-center gap-2">
         <div
           className={cn(
-            'hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-colors',
+            "hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-colors",
             isOnline
-              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+              : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
           )}
           title={isOnline ? t.header.online_tooltip : t.header.offline_tooltip}
         >
@@ -108,16 +123,44 @@ export function Header() {
           <span>{isOnline ? t.header.online : t.header.offline}</span>
         </div>
 
-        {syncStatus === 'syncing' && (
-          <Button variant="ghost" size="icon-sm" className="text-muted-foreground" title={t.header.syncing}>
+        {syncStatus === "syncing" ? (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="text-muted-foreground"
+            title={t.header.syncing}
+          >
             <RefreshCw className="h-4 w-4 animate-spin" />
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="relative text-muted-foreground"
+            onClick={handleManualSync}
+            title={
+              pendingCount > 0
+                ? `Upload ${pendingCount} pending sale${pendingCount === 1 ? "" : "s"} now`
+                : "Upload / sync now"
+            }
+            aria-label="Upload pending data"
+          >
+            <Upload className="h-4 w-4" />
+            {pendingCount > 0 && (
+              <Badge
+                variant="destructive"
+                className="absolute -top-1 -right-1 h-4 min-w-4 px-1 flex items-center justify-center text-[10px]"
+              >
+                {pendingCount > 9 ? "9+" : pendingCount}
+              </Badge>
+            )}
           </Button>
         )}
 
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           title={t.header.toggle_theme}
         >
           <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
@@ -129,7 +172,7 @@ export function Header() {
           variant="ghost"
           size="icon"
           className="relative"
-          onClick={() => router.push('/notifications')}
+          onClick={() => router.push("/notifications")}
           title={t.header.notifications}
         >
           <Bell className="h-4 w-4" />
@@ -138,7 +181,7 @@ export function Header() {
               variant="destructive"
               className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-xs"
             >
-              {unreadCount > 9 ? '9+' : unreadCount}
+              {unreadCount > 9 ? "9+" : unreadCount}
             </Badge>
           )}
         </Button>
@@ -148,7 +191,7 @@ export function Header() {
             <Button variant="ghost" size="icon" className="rounded-full">
               <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
                 <span className="text-xs font-semibold text-primary">
-                  {user?.full_name?.charAt(0).toUpperCase() ?? 'U'}
+                  {user?.full_name?.charAt(0).toUpperCase() ?? "U"}
                 </span>
               </div>
             </Button>
@@ -159,7 +202,7 @@ export function Header() {
                 <p className="text-sm font-medium">{user?.full_name}</p>
                 <p className="text-xs text-muted-foreground">{user?.email}</p>
                 <p className="text-xs text-muted-foreground capitalize">
-                  {user?.role?.replace('_', ' ')}
+                  {user?.role?.replace("_", " ")}
                 </p>
                 {!isOnline && (
                   <p className="text-xs text-amber-600 flex items-center gap-1 mt-1">
@@ -170,11 +213,11 @@ export function Header() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.push('/settings')}>
+            <DropdownMenuItem onClick={() => router.push("/settings")}>
               <User className="mr-2 h-4 w-4" />
               {t.header.profile}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push('/settings')}>
+            <DropdownMenuItem onClick={() => router.push("/settings")}>
               <Settings className="mr-2 h-4 w-4" />
               {t.header.settings}
             </DropdownMenuItem>

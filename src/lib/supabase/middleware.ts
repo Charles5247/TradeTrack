@@ -69,9 +69,7 @@ export async function updateSession(request: NextRequest) {
   // trader has a valid, previously-cached session. We must NOT treat a
   // network/verification failure the same as "genuinely logged out" — that
   // was forcing traders to /login on every refresh whenever the network
-  // blipped, which defeats the offline-first design (and, because the SW
-  // uses network-first for navigations, the redirect response short-circuits
-  // the cached-page fallback too).
+  // blipped, which defeats the offline-first design.
   let user = null;
   let authCheckFailed = false;
 
@@ -95,18 +93,9 @@ export async function updateSession(request: NextRequest) {
     .getAll()
     .some((c) => c.name.startsWith("sb-") && c.name.includes("auth-token"));
 
-  // Should we redirect to login? Only when we're confident there's genuinely
-  // no session to fall back on:
-  //  - getUser() succeeded and there's truly no user, OR
-  //  - getUser() failed (network/offline) AND there's no prior session cookie
-  //    to defer to on the client side.
   const shouldForceLogin =
     (!user && !authCheckFailed) ||
     (!user && authCheckFailed && !hasSupabaseSessionCookie);
-
-  // Otherwise, if getUser() failed but a session cookie exists, let the
-  // request through — the client-side AuthProvider will resolve auth state
-  // from the cached IndexedDB session instead of bouncing the trader out.
 
   if (isProtectedRoute(pathname) && shouldForceLogin) {
     const loginUrl = request.nextUrl.clone();

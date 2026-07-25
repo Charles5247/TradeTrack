@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   ShoppingCart,
   TrendingUp,
@@ -11,7 +11,10 @@ import {
   Users,
   ArrowLeftRight,
   DollarSign,
-} from 'lucide-react';
+  RefreshCw,
+} from "lucide-react";
+import { useRealtimeSync } from "@/hooks/use-realtime-sync";
+import { Button } from "@/components/ui/button";
 import {
   AreaChart,
   Area,
@@ -20,16 +23,22 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-} from 'recharts';
-import { StatsCard } from '@/components/dashboard/stats-card';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { createClient } from '@/lib/supabase/client';
-import { formatCurrency, formatRelativeTime } from '@/lib/utils/format';
-import { useAuthStore } from '@/store';
-import { useI18n } from '@/i18n';
-import type { Sale } from '@/types';
+} from "recharts";
+import { StatsCard } from "@/components/dashboard/stats-card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { createClient } from "@/lib/supabase/client";
+import { formatCurrency, formatRelativeTime } from "@/lib/utils/format";
+import { useAuthStore } from "@/store";
+import { useI18n } from "@/i18n";
+import type { Sale } from "@/types";
 
 async function fetchDashboardData() {
   const supabase = createClient();
@@ -37,10 +46,16 @@ async function fetchDashboardData() {
   const todayStart = new Date(
     today.getFullYear(),
     today.getMonth(),
-    today.getDate()
+    today.getDate(),
   ).toISOString();
-  const weekStart = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
+  const weekStart = new Date(
+    today.getTime() - 7 * 24 * 60 * 60 * 1000,
+  ).toISOString();
+  const monthStart = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    1,
+  ).toISOString();
 
   const [
     todaySales,
@@ -54,70 +69,72 @@ async function fetchDashboardData() {
     revenueData,
   ] = await Promise.all([
     supabase
-      .from('sales')
-      .select('total')
-      .gte('created_at', todayStart)
-      .eq('status', 'completed'),
+      .from("sales")
+      .select("total")
+      .gte("created_at", todayStart)
+      .eq("status", "completed"),
     supabase
-      .from('sales')
-      .select('total')
-      .gte('created_at', weekStart)
-      .eq('status', 'completed'),
+      .from("sales")
+      .select("total")
+      .gte("created_at", weekStart)
+      .eq("status", "completed"),
     supabase
-      .from('sales')
-      .select('total')
-      .gte('created_at', monthStart)
-      .eq('status', 'completed'),
-    supabase.from('products').select('id').eq('status', 'active'),
+      .from("sales")
+      .select("total")
+      .gte("created_at", monthStart)
+      .eq("status", "completed"),
+    supabase.from("products").select("id").eq("status", "active"),
     // Fixed: fetch all inventory rows with quantity + min_stock_level
-    supabase.from('inventory').select('id, quantity, min_stock_level'),
+    supabase.from("inventory").select("id, quantity, min_stock_level"),
     supabase
-      .from('vendor_transactions')
-      .select('id,total_value,amount_paid')
-      .eq('status', 'pending'),
-    supabase.from('warehouse_transfers').select('id').eq('status', 'pending'),
+      .from("vendor_transactions")
+      .select("id,total_value,amount_paid")
+      .eq("status", "pending"),
+    supabase.from("warehouse_transfers").select("id").eq("status", "pending"),
     supabase
-      .from('sales')
-      .select('id,invoice_number,total,payment_method,status,created_at,cashier_id')
-      .order('created_at', { ascending: false })
+      .from("sales")
+      .select(
+        "id,invoice_number,total,payment_method,status,created_at,cashier_id",
+      )
+      .order("created_at", { ascending: false })
       .limit(8),
     supabase
-      .from('sales')
-      .select('created_at,total')
-      .gte('created_at', weekStart)
-      .eq('status', 'completed')
-      .order('created_at', { ascending: true }),
+      .from("sales")
+      .select("created_at,total")
+      .gte("created_at", weekStart)
+      .eq("status", "completed")
+      .order("created_at", { ascending: true }),
   ]);
 
   const todayRevenue = (todaySales.data || []).reduce(
     (s, r) => s + (r.total || 0),
-    0
+    0,
   );
   const weeklyRevenue = (weeklySales.data || []).reduce(
     (s, r) => s + (r.total || 0),
-    0
+    0,
   );
   const monthlyRevenue = (monthlySales.data || []).reduce(
     (s, r) => s + (r.total || 0),
-    0
+    0,
   );
   const pendingDebt = (pendingVendors.data || []).reduce(
     (s, r) => s + ((r.total_value || 0) - (r.amount_paid || 0)),
-    0
+    0,
   );
 
   // Fixed low/out of stock calculation
   const inventoryRows = allInventory.data || [];
   const outOfStockCount = inventoryRows.filter((r) => r.quantity === 0).length;
   const lowStockCount = inventoryRows.filter(
-    (r) => r.quantity > 0 && r.quantity <= (r.min_stock_level || 5)
+    (r) => r.quantity > 0 && r.quantity <= (r.min_stock_level || 5),
   ).length;
 
   // Process revenue chart data by day
   const dayMap: Record<string, number> = {};
   (revenueData.data || []).forEach((sale) => {
-    const day = new Date(sale.created_at).toLocaleDateString('en-NG', {
-      weekday: 'short',
+    const day = new Date(sale.created_at).toLocaleDateString("en-NG", {
+      weekday: "short",
     });
     dayMap[day] = (dayMap[day] || 0) + sale.total;
   });
@@ -147,12 +164,16 @@ async function fetchDashboardData() {
 export default function DashboardPage() {
   const { user } = useAuthStore();
   const { t } = useI18n();
-  const { data, isLoading } = useQuery({
-    queryKey: ['dashboard'],
+  const { data, isLoading, isFetching, refetch } = useQuery({
+    queryKey: ["dashboard"],
     queryFn: fetchDashboardData,
     refetchInterval: 60000,
     retry: 2,
   });
+
+  // Auto-refresh the moment a cashier's device syncs its offline queue to
+  // Supabase — the owner doesn't need to do anything for this to happen.
+  useRealtimeSync(["sales", "inventory"], user?.organization_id, ["dashboard"]);
 
   const stats = data?.stats;
   const recentSales = data?.recentSales || [];
@@ -161,13 +182,30 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          {t.dashboard.greeting.replace('{time}', getGreeting(t)).replace('{name}', user?.full_name?.split(' ')[0] ?? '')} 👋
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          {t.dashboard.subtitle}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {t.dashboard.greeting
+              .replace("{time}", getGreeting(t))
+              .replace("{name}", user?.full_name?.split(" ")[0] ?? "")}{" "}
+            👋
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            {t.dashboard.subtitle}
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => refetch()}
+          disabled={isFetching}
+          title="Pull the latest synced data now"
+        >
+          <RefreshCw
+            className={`h-4 w-4 mr-1.5 ${isFetching ? "animate-spin" : ""}`}
+          />
+          Refresh
+        </Button>
       </div>
 
       {/* Stats Grid */}
@@ -216,7 +254,7 @@ export default function DashboardPage() {
           icon={AlertTriangle}
           iconColor="text-amber-600"
           iconBg="bg-amber-100 dark:bg-amber-900/30"
-          variant={stats?.low_stock_count ? 'warning' : 'default'}
+          variant={stats?.low_stock_count ? "warning" : "default"}
           loading={isLoading}
         />
         <StatsCard
@@ -226,7 +264,7 @@ export default function DashboardPage() {
           icon={XCircle}
           iconColor="text-red-600"
           iconBg="bg-red-100 dark:bg-red-900/30"
-          variant={stats?.out_of_stock_count ? 'danger' : 'default'}
+          variant={stats?.out_of_stock_count ? "danger" : "default"}
           loading={isLoading}
         />
         <StatsCard
@@ -236,7 +274,7 @@ export default function DashboardPage() {
           icon={Users}
           iconColor="text-orange-600"
           iconBg="bg-orange-100 dark:bg-orange-900/30"
-          variant={stats?.pending_vendor_debts ? 'warning' : 'default'}
+          variant={stats?.pending_vendor_debts ? "warning" : "default"}
           loading={isLoading}
         />
         <StatsCard
@@ -265,12 +303,29 @@ export default function DashboardPage() {
               <ResponsiveContainer width="100%" height={250}>
                 <AreaChart data={chartData}>
                   <defs>
-                    <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    <linearGradient
+                      id="revenueGrad"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop
+                        offset="5%"
+                        stopColor="hsl(var(--primary))"
+                        stopOpacity={0.2}
+                      />
+                      <stop
+                        offset="95%"
+                        stopColor="hsl(var(--primary))"
+                        stopOpacity={0}
+                      />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="hsl(var(--border))"
+                  />
                   <XAxis
                     dataKey="date"
                     tick={{ fontSize: 12 }}
@@ -284,11 +339,14 @@ export default function DashboardPage() {
                     tickFormatter={(v) => `₦${(v / 1000).toFixed(0)}k`}
                   />
                   <Tooltip
-                    formatter={(value) => [formatCurrency(Number(value)), 'Revenue']}
+                    formatter={(value) => [
+                      formatCurrency(Number(value)),
+                      "Revenue",
+                    ]}
                     contentStyle={{
-                      background: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px',
+                      background: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "8px",
                     }}
                   />
                   <Area
@@ -307,8 +365,12 @@ export default function DashboardPage() {
         {/* Recent Transactions */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">{t.dashboard.recent_transactions}</CardTitle>
-            <CardDescription>{t.dashboard.recent_transactions_desc}</CardDescription>
+            <CardTitle className="text-base">
+              {t.dashboard.recent_transactions}
+            </CardTitle>
+            <CardDescription>
+              {t.dashboard.recent_transactions_desc}
+            </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             {isLoading ? (
@@ -326,25 +388,38 @@ export default function DashboardPage() {
             ) : recentSales.length === 0 ? (
               <div className="p-6 text-center">
                 <ShoppingCart className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">{t.dashboard.no_sales_today}</p>
+                <p className="text-sm text-muted-foreground">
+                  {t.dashboard.no_sales_today}
+                </p>
               </div>
             ) : (
               <div className="divide-y">
                 {recentSales.slice(0, 6).map((sale: Partial<Sale>) => (
-                  <div key={sale.id} className="flex items-center gap-3 px-4 py-3">
+                  <div
+                    key={sale.id}
+                    className="flex items-center gap-3 px-4 py-3"
+                  >
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                       <ShoppingCart className="h-3 w-3 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{sale.invoice_number}</p>
+                      <p className="text-sm font-medium truncate">
+                        {sale.invoice_number}
+                      </p>
                       <p className="text-xs text-muted-foreground">
-                        {sale.created_at ? formatRelativeTime(sale.created_at) : ''}
+                        {sale.created_at
+                          ? formatRelativeTime(sale.created_at)
+                          : ""}
                       </p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-sm font-semibold">{formatCurrency(sale.total || 0)}</p>
+                      <p className="text-sm font-semibold">
+                        {formatCurrency(sale.total || 0)}
+                      </p>
                       <Badge
-                        variant={sale.status === 'completed' ? 'success' : 'pending'}
+                        variant={
+                          sale.status === "completed" ? "success" : "pending"
+                        }
                         className="text-xs py-0"
                       >
                         {sale.status}
@@ -367,10 +442,30 @@ export default function DashboardPage() {
         <CardContent>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { href: '/pos', icon: ShoppingCart, label: t.dashboard.new_sale, color: 'blue' },
-              { href: '/inventory', icon: Package, label: t.dashboard.stock_in, color: 'green' },
-              { href: '/transfers', icon: ArrowLeftRight, label: t.nav.transfers, color: 'purple' },
-              { href: '/reports', icon: TrendingUp, label: t.nav.reports, color: 'amber' },
+              {
+                href: "/pos",
+                icon: ShoppingCart,
+                label: t.dashboard.new_sale,
+                color: "blue",
+              },
+              {
+                href: "/inventory",
+                icon: Package,
+                label: t.dashboard.stock_in,
+                color: "green",
+              },
+              {
+                href: "/transfers",
+                icon: ArrowLeftRight,
+                label: t.nav.transfers,
+                color: "purple",
+              },
+              {
+                href: "/reports",
+                icon: TrendingUp,
+                label: t.nav.reports,
+                color: "amber",
+              },
             ].map(({ href, icon: Icon, label, color }) => (
               <a
                 key={href}
@@ -392,7 +487,7 @@ export default function DashboardPage() {
   );
 }
 
-function getGreeting(t: ReturnType<typeof useI18n>['t']) {
+function getGreeting(t: ReturnType<typeof useI18n>["t"]) {
   const hour = new Date().getHours();
   if (hour < 12) return t.dashboard.morning;
   if (hour < 17) return t.dashboard.afternoon;
