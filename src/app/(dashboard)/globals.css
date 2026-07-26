@@ -176,6 +176,7 @@
 .receipt-paper {
   font-family: 'Courier New', Courier, monospace;
   font-size: 11px;
+  line-height: 1.35;
   color: #000;
   width: 100%;
   padding: 4mm;
@@ -206,6 +207,15 @@
   display: flex;
   justify-content: space-between;
   gap: 8px;
+  align-items: flex-start;
+  margin: 1px 0;
+}
+
+.receipt-row > span:last-child {
+  text-align: right;
+  flex-shrink: 0;
+  max-width: 60%;
+  white-space: nowrap;
 }
 
 .receipt-item {

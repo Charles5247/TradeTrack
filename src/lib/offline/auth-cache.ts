@@ -1,5 +1,6 @@
 const OFFLINE_AUTH_STORAGE_KEY = 'tradetrack-offline-auth';
 const REMEMBERED_LOGIN_STORAGE_KEY = 'tradetrack-remembered-login';
+const OFFLINE_NAMESPACE_STORAGE_KEY = 'tradetrack-offline-namespace';
 const REMEMBER_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
 
 export interface OfflineAuthSession {
@@ -46,6 +47,41 @@ function removeStorage(key: string): void {
   }
 }
 
+export function setOfflineAccountNamespace(profile?: Record<string, unknown> | null): void {
+  if (typeof window === 'undefined') return;
+
+  try {
+    const rawName =
+      (profile?.full_name as string | undefined) ||
+      (profile?.email as string | undefined) ||
+      (profile?.id as string | undefined) ||
+      'default';
+
+    const slug = String(rawName)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '') || 'default';
+
+    const suffix = typeof profile?.id === 'string' && profile.id ? profile.id.slice(0, 8) : 'default';
+    const namespace = `${slug}-${suffix}`;
+
+    window.localStorage.setItem(OFFLINE_NAMESPACE_STORAGE_KEY, namespace);
+  } catch {
+    // Ignore storage failures.
+  }
+}
+
+export function getOfflineAccountNamespace(): string {
+  if (typeof window === 'undefined') return 'default';
+
+  try {
+    const stored = window.localStorage.getItem(OFFLINE_NAMESPACE_STORAGE_KEY);
+    return stored || 'default';
+  } catch {
+    return 'default';
+  }
+}
+
 export function saveOfflineAuthSession(email: string, profile: Record<string, unknown>): void {
   const payload: OfflineAuthSession = {
     email,
@@ -53,6 +89,7 @@ export function saveOfflineAuthSession(email: string, profile: Record<string, un
     createdAt: new Date().toISOString(),
   };
 
+  setOfflineAccountNamespace(profile);
   writeStorage(OFFLINE_AUTH_STORAGE_KEY, payload);
 }
 
@@ -73,6 +110,7 @@ export async function saveRememberedLogin(
   password: string,
   profile: Record<string, unknown>
 ): Promise<void> {
+  setOfflineAccountNamespace(profile);
   const payload: RememberedLoginPayload = {
     email,
     password,

@@ -163,11 +163,11 @@ class SyncEngine {
     const client = supabase as any;
     switch (item.operation) {
       case 'INSERT':
-        return client.from(item.table_name).insert(item.payload);
+        return client.from(item.table_name).upsert(item.payload, { onConflict: 'id' });
       case 'UPDATE':
         return client
           .from(item.table_name)
-          .update(item.payload)
+          .upsert(item.payload, { onConflict: 'id' })
           .eq('id', item.record_id);
       case 'DELETE':
         return client

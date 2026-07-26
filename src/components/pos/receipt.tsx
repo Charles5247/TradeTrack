@@ -39,6 +39,12 @@ export function Receipt({ data }: { data: ReceiptData }) {
             <span>{data.customerName}</span>
           </div>
         )}
+        {data.customerPhone && (
+          <div className="receipt-row">
+            <span>Phone:</span>
+            <span>{data.customerPhone}</span>
+          </div>
+        )}
         <div className="receipt-divider" />
 
         {data.items.map((item, i) => (

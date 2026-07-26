@@ -19,6 +19,8 @@ import { formatCurrency, formatDate } from '@/lib/utils/format';
 import { useAuthStore } from '@/store';
 import type { VendorTransaction, Product } from '@/types';
 import { useI18n } from '@/i18n';
+import { buildReceiptData, type ReceiptData } from '@/lib/receipt/build-receipt';
+import { downloadReceiptPDF } from '@/lib/pdf/receipt-pdf';
 
 async function fetchVendors() {
   const supabase = createClient();
@@ -44,6 +46,8 @@ export default function VendorsPage() {
   const { user } = useAuthStore();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [viewVendor, setViewVendor] = useState<VendorTransaction | null>(null);
+  const [paymentDialog, setPaymentDialog] = useState<{ open: boolean; vendor: VendorTransaction | null }>({ open: false, vendor: null });
+  const [paymentAmount, setPaymentAmount] = useState('');
   const [formData, setFormData] = useState({
     vendor_name: '',
     vendor_phone: '',
@@ -102,6 +106,33 @@ export default function VendorsPage() {
         }))
       );
 
+      const warehouse = await supabase
+        .from('warehouses')
+        .select('id')
+        .eq('organization_id', orgId)
+        .order('name')
+        .limit(1)
+        .maybeSingle();
+
+      await supabase.from('sales').insert({
+        organization_id: orgId,
+        invoice_number: `VENDOR-${String(Date.now()).slice(-6)}`,
+        cashier_id: user!.id,
+        warehouse_id: warehouse?.data?.id || '',
+        customer_name: data.vendor_name,
+        customer_phone: data.vendor_phone || null,
+        subtotal: totalValue,
+        discount: 0,
+        tax: 0,
+        total: totalValue,
+        amount_paid: 0,
+        change_amount: 0,
+        payment_method: 'transfer',
+        payment_status: 'unpaid',
+        status: 'pending',
+        notes: `Vendor transaction ${vt.id}`,
+      });
+
       // Deduct inventory
       for (const item of items) {
         const supabase2 = createClient();
@@ -137,6 +168,19 @@ export default function VendorsPage() {
       const status = amount >= (vt?.total_value || 0) ? 'completed' : 'partial';
       const { error } = await supabase.from('vendor_transactions').update({ amount_paid: amount, status }).eq('id', id);
       if (error) throw error;
+
+      const paymentStatus = amount >= (vt?.total_value || 0) ? 'paid' : 'partial';
+      const saleStatus = amount >= (vt?.total_value || 0) ? 'completed' : 'pending';
+      await supabase
+        .from('sales')
+        .update({
+          amount_paid: amount,
+          change_amount: Math.max(0, amount - (vt?.total_value || 0)),
+          payment_status: paymentStatus,
+          status: saleStatus,
+        })
+        .eq('notes', `Vendor transaction ${id}`)
+        .is('deleted_at', null);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vendors'] });
@@ -159,6 +203,43 @@ export default function VendorsPage() {
   const totalPending = vendors
     .filter((v) => v.status === 'pending' || v.status === 'partial')
     .reduce((s, v) => s + (v.total_value - v.amount_paid), 0);
+
+  const getVendorReceiptData = (vendor: VendorTransaction): ReceiptData => {
+    const items = (vendor.items || []).map((item) => ({
+      name: (item.product as { name?: string } | null)?.name || 'Item',
+      quantity: item.quantity,
+      unitPrice: item.unit_price,
+      total: item.total,
+    }));
+
+    return buildReceiptData({
+      sale: {
+        invoice_number: `VENDOR-${vendor.id.slice(0, 8).toUpperCase()}`,
+        subtotal: vendor.total_value,
+        discount: 0,
+        tax: 0,
+        total: vendor.total_value,
+        amount_paid: vendor.amount_paid,
+        change_amount: Math.max(0, vendor.total_value - vendor.amount_paid),
+        payment_method: 'transfer',
+        customer_name: vendor.vendor_name,
+        customer_phone: vendor.vendor_phone,
+        notes: vendor.notes,
+        created_at: vendor.created_at,
+      },
+      items: items.map((item) => ({
+        product: { name: item.name } as never,
+        quantity: item.quantity,
+        unit_price: item.unitPrice,
+        unitPrice: item.unitPrice,
+        total: item.total,
+        discount: 0,
+      })) as never,
+      orgName: 'TradeTrack',
+      cashierName: (vendor.creator as { full_name?: string } | null)?.full_name || user?.full_name,
+      currency: 'NGN',
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -246,10 +327,8 @@ export default function VendorsPage() {
                               variant="outline"
                               className="h-7 text-xs text-green-600 border-green-200"
                               onClick={() => {
-                                const amt = prompt(`Record payment for ${v.vendor_name}\nBalance: ${formatCurrency(balance)}\nEnter amount:`);
-                                if (amt && parseFloat(amt) > 0) {
-                                  markPaidMutation.mutate({ id: v.id, amount: v.amount_paid + parseFloat(amt) });
-                                }
+                                setPaymentAmount(String(Math.max(0, balance)));
+                                setPaymentDialog({ open: true, vendor: v });
                               }}
                             >
                               <DollarSign className="h-3 w-3 mr-1" /> {t.vendors.pay}
@@ -357,6 +436,44 @@ export default function VendorsPage() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={paymentDialog.open} onOpenChange={(open) => setPaymentDialog({ open, vendor: open ? paymentDialog.vendor : null })}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Record payment</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm">
+              <p className="font-medium">{paymentDialog.vendor?.vendor_name}</p>
+              <p className="text-muted-foreground">Balance: {formatCurrency((paymentDialog.vendor?.total_value || 0) - (paymentDialog.vendor?.amount_paid || 0))}</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Amount paid</Label>
+              <Input type="number" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} />
+            </div>
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1" onClick={() => setPaymentDialog({ open: false, vendor: null })}>Cancel</Button>
+              <Button
+                className="flex-1"
+                onClick={() => {
+                  if (!paymentDialog.vendor) return;
+                  const amount = Number(paymentAmount);
+                  if (!Number.isFinite(amount) || amount <= 0) {
+                    toast.error('Enter a valid payment amount');
+                    return;
+                  }
+                  markPaidMutation.mutate({ id: paymentDialog.vendor.id, amount: paymentDialog.vendor.amount_paid + amount });
+                  setPaymentDialog({ open: false, vendor: null });
+                  setPaymentAmount('');
+                }}
+                disabled={markPaidMutation.isPending}
+              >
+                Save payment
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* View Dialog */}
       {viewVendor && (
         <Dialog open={!!viewVendor} onOpenChange={() => setViewVendor(null)}>
@@ -381,6 +498,25 @@ export default function VendorsPage() {
                     <span>{item.quantity} × {formatCurrency(item.unit_price)} = <strong>{formatCurrency(item.total)}</strong></span>
                   </div>
                 ))}
+              </div>
+
+              <div className="rounded-lg border border-border p-3 bg-muted/30">
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const receiptData = getVendorReceiptData(viewVendor);
+                      if (viewVendor.status === 'completed') {
+                        downloadReceiptPDF(receiptData);
+                      } else {
+                        window.print();
+                      }
+                    }}
+                  >
+                    {viewVendor.status === 'completed' ? 'Download receipt' : 'Generate invoice'}
+                  </Button>
+                </div>
               </div>
             </div>
           </DialogContent>

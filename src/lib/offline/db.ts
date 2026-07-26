@@ -6,6 +6,7 @@
 
 import { openDB, type IDBPDatabase } from 'idb';
 import { generateId } from '@/lib/utils/id';
+import { getOfflineAccountNamespace } from './auth-cache';
 
 // Use a plain interface without the DBSchema constraint to avoid index signature conflicts
 interface ProductRecord {
@@ -114,11 +115,21 @@ type StoreNames =
 type TradeTrackIDB = IDBPDatabase<any>;
 
 let dbInstance: TradeTrackIDB | null = null;
+let activeDbName: string | null = null;
+
+function getOfflineDatabaseName(): string {
+  const namespace = getOfflineAccountNamespace();
+  return `tradetrack-offline-${namespace}`;
+}
 
 export async function getDB(): Promise<TradeTrackIDB> {
-  if (dbInstance) return dbInstance;
+  const dbName = getOfflineDatabaseName();
+  if (dbInstance && activeDbName === dbName) return dbInstance;
 
-  dbInstance = await openDB('tradetrack-offline', 2, {
+  dbInstance = null;
+  activeDbName = null;
+
+  dbInstance = await openDB(dbName, 2, {
     upgrade(db, oldVersion) {
       // -- v1 stores --
       if (!db.objectStoreNames.contains('products')) {
@@ -171,6 +182,7 @@ export async function getDB(): Promise<TradeTrackIDB> {
     },
   });
 
+  activeDbName = dbName;
   return dbInstance;
 }
 
@@ -272,6 +284,19 @@ export async function addToSyncQueue(
   payload: Record<string, unknown>
 ): Promise<void> {
   const db = await getDB();
+  const existingItems = await db.getAll('sync_queue');
+  const alreadyQueued = existingItems.some((item) => {
+    const record = item as SyncQueueRecord;
+    return (
+      record.table_name === tableName &&
+      record.record_id === recordId &&
+      record.operation === operation &&
+      ['pending', 'syncing'].includes(record.status)
+    );
+  });
+
+  if (alreadyQueued) return;
+
   const record: SyncQueueRecord = {
     id: generateId(),
     table_name: tableName,

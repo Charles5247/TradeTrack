@@ -52,6 +52,7 @@ export function downloadReceiptPDF(receipt: ReceiptData) {
   row('Date:', new Date(receipt.dateISO).toLocaleString());
   if (receipt.cashierName) row('Cashier:', receipt.cashierName);
   if (receipt.customerName) row('Customer:', receipt.customerName);
+  if (receipt.customerPhone) row('Phone:', receipt.customerPhone);
   divider();
 
   receipt.items.forEach((item) => {
