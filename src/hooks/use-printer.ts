@@ -16,7 +16,9 @@ import {
   type ConnectedBluetoothPrinter,
 } from '@/lib/printer/webbluetooth-printer';
 import { receiptToEscPos } from '@/lib/printer/receipt-to-escpos';
+import { transferReceiptToEscPos } from '@/lib/printer/transfer-receipt-to-escpos';
 import type { ReceiptData } from '@/lib/receipt/build-receipt';
+import type { TransferReceiptData } from '@/lib/receipt/build-transfer-receipt';
 
 export type PrinterTransport = 'usb' | 'bluetooth' | null;
 export type PrinterStatus = 'disconnected' | 'connecting' | 'connected' | 'printing' | 'error';
@@ -154,6 +156,49 @@ export function usePrinter() {
     [state.transport]
   );
 
+  /**
+   * Same as `printReceipt` but for the distinct warehouse-transfer "Stock
+   * Transfer Note" template.
+   */
+  const printTransferReceipt = useCallback(
+    async (data: TransferReceiptData, charWidth = 32): Promise<boolean> => {
+      if (state.transport === 'usb' && usbRef.current) {
+        setState((s) => ({ ...s, status: 'printing' }));
+        try {
+          await printViaUsb(usbRef.current, transferReceiptToEscPos(data, charWidth));
+          setState((s) => ({ ...s, status: 'connected' }));
+          return true;
+        } catch (err) {
+          setState((s) => ({
+            ...s,
+            status: 'error',
+            error: err instanceof Error ? err.message : 'Print failed',
+          }));
+          return false;
+        }
+      }
+
+      if (state.transport === 'bluetooth' && bluetoothRef.current) {
+        setState((s) => ({ ...s, status: 'printing' }));
+        try {
+          await printViaBluetooth(bluetoothRef.current, transferReceiptToEscPos(data, charWidth));
+          setState((s) => ({ ...s, status: 'connected' }));
+          return true;
+        } catch (err) {
+          setState((s) => ({
+            ...s,
+            status: 'error',
+            error: err instanceof Error ? err.message : 'Print failed',
+          }));
+          return false;
+        }
+      }
+
+      return false;
+    },
+    [state.transport]
+  );
+
   return {
     ...state,
     usbSupported,
@@ -162,6 +207,7 @@ export function usePrinter() {
     connectBluetooth,
     disconnect,
     printReceipt,
+    printTransferReceipt,
     isConnected: state.status === 'connected' || state.status === 'printing',
   };
 }

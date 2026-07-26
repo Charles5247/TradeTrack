@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, AlertCircle, CheckCircle, Clock, DollarSign } from 'lucide-react';
+import { Plus, AlertCircle, CheckCircle, Clock, DollarSign, Loader2, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,12 +16,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency, formatDate } from '@/lib/utils/format';
-import { useAuthStore } from '@/store';
+import { useAuthStore, useOrgStore } from '@/store';
 import type { VendorTransaction, Product } from '@/types';
 import { useI18n } from '@/i18n';
 import { buildReceiptData, type ReceiptData } from '@/lib/receipt/build-receipt';
 import { AccessGuard } from '@/components/shared/access-guard';
 import { downloadReceiptPDF } from '@/lib/pdf/receipt-pdf';
+import { generateId } from '@/lib/utils/id';
 
 async function fetchVendors() {
   const supabase = createClient();
@@ -53,10 +54,14 @@ function VendorsPageInner() {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
+  const { organizationName, organizationAddress, organizationPhone } = useOrgStore();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [viewVendor, setViewVendor] = useState<VendorTransaction | null>(null);
   const [paymentDialog, setPaymentDialog] = useState<{ open: boolean; vendor: VendorTransaction | null }>({ open: false, vendor: null });
   const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<string>('cash');
+  const [paymentReceiptUrl, setPaymentReceiptUrl] = useState<string>('');
+  const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
   const [formData, setFormData] = useState({
     vendor_name: '',
     vendor_phone: '',
@@ -171,11 +176,24 @@ function VendorsPageInner() {
   });
 
   const markPaidMutation = useMutation({
-    mutationFn: async ({ id, amount }: { id: string; amount: number }) => {
+    mutationFn: async ({
+      id,
+      amount,
+      payment_method,
+      receipt_url,
+    }: { id: string; amount: number; payment_method?: string; receipt_url?: string }) => {
       const supabase = createClient();
       const { data: vt } = await supabase.from('vendor_transactions').select('total_value').eq('id', id).single();
       const status = amount >= (vt?.total_value || 0) ? 'completed' : 'partial';
-      const { error } = await supabase.from('vendor_transactions').update({ amount_paid: amount, status }).eq('id', id);
+      const { error } = await supabase
+        .from('vendor_transactions')
+        .update({
+          amount_paid: amount,
+          status,
+          ...(payment_method ? { payment_method: payment_method as 'cash' | 'transfer' | 'pos' } : {}),
+          ...(receipt_url ? { receipt_url } : {}),
+        })
+        .eq('id', id);
       if (error) throw error;
 
       const paymentStatus = amount >= (vt?.total_value || 0) ? 'paid' : 'partial';
@@ -244,7 +262,9 @@ function VendorsPageInner() {
         total: item.total,
         discount: 0,
       })) as never,
-      orgName: 'TradeTrack',
+      orgName: organizationName,
+      orgAddress: organizationAddress || undefined,
+      orgPhone: organizationPhone || undefined,
       cashierName: (vendor.creator as { full_name?: string } | null)?.full_name || user?.full_name,
       currency: 'NGN',
     });
@@ -459,6 +479,64 @@ function VendorsPageInner() {
               <Label>Amount paid</Label>
               <Input type="number" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} />
             </div>
+            <div className="space-y-2">
+              <Label>{t.vendors.payment_method}</Label>
+              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t.vendors.select_payment_method} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">{t.pos.cash}</SelectItem>
+                  <SelectItem value="transfer">{t.pos.transfer}</SelectItem>
+                  <SelectItem value="pos">{t.pos.pos_terminal}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>{t.vendors.proof_of_payment}</Label>
+              {paymentReceiptUrl ? (
+                <div className="flex items-center justify-between rounded-md border border-border p-2 text-xs">
+                  <span className="text-green-600">{t.vendors.receipt_uploaded}</span>
+                  <Button size="sm" variant="ghost" onClick={() => setPaymentReceiptUrl('')}>Remove</Button>
+                </div>
+              ) : (
+                <label className="flex items-center gap-2 rounded-md border border-dashed border-border p-2 text-xs cursor-pointer hover:bg-muted/50">
+                  {isUploadingReceipt ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Upload className="h-4 w-4" />
+                  )}
+                  <span>{t.vendors.upload_receipt}</span>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    disabled={isUploadingReceipt}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      e.target.value = '';
+                      if (!file) return;
+                      setIsUploadingReceipt(true);
+                      try {
+                        const supabase = createClient();
+                        const { data: { user: authUser } } = await supabase.auth.getUser();
+                        if (!authUser) throw new Error('Not authenticated');
+                        const path = `${authUser.id}/vendor-${generateId()}-${Date.now()}.${file.name.split('.').pop() || 'jpg'}`;
+                        const { error: uploadErr } = await supabase.storage.from('receipts').upload(path, file, { upsert: true });
+                        if (uploadErr) throw uploadErr;
+                        const { data: signed } = await supabase.storage.from('receipts').createSignedUrl(path, 60 * 60 * 24 * 365);
+                        setPaymentReceiptUrl(signed?.signedUrl || path);
+                        toast.success(t.vendors.receipt_uploaded);
+                      } catch (err) {
+                        toast.error(err instanceof Error ? err.message : 'Upload failed');
+                      } finally {
+                        setIsUploadingReceipt(false);
+                      }
+                    }}
+                  />
+                </label>
+              )}
+            </div>
             <div className="flex gap-3">
               <Button variant="outline" className="flex-1" onClick={() => setPaymentDialog({ open: false, vendor: null })}>Cancel</Button>
               <Button
@@ -470,11 +548,18 @@ function VendorsPageInner() {
                     toast.error('Enter a valid payment amount');
                     return;
                   }
-                  markPaidMutation.mutate({ id: paymentDialog.vendor.id, amount: paymentDialog.vendor.amount_paid + amount });
+                  markPaidMutation.mutate({
+                    id: paymentDialog.vendor.id,
+                    amount: paymentDialog.vendor.amount_paid + amount,
+                    payment_method: paymentMethod,
+                    receipt_url: paymentReceiptUrl || undefined,
+                  });
                   setPaymentDialog({ open: false, vendor: null });
                   setPaymentAmount('');
+                  setPaymentMethod('cash');
+                  setPaymentReceiptUrl('');
                 }}
-                disabled={markPaidMutation.isPending}
+                disabled={markPaidMutation.isPending || isUploadingReceipt}
               >
                 Save payment
               </Button>

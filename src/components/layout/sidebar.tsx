@@ -23,6 +23,7 @@ import {
   Store,
   Building2,
   Shield,
+  Search,
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { useUIStore, useAuthStore } from '@/store';
@@ -52,6 +53,7 @@ const navItems: NavItem[] = [
   { navKey: 'sales', href: '/sales', icon: History, roles: ['super_admin', 'admin'] },
   { navKey: 'warehouses', href: '/warehouses', icon: Warehouse, roles: ['super_admin', 'admin'] },
   { navKey: 'transfers', href: '/transfers', icon: ArrowLeftRight, roles: ['super_admin', 'admin'] },
+  { navKey: 'receiptLookup', href: '/receipts/lookup', icon: Search, roles: ['super_admin', 'admin', 'cashier'] },
   { navKey: 'vendors', href: '/vendors', icon: UserCheck, roles: ['super_admin', 'admin'] },
   { navKey: 'reports', href: '/reports', icon: BarChart3, roles: ['super_admin', 'admin'] },
   { navKey: 'audit', href: '/audit', icon: ClipboardList, roles: ['super_admin', 'admin'] },

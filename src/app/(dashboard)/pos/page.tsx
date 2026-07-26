@@ -224,7 +224,7 @@ export default function POSPage() {
 
 function POSPageInner() {
   const { user } = useAuthStore();
-  const { organizationName, currency } = useOrgStore();
+  const { organizationName, organizationAddress, organizationPhone, currency } = useOrgStore();
   const { t } = useI18n();
   const cart = useCartStore();
   const [searchQuery, setSearchQuery] = useState('');
@@ -372,6 +372,8 @@ function POSPageInner() {
           },
           items: lastSaleItems,
           orgName: organizationName,
+          orgAddress: organizationAddress || undefined,
+          orgPhone: organizationPhone || undefined,
           cashierName: user?.full_name,
           currency,
         })

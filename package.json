@@ -46,6 +46,7 @@
     "framer-motion": "^12.42.2",
     "html2canvas": "^1.4.1",
     "idb": "^8.0.3",
+    "jsbarcode": "^3.11.6",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
     "lucide-react": "^1.23.0",

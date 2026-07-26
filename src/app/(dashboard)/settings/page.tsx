@@ -18,7 +18,7 @@ import { cacheUserSession } from '@/lib/offline/db';
 
 export default function SettingsPage() {
   const { user, setUser } = useAuthStore();
-  const { setCurrency, setOrganizationName } = useOrgStore();
+  const { setCurrency, setOrganizationName, setOrganizationAddress, setOrganizationPhone } = useOrgStore();
   const { theme, setTheme } = useTheme();
   const { t, locale, setLocale } = useI18n();
   const [isProfileLoading, setIsProfileLoading] = useState(false);
@@ -65,10 +65,12 @@ export default function SettingsPage() {
         });
         if (data.currency) setCurrency(data.currency);
         if (data.name) setOrganizationName(data.name);
+        setOrganizationAddress(data.address || '');
+        setOrganizationPhone(data.phone || '');
       }
     }
     loadOrg();
-  }, [user?.organization_id, setCurrency, setOrganizationName]);
+  }, [user?.organization_id, setCurrency, setOrganizationName, setOrganizationAddress, setOrganizationPhone]);
 
   // Keep form in sync with user store
   useEffect(() => {
@@ -138,6 +140,8 @@ export default function SettingsPage() {
       if (error) throw error;
       setCurrency(orgData.currency);
       setOrganizationName(orgData.name.trim());
+      setOrganizationAddress(orgData.address.trim());
+      setOrganizationPhone(orgData.phone.trim());
       toast.success(t.settings.org_settings_saved);
     } catch (err) {
       console.error(err);

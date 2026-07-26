@@ -146,6 +146,199 @@
   }
 }
 
+/* Receipt template, shared by every generated receipt (POS sale, vendor
+   payment, and warehouse transfer), across all render paths: browser
+   print (this CSS), downloadable PDF, and ESC/POS thermal print. Modelled
+   on the sample till-roll layout: centered shop header, asterisk-dashed
+   dividers, a Description/Price item table, a Totals block, an optional
+   payment-details block, a bold THANK YOU footer, and a scannable linear
+   barcode, on a narrow monospace paper with jagged/perforated edges. */
+@media print {
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .receipt-print-area,
+  .receipt-print-area * {
+    visibility: visible;
+  }
+
+  .receipt-print-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 80mm;
+  }
+}
+
+.receipt-paper {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #000;
+  background: #fff;
+  width: 100%;
+  padding: 10px 4mm 14px;
+  position: relative;
+}
+
+/* Jagged/perforated edge along the very top and bottom of the paper,
+   mimicking a torn till-roll edge like the sample receipt. */
+.receipt-paper::before,
+.receipt-paper::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: linear-gradient(135deg, #fff 50%, transparent 50%),
+    linear-gradient(45deg, #fff 50%, transparent 50%);
+  background-size: 10px 10px;
+  background-position: 0 0;
+}
+
+.receipt-paper::before {
+  top: 0;
+}
+
+.receipt-paper::after {
+  bottom: 0;
+  transform: scaleY(-1);
+}
+
+.receipt-center {
+  text-align: center;
+}
+
+.receipt-bold {
+  font-weight: 700;
+}
+
+.receipt-lg {
+  font-size: 14px;
+}
+
+.receipt-xl {
+  font-size: 16px;
+}
+
+.receipt-small {
+  font-size: 9px;
+}
+
+.receipt-uppercase {
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Asterisk-dashed divider, matching the sample receipt's section
+   separators. */
+.receipt-divider {
+  margin: 6px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  letter-spacing: 1px;
+}
+
+.receipt-divider::before {
+  content: '****************************************';
+}
+
+.receipt-title {
+  text-align: center;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin: 2px 0;
+  text-transform: uppercase;
+}
+
+.receipt-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 1px 0;
+}
+
+.receipt-row > span:last-child {
+  text-align: right;
+  flex-shrink: 0;
+  max-width: 60%;
+  white-space: nowrap;
+}
+
+/* Description/Price item table header, mirroring the sample's two-column
+   layout. */
+.receipt-table-head {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  margin: 4px 0 2px;
+  text-transform: uppercase;
+  font-size: 10px;
+}
+
+.receipt-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 2px 0;
+}
+
+.receipt-item > span:first-child {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.receipt-item > span:last-child {
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.receipt-item-meta {
+  font-size: 9px;
+  color: #333;
+  margin: 0 0 2px;
+}
+
+.receipt-notes {
+  margin-top: 4px;
+  font-style: italic;
+}
+
+/* Payment-details block (Bank card / Approval Code), boxed by dividers
+   above and below like the sample. */
+.receipt-payment-details {
+  margin: 4px 0;
+}
+
+/* Barcode area at the very bottom of the receipt. */
+.receipt-barcode {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.receipt-barcode svg {
+  width: 85%;
+  max-width: 220px;
+  height: 42px;
+}
+
+.receipt-barcode-value {
+  font-size: 8px;
+  letter-spacing: 2px;
+  margin-top: 2px;
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;
