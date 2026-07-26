@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import {
   Search, ShoppingCart, Trash2, Plus, Minus, X, CreditCard,
@@ -225,6 +225,7 @@ export default function POSPage() {
   const [showReceipt, setShowReceipt] = useState(false);
   const [lastSale, setLastSale] = useState<Record<string, unknown> | null>(null);
   const [lastSaleItems, setLastSaleItems] = useState<CartItem[]>([]);
+  const [isHydrated, setIsHydrated] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const printer = usePrinter();
   const [showPrinterMenu, setShowPrinterMenu] = useState(false);
@@ -247,6 +248,10 @@ export default function POSPage() {
     queryFn: () => searchProducts(searchQuery, cart.warehouse_id),
     enabled: !!cart.warehouse_id,
   });
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   const saleMutation = useMutation({
     mutationFn: completeSale,
@@ -331,9 +336,12 @@ export default function POSPage() {
     });
   };
 
-  const total = cart.getTotal();
-  const paid = parseFloat(amountPaid) || 0;
-  const change = Math.max(0, paid - total);
+  const subtotal = isHydrated ? cart.getSubtotal() : 0;
+  const discountAmount = isHydrated ? cart.getDiscountAmount() : 0;
+  const taxAmount = isHydrated ? cart.getTaxAmount() : 0;
+  const total = isHydrated ? cart.getTotal() : 0;
+  const paid = isHydrated ? parseFloat(amountPaid) || 0 : 0;
+  const change = isHydrated ? Math.max(0, paid - total) : 0;
 
   const receiptData: ReceiptData | null =
     lastSale && lastSaleItems.length > 0
@@ -397,7 +405,7 @@ export default function POSPage() {
               leftIcon={<Search className="h-4 w-4" />}
             />
           </div>
-          <Select value={cart.warehouse_id} onValueChange={cart.setWarehouse}>
+          <Select value={isHydrated ? cart.warehouse_id : ''} onValueChange={cart.setWarehouse}>
             <SelectTrigger className="w-48">
               <SelectValue placeholder={t.pos.select_warehouse} />
             </SelectTrigger>
@@ -471,7 +479,7 @@ export default function POSPage() {
           <div className="flex items-center gap-2">
             <ShoppingCart className="h-4 w-4" />
             <span className="font-semibold">{t.pos.cart}</span>
-            {cart.items.length > 0 && (
+            {isHydrated && cart.items.length > 0 && (
               <Badge variant="secondary">{cart.items.length}</Badge>
             )}
           </div>
@@ -489,7 +497,12 @@ export default function POSPage() {
 
         {/* Cart Items */}
         <div className="flex-1 overflow-y-auto p-3 space-y-2">
-          {cart.items.length === 0 ? (
+          {!isHydrated ? (
+            <div className="h-32 flex flex-col items-center justify-center text-muted-foreground">
+              <Loader2 className="h-8 w-8 opacity-30 mb-2 animate-spin" />
+              <p className="text-sm">Loading cart…</p>
+            </div>
+          ) : cart.items.length === 0 ? (
             <div className="h-32 flex flex-col items-center justify-center text-muted-foreground">
               <ShoppingCart className="h-8 w-8 opacity-30 mb-2" />
               <p className="text-sm">{t.pos.empty_cart}</p>
@@ -579,18 +592,18 @@ export default function POSPage() {
           <div className="space-y-1 text-sm">
             <div className="flex justify-between text-muted-foreground">
               <span>{t.pos.subtotal}</span>
-              <span>{formatCurrency(cart.getSubtotal())}</span>
+              <span>{formatCurrency(subtotal)}</span>
             </div>
             {cart.discount > 0 && (
               <div className="flex justify-between text-green-600">
                 <span>{t.pos.discount} ({cart.discount}%)</span>
-                <span>-{formatCurrency(cart.getDiscountAmount())}</span>
+                <span>-{formatCurrency(discountAmount)}</span>
               </div>
             )}
             {cart.tax_rate > 0 && (
               <div className="flex justify-between text-muted-foreground">
                 <span>{t.pos.tax} ({cart.tax_rate}%)</span>
-                <span>{formatCurrency(cart.getTaxAmount())}</span>
+                <span>{formatCurrency(taxAmount)}</span>
               </div>
             )}
             <div className="flex justify-between font-bold text-base border-t border-border pt-2">
@@ -621,7 +634,7 @@ export default function POSPage() {
           <Button
             className="w-full h-10"
             onClick={handleCheckout}
-            disabled={cart.items.length === 0 || saleMutation.isPending}
+            disabled={!isHydrated || cart.items.length === 0 || saleMutation.isPending}
           >
             {saleMutation.isPending ? (
               <>{t.pos.processing}</>

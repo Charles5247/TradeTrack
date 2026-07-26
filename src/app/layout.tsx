@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import Script from "next/script";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 import { QueryProvider } from "@/components/shared/query-provider";
@@ -70,8 +71,9 @@ export default async function RootLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
-        {/* Plain script – avoids React's "script inside component" warning */}
-        <script
+        <Script
+          id="theme-init"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
