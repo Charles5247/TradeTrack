@@ -4,7 +4,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import {
   Search, ShoppingCart, Trash2, Plus, Minus, X, CreditCard,
-  Printer, Package, AlertCircle, Check, Barcode,
+  Printer, Package, AlertCircle, Check, Barcode, Download, Usb, Bluetooth, Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -17,10 +17,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency } from '@/lib/utils/format';
-import { useCartStore, useAuthStore } from '@/store';
+import { useCartStore, useAuthStore, useOrgStore } from '@/store';
 import { useI18n } from '@/i18n';
 import type { Product, Warehouse, CartItem } from '@/types';
 import Image from 'next/image';
+import { usePrinter } from '@/hooks/use-printer';
+import { buildReceiptData, type ReceiptData } from '@/lib/receipt/build-receipt';
+import { downloadReceiptPDF } from '@/lib/pdf/receipt-pdf';
+import { Receipt } from '@/components/pos/receipt';
 
 async function searchProducts(query: string, warehouseId: string) {
   const supabase = createClient();
@@ -179,6 +183,7 @@ async function completeSale(payload: {
 
 export default function POSPage() {
   const { user } = useAuthStore();
+  const { organizationName, currency } = useOrgStore();
   const { t } = useI18n();
   const cart = useCartStore();
   const [searchQuery, setSearchQuery] = useState('');
@@ -188,7 +193,10 @@ export default function POSPage() {
   const [notes, setNotes] = useState('');
   const [showReceipt, setShowReceipt] = useState(false);
   const [lastSale, setLastSale] = useState<Record<string, unknown> | null>(null);
+  const [lastSaleItems, setLastSaleItems] = useState<CartItem[]>([]);
   const searchRef = useRef<HTMLInputElement>(null);
+  const printer = usePrinter();
+  const [showPrinterMenu, setShowPrinterMenu] = useState(false);
 
   const { data: warehouses = [] } = useQuery({
     queryKey: ['warehouses-pos'],
@@ -260,6 +268,12 @@ export default function POSPage() {
     // Get org_id from user store
     const orgId = (user as unknown as { organization_id: string })?.organization_id;
 
+    // Snapshot the cart items now — cart.clearCart() runs in onSuccess right
+    // after the mutation resolves, and the receipt (on-screen, PDF, and
+    // thermal print) all need product names/prices that the sale payload
+    // itself doesn't carry (it only has product_id).
+    setLastSaleItems([...cart.items]);
+
     saleMutation.mutate({
       cashier_id: user.id,
       organization_id: orgId,
@@ -289,6 +303,53 @@ export default function POSPage() {
   const total = cart.getTotal();
   const paid = parseFloat(amountPaid) || 0;
   const change = Math.max(0, paid - total);
+
+  const receiptData: ReceiptData | null =
+    lastSale && lastSaleItems.length > 0
+      ? buildReceiptData({
+          sale: {
+            invoice_number: String(lastSale.invoice_number ?? ''),
+            subtotal: Number(lastSale.subtotal ?? 0),
+            discount: Number(lastSale.discount ?? 0),
+            tax: Number(lastSale.tax ?? 0),
+            total: Number(lastSale.total ?? 0),
+            amount_paid: Number(lastSale.amount_paid ?? 0),
+            change_amount: Number(lastSale.change_amount ?? 0),
+            payment_method: String(lastSale.payment_method ?? ''),
+            customer_name: lastSale.customer_name as string | undefined,
+            customer_phone: lastSale.customer_phone as string | undefined,
+            notes: lastSale.notes as string | undefined,
+            created_at: lastSale.created_at as string | undefined,
+          },
+          items: lastSaleItems,
+          orgName: organizationName,
+          cashierName: user?.full_name,
+          currency,
+        })
+      : null;
+
+  const handleBrowserPrint = () => {
+    // Uses the .print-only <Receipt> rendered below — the print stylesheet
+    // (globals.css) hides everything else, so this produces a clean
+    // receipt instead of a screenshot of the whole dashboard.
+    window.print();
+  };
+
+  const handleDownloadPDF = () => {
+    if (!receiptData) return;
+    downloadReceiptPDF(receiptData);
+  };
+
+  const handleHardwarePrint = async () => {
+    if (!receiptData) return;
+    const printed = await printer.printReceipt(receiptData);
+    if (printed) {
+      toast.success('Receipt sent to printer');
+    } else {
+      toast.error('Print failed — falling back to browser print');
+      handleBrowserPrint();
+    }
+  };
 
   return (
     <div className="flex h-[calc(100vh-8rem)] gap-4 -m-4 lg:-m-6 p-4 lg:p-6">
@@ -545,7 +606,7 @@ export default function POSPage() {
 
       {/* Receipt Modal */}
       {showReceipt && lastSale && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 no-print">
           <div className="bg-card rounded-xl shadow-2xl w-full max-w-sm p-6">
             <div className="text-center mb-6">
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -559,28 +620,115 @@ export default function POSPage() {
                 {formatCurrency(Number(lastSale.total))}
               </p>
             </div>
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => window.print()}
-              >
+
+            {/* Primary print/export actions */}
+            <div className="flex gap-3 mb-3">
+              <Button variant="outline" className="flex-1" onClick={handleBrowserPrint}>
                 <Printer className="h-4 w-4 mr-2" />
                 {t.common.print}
               </Button>
-              <Button
-                className="flex-1"
-                onClick={() => {
-                  setShowReceipt(false);
-                  setLastSale(null);
-                }}
-              >
-                {t.pos.new_sale}
+              <Button variant="outline" className="flex-1" onClick={handleDownloadPDF}>
+                <Download className="h-4 w-4 mr-2" />
+                PDF
               </Button>
             </div>
+
+            {/* Hardware thermal-printer options — only shown when a printer
+                is connected, or lets the trader connect one on the spot.
+                Hidden entirely if neither WebUSB nor WebBluetooth are
+                supported (e.g. iPhone Safari), since there's nothing useful
+                to offer there beyond the browser print/PDF above. */}
+            {(printer.usbSupported || printer.bluetoothSupported) && (
+              <div className="mb-3 border rounded-lg p-3 bg-muted/30">
+                {printer.isConnected ? (
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-sm min-w-0">
+                      {printer.transport === 'usb' ? (
+                        <Usb className="h-4 w-4 shrink-0 text-green-600" />
+                      ) : (
+                        <Bluetooth className="h-4 w-4 shrink-0 text-green-600" />
+                      )}
+                      <span className="truncate">{printer.deviceName}</span>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={handleHardwarePrint}
+                      disabled={printer.status === 'printing'}
+                    >
+                      {printer.status === 'printing' ? (
+                        <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                      ) : (
+                        <Printer className="h-4 w-4 mr-1.5" />
+                      )}
+                      Print to device
+                    </Button>
+                  </div>
+                ) : (
+                  <div>
+                    <button
+                      type="button"
+                      className="text-xs text-muted-foreground underline w-full text-left"
+                      onClick={() => setShowPrinterMenu((v) => !v)}
+                    >
+                      {printer.status === 'connecting'
+                        ? 'Connecting…'
+                        : 'Connect a receipt printer (USB / Bluetooth)'}
+                    </button>
+                    {showPrinterMenu && (
+                      <div className="flex gap-2 mt-2">
+                        {printer.usbSupported && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1"
+                            onClick={printer.connectUsb}
+                            disabled={printer.status === 'connecting'}
+                          >
+                            <Usb className="h-4 w-4 mr-1.5" />
+                            USB
+                          </Button>
+                        )}
+                        {printer.bluetoothSupported && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1"
+                            onClick={printer.connectBluetooth}
+                            disabled={printer.status === 'connecting'}
+                          >
+                            <Bluetooth className="h-4 w-4 mr-1.5" />
+                            Bluetooth
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                    {printer.error && (
+                      <p className="text-xs text-destructive mt-1.5">{printer.error}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <Button
+              className="w-full"
+              onClick={() => {
+                setShowReceipt(false);
+                setLastSale(null);
+                setLastSaleItems([]);
+              }}
+            >
+              {t.pos.new_sale}
+            </Button>
           </div>
         </div>
       )}
+
+      {/* Print-only receipt — invisible on screen, the only thing shown by
+          window.print() thanks to the .print-only/.no-print rules in
+          globals.css. Rendered whenever we have data so it's ready the
+          instant handleBrowserPrint() is called. */}
+      {receiptData && <Receipt data={receiptData} />}
     </div>
   );
 }

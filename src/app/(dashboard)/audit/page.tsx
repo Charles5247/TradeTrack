@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Skeleton } from '@/components/ui/skeleton';
 import { createClient } from '@/lib/supabase/client';
 import { formatDateTime } from '@/lib/utils/format';
+import { downloadTablePDF } from '@/lib/pdf/table-pdf';
 import type { AuditLog } from '@/types';
 import { useI18n } from '@/i18n';
 
@@ -84,6 +85,24 @@ export default function AuditPage() {
     URL.revokeObjectURL(url);
   };
 
+  const exportLogsPDF = () => {
+    const headers = ['Time', 'User', 'Action', 'Resource', 'IP Address'];
+    const rows = logs.map((l) => [
+      formatDateTime(l.created_at),
+      (l.user as { full_name?: string } | null)?.full_name || '',
+      l.action,
+      l.resource_type,
+      l.ip_address || '',
+    ]);
+    downloadTablePDF({
+      title: 'Audit Log',
+      subtitle: `${logs.length} entries · generated ${new Date().toLocaleString()}`,
+      headers,
+      rows,
+      filename: `audit-logs-${new Date().toISOString().split('T')[0]}.pdf`,
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -93,10 +112,16 @@ export default function AuditPage() {
             {t.audit.subtitle}
           </p>
         </div>
-        <Button variant="outline" onClick={exportLogs}>
-          <Download className="h-4 w-4 mr-2" />
-          {t.audit.export_csv}
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={exportLogs}>
+            <Download className="h-4 w-4 mr-2" />
+            {t.audit.export_csv}
+          </Button>
+          <Button variant="outline" onClick={exportLogsPDF}>
+            <Download className="h-4 w-4 mr-2" />
+            PDF
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}

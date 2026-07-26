@@ -14,6 +14,7 @@ import {
 } from 'recharts';
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency, formatDate } from '@/lib/utils/format';
+import { downloadTablePDF } from '@/lib/pdf/table-pdf';
 
 type ReportPeriod = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
 
@@ -128,6 +129,23 @@ export default function ReportsPage() {
     a.click();
   };
 
+  const exportPDF = () => {
+    if (!data?.topProducts) return;
+    const headers = ['Product', 'Units Sold', 'Revenue'];
+    const rows = data.topProducts.map((p) => [p.name, p.quantity, formatCurrency(p.revenue)]);
+    const s = data.summary;
+    const subtitle = s
+      ? `${s.total_transactions} transactions · Revenue ${formatCurrency(s.total_revenue)} · Profit margin ${s.profit_margin.toFixed(1)}%`
+      : undefined;
+    downloadTablePDF({
+      title: `Reports & Analytics — ${period.charAt(0).toUpperCase() + period.slice(1)}`,
+      subtitle,
+      headers,
+      rows,
+      filename: `report-${period}-${new Date().toISOString().split('T')[0]}.pdf`,
+    });
+  };
+
   const summary = data?.summary;
 
   return (
@@ -153,6 +171,10 @@ export default function ReportsPage() {
           <Button variant="outline" onClick={exportCSV}>
             <Download className="h-4 w-4 mr-2" />
             Export
+          </Button>
+          <Button variant="outline" onClick={exportPDF}>
+            <Download className="h-4 w-4 mr-2" />
+            PDF
           </Button>
         </div>
       </div>

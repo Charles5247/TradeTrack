@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Skeleton } from '@/components/ui/skeleton';
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency, formatDateTime } from '@/lib/utils/format';
+import { downloadTablePDF } from '@/lib/pdf/table-pdf';
 import type { Sale, SaleItem } from '@/types';
 import { useI18n } from '@/i18n';
 
@@ -76,6 +77,27 @@ function exportToCSV(sales: Sale[]) {
   URL.revokeObjectURL(url);
 }
 
+function exportToPDF(sales: Sale[]) {
+  const headers = ['Invoice', 'Customer', 'Cashier', 'Warehouse', 'Total', 'Payment', 'Status', 'Date'];
+  const rows = sales.map((s) => [
+    s.invoice_number,
+    s.customer_name || '',
+    (s.cashier as { full_name?: string } | null)?.full_name || '',
+    (s.warehouse as { name?: string } | null)?.name || '',
+    formatCurrency(s.total),
+    s.payment_method,
+    s.status,
+    new Date(s.created_at).toLocaleDateString(),
+  ]);
+  downloadTablePDF({
+    title: 'Sales Report',
+    subtitle: `${sales.length} sales · generated ${new Date().toLocaleString()}`,
+    headers,
+    rows,
+    filename: `sales-${new Date().toISOString().split('T')[0]}.pdf`,
+  });
+}
+
 export default function SalesPage() {
   const { t } = useI18n();
   const [search, setSearch] = useState('');
@@ -122,10 +144,16 @@ export default function SalesPage() {
             {t.sales.subtitle.replace('{count}', String(sales.length)).replace('{revenue}', formatCurrency(totalRevenue))}
           </p>
         </div>
-        <Button variant="outline" onClick={() => exportToCSV(sales)}>
-          <Download className="h-4 w-4 mr-2" />
-          {t.sales.export_csv}
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => exportToCSV(sales)}>
+            <Download className="h-4 w-4 mr-2" />
+            {t.sales.export_csv}
+          </Button>
+          <Button variant="outline" onClick={() => exportToPDF(sales)}>
+            <Download className="h-4 w-4 mr-2" />
+            PDF
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
