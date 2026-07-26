@@ -40,6 +40,7 @@ export async function createAuditLog(entry: AuditEntry) {
       user_agent: userAgent,
     };
 
+    if (!supabase) return;
     await supabase.from('audit_logs').insert(record);
   } catch {
     // Audit failures should not crash the app
@@ -62,6 +63,7 @@ export async function logActivity(
       description,
       metadata: metadata || {},
     };
+    if (!supabase) return;
     await supabase.from('activity_logs').insert(record);
   } catch {
     // Ignore

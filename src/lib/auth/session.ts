@@ -6,6 +6,8 @@ import type { User } from '@/types';
 
 export async function getSession() {
   const supabase = await createClient();
+  if (!supabase) return null;
+
   const { data: { user }, error } = await supabase.auth.getUser();
   if (error || !user) return null;
   return user;
@@ -13,6 +15,8 @@ export async function getSession() {
 
 export async function getCurrentUser(): Promise<User | null> {
   const supabase = await createClient();
+  if (!supabase) return null;
+
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
@@ -39,17 +43,21 @@ export async function requireRole(roles: string[]): Promise<User> {
 
 export async function signIn(email: string, password: string) {
   const supabase = await createClient();
+  if (!supabase) return { data: { user: null }, error: new Error('Supabase is not configured') };
   return supabase.auth.signInWithPassword({ email, password });
 }
 
 export async function signOut() {
   const supabase = await createClient();
-  await supabase.auth.signOut();
+  if (supabase) {
+    await supabase.auth.signOut();
+  }
   redirect('/login');
 }
 
 export async function resetPassword(email: string) {
   const supabase = await createClient();
+  if (!supabase) return { data: {}, error: new Error('Supabase is not configured') };
   return supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/reset-password`,
   });
@@ -57,5 +65,6 @@ export async function resetPassword(email: string) {
 
 export async function updatePassword(password: string) {
   const supabase = await createClient();
+  if (!supabase) return { data: {}, error: new Error('Supabase is not configured') };
   return supabase.auth.updateUser({ password });
 }

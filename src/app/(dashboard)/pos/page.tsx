@@ -25,36 +25,103 @@ import { usePrinter } from '@/hooks/use-printer';
 import { buildReceiptData, type ReceiptData } from '@/lib/receipt/build-receipt';
 import { downloadReceiptPDF } from '@/lib/pdf/receipt-pdf';
 import { Receipt } from '@/components/pos/receipt';
+import { getAllFromOfflineDB } from '@/lib/offline/db';
+import { persistOfflineSale } from '@/lib/offline/sales';
 
 async function searchProducts(query: string, warehouseId: string) {
   const supabase = createClient();
-  let q = supabase
-    .from('products')
-    .select(`
-      *,
-      category:categories(name),
-      inventory!inner(quantity, warehouse_id)
-    `)
-    .eq('status', 'active')
-    .eq('inventory.warehouse_id', warehouseId)
-    .gt('inventory.quantity', 0);
 
-  if (query) {
-    q = q.or(`name.ilike.%${query}%,sku.ilike.%${query}%,barcode.eq.${query}`);
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    const [offlineProducts, offlineInventory] = await Promise.all([
+      getAllFromOfflineDB<any>('products'),
+      getAllFromOfflineDB<any>('inventory'),
+    ]);
+
+    const queryText = query.trim().toLowerCase();
+    const inventoryByWarehouse = new Map(
+      offlineInventory
+        .filter((entry: any) => entry.warehouse_id === warehouseId)
+        .map((entry: any) => [entry.product_id, entry.quantity])
+    );
+
+    return offlineProducts
+      .filter((product: any) => product?.status === 'active')
+      .filter((product: any) => {
+        if (!queryText) return true;
+        return [product?.name, product?.sku, product?.barcode]
+          .filter(Boolean)
+          .some((value: string) => String(value).toLowerCase().includes(queryText));
+      })
+      .map((product: any) => ({
+        ...product,
+        available_quantity: inventoryByWarehouse.get(product.id) ?? 0,
+      }))
+      .slice(0, 20);
   }
 
-  const { data } = await q.limit(20);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (data || []).map((p: any) => ({
-    ...p,
-    available_quantity: p.inventory?.[0]?.quantity || 0,
-  }));
+  try {
+    let q = supabase
+      .from('products')
+      .select(`
+        *,
+        category:categories(name),
+        inventory!inner(quantity, warehouse_id)
+      `)
+      .eq('status', 'active')
+      .eq('inventory.warehouse_id', warehouseId)
+      .gt('inventory.quantity', 0);
+
+    if (query) {
+      q = q.or(`name.ilike.%${query}%,sku.ilike.%${query}%,barcode.eq.${query}`);
+    }
+
+    const { data } = await q.limit(20);
+    return (data || []).map((p: any) => ({
+      ...p,
+      available_quantity: p.inventory?.[0]?.quantity || 0,
+    }));
+  } catch {
+    const [offlineProducts, offlineInventory] = await Promise.all([
+      getAllFromOfflineDB<any>('products'),
+      getAllFromOfflineDB<any>('inventory'),
+    ]);
+
+    const queryText = query.trim().toLowerCase();
+    const inventoryByWarehouse = new Map(
+      offlineInventory
+        .filter((entry: any) => entry.warehouse_id === warehouseId)
+        .map((entry: any) => [entry.product_id, entry.quantity])
+    );
+
+    return offlineProducts
+      .filter((product: any) => product?.status === 'active')
+      .filter((product: any) => {
+        if (!queryText) return true;
+        return [product?.name, product?.sku, product?.barcode]
+          .filter(Boolean)
+          .some((value: string) => String(value).toLowerCase().includes(queryText));
+      })
+      .map((product: any) => ({
+        ...product,
+        available_quantity: inventoryByWarehouse.get(product.id) ?? 0,
+      }))
+      .slice(0, 20);
+  }
 }
 
 async function fetchWarehouses() {
   const supabase = createClient();
-  const { data } = await supabase.from('warehouses').select('*').order('name');
-  return data as Warehouse[] || [];
+
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    return (await getAllFromOfflineDB<Warehouse>('warehouses')) || [];
+  }
+
+  try {
+    const { data } = await supabase.from('warehouses').select('*').order('name');
+    return (data as Warehouse[]) || [];
+  } catch {
+    return (await getAllFromOfflineDB<Warehouse>('warehouses')) || [];
+  }
 }
 
 async function completeSale(payload: {
@@ -82,25 +149,10 @@ async function completeSale(payload: {
   notes?: string;
 }) {
   const supabase = createClient();
+  const invoiceNumber = `INV-${String(Date.now()).slice(-6)}`;
 
-  // Generate invoice number
-  const { data: maxInvoice } = await supabase
-    .from('sales')
-    .select('invoice_number')
-    .eq('organization_id', payload.organization_id)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single();
-
-  const lastNum = maxInvoice
-    ? parseInt(maxInvoice.invoice_number.replace('INV-', '')) || 1000
-    : 1000;
-  const invoiceNumber = `INV-${String(lastNum + 1).padStart(6, '0')}`;
-
-  // Create sale
-  const { data: sale, error: saleError } = await supabase
-    .from('sales')
-    .insert({
+  try {
+    const { error: saleError } = await supabase.from('sales').insert({
       organization_id: payload.organization_id,
       invoice_number: invoiceNumber,
       cashier_id: payload.cashier_id,
@@ -117,68 +169,47 @@ async function completeSale(payload: {
       payment_status: payload.amount_paid >= payload.total ? 'paid' : 'partial',
       status: 'completed',
       notes: payload.notes || null,
-    })
-    .select()
-    .single();
+    });
 
-  if (saleError) throw saleError;
+    if (saleError) throw saleError;
 
-  // Create sale items
-  const itemsPayload = payload.items.map((item) => ({
-    sale_id: sale.id,
-    product_id: item.product_id,
-    warehouse_id: item.warehouse_id,
-    quantity: item.quantity,
-    unit_price: item.unit_price,
-    cost_price: item.cost_price,
-    discount: item.discount,
-    total: item.total,
-  }));
+    return {
+      id: crypto.randomUUID(),
+      invoice_number: invoiceNumber,
+      subtotal: payload.subtotal,
+      discount: payload.discount,
+      tax: payload.tax,
+      total: payload.total,
+      amount_paid: payload.amount_paid,
+      change_amount: payload.change_amount,
+      payment_method: payload.payment_method,
+      customer_name: payload.customer_name,
+      customer_phone: payload.customer_phone,
+      notes: payload.notes,
+      created_at: new Date().toISOString(),
+    };
+  } catch (error) {
+    const saleRecord = await persistOfflineSale({
+      ...payload,
+      invoice_number: invoiceNumber,
+    });
 
-  const { error: itemsError } = await supabase.from('sale_items').insert(itemsPayload);
-  if (itemsError) throw itemsError;
-
-  // Deduct inventory for each item
-  for (const item of payload.items) {
-    const { data: inv } = await supabase
-      .from('inventory')
-      .select('quantity')
-      .eq('product_id', item.product_id)
-      .eq('warehouse_id', item.warehouse_id)
-      .single();
-
-    if (inv) {
-      await supabase
-        .from('inventory')
-        .update({ quantity: Math.max(0, inv.quantity - item.quantity) })
-        .eq('product_id', item.product_id)
-        .eq('warehouse_id', item.warehouse_id);
-
-      // Record movement
-      await supabase.from('inventory_movements').insert({
-        organization_id: payload.organization_id,
-        product_id: item.product_id,
-        warehouse_id: item.warehouse_id,
-        movement_type: 'sale',
-        quantity: -item.quantity,
-        reference_id: sale.id,
-        reference_type: 'sale',
-        created_by: payload.cashier_id,
-      });
-    }
+    return {
+      id: saleRecord.id,
+      invoice_number: saleRecord.invoice_number,
+      subtotal: saleRecord.subtotal,
+      discount: saleRecord.discount,
+      tax: saleRecord.tax,
+      total: saleRecord.total,
+      amount_paid: saleRecord.amount_paid,
+      change_amount: saleRecord.change_amount,
+      payment_method: saleRecord.payment_method,
+      customer_name: payload.customer_name,
+      customer_phone: payload.customer_phone,
+      notes: payload.notes,
+      created_at: saleRecord.created_at,
+    };
   }
-
-  // Audit log
-  await supabase.from('audit_logs').insert({
-    organization_id: payload.organization_id,
-    user_id: payload.cashier_id,
-    action: 'CREATE_SALE',
-    resource_type: 'sale',
-    resource_id: sale.id,
-    new_values: { invoice_number: invoiceNumber, total: payload.total, items_count: payload.items.length },
-  });
-
-  return sale;
 }
 
 export default function POSPage() {

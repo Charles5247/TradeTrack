@@ -8,6 +8,11 @@ export default async function DashboardGroupLayout({
   children: React.ReactNode;
 }) {
   const supabase = await createClient();
+
+  if (!supabase) {
+    return <DashboardLayout>{children}</DashboardLayout>;
+  }
+
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
