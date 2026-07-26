@@ -27,6 +27,7 @@ import { downloadReceiptPDF } from '@/lib/pdf/receipt-pdf';
 import { Receipt } from '@/components/pos/receipt';
 import { getAllFromOfflineDB } from '@/lib/offline/db';
 import { persistOfflineSale } from '@/lib/offline/sales';
+import { generateId } from '@/lib/utils/id';
 
 async function searchProducts(query: string, warehouseId: string) {
   const supabase = createClient();
@@ -174,7 +175,7 @@ async function completeSale(payload: {
     if (saleError) throw saleError;
 
     return {
-      id: crypto.randomUUID(),
+      id: generateId(),
       invoice_number: invoiceNumber,
       subtotal: payload.subtotal,
       discount: payload.discount,

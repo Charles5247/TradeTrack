@@ -4,6 +4,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { Upload, X, ImageOff, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { generateId } from '@/lib/utils/id';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils/cn';
@@ -106,7 +107,7 @@ export function ImageUpload({
 
         // Build path: products/{userId}/{uuid}.webp
         const ext = 'webp';
-        const fileName = `${productId ?? crypto.randomUUID()}-${Date.now()}.${ext}`;
+        const fileName = `${productId ?? generateId()}-${Date.now()}.${ext}`;
         const path = `${user.id}/${fileName}`;
 
         // Upload to Supabase Storage

@@ -1,4 +1,5 @@
 import { getDB, addToSyncQueue } from './db';
+import { generateId } from '@/lib/utils/id';
 
 export interface OfflineSaleItemPayload {
   product_id: string;
@@ -27,7 +28,7 @@ export interface OfflineSalePayload {
 }
 
 export async function persistOfflineSale(payload: OfflineSalePayload) {
-  const saleId = crypto.randomUUID();
+  const saleId = generateId();
   const createdAt = new Date().toISOString();
 
   const saleRecord = {
@@ -52,7 +53,7 @@ export async function persistOfflineSale(payload: OfflineSalePayload) {
   };
 
   const saleItems = payload.items.map((item) => ({
-    id: crypto.randomUUID(),
+    id: generateId(),
     sale_id: saleId,
     product_id: item.product_id,
     warehouse_id: item.warehouse_id,

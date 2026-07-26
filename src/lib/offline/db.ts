@@ -5,6 +5,7 @@
  */
 
 import { openDB, type IDBPDatabase } from 'idb';
+import { generateId } from '@/lib/utils/id';
 
 // Use a plain interface without the DBSchema constraint to avoid index signature conflicts
 interface ProductRecord {
@@ -272,7 +273,7 @@ export async function addToSyncQueue(
 ): Promise<void> {
   const db = await getDB();
   const record: SyncQueueRecord = {
-    id: crypto.randomUUID(),
+    id: generateId(),
     table_name: tableName,
     operation,
     record_id: recordId,
