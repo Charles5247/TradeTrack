@@ -9,6 +9,7 @@ import {
   clearCachedSession,
   getAnyCachedSession,
 } from '@/lib/offline/db';
+import { getOfflineAuthSession } from '@/lib/offline/auth-cache';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { setUser, setLoading } = useAuthStore();
@@ -58,9 +59,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           // 2. Fall back to IndexedDB cached session (offline mode)
           const cached = await getAnyCachedSession();
+          const offlineSession = getOfflineAuthSession();
           if (cached) {
             console.info('[offline] Using cached session for user:', cached.id);
             setUser(cached.profile as unknown as User);
+          } else if (offlineSession) {
+            console.info('[offline] Using remembered offline auth session for:', offlineSession.email);
+            setUser(offlineSession.profile as unknown as User);
           } else {
             setUser(null);
           }
@@ -70,8 +75,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.warn('[offline] Network unavailable, loading cached session');
         try {
           const cached = await getAnyCachedSession();
+          const offlineSession = getOfflineAuthSession();
           if (cached) {
             setUser(cached.profile as unknown as User);
+          } else if (offlineSession) {
+            setUser(offlineSession.profile as unknown as User);
           } else {
             setUser(null);
           }

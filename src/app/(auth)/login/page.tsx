@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { loginSchema, type LoginFormData } from '@/lib/validations';
 import { createClient } from '@/lib/supabase/client';
 import { useI18n } from '@/i18n';
+import { saveOfflineAuthSession, saveRememberedLogin, verifyRememberedLogin } from '@/lib/offline/auth-cache';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -32,20 +33,52 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error, data: authData } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
       });
 
       if (error) {
+        const rememberedProfile = await verifyRememberedLogin(data.email, data.password);
+        if (rememberedProfile) {
+          saveOfflineAuthSession(data.email, rememberedProfile);
+          toast.success(t.auth.sign_in_success);
+          router.push('/dashboard');
+          router.refresh();
+          return;
+        }
+
         toast.error(error.message || t.auth.invalid_credentials);
         return;
+      }
+
+      const { data: profileData } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', authData.user?.id)
+        .single();
+
+      const profile = (profileData ?? authData.user) as Record<string, unknown> | null;
+      if (profile) {
+        saveOfflineAuthSession(data.email, profile);
+        if (data.remember) {
+          await saveRememberedLogin(data.email, data.password, profile);
+        }
       }
 
       toast.success(t.auth.sign_in_success);
       router.push('/dashboard');
       router.refresh();
     } catch {
+      const rememberedProfile = await verifyRememberedLogin(data.email, data.password);
+      if (rememberedProfile) {
+        saveOfflineAuthSession(data.email, rememberedProfile);
+        toast.success(t.auth.sign_in_success);
+        router.push('/dashboard');
+        router.refresh();
+        return;
+      }
+
       toast.error(t.auth.unexpected_error);
     } finally {
       setIsLoading(false);
