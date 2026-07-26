@@ -41,6 +41,8 @@ export const ha = {
     error: 'Kuskure',
     warning: 'Gargaɗi',
     info: 'Bayani',
+    access_denied: 'An Hana Shiga',
+    access_denied_desc: 'Ba ku da izinin duba wannan shafin.',
   },
   auth: {
     login: 'Shiga',
@@ -66,7 +68,6 @@ export const ha = {
     role_super_admin: 'Babban Manaja',
     role_owner: 'Mai Shago',
     role_admin: 'Admin',
-    role_manager: 'Manaja',
     role_cashier: 'Mai Karba Kuɗi',
   },
   nav: {
@@ -455,7 +456,6 @@ export const ha = {
     super_admin: 'Babban Shugaba',
     owner: 'Mai Shago',
     admin: 'Shugaba',
-    manager: 'Manaja',
     cashier: 'Ma\'ajin kuɗi',
     reset_password: 'Sake saita kalmar sirri',
     suspend_user: 'Dakatar da mai amfani',

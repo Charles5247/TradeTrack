@@ -19,6 +19,7 @@ import { formatDateTime } from '@/lib/utils/format';
 import { useAuthStore } from '@/store';
 import type { WarehouseTransfer, Warehouse, Product } from '@/types';
 import { useI18n } from '@/i18n';
+import { AccessGuard } from '@/components/shared/access-guard';
 
 async function fetchTransfers() {
   const supabase = createClient();
@@ -128,6 +129,14 @@ async function updateTransferStatus(id: string, status: 'received' | 'cancelled'
 }
 
 export default function TransfersPage() {
+  return (
+    <AccessGuard allow={['super_admin', 'admin']}>
+      <TransfersPageInner />
+    </AccessGuard>
+  );
+}
+
+function TransfersPageInner() {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();

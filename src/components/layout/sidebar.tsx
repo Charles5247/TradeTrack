@@ -37,23 +37,26 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
   badge?: number;
   roles?: UserRole[];
-  /** Platform-level routes intended for org owners / platform super_admin (not regular admin/manager/cashier) */
+  /** Platform-level routes intended for org owners / platform super_admin (not regular admin/cashier) */
   platformOnly?: boolean;
 }
 
+// NOTE: The Owner role is intentionally excluded from Products, Inventory, POS,
+// Sales History, Warehouses, Transfers, Vendor Sales, Reports, Audit Trail and
+// Users — Owner is a platform-level role focused on merchants/subscriptions.
 const navItems: NavItem[] = [
   { navKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { navKey: 'products', href: '/products', icon: Package, roles: ['super_admin', 'owner', 'admin'] },
-  { navKey: 'inventory', href: '/inventory', icon: Warehouse, roles: ['super_admin', 'owner', 'admin'] },
-  { navKey: 'pos', href: '/pos', icon: ShoppingCart },
-  { navKey: 'sales', href: '/sales', icon: History, roles: ['super_admin', 'owner', 'admin'] },
-  { navKey: 'warehouses', href: '/warehouses', icon: Warehouse, roles: ['super_admin', 'owner', 'admin'] },
-  { navKey: 'transfers', href: '/transfers', icon: ArrowLeftRight, roles: ['super_admin', 'owner', 'admin'] },
-  { navKey: 'vendors', href: '/vendors', icon: UserCheck, roles: ['super_admin', 'owner', 'admin'] },
-  { navKey: 'reports', href: '/reports', icon: BarChart3, roles: ['super_admin', 'owner', 'admin'] },
-  { navKey: 'audit', href: '/audit', icon: ClipboardList, roles: ['super_admin', 'owner', 'admin'] },
+  { navKey: 'products', href: '/products', icon: Package, roles: ['super_admin', 'admin'] },
+  { navKey: 'inventory', href: '/inventory', icon: Warehouse, roles: ['super_admin', 'admin'] },
+  { navKey: 'pos', href: '/pos', icon: ShoppingCart, roles: ['super_admin', 'admin', 'cashier'] },
+  { navKey: 'sales', href: '/sales', icon: History, roles: ['super_admin', 'admin'] },
+  { navKey: 'warehouses', href: '/warehouses', icon: Warehouse, roles: ['super_admin', 'admin'] },
+  { navKey: 'transfers', href: '/transfers', icon: ArrowLeftRight, roles: ['super_admin', 'admin'] },
+  { navKey: 'vendors', href: '/vendors', icon: UserCheck, roles: ['super_admin', 'admin'] },
+  { navKey: 'reports', href: '/reports', icon: BarChart3, roles: ['super_admin', 'admin'] },
+  { navKey: 'audit', href: '/audit', icon: ClipboardList, roles: ['super_admin', 'admin'] },
   { navKey: 'notifications', href: '/notifications', icon: Bell },
-  { navKey: 'users', href: '/users', icon: Users, roles: ['super_admin', 'owner'] },
+  { navKey: 'users', href: '/users', icon: Users, roles: ['super_admin'] },
   { navKey: 'subscriptions', href: '/subscriptions', icon: CreditCard, roles: ['super_admin', 'owner'] },
   { navKey: 'admin', href: '/admin', icon: Shield, roles: ['super_admin', 'owner'], platformOnly: true },
   { navKey: 'merchants', href: '/merchants', icon: Building2, roles: ['super_admin', 'owner'], platformOnly: true },

@@ -23,6 +23,7 @@ import type { Product, Warehouse, CartItem } from '@/types';
 import Image from 'next/image';
 import { usePrinter } from '@/hooks/use-printer';
 import { buildReceiptData, type ReceiptData } from '@/lib/receipt/build-receipt';
+import { AccessGuard } from '@/components/shared/access-guard';
 import { downloadReceiptPDF } from '@/lib/pdf/receipt-pdf';
 import { Receipt } from '@/components/pos/receipt';
 import { getAllFromOfflineDB } from '@/lib/offline/db';
@@ -214,6 +215,14 @@ async function completeSale(payload: {
 }
 
 export default function POSPage() {
+  return (
+    <AccessGuard allow={['super_admin', 'admin', 'cashier']}>
+      <POSPageInner />
+    </AccessGuard>
+  );
+}
+
+function POSPageInner() {
   const { user } = useAuthStore();
   const { organizationName, currency } = useOrgStore();
   const { t } = useI18n();

@@ -23,7 +23,7 @@ export const resetPasswordSchema = z.object({
 export const createUserSchema = z.object({
   email: z.string().email('Invalid email address'),
   full_name: z.string().min(2, 'Name must be at least 2 characters'),
-  role: z.enum(['super_admin', 'owner', 'admin', 'manager', 'cashier']),
+  role: z.enum(['super_admin', 'owner', 'admin', 'cashier']),
   phone: z.string().optional(),
   organization_id: z.string().uuid().optional(),
   password: z.string().min(8, 'Password must be at least 8 characters'),
@@ -33,7 +33,7 @@ export const updateUserSchema = z.object({
   full_name: z.string().min(2).optional(),
   phone: z.string().optional(),
   status: z.enum(['active', 'suspended', 'inactive']).optional(),
-  role: z.enum(['super_admin', 'owner', 'admin', 'manager', 'cashier']).optional(),
+  role: z.enum(['super_admin', 'owner', 'admin', 'cashier']).optional(),
 });
 
 // ── Products ──────────────────────────────────────────────────
@@ -90,6 +90,9 @@ export const warehouseTransferSchema = z.object({
   product_id: z.string().uuid('Product is required'),
   quantity: z.coerce.number().int().min(1, 'Quantity must be at least 1'),
   notes: z.string().optional(),
+  initiated_by: z.string().min(1, 'Initiated by is required'),
+  approved_by: z.string().min(1, 'Approved by is required'),
+  coordinated_by: z.string().min(1, 'Coordinated by is required'),
 }).refine((data) => data.from_warehouse_id !== data.to_warehouse_id, {
   message: 'From and To warehouses must be different',
   path: ['to_warehouse_id'],
@@ -129,6 +132,13 @@ export const vendorTransactionSchema = z.object({
   })).min(1, 'At least one item is required'),
 });
 
+// ── Vendor Payment ─────────────────────────────────────────────
+export const vendorPaymentSchema = z.object({
+  amount_paid: z.coerce.number().min(0.01, 'Amount must be greater than 0'),
+  payment_method: z.enum(['cash', 'transfer', 'pos']),
+  receipt_url: z.string().optional(),
+});
+
 // ── Organization ──────────────────────────────────────────────
 export const organizationSchema = z.object({
   name: z.string().min(2, 'Organization name is required'),
@@ -152,4 +162,5 @@ export type InventoryAdjustmentFormData = z.infer<typeof inventoryAdjustmentSche
 export type WarehouseTransferFormData = z.infer<typeof warehouseTransferSchema>;
 export type SaleFormData = z.infer<typeof saleSchema>;
 export type VendorTransactionFormData = z.infer<typeof vendorTransactionSchema>;
+export type VendorPaymentFormData = z.infer<typeof vendorPaymentSchema>;
 export type OrganizationFormData = z.infer<typeof organizationSchema>;

@@ -18,6 +18,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
+import { AccessGuard } from '@/components/shared/access-guard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { createClient } from '@/lib/supabase/client';
@@ -60,6 +61,14 @@ async function deleteProduct(id: string) {
 }
 
 export default function ProductsPage() {
+  return (
+    <AccessGuard allow={['super_admin', 'admin']}>
+      <ProductsPageInner />
+    </AccessGuard>
+  );
+}
+
+function ProductsPageInner() {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');

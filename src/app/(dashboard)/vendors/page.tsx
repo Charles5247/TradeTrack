@@ -20,6 +20,7 @@ import { useAuthStore } from '@/store';
 import type { VendorTransaction, Product } from '@/types';
 import { useI18n } from '@/i18n';
 import { buildReceiptData, type ReceiptData } from '@/lib/receipt/build-receipt';
+import { AccessGuard } from '@/components/shared/access-guard';
 import { downloadReceiptPDF } from '@/lib/pdf/receipt-pdf';
 
 async function fetchVendors() {
@@ -41,6 +42,14 @@ async function fetchVendors() {
 }
 
 export default function VendorsPage() {
+  return (
+    <AccessGuard allow={['super_admin', 'admin']}>
+      <VendorsPageInner />
+    </AccessGuard>
+  );
+}
+
+function VendorsPageInner() {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();

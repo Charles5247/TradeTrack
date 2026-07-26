@@ -93,7 +93,6 @@ function RoleBadge({ role }: { role: string }) {
     super_admin: 'default',
     owner: 'default',
     admin: 'info',
-    manager: 'info',
     cashier: 'outline',
   };
   return (
@@ -120,7 +119,7 @@ function StatusBadge({ status }: { status: string }) {
 const defaultForm = {
   email: '',
   full_name: '',
-  role: 'cashier' as 'super_admin' | 'owner' | 'admin' | 'manager' | 'cashier',
+  role: 'cashier' as 'super_admin' | 'owner' | 'admin' | 'cashier',
   phone: '',
   password: '',
 };
@@ -407,7 +406,6 @@ export default function UsersPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="cashier">{t.users.cashier}</SelectItem>
-                  <SelectItem value="manager">{t.users.manager}</SelectItem>
                   <SelectItem value="admin">{t.users.admin}</SelectItem>
                   <SelectItem value="owner">{t.users.owner}</SelectItem>
                   <SelectItem value="super_admin">{t.users.super_admin}</SelectItem>
@@ -481,7 +479,6 @@ export default function UsersPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="cashier">{t.users.cashier}</SelectItem>
-                    <SelectItem value="manager">{t.users.manager}</SelectItem>
                     <SelectItem value="admin">{t.users.admin}</SelectItem>
                     <SelectItem value="owner">{t.users.owner}</SelectItem>
                     <SelectItem value="super_admin">{t.users.super_admin}</SelectItem>

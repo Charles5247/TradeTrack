@@ -20,7 +20,6 @@ INSERT INTO users (id, email, full_name, role, status, organization_id) VALUES
   ('22222222-2222-2222-2222-222222222222', 'superadmin@tradetrack.ng', 'Super Admin', 'super_admin', 'active', NULL),
   ('a6000000-0000-0000-0000-000000000001', 'owner@demo.com', 'Demo Owner', 'owner', 'active', '11111111-1111-1111-1111-111111111111'),
   ('33333333-3333-3333-3333-333333333333', 'admin@demo.com', 'Demo Admin', 'admin', 'active', '11111111-1111-1111-1111-111111111111'),
-  ('a5000000-0000-0000-0000-000000000001', 'manager@demo.com', 'Demo Manager', 'manager', 'active', '11111111-1111-1111-1111-111111111111'),
   ('44444444-4444-4444-4444-444444444444', 'cashier@demo.com', 'Demo Cashier', 'cashier', 'active', '11111111-1111-1111-1111-111111111111');
 
 -- Demo Warehouses

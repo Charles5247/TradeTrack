@@ -18,6 +18,7 @@ import { createClient } from '@/lib/supabase/client';
 import { formatCurrency, formatDateTime } from '@/lib/utils/format';
 import { useAuthStore } from '@/store';
 import type { Warehouse } from '@/types';
+import { AccessGuard } from '@/components/shared/access-guard';
 import { useI18n } from '@/i18n';
 
 async function fetchInventory(warehouseId: string, filter: string, search: string) {
@@ -116,6 +117,14 @@ async function adjustStock(payload: {
 }
 
 export default function InventoryPage() {
+  return (
+    <AccessGuard allow={['super_admin', 'admin']}>
+      <InventoryPageInner />
+    </AccessGuard>
+  );
+}
+
+function InventoryPageInner() {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();

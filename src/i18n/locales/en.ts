@@ -40,6 +40,8 @@ export const en = {
     error: 'Error',
     warning: 'Warning',
     info: 'Information',
+    access_denied: 'Access Denied',
+    access_denied_desc: "You don't have permission to view this page.",
   },
   auth: {
     login: 'Login',
@@ -65,7 +67,6 @@ export const en = {
     role_super_admin: 'Super Admin',
     role_owner: 'Owner',
     role_admin: 'Admin',
-    role_manager: 'Manager',
     role_cashier: 'Cashier',
   },
   nav: {
@@ -454,7 +455,6 @@ export const en = {
     super_admin: 'Super Admin',
     owner: 'Owner',
     admin: 'Admin',
-    manager: 'Manager',
     cashier: 'Cashier',
     reset_password: 'Reset Password',
     suspend_user: 'Suspend User',

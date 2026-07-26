@@ -74,7 +74,7 @@ interface DemoUser {
   id: string;
   email: string;
   full_name: string;
-  role: "super_admin" | "admin" | "owner" | "manager" | "cashier";
+  role: "super_admin" | "admin" | "owner" | "cashier";
   organization_id: string | null;
 }
 
@@ -98,13 +98,6 @@ const DEMO_USERS: DemoUser[] = [
     email: "admin@demo.com",
     full_name: "Demo Admin",
     role: "admin",
-    organization_id: DEMO_ORG_ID,
-  },
-  {
-    id: "a5000000-0000-0000-0000-000000000001",
-    email: "manager@demo.com",
-    full_name: "Demo Manager",
-    role: "manager",
     organization_id: DEMO_ORG_ID,
   },
   {

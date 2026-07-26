@@ -97,8 +97,8 @@ npm run setup:demo
 
 This script (`scripts/setup-demo-users.ts`) uses the Supabase Admin
 API (`SUPABASE_SERVICE_ROLE_KEY`) to create confirmed Auth users for
-all five roles — `superadmin@tradetrack.ng`, `owner@demo.com`,
-`admin@demo.com`, `manager@demo.com`, and `cashier@demo.com` — all with
+all four roles — `superadmin@tradetrack.ng`, `owner@demo.com`,
+`admin@demo.com`, and `cashier@demo.com` — all with
 the password `demo1234`, and keeps their `users` table profile rows in
 sync. It is safe to re-run - existing users are detected and updated
 instead of duplicated.
@@ -143,22 +143,21 @@ npm run deploy:check
 
 ## 👥 User Roles
 
-TradeTrack uses a 5-tier role hierarchy:
-`super_admin > owner > admin > manager > cashier`
+TradeTrack uses a 4-tier role hierarchy:
+`super_admin > owner > admin > cashier`
 
 | Role            | Permissions                                                                                             |
 | --------------- | ------------------------------------------------------------------------------------------------------- |
 | **Super Admin** | Full platform access: create users, manage subscriptions, view all data across every organization       |
-| **Owner**       | Business owner: platform-wide merchant/revenue dashboard (`/admin`), merchant management (`/merchants`) |
+| **Owner**       | Platform-level role: merchant/revenue dashboard (`/admin`), merchant management (`/merchants`), and subscription plan management (`/subscriptions`) only — no access to Products, Inventory, POS, Sales History, Warehouses, Transfers, Vendor Sales, Reports, Audit Trail, or Users |
 | **Admin**       | Manage products, inventory, sales, reports, vendors, warehouses for their organization                  |
-| **Manager**     | Day-to-day operational management: inventory, sales, reports (no user/billing management)               |
 | **Cashier**     | Create sales, view inventory, print receipts                                                            |
 
 ### Demo Credentials (development only)
 
 Demo credentials are only ever displayed in the app when
 `NODE_ENV !== 'production'`, and only exist once you've run
-`npm run setup:demo` (see Database Setup above). Every one of the five
+`npm run setup:demo` (see Database Setup above). Every one of the four
 roles has a working login:
 
 | Role            | Email                      | Password   | Organization         |
@@ -166,14 +165,12 @@ roles has a working login:
 | **Super Admin** | `superadmin@tradetrack.ng` | `demo1234` | None (platform-wide) |
 | **Owner**       | `owner@demo.com`           | `demo1234` | Demo Store           |
 | **Admin**       | `admin@demo.com`           | `demo1234` | Demo Store           |
-| **Manager**     | `manager@demo.com`         | `demo1234` | Demo Store           |
 | **Cashier**     | `cashier@demo.com`         | `demo1234` | Demo Store           |
 
 ```
 Super Admin: superadmin@tradetrack.ng / demo1234
 Owner:       owner@demo.com / demo1234
 Admin:       admin@demo.com / demo1234
-Manager:     manager@demo.com / demo1234
 Cashier:     cashier@demo.com / demo1234
 ```
 

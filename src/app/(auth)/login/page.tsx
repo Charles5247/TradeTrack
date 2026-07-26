@@ -193,7 +193,6 @@ export default function LoginPage() {
                   <p><span className="font-medium">{t.auth.role_super_admin}:</span> superadmin@tradetrack.ng / demo1234</p>
                   <p><span className="font-medium">{t.auth.role_owner}:</span> owner@demo.com / demo1234</p>
                   <p><span className="font-medium">{t.auth.role_admin}:</span> admin@demo.com / demo1234</p>
-                  <p><span className="font-medium">{t.auth.role_manager}:</span> manager@demo.com / demo1234</p>
                   <p><span className="font-medium">{t.auth.role_cashier}:</span> cashier@demo.com / demo1234</p>
                 </div>
               </div>

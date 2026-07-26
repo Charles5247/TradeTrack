@@ -3,7 +3,7 @@
 // ============================================================
 
 // ── User & Auth ──────────────────────────────────────────────
-export type UserRole = 'super_admin' | 'admin' | 'owner' | 'manager' | 'cashier';
+export type UserRole = 'super_admin' | 'admin' | 'owner' | 'cashier';
 
 export type UserStatus = 'active' | 'suspended' | 'inactive';
 
@@ -17,6 +17,7 @@ export interface User {
   avatar_url?: string;
   phone?: string;
   last_login?: string;
+  must_change_password?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -143,6 +144,9 @@ export interface WarehouseTransfer {
   notes?: string;
   sent_by: string;
   received_by?: string;
+  initiated_by?: string;
+  approved_by?: string;
+  coordinated_by?: string;
   date_sent: string;
   date_received?: string;
   created_at: string;
@@ -204,6 +208,7 @@ export interface SaleItem {
 
 // ── Vendor Consignment ───────────────────────────────────────
 export type VendorTransactionStatus = 'pending' | 'completed' | 'cancelled' | 'partial';
+export type VendorPaymentMethod = 'cash' | 'transfer' | 'pos';
 
 export interface VendorTransaction {
   id: string;
@@ -216,6 +221,8 @@ export interface VendorTransaction {
   status: VendorTransactionStatus;
   total_value: number;
   amount_paid: number;
+  payment_method?: VendorPaymentMethod;
+  receipt_url?: string;
   notes?: string;
   created_by: string;
   created_at: string;
@@ -283,11 +290,14 @@ export interface SubscriptionPlan {
   name: string;
   price: number;
   currency: string;
+  billing_cycle?: string;
   max_cashiers: number;
   max_products?: number;
   max_warehouses?: number;
   features: string[];
   is_active: boolean;
+  is_popular?: boolean;
+  created_at?: string;
 }
 
 export interface Subscription {

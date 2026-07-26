@@ -51,12 +51,13 @@ export type Database = {
           id: string;
           email: string;
           full_name: string;
-          role: 'super_admin' | 'admin' | 'owner' | 'manager' | 'cashier';
+          role: 'super_admin' | 'admin' | 'owner' | 'cashier';
           status: 'active' | 'suspended' | 'inactive';
           organization_id: string | null;
           avatar_url: string | null;
           phone: string | null;
           last_login: string | null;
+          must_change_password: boolean;
           settings: Record<string, unknown>;
           created_at: string;
           updated_at: string;
@@ -65,12 +66,13 @@ export type Database = {
           id?: string;
           email: string;
           full_name: string;
-          role: 'super_admin' | 'admin' | 'owner' | 'manager' | 'cashier';
+          role: 'super_admin' | 'admin' | 'owner' | 'cashier';
           status?: 'active' | 'suspended' | 'inactive';
           organization_id?: string | null;
           avatar_url?: string | null;
           phone?: string | null;
           last_login?: string | null;
+          must_change_password?: boolean;
           settings?: Record<string, unknown>;
           created_at?: string;
           updated_at?: string;
@@ -250,6 +252,9 @@ export type Database = {
           notes: string | null;
           sent_by: string;
           received_by: string | null;
+          initiated_by: string | null;
+          approved_by: string | null;
+          coordinated_by: string | null;
           date_sent: string;
           date_received: string | null;
           created_at: string;
@@ -266,6 +271,9 @@ export type Database = {
           notes?: string | null;
           sent_by: string;
           received_by?: string | null;
+          initiated_by?: string | null;
+          approved_by?: string | null;
+          coordinated_by?: string | null;
           date_sent?: string;
           date_received?: string | null;
           created_at?: string;
@@ -388,6 +396,8 @@ export type Database = {
           status: 'pending' | 'completed' | 'cancelled' | 'partial';
           total_value: number;
           amount_paid: number;
+          payment_method: 'cash' | 'transfer' | 'pos' | null;
+          receipt_url: string | null;
           notes: string | null;
           created_by: string;
           created_at: string;
@@ -404,6 +414,8 @@ export type Database = {
           status?: 'pending' | 'completed' | 'cancelled' | 'partial';
           total_value?: number;
           amount_paid?: number;
+          payment_method?: 'cash' | 'transfer' | 'pos' | null;
+          receipt_url?: string | null;
           notes?: string | null;
           created_by: string;
           created_at?: string;
@@ -740,6 +752,7 @@ export type Database = {
           logo_url: string | null;
           onboarding_completed: boolean;
           onboarding_step: number;
+          subscription_plan_id: string | null;
           notes: string | null;
           created_at: string;
           updated_at: string;
@@ -763,6 +776,7 @@ export type Database = {
           logo_url?: string | null;
           onboarding_completed?: boolean;
           onboarding_step?: number;
+          subscription_plan_id?: string | null;
           notes?: string | null;
           created_at?: string;
           updated_at?: string;
