@@ -242,6 +242,11 @@ export const en = {
     sale_completed_toast: 'Sale completed! Invoice: {invoice}',
     complete_sale_failed: 'Failed to complete sale',
     only_units_available: 'Only {count} units available',
+    proof_of_payment: 'Proof of Payment (optional)',
+    upload_receipt: 'Upload receipt image',
+    receipt_uploaded: 'Receipt uploaded',
+    remove: 'Remove',
+    upload_failed: 'Upload failed',
   },
   sales: {
     title: 'Sales History',

@@ -243,6 +243,11 @@ export const ha = {
     sale_completed_toast: 'An kammala siyarwa! Invoice: {invoice}',
     complete_sale_failed: 'An kasa kammala siyarwa',
     only_units_available: 'Kayan {count} kaɗai suke akwai',
+    proof_of_payment: 'Hujjar Biya (zaɓi)',
+    upload_receipt: 'Loda hoton rasit',
+    receipt_uploaded: 'An loda rasit',
+    remove: 'Cire',
+    upload_failed: 'Lodawa ta kasa',
   },
   sales: {
     title: 'Tarihin siyarwa',

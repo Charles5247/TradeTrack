@@ -25,6 +25,7 @@ export interface OfflineSalePayload {
   change_amount: number;
   payment_method: string;
   notes?: string;
+  receipt_url?: string;
 }
 
 export async function persistOfflineSale(payload: OfflineSalePayload) {
@@ -47,6 +48,7 @@ export async function persistOfflineSale(payload: OfflineSalePayload) {
     payment_status: payload.amount_paid >= payload.total ? 'paid' : 'partial',
     status: 'completed',
     notes: payload.notes ?? null,
+    receipt_url: payload.receipt_url ?? null,
     created_at: createdAt,
     updated_at: createdAt,
     synced: false,
