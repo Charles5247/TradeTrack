@@ -758,6 +758,9 @@ export const en = {
     onboard_step_doc_verification: 'Document Verification',
     onboard_step_payment_setup: 'Payment Setup',
     onboard_step_complete: 'Complete',
+    subscription_plan: 'Subscription Plan',
+    select_plan_placeholder: 'Select a subscription plan (optional)',
+    subscription_plan_hint: 'Assign a plan now, or leave unset and assign it later from Subscriptions.',
   },
 
   subscriptions: {

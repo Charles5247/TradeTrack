@@ -759,6 +759,9 @@ export const ha = {
     onboard_step_doc_verification: 'Tabbatar da Takardu',
     onboard_step_payment_setup: 'Saitin Biya',
     onboard_step_complete: 'An Kammala',
+    subscription_plan: 'Tsarin Rajista',
+    select_plan_placeholder: 'Zaɓi tsarin rajista (na zaɓi)',
+    subscription_plan_hint: 'Ba da tsari yanzu, ko a bar shi a saita daga baya daga Rajista.',
   },
 
   subscriptions: {

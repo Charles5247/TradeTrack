@@ -57,6 +57,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { createClient } from '@/lib/supabase/client';
+import { formatCurrency } from '@/lib/utils/format';
 import { useAuthStore } from '@/store';
 import { toast } from 'sonner';
 import { useI18n } from '@/i18n';
@@ -103,6 +104,14 @@ interface MerchantFormData {
   state:               string;
   country:             string;
   notes:               string;
+  subscription_plan_id: string;
+}
+
+interface SubscriptionPlanOption {
+  id: string;
+  name: string;
+  price: number;
+  billing_cycle: string;
 }
 
 interface DeviceLimits {
@@ -162,8 +171,26 @@ function CreateMerchantDialog({ open, onClose, onSuccess, orgId }: CreateMerchan
     business_name: '', business_type: '', registration_number: '', tax_id: '',
     contact_name: '', contact_email: '', contact_phone: '',
     address: '', city: '', state: '', country: 'Nigeria', notes: '',
+    subscription_plan_id: '',
   });
   const [loading, setLoading] = useState(false);
+
+  const { data: plans } = useQuery({
+    queryKey: ['subscription-plans-for-merchant'],
+    queryFn: async (): Promise<SubscriptionPlanOption[]> => {
+      const { data, error } = await supabase
+        .from('subscription_plans')
+        .select('id, name, price, billing_cycle')
+        .eq('is_active', true)
+        .order('price', { ascending: true });
+      if (error) {
+        console.error('subscription_plans fetch error:', error);
+        return [];
+      }
+      return (data as unknown) as SubscriptionPlanOption[];
+    },
+    enabled: open,
+  });
 
   const updateForm = (field: keyof MerchantFormData, value: string) =>
     setForm(f => ({ ...f, [field]: value }));
@@ -191,6 +218,7 @@ function CreateMerchantDialog({ open, onClose, onSuccess, orgId }: CreateMerchan
           state:               form.state || null,
           country:             form.country || 'Nigeria',
           notes:               form.notes || null,
+          subscription_plan_id: form.subscription_plan_id || null,
           status:              'pending',
           verification_status: 'unverified',
           onboarding_completed: false,
@@ -204,6 +232,7 @@ function CreateMerchantDialog({ open, onClose, onSuccess, orgId }: CreateMerchan
         business_name: '', business_type: '', registration_number: '', tax_id: '',
         contact_name: '', contact_email: '', contact_phone: '',
         address: '', city: '', state: '', country: 'Nigeria', notes: '',
+        subscription_plan_id: '',
       });
       setStep(1);
     } catch (err: unknown) {
@@ -383,6 +412,25 @@ function CreateMerchantDialog({ open, onClose, onSuccess, orgId }: CreateMerchan
                 <span className="text-muted-foreground">{t.merchants.location_label}</span>
                 <span className="font-medium">{[form.city, form.state, form.country].filter(Boolean).join(', ')}</span>
               </div>
+            </div>
+            <div>
+              <Label>{t.merchants.subscription_plan}</Label>
+              <Select
+                value={form.subscription_plan_id}
+                onValueChange={v => updateForm('subscription_plan_id', v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t.merchants.select_plan_placeholder} />
+                </SelectTrigger>
+                <SelectContent>
+                  {(plans || []).map(plan => (
+                    <SelectItem key={plan.id} value={plan.id}>
+                      {plan.name} — {formatCurrency(plan.price)}/{plan.billing_cycle}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">{t.merchants.subscription_plan_hint}</p>
             </div>
             <div>
               <Label>{t.merchants.internal_notes}</Label>
