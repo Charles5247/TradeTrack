@@ -14,6 +14,10 @@ import {
   RefreshCw,
   Download,
   Calendar,
+  Plus,
+  Pencil,
+  Trash2,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -23,6 +27,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
+import {
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency, formatDate } from '@/lib/utils/format';
 import { useAuthStore } from '@/store';
@@ -152,11 +162,12 @@ async function fetchSubscriptionData() {
     .limit(1)
     .maybeSingle();
 
-  // Fetch all plans
+  // Fetch all plans. RLS already scopes visibility: regular org users only
+  // see is_active=true plans, while 'owner'/'super_admin' also see inactive
+  // ones (needed to manage the full catalog of packages).
   const { data: plans } = await supabase
     .from('subscription_plans')
     .select('*')
-    .eq('is_active', true)
     .order('price', { ascending: true });
 
   // Fetch payment history
@@ -280,16 +291,274 @@ function StatusBadge({ status }: { status: string }) {
   return <Badge variant={cfg.variant}>{cfg.label}</Badge>;
 }
 
+// ── Plan Create/Edit Form Data ─────────────────────────────────
+interface PlanFormData {
+  name: string;
+  price: string;
+  billing_cycle: string;
+  max_cashiers: string;
+  max_products: string;
+  max_warehouses: string;
+  features: string;
+  is_active: boolean;
+  is_popular: boolean;
+}
+
+const EMPTY_PLAN_FORM: PlanFormData = {
+  name: '',
+  price: '',
+  billing_cycle: 'monthly',
+  max_cashiers: '1',
+  max_products: '',
+  max_warehouses: '',
+  features: '',
+  is_active: true,
+  is_popular: false,
+};
+
+function planToFormData(plan: Plan): PlanFormData {
+  return {
+    name: plan.name,
+    price: String(plan.price),
+    billing_cycle: plan.billing_cycle || 'monthly',
+    max_cashiers: String(plan.max_cashiers),
+    max_products: plan.max_products != null ? String(plan.max_products) : '',
+    max_warehouses: plan.max_warehouses != null ? String(plan.max_warehouses) : '',
+    features: (plan.features || []).join('\n'),
+    is_active: plan.is_active,
+    is_popular: !!plan.is_popular,
+  };
+}
+
+// ── Plan Create/Edit Dialog ─────────────────────────────────────
+function PlanFormDialog({
+  open,
+  editingPlan,
+  onClose,
+  onSaved,
+}: {
+  open: boolean;
+  editingPlan: Plan | null;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const { t } = useI18n();
+  const [form, setForm] = useState<PlanFormData>(EMPTY_PLAN_FORM);
+  const [saving, setSaving] = useState(false);
+
+  React.useEffect(() => {
+    if (open) {
+      setForm(editingPlan ? planToFormData(editingPlan) : EMPTY_PLAN_FORM);
+    }
+  }, [open, editingPlan]);
+
+  const update = (field: keyof PlanFormData, value: string | boolean) =>
+    setForm((f) => ({ ...f, [field]: value }));
+
+  async function handleSave() {
+    if (!form.name.trim() || !form.price) {
+      toast.error(t.subscriptions.plan_name_price_required);
+      return;
+    }
+    const priceNum = Number(form.price);
+    const maxCashiersNum = Number(form.max_cashiers);
+    if (!Number.isFinite(priceNum) || priceNum < 0) {
+      toast.error(t.subscriptions.plan_price_invalid);
+      return;
+    }
+    setSaving(true);
+    try {
+      const supabase = createClient();
+      const payload = {
+        name: form.name.trim(),
+        price: priceNum,
+        billing_cycle: form.billing_cycle || 'monthly',
+        max_cashiers: Number.isFinite(maxCashiersNum) ? maxCashiersNum : 1,
+        max_products: form.max_products.trim() ? Number(form.max_products) : null,
+        max_warehouses: form.max_warehouses.trim() ? Number(form.max_warehouses) : null,
+        features: form.features
+          .split('\n')
+          .map((f) => f.trim())
+          .filter(Boolean),
+        is_active: form.is_active,
+        is_popular: form.is_popular,
+      };
+
+      if (editingPlan) {
+        const { error } = await supabase
+          .from('subscription_plans')
+          .update(payload)
+          .eq('id', editingPlan.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('subscription_plans').insert(payload);
+        if (error) throw error;
+      }
+
+      toast.success(editingPlan ? t.subscriptions.plan_updated : t.subscriptions.plan_created);
+      onSaved();
+      onClose();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t.subscriptions.plan_save_failed);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="sm:max-w-[520px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>
+            {editingPlan ? t.subscriptions.edit_plan : t.subscriptions.create_plan}
+          </DialogTitle>
+          <DialogDescription>{t.subscriptions.plan_form_desc}</DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div>
+            <Label>{t.subscriptions.plan_name} *</Label>
+            <Input
+              value={form.name}
+              onChange={(e) => update('name', e.target.value)}
+              placeholder={t.subscriptions.plan_name_placeholder}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>{t.subscriptions.plan_price} (₦) *</Label>
+              <Input
+                type="number"
+                value={form.price}
+                onChange={(e) => update('price', e.target.value)}
+                placeholder="5000"
+              />
+            </div>
+            <div>
+              <Label>{t.subscriptions.billing_cycle}</Label>
+              <select
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+                value={form.billing_cycle}
+                onChange={(e) => update('billing_cycle', e.target.value)}
+              >
+                <option value="monthly">{t.subscriptions.monthly}</option>
+                <option value="yearly">{t.subscriptions.yearly}</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <Label>{t.subscriptions.max_cashiers_label}</Label>
+              <Input
+                type="number"
+                value={form.max_cashiers}
+                onChange={(e) => update('max_cashiers', e.target.value)}
+                placeholder="e.g. 3, -1 for unlimited"
+              />
+            </div>
+            <div>
+              <Label>{t.subscriptions.max_products_label}</Label>
+              <Input
+                type="number"
+                value={form.max_products}
+                onChange={(e) => update('max_products', e.target.value)}
+                placeholder={t.subscriptions.unlimited}
+              />
+            </div>
+            <div>
+              <Label>{t.subscriptions.max_warehouses_label}</Label>
+              <Input
+                type="number"
+                value={form.max_warehouses}
+                onChange={(e) => update('max_warehouses', e.target.value)}
+                placeholder={t.subscriptions.unlimited}
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label>{t.subscriptions.features_label}</Label>
+            <Textarea
+              value={form.features}
+              onChange={(e) => update('features', e.target.value)}
+              placeholder={t.subscriptions.features_placeholder}
+              rows={4}
+            />
+          </div>
+
+          <div className="flex items-center gap-6">
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.is_active}
+                onChange={(e) => update('is_active', e.target.checked)}
+                className="h-4 w-4 rounded border-input"
+              />
+              {t.subscriptions.plan_is_active}
+            </label>
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.is_popular}
+                onChange={(e) => update('is_popular', e.target.checked)}
+                className="h-4 w-4 rounded border-input"
+              />
+              {t.subscriptions.plan_is_popular}
+            </label>
+          </div>
+        </div>
+
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={onClose} disabled={saving}>
+            {t.subscriptions.cancel_action}
+          </Button>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? (
+              <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t.subscriptions.saving}</>
+            ) : editingPlan ? (
+              t.subscriptions.save_changes
+            ) : (
+              t.subscriptions.create_plan
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────
 export default function SubscriptionsPage() {
   const { t } = useI18n();
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'overview' | 'plans' | 'billing'>('overview');
+  const [planDialogOpen, setPlanDialogOpen] = useState(false);
+  const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
+  const [deletingPlan, setDeletingPlan] = useState<Plan | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['subscriptions'],
     queryFn: fetchSubscriptionData,
+  });
+
+  const deletePlanMutation = useMutation({
+    mutationFn: async (planId: string) => {
+      const supabase = createClient();
+      const { error } = await supabase.from('subscription_plans').delete().eq('id', planId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+      toast.success(t.subscriptions.plan_deleted);
+      setDeletingPlan(null);
+    },
+    onError: (e) => {
+      toast.error(e instanceof Error ? e.message : t.subscriptions.plan_delete_failed);
+      setDeletingPlan(null);
+    },
   });
 
   const upgradeMutation = useMutation({
@@ -338,8 +607,10 @@ export default function SubscriptionsPage() {
       toast.error(e instanceof Error ? e.message : t.subscriptions.update_failed),
   });
 
-  // Only super_admin can manage subscriptions
-  if (user?.role !== 'super_admin') {
+  // super_admin and owner can manage subscriptions (owner manages plans/pricing
+  // for the platform; super_admin retains full access too).
+  const canManagePlans = user?.role === 'super_admin' || user?.role === 'owner';
+  if (!canManagePlans) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <Shield className="h-12 w-12 text-muted-foreground" />
@@ -544,11 +815,22 @@ export default function SubscriptionsPage() {
       {/* Plans Tab */}
       {activeTab === 'plans' && (
         <div className="space-y-6">
-          <div>
-            <h2 className="text-lg font-semibold">{t.subscriptions.choose_a_plan}</h2>
-            <p className="text-sm text-muted-foreground">
-              {t.subscriptions.select_plan_desc}
-            </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold">{t.subscriptions.choose_a_plan}</h2>
+              <p className="text-sm text-muted-foreground">
+                {t.subscriptions.select_plan_desc}
+              </p>
+            </div>
+            <Button
+              onClick={() => {
+                setEditingPlan(null);
+                setPlanDialogOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              {t.subscriptions.add_plan}
+            </Button>
           </div>
           {isLoading ? (
             <div className="grid gap-6 md:grid-cols-3">
@@ -557,13 +839,42 @@ export default function SubscriptionsPage() {
           ) : (
             <div className="grid gap-6 md:grid-cols-3 mt-8">
               {plans.map((plan) => (
-                <PlanCard
-                  key={plan.id}
-                  plan={plan}
-                  currentPlanId={subscription?.plan_id}
-                  onSelect={(planId) => upgradeMutation.mutate(planId)}
-                  isLoading={upgradeMutation.isPending}
-                />
+                <div key={plan.id} className="space-y-2">
+                  <PlanCard
+                    plan={plan}
+                    currentPlanId={subscription?.plan_id}
+                    onSelect={(planId) => upgradeMutation.mutate(planId)}
+                    isLoading={upgradeMutation.isPending}
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => {
+                        setEditingPlan(plan);
+                        setPlanDialogOpen(true);
+                      }}
+                    >
+                      <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                      {t.subscriptions.edit_plan}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 text-destructive hover:text-destructive"
+                      onClick={() => setDeletingPlan(plan)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                      {t.subscriptions.delete_plan}
+                    </Button>
+                  </div>
+                  {!plan.is_active && (
+                    <Badge variant="outline" className="w-full justify-center">
+                      {t.subscriptions.inactive_plan}
+                    </Badge>
+                  )}
+                </div>
               ))}
             </div>
           )}
@@ -658,6 +969,49 @@ export default function SubscriptionsPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Plan create/edit dialog */}
+      <PlanFormDialog
+        open={planDialogOpen}
+        editingPlan={editingPlan}
+        onClose={() => {
+          setPlanDialogOpen(false);
+          setEditingPlan(null);
+        }}
+        onSaved={() => queryClient.invalidateQueries({ queryKey: ['subscriptions'] })}
+      />
+
+      {/* Delete plan confirmation dialog */}
+      <Dialog open={!!deletingPlan} onOpenChange={(v) => !v && setDeletingPlan(null)}>
+        <DialogContent className="sm:max-w-[420px]">
+          <DialogHeader>
+            <DialogTitle>{t.subscriptions.delete_plan_title}</DialogTitle>
+            <DialogDescription>
+              {t.subscriptions.delete_plan_confirm.replace('{name}', deletingPlan?.name ?? '')}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setDeletingPlan(null)}
+              disabled={deletePlanMutation.isPending}
+            >
+              {t.subscriptions.cancel_action}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => deletingPlan && deletePlanMutation.mutate(deletingPlan.id)}
+              disabled={deletePlanMutation.isPending}
+            >
+              {deletePlanMutation.isPending ? (
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t.subscriptions.deleting}</>
+              ) : (
+                t.subscriptions.delete_plan
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
