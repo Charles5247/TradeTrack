@@ -21,8 +21,14 @@ export const useAuthStore = create<AuthState>()((set) => ({
 interface OrgState {
   currency: string;
   organizationName: string;
+  /** Organization's postal/street address, used on receipt headers. */
+  organizationAddress: string;
+  /** Organization's phone number, shown as "Telp: ..." on receipt headers. */
+  organizationPhone: string;
   setCurrency: (currency: string) => void;
   setOrganizationName: (name: string) => void;
+  setOrganizationAddress: (address: string) => void;
+  setOrganizationPhone: (phone: string) => void;
 }
 
 export const useOrgStore = create<OrgState>()(
@@ -30,8 +36,12 @@ export const useOrgStore = create<OrgState>()(
     (set) => ({
       currency: 'NGN',
       organizationName: 'TradeTrack',
+      organizationAddress: '',
+      organizationPhone: '',
       setCurrency: (currency) => set({ currency }),
       setOrganizationName: (organizationName) => set({ organizationName }),
+      setOrganizationAddress: (organizationAddress) => set({ organizationAddress }),
+      setOrganizationPhone: (organizationPhone) => set({ organizationPhone }),
     }),
     { name: 'tradetrack-org' }
   )

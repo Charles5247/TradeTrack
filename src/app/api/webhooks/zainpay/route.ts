@@ -27,6 +27,19 @@ interface ZainpayWebhookPayload {
   description?:  string;
   email?:        string;
   zainboxCode?:  string;
+  // ── Virtual-account deposit notification fields ──────────────────────────
+  // Zainpay's "deposit.notification" webhook (a customer transferring money
+  // INTO a dedicated virtual account) does not reference a pre-existing
+  // payment_transactions row the way a checkout-initiated payment does — it
+  // must be reconciled by matching the destination account number against
+  // `organizations.zainpay_virtual_account_number`. Different Zainpay event
+  // payloads have used different field names for this over time, so we
+  // check several known aliases (see `extractVirtualAccountNumber` below).
+  accountNumber?:            string;
+  virtualAccountNumber?:     string;
+  destinationAccountNumber?: string;
+  benAccountNo?:             string;
+  accountNo?:                string;
   [key: string]: unknown;
 }
 
@@ -73,6 +86,22 @@ function extractAmount(payload: ZainpayWebhookPayload): number {
     return (payload.amount as { amount?: number }).amount ?? 0;
   }
   return 0;
+}
+
+/**
+ * Extract the destination virtual-account number from a Zainpay deposit
+ * webhook payload, checking known field-name aliases (Zainpay's payload
+ * shape has varied across event types/versions).
+ */
+function extractVirtualAccountNumber(payload: ZainpayWebhookPayload): string | null {
+  return (
+    payload.accountNumber ??
+    payload.virtualAccountNumber ??
+    payload.destinationAccountNumber ??
+    payload.benAccountNo ??
+    payload.accountNo ??
+    null
+  );
 }
 
 /** Generate invoice number */
@@ -200,15 +229,74 @@ async function handleSuccessfulPayment(
   const amountNGN = rawAmount > 1000 ? rawAmount / 100 : rawAmount;
 
   // ── Find the matching payment_transaction ────────────────────────────────
-  // Use provider_reference column (not 'reference') per the actual schema
-  const { data: txn } = await (supabaseAdmin as any)
-    .from('payment_transactions')
-    .select('id, organization_id, subscription_id, status')
-    .eq('provider_reference', txnRef)
-    .single() as { data: { id: string; organization_id: string; subscription_id: string | null; status: string } | null };
+  // Two reconciliation paths, since Zainpay sends different event shapes:
+  //   (a) checkout-initiated payments already have a `payment_transactions`
+  //       row created up-front, matched by `provider_reference` = txnRef.
+  //   (b) dedicated-virtual-account deposits (a merchant's customer/owner
+  //       transferring money straight into the org's NUBAN) have NO
+  //       pre-existing transaction row — they must be matched by the
+  //       destination account number against
+  //       `organizations.zainpay_virtual_account_number`, and the
+  //       transaction row is created here.
+  let txn = (
+    await (supabaseAdmin as any)
+      .from('payment_transactions')
+      .select('id, organization_id, subscription_id, status')
+      .eq('provider_reference', txnRef)
+      .maybeSingle()
+  ).data as { id: string; organization_id: string; subscription_id: string | null; status: string } | null;
+
+  let organizationId: string | null = txn?.organization_id ?? null;
 
   if (!txn) {
-    console.warn(`[Webhook] No matching transaction found for txnRef: ${txnRef}`);
+    // ── Fallback: reconcile by dedicated virtual account number ─────────
+    const vAcctNumber = extractVirtualAccountNumber(payload);
+    if (vAcctNumber) {
+      const { data: org } = await (supabaseAdmin as any)
+        .from('organizations')
+        .select('id')
+        .eq('zainpay_virtual_account_number', vAcctNumber)
+        .maybeSingle() as { data: { id: string } | null };
+
+      if (org) {
+        organizationId = org.id;
+
+        const { data: sub } = await (supabaseAdmin as any)
+          .from('subscriptions')
+          .select('id')
+          .eq('organization_id', organizationId)
+          .maybeSingle() as { data: { id: string } | null };
+
+        const { data: newTxn, error: newTxnErr } = await (supabaseAdmin as any)
+          .from('payment_transactions')
+          .insert({
+            organization_id:    organizationId,
+            subscription_id:    sub?.id ?? null,
+            amount:              amountNGN,
+            currency:            'NGN',
+            status:              'pending',
+            payment_method:      'zainpay',
+            provider:            'zainpay',
+            provider_reference:  txnRef,
+            provider_response:   payload as Record<string, unknown>,
+            virtual_account_number: vAcctNumber,
+          })
+          .select('id, organization_id, subscription_id, status')
+          .single();
+
+        if (newTxnErr) {
+          console.error('[Webhook] Failed to create transaction for virtual-account deposit:', newTxnErr.message);
+        } else {
+          txn = newTxn as { id: string; organization_id: string; subscription_id: string | null; status: string };
+        }
+      } else {
+        console.warn(`[Webhook] No organization found for virtual account: ${vAcctNumber}`);
+      }
+    }
+  }
+
+  if (!txn || !organizationId) {
+    console.warn(`[Webhook] No matching transaction/organization found for txnRef: ${txnRef}`);
     return;
   }
 
@@ -216,8 +304,6 @@ async function handleSuccessfulPayment(
     console.log(`[Webhook] Transaction already completed: ${txnRef}`);
     return;
   }
-
-  const organizationId = txn.organization_id;
 
   // ── 1. Update payment_transaction → success ──────────────────────────────
   await (supabaseAdmin as any)
@@ -247,6 +333,19 @@ async function handleSuccessfulPayment(
       })
       .eq('id', sub.id);
   }
+
+  // ── 2b. Update denormalized renewal/payment fields on organizations ───────
+  // (dedicated virtual-account reconciliation — see migration 009). These
+  // columns power the platform_owner merchant list (plan/renewal/amount)
+  // without needing a join against subscriptions/payment_transactions.
+  await (supabaseAdmin as any)
+    .from('organizations')
+    .update({
+      next_renewal_at:     end.toISOString(),
+      last_payment_amount: amountNGN,
+      last_payment_at:     now.toISOString(),
+    })
+    .eq('id', organizationId);
 
   // ── 3. Activate merchant account ─────────────────────────────────────────
   await supabaseAdmin

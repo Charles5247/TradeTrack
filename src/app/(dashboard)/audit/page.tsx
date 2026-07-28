@@ -16,6 +16,7 @@ import { formatDateTime } from '@/lib/utils/format';
 import { downloadTablePDF } from '@/lib/pdf/table-pdf';
 import type { AuditLog } from '@/types';
 import { useI18n } from '@/i18n';
+import { AccessGuard } from '@/components/shared/access-guard';
 
 async function fetchAuditLogs(search: string, resourceType: string, startDate: string, endDate: string) {
   const supabase = createClient();
@@ -54,6 +55,14 @@ const actionColors: Record<string, string> = {
 };
 
 export default function AuditPage() {
+  return (
+    <AccessGuard allow={['business_owner', 'admin']}>
+      <AuditPageInner />
+    </AccessGuard>
+  );
+}
+
+function AuditPageInner() {
   const { t } = useI18n();
   const [search, setSearch] = useState('');
   const [resourceType, setResourceType] = useState('all');

@@ -15,6 +15,7 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency, formatDate } from '@/lib/utils/format';
 import { downloadTablePDF } from '@/lib/pdf/table-pdf';
+import { AccessGuard } from '@/components/shared/access-guard';
 
 type ReportPeriod = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
 
@@ -109,6 +110,14 @@ async function fetchReport(period: ReportPeriod) {
 const PIE_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444'];
 
 export default function ReportsPage() {
+  return (
+    <AccessGuard allow={['business_owner', 'admin']}>
+      <ReportsPageInner />
+    </AccessGuard>
+  );
+}
+
+function ReportsPageInner() {
   const [period, setPeriod] = useState<ReportPeriod>('monthly');
 
   const { data, isLoading } = useQuery({

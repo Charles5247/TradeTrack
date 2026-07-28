@@ -19,11 +19,11 @@ describe('offline auth cache', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-07-26T12:00:00.000Z'));
 
-    saveOfflineAuthSession('owner@demo.com', { id: 'user-1', role: 'owner' });
+    saveOfflineAuthSession('owner@demo.com', { id: 'user-1', role: 'business_owner' });
 
     expect(getOfflineAuthSession()).toMatchObject({
       email: 'owner@demo.com',
-      profile: { id: 'user-1', role: 'owner' },
+      profile: { id: 'user-1', role: 'business_owner' },
     });
   });
 

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, ArrowRight, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Plus, ArrowRight, CheckCircle, XCircle, Clock, Printer, Download, Loader2, Usb, Bluetooth, Receipt as ReceiptIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,9 +16,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { createClient } from '@/lib/supabase/client';
 import { formatDateTime } from '@/lib/utils/format';
-import { useAuthStore } from '@/store';
+import { useAuthStore, useOrgStore } from '@/store';
 import type { WarehouseTransfer, Warehouse, Product } from '@/types';
 import { useI18n } from '@/i18n';
+import { AccessGuard } from '@/components/shared/access-guard';
+import { buildTransferReceiptData, type TransferReceiptData } from '@/lib/receipt/build-transfer-receipt';
+import { TransferReceipt } from '@/components/transfers/transfer-receipt';
+import { downloadTransferReceiptPDF } from '@/lib/pdf/transfer-receipt-pdf';
+import { usePrinter } from '@/hooks/use-printer';
 
 async function fetchTransfers() {
   const supabase = createClient();
@@ -55,6 +60,9 @@ async function createTransfer(payload: {
   quantity: number;
   notes?: string;
   sent_by: string;
+  initiated_by?: string;
+  approved_by?: string;
+  coordinated_by?: string;
 }) {
   const supabase = createClient();
   const { data, error } = await supabase.from('warehouse_transfers').insert(payload).select().single();
@@ -128,9 +136,19 @@ async function updateTransferStatus(id: string, status: 'received' | 'cancelled'
 }
 
 export default function TransfersPage() {
+  return (
+    <AccessGuard allow={['business_owner', 'admin']}>
+      <TransfersPageInner />
+    </AccessGuard>
+  );
+}
+
+function TransfersPageInner() {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
+  const { organizationName, organizationAddress, organizationPhone } = useOrgStore();
+  const printer = usePrinter();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formData, setFormData] = useState({
     from_warehouse_id: '',
@@ -138,7 +156,11 @@ export default function TransfersPage() {
     product_id: '',
     quantity: '',
     notes: '',
+    initiated_by: '',
+    approved_by: '',
+    coordinated_by: '',
   });
+  const [receiptTransfer, setReceiptTransfer] = useState<WarehouseTransfer | null>(null);
 
   const { data: transfers = [], isLoading } = useQuery({
     queryKey: ['transfers'],
@@ -155,7 +177,16 @@ export default function TransfersPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transfers'] });
       setIsFormOpen(false);
-      setFormData({ from_warehouse_id: '', to_warehouse_id: '', product_id: '', quantity: '', notes: '' });
+      setFormData({
+        from_warehouse_id: '',
+        to_warehouse_id: '',
+        product_id: '',
+        quantity: '',
+        notes: '',
+        initiated_by: '',
+        approved_by: '',
+        coordinated_by: '',
+      });
       toast.success(t.transfers.created_success);
     },
     onError: () => toast.error(t.transfers.create_failed),
@@ -194,7 +225,54 @@ export default function TransfersPage() {
       quantity: qty,
       notes: formData.notes,
       sent_by: user.id,
+      initiated_by: formData.initiated_by.trim() || undefined,
+      approved_by: formData.approved_by.trim() || undefined,
+      coordinated_by: formData.coordinated_by.trim() || undefined,
     });
+  };
+
+  const getTransferReceiptData = (tr: WarehouseTransfer): TransferReceiptData =>
+    buildTransferReceiptData({
+      transfer: {
+        id: tr.id,
+        from_warehouse_id: tr.from_warehouse_id,
+        to_warehouse_id: tr.to_warehouse_id,
+        quantity: tr.quantity,
+        status: tr.status,
+        notes: tr.notes,
+        date_sent: tr.date_sent,
+        initiated_by: tr.initiated_by,
+        approved_by: tr.approved_by,
+        coordinated_by: tr.coordinated_by,
+      },
+      fromWarehouseName: (tr.from_warehouse as { name?: string } | null)?.name || '',
+      toWarehouseName: (tr.to_warehouse as { name?: string } | null)?.name || '',
+      productName: (tr.product as { name?: string } | null)?.name || '',
+      productSku: (tr.product as { sku?: string } | null)?.sku,
+      sentByName: (tr.sender as { full_name?: string } | null)?.full_name,
+      receivedByName: (tr.receiver as { full_name?: string } | null)?.full_name,
+      orgName: organizationName,
+      orgAddress: organizationAddress || undefined,
+      orgPhone: organizationPhone || undefined,
+    });
+
+  const receiptData = receiptTransfer ? getTransferReceiptData(receiptTransfer) : null;
+
+  const handleBrowserPrintTransfer = () => {
+    window.print();
+  };
+
+  const handleDownloadTransferPDF = () => {
+    if (!receiptData) return;
+    downloadTransferReceiptPDF(receiptData);
+  };
+
+  const handleHardwarePrintTransfer = async () => {
+    if (!receiptData) return;
+    const printed = await printer.printTransferReceipt(receiptData);
+    if (!printed) {
+      handleBrowserPrintTransfer();
+    }
   };
 
   const statusBadge = (status: string) => {
@@ -282,26 +360,37 @@ export default function TransfersPage() {
                     <TableCell className="text-xs text-muted-foreground">{formatDateTime(tr.date_sent)}</TableCell>
                     <TableCell>{statusBadge(tr.status)}</TableCell>
                     <TableCell className="text-right">
-                      {tr.status === 'pending' && (
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-7 text-xs text-green-600 border-green-200"
-                            onClick={() => updateMutation.mutate({ id: tr.id, status: 'received' })}
-                          >
-                            <CheckCircle className="h-3 w-3 mr-1" /> {t.transfers.receive}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-7 text-xs text-red-600 border-red-200"
-                            onClick={() => updateMutation.mutate({ id: tr.id, status: 'cancelled' })}
-                          >
-                            {t.transfers.cancel_action}
-                          </Button>
-                        </div>
-                      )}
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs"
+                          onClick={() => setReceiptTransfer(tr)}
+                          title={t.transfers.view_receipt}
+                        >
+                          <ReceiptIcon className="h-3 w-3 mr-1" /> {t.transfers.view_receipt}
+                        </Button>
+                        {tr.status === 'pending' && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs text-green-600 border-green-200"
+                              onClick={() => updateMutation.mutate({ id: tr.id, status: 'received' })}
+                            >
+                              <CheckCircle className="h-3 w-3 mr-1" /> {t.transfers.receive}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs text-red-600 border-red-200"
+                              onClick={() => updateMutation.mutate({ id: tr.id, status: 'cancelled' })}
+                            >
+                              {t.transfers.cancel_action}
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -369,6 +458,32 @@ export default function TransfersPage() {
                 placeholder={t.transfers.enter_quantity}
               />
             </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>{t.transfers.initiated_by}</Label>
+                <Input
+                  value={formData.initiated_by}
+                  onChange={(e) => setFormData({ ...formData, initiated_by: e.target.value })}
+                  placeholder={t.transfers.initiated_by_placeholder}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{t.transfers.approved_by}</Label>
+                <Input
+                  value={formData.approved_by}
+                  onChange={(e) => setFormData({ ...formData, approved_by: e.target.value })}
+                  placeholder={t.transfers.approved_by_placeholder}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{t.transfers.coordinated_by}</Label>
+                <Input
+                  value={formData.coordinated_by}
+                  onChange={(e) => setFormData({ ...formData, coordinated_by: e.target.value })}
+                  placeholder={t.transfers.coordinated_by_placeholder}
+                />
+              </div>
+            </div>
             <div className="space-y-2">
               <Label>{t.transfers.notes}</Label>
               <Textarea
@@ -389,6 +504,78 @@ export default function TransfersPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Transfer Receipt Dialog — "Stock Transfer Note" preview + print/PDF/hardware actions */}
+      <Dialog open={!!receiptTransfer} onOpenChange={(open) => !open && setReceiptTransfer(null)}>
+        <DialogContent className="max-w-sm no-print">
+          <DialogHeader>
+            <DialogTitle>{t.transfers.transfer_note_title}</DialogTitle>
+          </DialogHeader>
+          {receiptData && (
+            <div className="space-y-4">
+              <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm space-y-1">
+                <p className="font-medium">{receiptData.transferRef}</p>
+                <p className="text-muted-foreground">
+                  {receiptData.fromWarehouse} <ArrowRight className="inline h-3 w-3" /> {receiptData.toWarehouse}
+                </p>
+                <p className="text-muted-foreground">{receiptData.productName} &times; {receiptData.quantity}</p>
+              </div>
+              <div className="flex gap-3">
+                <Button variant="outline" className="flex-1" onClick={handleBrowserPrintTransfer}>
+                  <Printer className="h-4 w-4 mr-2" />
+                  {t.common.print}
+                </Button>
+                <Button variant="outline" className="flex-1" onClick={handleDownloadTransferPDF}>
+                  <Download className="h-4 w-4 mr-2" />
+                  PDF
+                </Button>
+              </div>
+              {(printer.usbSupported || printer.bluetoothSupported) && (
+                <div className="border rounded-lg p-3 bg-muted/30">
+                  {printer.isConnected ? (
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 text-sm min-w-0">
+                        {printer.transport === 'usb' ? (
+                          <Usb className="h-4 w-4 shrink-0 text-green-600" />
+                        ) : (
+                          <Bluetooth className="h-4 w-4 shrink-0 text-green-600" />
+                        )}
+                        <span className="truncate">{printer.deviceName}</span>
+                      </div>
+                      <Button size="sm" onClick={handleHardwarePrintTransfer} disabled={printer.status === 'printing'}>
+                        {printer.status === 'printing' ? (
+                          <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                        ) : (
+                          <Printer className="h-4 w-4 mr-1.5" />
+                        )}
+                        Print to device
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      {printer.usbSupported && (
+                        <Button size="sm" variant="outline" className="flex-1" onClick={printer.connectUsb}>
+                          <Usb className="h-4 w-4 mr-1.5" /> USB
+                        </Button>
+                      )}
+                      {printer.bluetoothSupported && (
+                        <Button size="sm" variant="outline" className="flex-1" onClick={printer.connectBluetooth}>
+                          <Bluetooth className="h-4 w-4 mr-1.5" /> Bluetooth
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Print-only transfer receipt — hidden on screen (see globals.css
+          @media print rules), rendered only when window.print() fires
+          while receiptData is set. */}
+      {receiptData && <TransferReceipt data={receiptData} />}
     </div>
   );
 }

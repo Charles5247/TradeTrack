@@ -4,7 +4,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import {
   Search, ShoppingCart, Trash2, Plus, Minus, X, CreditCard,
-  Printer, Package, AlertCircle, Check, Barcode, Download, Usb, Bluetooth, Loader2,
+  Printer, Package, AlertCircle, Check, Barcode, Download, Usb, Bluetooth, Loader2, Upload,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,7 @@ import type { Product, Warehouse, CartItem } from '@/types';
 import Image from 'next/image';
 import { usePrinter } from '@/hooks/use-printer';
 import { buildReceiptData, type ReceiptData } from '@/lib/receipt/build-receipt';
+import { AccessGuard } from '@/components/shared/access-guard';
 import { downloadReceiptPDF } from '@/lib/pdf/receipt-pdf';
 import { Receipt } from '@/components/pos/receipt';
 import { getAllFromOfflineDB } from '@/lib/offline/db';
@@ -148,6 +149,7 @@ async function completeSale(payload: {
   change_amount: number;
   payment_method: string;
   notes?: string;
+  receipt_url?: string;
 }) {
   const supabase = createClient();
   const invoiceNumber = `INV-${String(Date.now()).slice(-6)}`;
@@ -170,6 +172,7 @@ async function completeSale(payload: {
       payment_status: payload.amount_paid >= payload.total ? 'paid' : 'partial',
       status: 'completed',
       notes: payload.notes || null,
+      receipt_url: payload.receipt_url || null,
     });
 
     if (saleError) throw saleError;
@@ -187,6 +190,7 @@ async function completeSale(payload: {
       customer_name: payload.customer_name,
       customer_phone: payload.customer_phone,
       notes: payload.notes,
+      receipt_url: payload.receipt_url,
       created_at: new Date().toISOString(),
     };
   } catch (error) {
@@ -208,14 +212,23 @@ async function completeSale(payload: {
       customer_name: payload.customer_name,
       customer_phone: payload.customer_phone,
       notes: payload.notes,
+      receipt_url: payload.receipt_url,
       created_at: saleRecord.created_at,
     };
   }
 }
 
 export default function POSPage() {
+  return (
+    <AccessGuard allow={['business_owner', 'admin', 'cashier']}>
+      <POSPageInner />
+    </AccessGuard>
+  );
+}
+
+function POSPageInner() {
   const { user } = useAuthStore();
-  const { organizationName, currency } = useOrgStore();
+  const { organizationName, organizationAddress, organizationPhone, currency } = useOrgStore();
   const { t } = useI18n();
   const cart = useCartStore();
   const [searchQuery, setSearchQuery] = useState('');
@@ -223,6 +236,8 @@ export default function POSPage() {
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [notes, setNotes] = useState('');
+  const [paymentReceiptUrl, setPaymentReceiptUrl] = useState('');
+  const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [lastSale, setLastSale] = useState<Record<string, unknown> | null>(null);
   const [lastSaleItems, setLastSaleItems] = useState<CartItem[]>([]);
@@ -264,6 +279,7 @@ export default function POSPage() {
       setCustomerName('');
       setCustomerPhone('');
       setNotes('');
+      setPaymentReceiptUrl('');
       toast.success(t.pos.sale_completed_toast.replace('{invoice}', sale.invoice_number));
     },
     onError: (err) => {
@@ -334,6 +350,7 @@ export default function POSPage() {
       change_amount: Math.max(0, paid - total),
       payment_method: cart.payment_method,
       notes: notes || undefined,
+      receipt_url: paymentReceiptUrl || undefined,
     });
   };
 
@@ -363,6 +380,8 @@ export default function POSPage() {
           },
           items: lastSaleItems,
           orgName: organizationName,
+          orgAddress: organizationAddress || undefined,
+          orgPhone: organizationPhone || undefined,
           cashierName: user?.full_name,
           currency,
         })
@@ -589,6 +608,59 @@ export default function POSPage() {
             </SelectContent>
           </Select>
 
+          {/* Optional payment receipt upload */}
+          <div className="space-y-1">
+            {paymentReceiptUrl ? (
+              <div className="flex items-center justify-between rounded-md border border-border p-2 text-xs">
+                <span className="text-green-600">{t.pos.receipt_uploaded}</span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 px-2"
+                  onClick={() => setPaymentReceiptUrl('')}
+                >
+                  {t.pos.remove}
+                </Button>
+              </div>
+            ) : (
+              <label className="flex items-center gap-2 rounded-md border border-dashed border-border p-2 text-xs cursor-pointer hover:bg-muted/50">
+                {isUploadingReceipt ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4" />
+                )}
+                <span>{t.pos.upload_receipt}</span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  disabled={isUploadingReceipt}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    e.target.value = '';
+                    if (!file) return;
+                    setIsUploadingReceipt(true);
+                    try {
+                      const supabase = createClient();
+                      const { data: { user: authUser } } = await supabase.auth.getUser();
+                      if (!authUser) throw new Error('Not authenticated');
+                      const path = `${authUser.id}/pos-${generateId()}-${Date.now()}.${file.name.split('.').pop() || 'jpg'}`;
+                      const { error: uploadErr } = await supabase.storage.from('receipts').upload(path, file, { upsert: true });
+                      if (uploadErr) throw uploadErr;
+                      const { data: signed } = await supabase.storage.from('receipts').createSignedUrl(path, 60 * 60 * 24 * 365);
+                      setPaymentReceiptUrl(signed?.signedUrl || path);
+                      toast.success(t.pos.receipt_uploaded);
+                    } catch (err) {
+                      toast.error(err instanceof Error ? err.message : t.pos.upload_failed);
+                    } finally {
+                      setIsUploadingReceipt(false);
+                    }
+                  }}
+                />
+              </label>
+            )}
+          </div>
+
           {/* Totals */}
           <div className="space-y-1 text-sm">
             <div className="flex justify-between text-muted-foreground">
@@ -635,7 +707,7 @@ export default function POSPage() {
           <Button
             className="w-full h-10"
             onClick={handleCheckout}
-            disabled={!isHydrated || cart.items.length === 0 || saleMutation.isPending}
+            disabled={!isHydrated || cart.items.length === 0 || saleMutation.isPending || isUploadingReceipt}
           >
             {saleMutation.isPending ? (
               <>{t.pos.processing}</>

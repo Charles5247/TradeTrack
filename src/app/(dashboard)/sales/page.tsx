@@ -16,6 +16,7 @@ import { formatCurrency, formatDateTime } from '@/lib/utils/format';
 import { downloadTablePDF } from '@/lib/pdf/table-pdf';
 import type { Sale, SaleItem } from '@/types';
 import { useI18n } from '@/i18n';
+import { AccessGuard } from '@/components/shared/access-guard';
 
 async function fetchSales(filters: {
   search: string;
@@ -99,6 +100,14 @@ function exportToPDF(sales: Sale[]) {
 }
 
 export default function SalesPage() {
+  return (
+    <AccessGuard allow={['business_owner', 'admin']}>
+      <SalesPageInner />
+    </AccessGuard>
+  );
+}
+
+function SalesPageInner() {
   const { t } = useI18n();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');

@@ -23,6 +23,7 @@ import {
   Store,
   Building2,
   Shield,
+  Search,
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { useUIStore, useAuthStore } from '@/store';
@@ -37,26 +38,44 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
   badge?: number;
   roles?: UserRole[];
-  /** Platform-level routes intended for org owners / platform super_admin (not regular admin/manager/cashier) */
+  /** Platform-level routes intended for TradeTrack's own platform_owner staff, never a merchant's business_owner/admin/cashier */
   platformOnly?: boolean;
 }
 
+// NOTE: platform_owner (TradeTrack staff, cross-organization) never sees a
+// merchant's own operational data (Products, Inventory, POS, Sales History,
+// Warehouses, Transfers, Vendor Sales, Reports, Audit Trail) — those screens
+// are gated to business_owner/admin only. platform_owner instead sees the
+// two truly platform-level screens: Admin (the platform dashboard) and
+// Merchants (the cross-org merchant directory) — both marked
+// `platformOnly: true` below.
+//
+// Users and Subscriptions are PER-ORG screens, not platform-level: a
+// business_owner uses Users to manage admin/cashier accounts within their
+// own org, and Subscriptions to view plans / self-service pick their own
+// org's plan (see migration 008's plans/subscriptions RLS policies).
+// platform_owner also has access to both — Users for TradeTrack's own
+// internal staff accounts, Subscriptions to manage the global plan catalog
+// (create/edit/delete packages) — but platform_owner has NO write access
+// into any individual merchant's operational data via these or any other
+// screen.
 const navItems: NavItem[] = [
   { navKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { navKey: 'products', href: '/products', icon: Package, roles: ['super_admin', 'owner', 'admin'] },
-  { navKey: 'inventory', href: '/inventory', icon: Warehouse, roles: ['super_admin', 'owner', 'admin'] },
-  { navKey: 'pos', href: '/pos', icon: ShoppingCart },
-  { navKey: 'sales', href: '/sales', icon: History, roles: ['super_admin', 'owner', 'admin'] },
-  { navKey: 'warehouses', href: '/warehouses', icon: Warehouse, roles: ['super_admin', 'owner', 'admin'] },
-  { navKey: 'transfers', href: '/transfers', icon: ArrowLeftRight, roles: ['super_admin', 'owner', 'admin'] },
-  { navKey: 'vendors', href: '/vendors', icon: UserCheck, roles: ['super_admin', 'owner', 'admin'] },
-  { navKey: 'reports', href: '/reports', icon: BarChart3, roles: ['super_admin', 'owner', 'admin'] },
-  { navKey: 'audit', href: '/audit', icon: ClipboardList, roles: ['super_admin', 'owner', 'admin'] },
+  { navKey: 'products', href: '/products', icon: Package, roles: ['business_owner', 'admin'] },
+  { navKey: 'inventory', href: '/inventory', icon: Warehouse, roles: ['business_owner', 'admin'] },
+  { navKey: 'pos', href: '/pos', icon: ShoppingCart, roles: ['business_owner', 'admin', 'cashier'] },
+  { navKey: 'sales', href: '/sales', icon: History, roles: ['business_owner', 'admin'] },
+  { navKey: 'warehouses', href: '/warehouses', icon: Warehouse, roles: ['business_owner', 'admin'] },
+  { navKey: 'transfers', href: '/transfers', icon: ArrowLeftRight, roles: ['business_owner', 'admin'] },
+  { navKey: 'receiptLookup', href: '/receipts/lookup', icon: Search, roles: ['business_owner', 'admin', 'cashier'] },
+  { navKey: 'vendors', href: '/vendors', icon: UserCheck, roles: ['business_owner', 'admin'] },
+  { navKey: 'reports', href: '/reports', icon: BarChart3, roles: ['business_owner', 'admin'] },
+  { navKey: 'audit', href: '/audit', icon: ClipboardList, roles: ['business_owner', 'admin'] },
   { navKey: 'notifications', href: '/notifications', icon: Bell },
-  { navKey: 'users', href: '/users', icon: Users, roles: ['super_admin', 'owner'] },
-  { navKey: 'subscriptions', href: '/subscriptions', icon: CreditCard, roles: ['super_admin', 'owner'] },
-  { navKey: 'admin', href: '/admin', icon: Shield, roles: ['super_admin', 'owner'], platformOnly: true },
-  { navKey: 'merchants', href: '/merchants', icon: Building2, roles: ['super_admin', 'owner'], platformOnly: true },
+  { navKey: 'users', href: '/users', icon: Users, roles: ['business_owner', 'platform_owner'] },
+  { navKey: 'subscriptions', href: '/subscriptions', icon: CreditCard, roles: ['business_owner', 'platform_owner'] },
+  { navKey: 'admin', href: '/admin', icon: Shield, roles: ['platform_owner'], platformOnly: true },
+  { navKey: 'merchants', href: '/merchants', icon: Building2, roles: ['platform_owner'], platformOnly: true },
   { navKey: 'settings', href: '/settings', icon: Settings },
 ];
 
@@ -68,7 +87,7 @@ export function Sidebar() {
   const { t } = useI18n();
 
   const orgLabel =
-    organization?.name ?? (user?.role === 'super_admin' ? 'TradeTrack Platform' : t.app.name);
+    organization?.name ?? (user?.role === 'platform_owner' ? 'TradeTrack Platform' : t.app.name);
 
   const filteredItems = navItems.filter((item) => {
     if (!item.roles) return true;

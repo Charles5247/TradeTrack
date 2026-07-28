@@ -151,8 +151,10 @@ export default function AdminPage() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   // ── Access guard ─────────────────────────────────────────────────────────
-  // Platform super_admin AND org owners can view this dashboard (5-tier RBAC).
-  const isOwnerOrAdmin = user?.role === 'super_admin' || user?.role === 'owner';
+  // Platform Owner dashboard: TradeTrack's own cross-org staff only.
+  // A merchant's business_owner account never sees this screen (it has no
+  // write access into any individual merchant's operational data).
+  const isOwnerOrAdmin = user?.role === 'platform_owner';
 
   // ── Merchants query ───────────────────────────────────────────────────────
   const { data: merchants, isLoading: merchantsLoading } = useQuery({

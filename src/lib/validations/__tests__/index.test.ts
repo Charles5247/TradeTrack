@@ -75,8 +75,8 @@ describe('resetPasswordSchema', () => {
 });
 
 describe('createUserSchema', () => {
-  it('accepts a fully valid payload for each of the 5 roles', () => {
-    const roles = ['super_admin', 'owner', 'admin', 'manager', 'cashier'] as const;
+  it('accepts a fully valid payload for each of the 4 roles', () => {
+    const roles = ['platform_owner', 'business_owner', 'admin', 'cashier'] as const;
     for (const role of roles) {
       const result = createUserSchema.safeParse({
         email: 'newuser@example.com',
@@ -110,9 +110,12 @@ describe('createUserSchema', () => {
 });
 
 describe('updateUserSchema', () => {
-  it('accepts owner and manager roles (regression test for role-gap bug)', () => {
-    expect(updateUserSchema.safeParse({ role: 'owner' }).success).toBe(true);
-    expect(updateUserSchema.safeParse({ role: 'manager' }).success).toBe(true);
+  it('accepts business_owner role (regression test for role-gap bug)', () => {
+    expect(updateUserSchema.safeParse({ role: 'business_owner' }).success).toBe(true);
+  });
+
+  it('rejects the removed manager role', () => {
+    expect(updateUserSchema.safeParse({ role: 'manager' }).success).toBe(false);
   });
 
   it('accepts a partial update with only status', () => {
@@ -256,6 +259,9 @@ describe('warehouseTransferSchema', () => {
       to_warehouse_id: uuidB,
       product_id: uuidA,
       quantity: 5,
+      initiated_by: 'Jane Doe',
+      approved_by: 'John Smith',
+      coordinated_by: 'Amaka Okafor',
     });
     expect(result.success).toBe(true);
   });
@@ -266,6 +272,9 @@ describe('warehouseTransferSchema', () => {
       to_warehouse_id: uuidA,
       product_id: uuidA,
       quantity: 5,
+      initiated_by: 'Jane Doe',
+      approved_by: 'John Smith',
+      coordinated_by: 'Amaka Okafor',
     });
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -279,6 +288,19 @@ describe('warehouseTransferSchema', () => {
       to_warehouse_id: uuidB,
       product_id: uuidA,
       quantity: 0,
+      initiated_by: 'Jane Doe',
+      approved_by: 'John Smith',
+      coordinated_by: 'Amaka Okafor',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a transfer missing the initiated_by / approved_by / coordinated_by fields', () => {
+    const result = warehouseTransferSchema.safeParse({
+      from_warehouse_id: uuidA,
+      to_warehouse_id: uuidB,
+      product_id: uuidA,
+      quantity: 5,
     });
     expect(result.success).toBe(false);
   });

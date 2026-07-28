@@ -15,6 +15,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store';
 import type { Warehouse as WarehouseType } from '@/types';
 import { useI18n } from '@/i18n';
+import { AccessGuard } from '@/components/shared/access-guard';
 
 async function fetchWarehouses() {
   const supabase = createClient();
@@ -28,6 +29,14 @@ async function fetchWarehouses() {
 }
 
 export default function WarehousesPage() {
+  return (
+    <AccessGuard allow={['business_owner', 'admin']}>
+      <WarehousesPageInner />
+    </AccessGuard>
+  );
+}
+
+function WarehousesPageInner() {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();

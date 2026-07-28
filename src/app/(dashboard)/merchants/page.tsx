@@ -57,6 +57,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { createClient } from '@/lib/supabase/client';
+import { formatCurrency } from '@/lib/utils/format';
 import { useAuthStore } from '@/store';
 import { toast } from 'sonner';
 import { useI18n } from '@/i18n';
@@ -86,6 +87,7 @@ interface Merchant {
   onboarding_completed: boolean;
   onboarding_step:      number;
   notes:                string | null;
+  subscription_plan_id: string | null;
   created_at:           string;
   updated_at:           string;
 }
@@ -103,6 +105,14 @@ interface MerchantFormData {
   state:               string;
   country:             string;
   notes:               string;
+  subscription_plan_id: string;
+}
+
+interface SubscriptionPlanOption {
+  id: string;
+  name: string;
+  price: number;
+  billing_cycle: string;
 }
 
 interface DeviceLimits {
@@ -155,6 +165,11 @@ interface CreateMerchantDialogProps {
   orgId:    string;
 }
 
+interface OnboardResult {
+  business_owner: { email: string; temp_password: string };
+  virtual_account: { accountNumber: string; bankName: string; accountName: string } | null;
+}
+
 function CreateMerchantDialog({ open, onClose, onSuccess, orgId }: CreateMerchantDialogProps) {
   const { t } = useI18n();
   const [step, setStep] = useState(1);
@@ -162,8 +177,27 @@ function CreateMerchantDialog({ open, onClose, onSuccess, orgId }: CreateMerchan
     business_name: '', business_type: '', registration_number: '', tax_id: '',
     contact_name: '', contact_email: '', contact_phone: '',
     address: '', city: '', state: '', country: 'Nigeria', notes: '',
+    subscription_plan_id: '',
   });
   const [loading, setLoading] = useState(false);
+  const [onboardResult, setOnboardResult] = useState<OnboardResult | null>(null);
+
+  const { data: plans } = useQuery({
+    queryKey: ['subscription-plans-for-merchant'],
+    queryFn: async (): Promise<SubscriptionPlanOption[]> => {
+      const { data, error } = await supabase
+        .from('subscription_plans')
+        .select('id, name, price, billing_cycle')
+        .eq('is_active', true)
+        .order('price', { ascending: true });
+      if (error) {
+        console.error('subscription_plans fetch error:', error);
+        return [];
+      }
+      return (data as unknown) as SubscriptionPlanOption[];
+    },
+    enabled: open,
+  });
 
   const updateForm = (field: keyof MerchantFormData, value: string) =>
     setForm(f => ({ ...f, [field]: value }));
@@ -175,37 +209,38 @@ function CreateMerchantDialog({ open, onClose, onSuccess, orgId }: CreateMerchan
     }
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('merchants')
-        .insert({
-          organization_id:     orgId,
-          business_name:       form.business_name,
-          business_type:       form.business_type || null,
-          registration_number: form.registration_number || null,
-          tax_id:              form.tax_id || null,
-          contact_name:        form.contact_name,
-          contact_email:       form.contact_email,
-          contact_phone:       form.contact_phone || null,
-          address:             form.address || null,
-          city:                form.city || null,
-          state:               form.state || null,
-          country:             form.country || 'Nigeria',
-          notes:               form.notes || null,
-          status:              'pending',
-          verification_status: 'unverified',
-          onboarding_completed: false,
-          onboarding_step:     1,
-        } as any);
-      if (error) throw error;
-      toast.success(t.merchants.created_success);
-      onSuccess();
-      onClose();
-      setForm({
-        business_name: '', business_type: '', registration_number: '', tax_id: '',
-        contact_name: '', contact_email: '', contact_phone: '',
-        address: '', city: '', state: '', country: 'Nigeria', notes: '',
+      // Each merchant is onboarded into a brand-new organization (never the
+      // creator's own org) via the server-side onboarding API, which also
+      // creates the business_owner login + temp password + (best-effort)
+      // Zainpay virtual account. See /api/merchants/onboard.
+      const res = await fetch('/api/merchants/onboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          business_name:        form.business_name,
+          business_type:        form.business_type || null,
+          registration_number:  form.registration_number || null,
+          tax_id:               form.tax_id || null,
+          contact_name:         form.contact_name,
+          contact_email:        form.contact_email,
+          contact_phone:        form.contact_phone || null,
+          address:              form.address || null,
+          city:                 form.city || null,
+          state:                form.state || null,
+          country:              form.country || 'Nigeria',
+          notes:                form.notes || null,
+          subscription_plan_id: form.subscription_plan_id || null,
+        }),
       });
-      setStep(1);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || t.merchants.create_failed);
+
+      toast.success(t.merchants.created_success);
+      setOnboardResult({
+        business_owner:  json.business_owner,
+        virtual_account: json.virtual_account,
+      });
+      onSuccess();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : t.merchants.create_failed;
       toast.error(msg);
@@ -214,8 +249,75 @@ function CreateMerchantDialog({ open, onClose, onSuccess, orgId }: CreateMerchan
     }
   }
 
+  function handleClose() {
+    setOnboardResult(null);
+    setForm({
+      business_name: '', business_type: '', registration_number: '', tax_id: '',
+      contact_name: '', contact_email: '', contact_phone: '',
+      address: '', city: '', state: '', country: 'Nigeria', notes: '',
+      subscription_plan_id: '',
+    });
+    setStep(1);
+    onClose();
+  }
+
+  function copyTempPassword() {
+    if (!onboardResult) return;
+    navigator.clipboard?.writeText(onboardResult.business_owner.temp_password);
+    toast.success(t.merchants.temp_password_copied);
+  }
+
+  if (onboardResult) {
+    return (
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-[520px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              {t.merchants.onboard_success_title}
+            </DialogTitle>
+            <DialogDescription>{t.merchants.onboard_success_desc}</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div>
+              <Label>{t.merchants.business_owner_email_label}</Label>
+              <Input readOnly value={onboardResult.business_owner.email} />
+            </div>
+            <div>
+              <Label>{t.merchants.temp_password_label}</Label>
+              <div className="flex gap-2">
+                <Input readOnly className="font-mono" value={onboardResult.business_owner.temp_password} />
+                <Button variant="outline" onClick={copyTempPassword}>{t.merchants.temp_password_copy}</Button>
+              </div>
+              <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3" /> {t.merchants.temp_password_warning}
+              </p>
+            </div>
+            <div className="p-3 bg-muted/50 rounded-lg text-xs text-muted-foreground">
+              {onboardResult.virtual_account ? (
+                <>
+                  {t.merchants.virtual_account_created}
+                  <div className="mt-1 font-mono text-foreground">
+                    {onboardResult.virtual_account.accountNumber} · {onboardResult.virtual_account.bankName}
+                  </div>
+                </>
+              ) : (
+                t.merchants.virtual_account_not_created
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button onClick={handleClose}>{t.merchants.done}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -385,6 +487,25 @@ function CreateMerchantDialog({ open, onClose, onSuccess, orgId }: CreateMerchan
               </div>
             </div>
             <div>
+              <Label>{t.merchants.subscription_plan}</Label>
+              <Select
+                value={form.subscription_plan_id}
+                onValueChange={v => updateForm('subscription_plan_id', v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t.merchants.select_plan_placeholder} />
+                </SelectTrigger>
+                <SelectContent>
+                  {(plans || []).map(plan => (
+                    <SelectItem key={plan.id} value={plan.id}>
+                      {plan.name} — {formatCurrency(plan.price)}/{plan.billing_cycle}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">{t.merchants.subscription_plan_hint}</p>
+            </div>
+            <div>
               <Label>{t.merchants.internal_notes}</Label>
               <Textarea
                 value={form.notes}
@@ -422,14 +543,21 @@ function CreateMerchantDialog({ open, onClose, onSuccess, orgId }: CreateMerchan
 interface ViewMerchantDialogProps {
   merchant:  Merchant | null;
   onClose:   () => void;
+  /** Whether the current viewer may change this merchant's subscription
+   *  plan (platform_owner only — see MerchantsPage). */
+  canManagePlan?: boolean;
+  onPlanChanged?: () => void;
 }
 
-function ViewMerchantDialog({ merchant, onClose }: ViewMerchantDialogProps) {
+function ViewMerchantDialog({ merchant, onClose, canManagePlan = false, onPlanChanged }: ViewMerchantDialogProps) {
   const { t } = useI18n();
   const [deviceLimits, setDeviceLimits] = useState<DeviceLimits | null>(null);
   const [editDevices, setEditDevices] = useState(false);
   const [newMaxDevices, setNewMaxDevices] = useState(1);
   const [savingDevices, setSavingDevices] = useState(false);
+  const [plans, setPlans] = useState<SubscriptionPlanOption[]>([]);
+  const [selectedPlanId, setSelectedPlanId] = useState<string>('');
+  const [savingPlan, setSavingPlan] = useState(false);
 
   React.useEffect(() => {
     if (merchant) {
@@ -444,8 +572,70 @@ function ViewMerchantDialog({ merchant, onClose }: ViewMerchantDialogProps) {
             setNewMaxDevices(data.max_devices);
           }
         });
+      setSelectedPlanId(merchant.subscription_plan_id ?? '');
     }
   }, [merchant]);
+
+  React.useEffect(() => {
+    if (!canManagePlan) return;
+    supabase
+      .from('subscription_plans')
+      .select('id, name, price, billing_cycle')
+      .order('price', { ascending: true })
+      .then(({ data }) => setPlans((data as unknown as SubscriptionPlanOption[]) ?? []));
+  }, [canManagePlan]);
+
+  async function savePlan() {
+    if (!merchant || !selectedPlanId) return;
+    setSavingPlan(true);
+    try {
+      const { error } = await supabase
+        .from('merchants')
+        .update({ subscription_plan_id: selectedPlanId, updated_at: new Date().toISOString() } as any)
+        .eq('id', merchant.id);
+      if (error) throw error;
+
+      // Keep the org's own `subscriptions` record in sync too, so the
+      // business_owner's self-service Subscriptions page reflects the
+      // platform_owner-assigned plan immediately (there's no unique
+      // constraint on organization_id, so check-then-insert/update rather
+      // than upsert-by-conflict-target).
+      const { data: existingSub } = await supabase
+        .from('subscriptions')
+        .select('id')
+        .eq('organization_id', merchant.organization_id)
+        .maybeSingle();
+
+      const expiresAt = new Date();
+      expiresAt.setMonth(expiresAt.getMonth() + 1);
+
+      if (existingSub) {
+        await supabase
+          .from('subscriptions')
+          .update({ plan_id: selectedPlanId, status: 'active' } as any)
+          .eq('id', existingSub.id)
+          .then(() => {}, () => {});
+      } else {
+        await supabase
+          .from('subscriptions')
+          .insert({
+            organization_id: merchant.organization_id,
+            plan_id: selectedPlanId,
+            status: 'active',
+            starts_at: new Date().toISOString(),
+            expires_at: expiresAt.toISOString(),
+          } as any)
+          .then(() => {}, () => {});
+      }
+
+      toast.success(t.merchants.plan_updated);
+      onPlanChanged?.();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : t.merchants.plan_update_failed);
+    } finally {
+      setSavingPlan(false);
+    }
+  }
 
   async function saveDeviceLimits() {
     if (!merchant || !deviceLimits) return;
@@ -599,6 +789,34 @@ function ViewMerchantDialog({ merchant, onClose }: ViewMerchantDialogProps) {
             )}
           </section>
 
+          {/* Subscription Plan (platform_owner can change/set) */}
+          {canManagePlan && (
+            <section>
+              <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">{t.merchants.subscription_plan}</h4>
+              <div className="flex items-center gap-2">
+                <Select value={selectedPlanId} onValueChange={setSelectedPlanId}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder={t.merchants.select_plan_placeholder} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {plans.map(plan => (
+                      <SelectItem key={plan.id} value={plan.id}>
+                        {plan.name} — {formatCurrency(plan.price)}/{plan.billing_cycle}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  size="sm"
+                  onClick={savePlan}
+                  disabled={savingPlan || !selectedPlanId || selectedPlanId === merchant.subscription_plan_id}
+                >
+                  {savingPlan ? t.merchants.saving : t.merchants.save}
+                </Button>
+              </div>
+            </section>
+          )}
+
           {/* Notes */}
           {merchant.notes && (
             <section>
@@ -686,8 +904,11 @@ export default function MerchantsPage() {
         .select('*')
         .order('created_at', { ascending: false });
 
-      // Platform super_admin & org owners see all merchants; other roles see their org only
-      if (user?.role !== 'super_admin' && user?.role !== 'owner') {
+      // Only platform_owner (TradeTrack's own cross-org staff) sees all
+      // merchants. business_owner/admin are always scoped to their own org
+      // (see migration 008's merchants_select_own_org_or_platform policy —
+      // this client-side filter mirrors that RLS restriction).
+      if (user?.role !== 'platform_owner') {
         query.eq('organization_id', orgId);
       }
 
@@ -698,7 +919,9 @@ export default function MerchantsPage() {
       }
       return (data as any) as Merchant[];
     },
-    enabled: !!orgId,
+    // platform_owner has no organization_id of their own (cross-org role),
+    // so this query must still run for them even though orgId is empty.
+    enabled: !!orgId || user?.role === 'platform_owner',
   });
 
   // ── Perform status action ─────────────────────────────────────────────────
@@ -979,6 +1202,8 @@ export default function MerchantsPage() {
       <ViewMerchantDialog
         merchant={viewMerchant}
         onClose={() => setViewMerchant(null)}
+        canManagePlan={user?.role === 'platform_owner'}
+        onPlanChanged={() => queryClient.invalidateQueries({ queryKey: ['merchants'] })}
       />
 
       <ConfirmDialog

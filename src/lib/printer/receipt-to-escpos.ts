@@ -11,12 +11,20 @@ import { formatCurrency } from '@/lib/utils/format';
  * `webusb-printer.ts` and `webbluetooth-printer.ts` each take these bytes
  * and write them to whichever physical connection they manage.
  *
+ * Matches the shared receipt template (asterisk dividers, "CASH RECEIPT"
+ * title, Description/Price item table, Totals, optional payment-details
+ * block, "THANK YOU!" footer) and prints a scannable CODE128 barcode at
+ * the end using the printer's native GS k command — the same barcode
+ * value that's rendered in the browser print view and the PDF, so
+ * scanning any of the three resolves to the same receipt.
+ *
  * NOTE: exact command support (barcode/QR, cut behavior, code page for
  * accented characters) varies slightly between printer models. This covers
- * the common subset (text, bold, alignment, cut, feed) that works on
- * virtually every ESC/POS printer. If a specific printer needs a different
- * code page for non-ASCII characters (e.g. certain Hausa/Yoruba diacritics),
- * that would need a small per-model adjustment here.
+ * the common subset (text, bold, alignment, cut, feed, CODE128 barcode)
+ * that works on virtually every ESC/POS printer. If a specific printer
+ * needs a different code page for non-ASCII characters (e.g. certain
+ * Hausa/Yoruba diacritics), that would need a small per-model adjustment
+ * here.
  */
 
 const ESC = 0x1b;
@@ -73,7 +81,30 @@ class EscPosBuilder {
   }
 
   divider(width = 32) {
-    this.bytes.push(...line('-'.repeat(width)));
+    this.bytes.push(...line('*'.repeat(width)));
+    return this;
+  }
+
+  /**
+   * Prints a CODE128 linear barcode using the standard ESC/POS "GS k"
+   * command (function 73, the variable-length form most 58mm/80mm
+   * printers support). `height` is in printer dots (~2 dots/mm, so 60 ≈
+   * 30mm tall — plenty to be reliably re-scanned).
+   */
+  barcode(value: string, height = 60) {
+    // GS h n — barcode height in dots
+    this.bytes.push(GS, 0x68, Math.min(255, height));
+    // GS w n — barcode module width (1-6, 2 is a good default for 80mm)
+    this.bytes.push(GS, 0x77, 2);
+    // GS H n — print human-readable text below barcode: 0 = none (the
+    // sample receipt shows no digits under the barcode)
+    this.bytes.push(GS, 0x48, 0);
+    // GS k m n d1...dn — CODE128, function 73 (m=73), CODE128 payload
+    // must be preceded by {B per the CODE128 subset-B convention used by
+    // the ESC/POS "GS k" implementation on virtually all clone printers.
+    const payload = `{B${value}`;
+    const payloadBytes = textToBytes(payload);
+    this.bytes.push(GS, 0x6b, 73, payloadBytes.length, ...payloadBytes);
     return this;
   }
 
@@ -96,16 +127,30 @@ export function receiptToEscPos(receipt: ReceiptData, charWidth = 32): Uint8Arra
   const b = new EscPosBuilder();
   b.init();
 
+  const money = (label: string, amount: string) => {
+    const pad = Math.max(1, charWidth - label.length - amount.length);
+    b.text(label + ' '.repeat(pad) + amount);
+  };
+
+  const hasPaymentDetails = Boolean(receipt.cardMasked || receipt.approvalCode);
+
+  // ── Header ──────────────────────────────────────────────────
   b.align('center');
   b.doubleSize(true);
   b.bold(true);
-  b.text(receipt.orgName);
+  b.text(receipt.orgName.toUpperCase());
   b.doubleSize(false);
   b.bold(false);
-  if (receipt.orgAddress) b.text(receipt.orgAddress);
+  if (receipt.orgAddress) b.text(`Address: ${receipt.orgAddress}`);
+  if (receipt.orgPhone) b.text(`Telp. ${receipt.orgPhone}`);
   b.feed(1);
   b.divider(charWidth);
+  b.bold(true);
+  b.text('CASH RECEIPT');
+  b.bold(false);
+  b.divider(charWidth);
 
+  // ── Meta ────────────────────────────────────────────────────
   b.align('left');
   b.text(`Invoice: ${receipt.invoiceNumber}`);
   b.text(`Date: ${new Date(receipt.dateISO).toLocaleString()}`);
@@ -113,44 +158,53 @@ export function receiptToEscPos(receipt: ReceiptData, charWidth = 32): Uint8Arra
   if (receipt.customerName) b.text(`Customer: ${receipt.customerName}`);
   b.divider(charWidth);
 
+  // ── Item table ──────────────────────────────────────────────
+  money('DESCRIPTION', 'PRICE');
   receipt.items.forEach((item) => {
-    b.text(item.name);
-    const left = `  ${item.quantity} x ${formatCurrency(item.unitPrice)}`;
-    const right = formatCurrency(item.total);
-    const pad = Math.max(1, charWidth - left.length - right.length);
-    b.text(left + ' '.repeat(pad) + right);
+    b.text(`  ${item.quantity} x ${formatCurrency(item.unitPrice)}`);
+    money(item.name, formatCurrency(item.total));
   });
 
   b.divider(charWidth);
-
-  const money = (label: string, amount: string) => {
-    const pad = Math.max(1, charWidth - label.length - amount.length);
-    b.text(label + ' '.repeat(pad) + amount);
-  };
-
   money('Subtotal', formatCurrency(receipt.subtotal));
   if (receipt.discount > 0) money('Discount', `-${formatCurrency(receipt.discount)}`);
   if (receipt.tax > 0) money('Tax', formatCurrency(receipt.tax));
-  b.divider(charWidth);
 
+  b.doubleSize(true);
   b.bold(true);
   money('TOTAL', formatCurrency(receipt.total));
+  b.doubleSize(false);
   b.bold(false);
-  money('Paid', formatCurrency(receipt.amountPaid));
+  money(receipt.paymentMethod === 'cash' ? 'Cash' : 'Paid', formatCurrency(receipt.amountPaid));
   if (receipt.changeAmount > 0) money('Change', formatCurrency(receipt.changeAmount));
-  b.text(`Payment: ${receipt.paymentMethod}`);
+  if (!hasPaymentDetails) b.text(`Payment: ${receipt.paymentMethod}`);
   b.feed(1);
+
+  // ── Payment details (Bank card / Approval Code) ────────────
+  if (hasPaymentDetails) {
+    b.divider(charWidth);
+    if (receipt.cardMasked) money('Bank card', receipt.cardMasked);
+    if (receipt.approvalCode) money('Approval Code', `#${receipt.approvalCode}`);
+    b.feed(1);
+  }
 
   if (receipt.notes) {
     b.align('center');
     b.text(receipt.notes);
   }
 
+  b.divider(charWidth);
   b.align('center');
   b.bold(true);
-  b.text('Thank you for your business!');
+  b.text('THANK YOU!');
   b.bold(false);
   b.text('Powered by TradeTrack');
+
+  // ── Scannable barcode ───────────────────────────────────────
+  if (receipt.barcodeValue) {
+    b.feed(1);
+    b.barcode(receipt.barcodeValue);
+  }
 
   b.feed(3);
   b.cut();

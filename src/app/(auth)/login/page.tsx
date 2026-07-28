@@ -67,7 +67,15 @@ export default function LoginPage() {
       }
 
       toast.success(t.auth.sign_in_success);
-      router.push('/dashboard');
+      // Forced first-login password-change gate (e.g. a merchant's
+      // business_owner created via /api/merchants/onboard with a
+      // temporary password) — send them straight to /change-password
+      // instead of bouncing through /dashboard first.
+      if (profile && (profile as Record<string, unknown>).must_change_password) {
+        router.push('/change-password');
+      } else {
+        router.push('/dashboard');
+      }
       router.refresh();
     } catch {
       const rememberedProfile = await verifyRememberedLogin(data.email, data.password);
@@ -190,10 +198,9 @@ export default function LoginPage() {
               <div className="mt-6 p-4 bg-muted/50 rounded-lg">
                 <p className="text-xs font-medium text-muted-foreground mb-2">{t.auth.demo_credentials_label}</p>
                 <div className="space-y-1 text-xs text-muted-foreground">
-                  <p><span className="font-medium">{t.auth.role_super_admin}:</span> superadmin@tradetrack.ng / demo1234</p>
-                  <p><span className="font-medium">{t.auth.role_owner}:</span> owner@demo.com / demo1234</p>
+                  <p><span className="font-medium">{t.auth.role_platform_owner}:</span> platformowner@tradetrack.ng / demo1234</p>
+                  <p><span className="font-medium">{t.auth.role_business_owner}:</span> owner@demo.com / demo1234</p>
                   <p><span className="font-medium">{t.auth.role_admin}:</span> admin@demo.com / demo1234</p>
-                  <p><span className="font-medium">{t.auth.role_manager}:</span> manager@demo.com / demo1234</p>
                   <p><span className="font-medium">{t.auth.role_cashier}:</span> cashier@demo.com / demo1234</p>
                 </div>
               </div>

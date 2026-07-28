@@ -82,6 +82,18 @@ interface SyncQueueRecord {
   error?: string;
   created_at: string;
   synced_at?: string;
+  /**
+   * The client's local `updated_at` timestamp for this record AT THE TIME
+   * the change was queued (not when it's eventually synced). Used by the
+   * sync engine's conflict-resolution rule for UPDATE operations: the
+   * server row is only overwritten if this is NEWER than the server's own
+   * `updated_at` — otherwise the local change is considered stale and is
+   * dropped in favor of the server's (newer) version, rather than blindly
+   * overwriting concurrent server-side changes.
+   * Not applicable to INSERT (no prior row to conflict with) or to
+   * `sales`/`sale_items` (append-only/immutable — see sync-engine.ts).
+   */
+  client_updated_at?: string;
 }
 
 interface PendingReceiptRecord {
@@ -297,6 +309,14 @@ export async function addToSyncQueue(
 
   if (alreadyQueued) return;
 
+  // Capture the record's own `updated_at` (if present in the payload) as
+  // the client-side timestamp used for the sync engine's last-write-wins
+  // conflict check on UPDATE operations. Falls back to "now" if the
+  // payload doesn't carry one (e.g. a partial-field update).
+  const clientUpdatedAt =
+    (typeof payload.updated_at === 'string' && payload.updated_at) ||
+    new Date().toISOString();
+
   const record: SyncQueueRecord = {
     id: generateId(),
     table_name: tableName,
@@ -306,6 +326,7 @@ export async function addToSyncQueue(
     status: 'pending',
     retry_count: 0,
     created_at: new Date().toISOString(),
+    client_updated_at: clientUpdatedAt,
   };
   await db.add('sync_queue', record);
 }

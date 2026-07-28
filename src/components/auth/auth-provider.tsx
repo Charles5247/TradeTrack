@@ -13,7 +13,7 @@ import { getOfflineAuthSession } from '@/lib/offline/auth-cache';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { setUser, setLoading } = useAuthStore();
-  const { setCurrency, setOrganizationName } = useOrgStore();
+  const { setCurrency, setOrganizationName, setOrganizationAddress, setOrganizationPhone } = useOrgStore();
 
   useEffect(() => {
     const supabase = createClient();
@@ -23,12 +23,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const { data: org } = await supabase
           .from('organizations')
-          .select('currency, name')
+          .select('currency, name, address, phone')
           .eq('id', organizationId)
           .single();
         if (org) {
           if (org.currency) setCurrency(org.currency);
           if (org.name) setOrganizationName(org.name);
+          setOrganizationAddress(org.address || '');
+          setOrganizationPhone(org.phone || '');
         }
       } catch {
         // Non-fatal: fall back to persisted/default currency & org name
@@ -138,7 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     return () => subscription.unsubscribe();
-  }, [setUser, setLoading, setCurrency, setOrganizationName]);
+  }, [setUser, setLoading, setCurrency, setOrganizationName, setOrganizationAddress, setOrganizationPhone]);
 
   return <>{children}</>;
 }

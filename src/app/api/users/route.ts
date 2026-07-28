@@ -1,6 +1,11 @@
 /**
  * TradeTrack - User Management API Routes
- * POST   /api/users   - Create a new user (super_admin only)
+ * POST   /api/users   - Create a new user.
+ *                        - platform_owner: may create any role (cross-org).
+ *                        - business_owner: may only create admin/cashier
+ *                          users scoped to their OWN organization_id (no
+ *                          self-elevation, cannot create business_owner or
+ *                          platform_owner accounts).
  * GET    /api/users   - List all users for the organization
  */
 
@@ -60,9 +65,11 @@ export async function POST(request: NextRequest) {
     if (!currentUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    if (currentUser.role !== 'super_admin') {
+    const isPlatformOwner = currentUser.role === 'platform_owner';
+    const isBusinessOwner = currentUser.role === 'business_owner';
+    if (!isPlatformOwner && !isBusinessOwner) {
       return NextResponse.json(
-        { error: 'Forbidden: Only Super Admins can create users' },
+        { error: 'Forbidden: Only Business Owners and Platform Owners can create users' },
         { status: 403 }
       );
     }
@@ -79,12 +86,32 @@ export async function POST(request: NextRequest) {
     if (password.length < 8) {
       return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 });
     }
-    if (!['super_admin', 'admin', 'cashier'].includes(role)) {
+    if (!['platform_owner', 'business_owner', 'admin', 'cashier'].includes(role)) {
       return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
     }
 
+    // A business_owner is confined to their own org and may never create
+    // (or escalate a user into) a business_owner/platform_owner account —
+    // that would be a privilege-escalation / cross-tenant leak.
+    if (isBusinessOwner) {
+      if (role === 'business_owner' || role === 'platform_owner') {
+        return NextResponse.json(
+          { error: 'Forbidden: Business Owners can only create admin or cashier users' },
+          { status: 403 }
+        );
+      }
+      if (organization_id && organization_id !== currentUser.organization_id) {
+        return NextResponse.json(
+          { error: 'Forbidden: Cannot create users outside your own organization' },
+          { status: 403 }
+        );
+      }
+    }
+
     const serviceSupabase = getServiceClient();
-    const orgId = organization_id || currentUser.organization_id || '';
+    const orgId = isBusinessOwner
+      ? (currentUser.organization_id || '')
+      : (organization_id || currentUser.organization_id || '');
 
     // 1. Create auth user
     const { data: authData, error: authErr } = await serviceSupabase.auth.admin.createUser({
@@ -154,11 +181,15 @@ export async function GET() {
     if (!currentUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    if (currentUser.role !== 'super_admin') {
+    if (currentUser.role !== 'platform_owner' && currentUser.role !== 'business_owner') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const serviceSupabase = getServiceClient();
+    // platform_owner has no dedicated "list all users across orgs" UI here —
+    // this endpoint still scopes to the caller's own org for both roles.
+    // (Cross-org data is served exclusively from the platform dashboard's
+    // read-only merchant/subscription views, never from this users list.)
     const { data: users, error } = await serviceSupabase
       .from('users')
       .select('*')
