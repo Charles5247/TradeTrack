@@ -1,0 +1,50 @@
+{
+  "name": "tradetrack-desktop",
+  "productName": "TradeTrack",
+  "version": "1.0.0",
+  "description": "TradeTrack POS & Inventory Management — Windows desktop app",
+  "main": "main.js",
+  "author": "TradeTrack",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win --x64",
+    "build:win32": "electron-builder --win --ia32"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "ng.tradetrack.desktop",
+    "productName": "TradeTrack",
+    "asar": true,
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "menu.js",
+      "config.js",
+      "package.json",
+      "assets/**/*"
+    ],
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ],
+      "icon": "assets/icon.ico",
+      "artifactName": "TradeTrack-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "TradeTrack"
+    }
+  }
+}
