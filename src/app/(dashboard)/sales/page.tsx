@@ -101,7 +101,7 @@ function exportToPDF(sales: Sale[]) {
 
 export default function SalesPage() {
   return (
-    <AccessGuard allow={['super_admin', 'admin']}>
+    <AccessGuard allow={['business_owner', 'admin']}>
       <SalesPageInner />
     </AccessGuard>
   );

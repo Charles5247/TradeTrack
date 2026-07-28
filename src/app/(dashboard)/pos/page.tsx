@@ -220,7 +220,7 @@ async function completeSale(payload: {
 
 export default function POSPage() {
   return (
-    <AccessGuard allow={['super_admin', 'admin', 'cashier']}>
+    <AccessGuard allow={['business_owner', 'admin', 'cashier']}>
       <POSPageInner />
     </AccessGuard>
   );

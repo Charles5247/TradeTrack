@@ -3,7 +3,16 @@
 // ============================================================
 
 // ── User & Auth ──────────────────────────────────────────────
-export type UserRole = 'super_admin' | 'admin' | 'owner' | 'cashier';
+// Role model (migration 008_role_model_rework.sql):
+//   platform_owner  — cross-organization (TradeTrack staff only). Replaces
+//                      the old 'super_admin' AND 'owner' roles. Never
+//                      auto-granted during merchant onboarding.
+//   business_owner  — NEW. Single-organization. Full control within their
+//                      own org only. Auto-created when a merchant is
+//                      onboarded via /api/merchants/onboard.
+//   admin           — single-organization caretaker/branch-manager role.
+//   cashier         — single-organization, POS/sales only.
+export type UserRole = 'platform_owner' | 'business_owner' | 'admin' | 'cashier';
 
 export type UserStatus = 'active' | 'suspended' | 'inactive';
 

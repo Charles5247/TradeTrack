@@ -30,7 +30,7 @@ async function fetchWarehouses() {
 
 export default function WarehousesPage() {
   return (
-    <AccessGuard allow={['super_admin', 'admin']}>
+    <AccessGuard allow={['business_owner', 'admin']}>
       <WarehousesPageInner />
     </AccessGuard>
   );

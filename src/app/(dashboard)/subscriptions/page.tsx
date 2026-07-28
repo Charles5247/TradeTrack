@@ -162,9 +162,10 @@ async function fetchSubscriptionData() {
     .limit(1)
     .maybeSingle();
 
-  // Fetch all plans. RLS already scopes visibility: regular org users only
-  // see is_active=true plans, while 'owner'/'super_admin' also see inactive
-  // ones (needed to manage the full catalog of packages).
+  // Fetch all plans. RLS already scopes visibility: admin/cashier users only
+  // see is_active=true plans, while 'business_owner'/'platform_owner' also
+  // see inactive ones (business_owner may be grandfathered onto a
+  // deactivated plan; platform_owner manages the full catalog).
   const { data: plans } = await supabase
     .from('subscription_plans')
     .select('*')
@@ -565,7 +566,8 @@ export default function SubscriptionsPage() {
     mutationFn: async (planId: string) => {
       const supabase = createClient();
       // In production this would integrate with Zainpay.
-      // For now we update directly (super_admin only).
+      // Self-service plan selection for the caller's own org (business_owner);
+      // platform_owner catalog management is a separate, gated code path above.
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (!authUser) throw new Error('Not authenticated');
 
@@ -607,10 +609,14 @@ export default function SubscriptionsPage() {
       toast.error(e instanceof Error ? e.message : t.subscriptions.update_failed),
   });
 
-  // super_admin and owner can manage subscriptions (owner manages plans/pricing
-  // for the platform; super_admin retains full access too).
-  const canManagePlans = user?.role === 'super_admin' || user?.role === 'owner';
-  if (!canManagePlans) {
+  // platform_owner (TradeTrack) manages the global plan catalog (add/edit
+  // price/delete packages). A merchant's business_owner can VIEW plans and
+  // self-service select/upgrade their own org's plan, but cannot edit the
+  // catalog itself (see migration 008's plans_manage_platform_owner policy).
+  const isPlatformOwner = user?.role === 'platform_owner';
+  const canManagePlans = isPlatformOwner;
+  const canAccessPage = user?.role === 'business_owner' || isPlatformOwner;
+  if (!canAccessPage) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <Shield className="h-12 w-12 text-muted-foreground" />
@@ -822,15 +828,17 @@ export default function SubscriptionsPage() {
                 {t.subscriptions.select_plan_desc}
               </p>
             </div>
-            <Button
-              onClick={() => {
-                setEditingPlan(null);
-                setPlanDialogOpen(true);
-              }}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              {t.subscriptions.add_plan}
-            </Button>
+            {canManagePlans && (
+              <Button
+                onClick={() => {
+                  setEditingPlan(null);
+                  setPlanDialogOpen(true);
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                {t.subscriptions.add_plan}
+              </Button>
+            )}
           </div>
           {isLoading ? (
             <div className="grid gap-6 md:grid-cols-3">
@@ -846,29 +854,31 @@ export default function SubscriptionsPage() {
                     onSelect={(planId) => upgradeMutation.mutate(planId)}
                     isLoading={upgradeMutation.isPending}
                   />
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => {
-                        setEditingPlan(plan);
-                        setPlanDialogOpen(true);
-                      }}
-                    >
-                      <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                      {t.subscriptions.edit_plan}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 text-destructive hover:text-destructive"
-                      onClick={() => setDeletingPlan(plan)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                      {t.subscriptions.delete_plan}
-                    </Button>
-                  </div>
+                  {canManagePlans && (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => {
+                          setEditingPlan(plan);
+                          setPlanDialogOpen(true);
+                        }}
+                      >
+                        <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                        {t.subscriptions.edit_plan}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 text-destructive hover:text-destructive"
+                        onClick={() => setDeletingPlan(plan)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                        {t.subscriptions.delete_plan}
+                      </Button>
+                    </div>
+                  )}
                   {!plan.is_active && (
                     <Badge variant="outline" className="w-full justify-center">
                       {t.subscriptions.inactive_plan}

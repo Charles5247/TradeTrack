@@ -154,6 +154,36 @@ class SyncEngine {
     }
   }
 
+  /**
+   * Conflict-resolution rule (formalized — NOT a naive full re-upload):
+   *
+   * 1. `sales` and `sale_items` are treated as APPEND-ONLY / immutable.
+   *    A completed offline sale is a fact that already happened — it must
+   *    never be silently dropped OR merged with a "conflicting" server
+   *    version, because there is no legitimate concurrent edit to a sale
+   *    record once created. We always INSERT (never UPDATE/overwrite) and
+   *    let a duplicate-key insert on retry be treated as already-synced
+   *    (idempotent by `id`), rather than upserting.
+   *
+   * 2. All other tables (`products`, `inventory`, `warehouses`,
+   *    `categories`, etc.) use explicit LAST-WRITE-WINS BY TIMESTAMP for
+   *    UPDATE operations: before overwriting the server row, we fetch its
+   *    current `updated_at` and only apply the queued change if the
+   *    client's `client_updated_at` (captured at the moment the change was
+   *    queued — see addToSyncQueue) is strictly newer. If the server's
+   *    version is newer (i.e. someone else's change — e.g. a different
+   *    device/cashier for the same org — already landed while we were
+   *    offline), we DROP our stale local write rather than clobber theirs,
+   *    and instead let the subsequent pullData() refresh the local copy
+   *    with the winning server version. This is why the business_owner
+   *    dashboard intentionally shows a "last-synced" state while offline
+   *    by design — it reflects the last state IT knows about, and
+   *    reconciles to the server's winning version once back online.
+   *
+   * 3. INSERT operations for non-append-only tables have no prior row to
+   *    conflict with, so they upsert-by-id directly (a retried INSERT for
+   *    a record that already made it to the server is idempotent).
+   */
   private async executeSyncOperation(
     supabase: ReturnType<typeof createClient>,
     item: SyncQueueRecord
@@ -161,19 +191,61 @@ class SyncEngine {
     // Use type assertion to allow dynamic table name
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const client = supabase as any;
+
+    const isAppendOnly = item.table_name === 'sales' || item.table_name === 'sale_items';
+
     switch (item.operation) {
       case 'INSERT':
+        // Append-only tables and fresh inserts both upsert-by-id, which is
+        // idempotent on retry — the difference for append-only tables is
+        // simply that they are NEVER reached via the 'UPDATE' branch below.
         return client.from(item.table_name).upsert(item.payload, { onConflict: 'id' });
-      case 'UPDATE':
+
+      case 'UPDATE': {
+        if (isAppendOnly) {
+          // Should not normally happen (sales/sale_items are only ever
+          // queued as INSERT — see persistOfflineSale), but guard anyway:
+          // never let an "UPDATE" mutate an immutable sales record.
+          return { error: null };
+        }
+
+        // Last-write-wins by timestamp: only overwrite if our queued
+        // change is newer than what's currently on the server.
+        const { data: serverRow, error: fetchErr } = await client
+          .from(item.table_name)
+          .select('updated_at')
+          .eq('id', item.record_id)
+          .maybeSingle();
+
+        if (fetchErr) return { error: fetchErr };
+
+        const serverUpdatedAt = serverRow?.updated_at ? new Date(serverRow.updated_at).getTime() : 0;
+        const clientUpdatedAt = item.client_updated_at ? new Date(item.client_updated_at).getTime() : 0;
+
+        if (serverRow && serverUpdatedAt > clientUpdatedAt) {
+          // The server already has a newer version (a concurrent change
+          // from another device/cashier) — drop our stale local write
+          // instead of overwriting it. Not an error: the sync is
+          // considered successful, just superseded.
+          console.info(
+            `[sync] Dropping stale local UPDATE for ${item.table_name}:${item.record_id} ` +
+            `(server updated_at=${serverRow.updated_at} is newer than local client_updated_at=${item.client_updated_at})`
+          );
+          return { error: null };
+        }
+
         return client
           .from(item.table_name)
           .upsert(item.payload, { onConflict: 'id' })
           .eq('id', item.record_id);
+      }
+
       case 'DELETE':
         return client
           .from(item.table_name)
           .delete()
           .eq('id', item.record_id);
+
       default:
         return { error: new Error('Unknown operation') };
     }

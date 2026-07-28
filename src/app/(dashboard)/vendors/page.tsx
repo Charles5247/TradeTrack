@@ -44,7 +44,7 @@ async function fetchVendors() {
 
 export default function VendorsPage() {
   return (
-    <AccessGuard allow={['super_admin', 'admin']}>
+    <AccessGuard allow={['business_owner', 'admin']}>
       <VendorsPageInner />
     </AccessGuard>
   );

@@ -76,7 +76,7 @@ describe('resetPasswordSchema', () => {
 
 describe('createUserSchema', () => {
   it('accepts a fully valid payload for each of the 4 roles', () => {
-    const roles = ['super_admin', 'owner', 'admin', 'cashier'] as const;
+    const roles = ['platform_owner', 'business_owner', 'admin', 'cashier'] as const;
     for (const role of roles) {
       const result = createUserSchema.safeParse({
         email: 'newuser@example.com',
@@ -110,8 +110,8 @@ describe('createUserSchema', () => {
 });
 
 describe('updateUserSchema', () => {
-  it('accepts owner role (regression test for role-gap bug)', () => {
-    expect(updateUserSchema.safeParse({ role: 'owner' }).success).toBe(true);
+  it('accepts business_owner role (regression test for role-gap bug)', () => {
+    expect(updateUserSchema.safeParse({ role: 'business_owner' }).success).toBe(true);
   });
 
   it('rejects the removed manager role', () => {

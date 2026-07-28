@@ -1,7 +1,16 @@
 /**
  * TradeTrack - Individual User Management API Routes
- * PATCH  /api/users/[id] - Update user profile / status / password
- * DELETE /api/users/[id] - Delete user (super_admin only)
+ * PATCH  /api/users/[id] - Update user profile / status / password.
+ *                           - platform_owner: any user, any role change.
+ *                           - business_owner: only admin/cashier users
+ *                             within their OWN org; cannot edit another
+ *                             business_owner/platform_owner, cannot
+ *                             escalate a target to business_owner/
+ *                             platform_owner (no self-elevation via a
+ *                             lower-privileged caller either, since only
+ *                             those two roles reach this branch at all).
+ * DELETE /api/users/[id] - Delete user (platform_owner, or business_owner
+ *                           deleting an admin/cashier within their own org)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -54,13 +63,44 @@ export async function PATCH(
     const { id: targetUserId } = await params;
     const currentUser = await getAuthenticatedUser();
     if (!currentUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    if (currentUser.role !== 'super_admin') {
+    const isPlatformOwner = currentUser.role === 'platform_owner';
+    const isBusinessOwner = currentUser.role === 'business_owner';
+    if (!isPlatformOwner && !isBusinessOwner) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const serviceSupabase = getServiceClient();
+
+    if (isBusinessOwner) {
+      const { data: targetUser } = await serviceSupabase
+        .from('users')
+        .select('id, role, organization_id')
+        .eq('id', targetUserId)
+        .single();
+
+      if (!targetUser || targetUser.organization_id !== currentUser.organization_id) {
+        return NextResponse.json(
+          { error: 'Forbidden: Cannot modify users outside your own organization' },
+          { status: 403 }
+        );
+      }
+      if (targetUser.role === 'business_owner' || targetUser.role === 'platform_owner') {
+        return NextResponse.json(
+          { error: 'Forbidden: Business Owners can only manage admin or cashier users' },
+          { status: 403 }
+        );
+      }
     }
 
     const body = await request.json() as Record<string, unknown>;
     const { full_name, phone, role, status, password } = body;
-    const serviceSupabase = getServiceClient();
+
+    if (isBusinessOwner && role !== undefined && role !== 'admin' && role !== 'cashier') {
+      return NextResponse.json(
+        { error: 'Forbidden: Business Owners can only assign admin or cashier roles' },
+        { status: 403 }
+      );
+    }
 
     // Build update object with only defined fields
     const profileUpdates: Database['public']['Tables']['users']['Update'] = {
@@ -127,7 +167,9 @@ export async function DELETE(
     const { id: targetUserId } = await params;
     const currentUser = await getAuthenticatedUser();
     if (!currentUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    if (currentUser.role !== 'super_admin') {
+    const isPlatformOwner = currentUser.role === 'platform_owner';
+    const isBusinessOwner = currentUser.role === 'business_owner';
+    if (!isPlatformOwner && !isBusinessOwner) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -137,6 +179,27 @@ export async function DELETE(
 
     const serviceSupabase = getServiceClient();
     const orgId = currentUser.organization_id;
+
+    if (isBusinessOwner) {
+      const { data: targetUser } = await serviceSupabase
+        .from('users')
+        .select('id, role, organization_id')
+        .eq('id', targetUserId)
+        .single();
+
+      if (!targetUser || targetUser.organization_id !== currentUser.organization_id) {
+        return NextResponse.json(
+          { error: 'Forbidden: Cannot delete users outside your own organization' },
+          { status: 403 }
+        );
+      }
+      if (targetUser.role === 'business_owner' || targetUser.role === 'platform_owner') {
+        return NextResponse.json(
+          { error: 'Forbidden: Business Owners can only delete admin or cashier users' },
+          { status: 403 }
+        );
+      }
+    }
 
     // Audit log before deletion (best-effort)
     if (orgId) {

@@ -118,7 +118,7 @@ async function adjustStock(payload: {
 
 export default function InventoryPage() {
   return (
-    <AccessGuard allow={['super_admin', 'admin']}>
+    <AccessGuard allow={['business_owner', 'admin']}>
       <InventoryPageInner />
     </AccessGuard>
   );

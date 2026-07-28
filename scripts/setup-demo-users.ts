@@ -74,23 +74,23 @@ interface DemoUser {
   id: string;
   email: string;
   full_name: string;
-  role: "super_admin" | "admin" | "owner" | "cashier";
+  role: "platform_owner" | "admin" | "business_owner" | "cashier";
   organization_id: string | null;
 }
 
 const DEMO_USERS: DemoUser[] = [
   {
     id: "22222222-2222-2222-2222-222222222222",
-    email: "superadmin@tradetrack.ng",
-    full_name: "Super Admin",
-    role: "super_admin",
+    email: "platformowner@tradetrack.ng",
+    full_name: "Platform Owner",
+    role: "platform_owner",
     organization_id: null,
   },
   {
     id: "a6000000-0000-0000-0000-000000000001",
     email: "owner@demo.com",
-    full_name: "Demo Owner",
-    role: "owner",
+    full_name: "Demo Business Owner",
+    role: "business_owner",
     organization_id: DEMO_ORG_ID,
   },
   {

@@ -10,11 +10,11 @@ import type { UserRole } from '@/types';
  * Renders `children` only if the current user's role is included in
  * `allow`. Otherwise renders a standard "Access Denied" placeholder.
  *
- * Used to enforce that the Owner role (a platform-level role) cannot
- * view operational pages such as Products, Inventory, POS, Sales
- * History, Warehouses, Transfers, Vendor Sales, Reports, Audit Trail
- * and Users — even via direct URL navigation (the sidebar already
- * hides these links for Owner, this is the page-level backstop).
+ * Used to enforce that platform_owner (TradeTrack's own cross-org role)
+ * cannot view a merchant's operational pages such as Products, Inventory,
+ * POS, Sales History, Warehouses, Transfers, Vendor Sales, Reports and
+ * Audit Trail — even via direct URL navigation (the sidebar already hides
+ * these links for platform_owner, this is the page-level backstop).
  */
 export function AccessGuard({
   allow,

@@ -137,7 +137,7 @@ async function updateTransferStatus(id: string, status: 'received' | 'cancelled'
 
 export default function TransfersPage() {
   return (
-    <AccessGuard allow={['super_admin', 'admin']}>
+    <AccessGuard allow={['business_owner', 'admin']}>
       <TransfersPageInner />
     </AccessGuard>
   );

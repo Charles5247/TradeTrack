@@ -90,8 +90,8 @@ async function deleteUser(id: string): Promise<void> {
 
 function RoleBadge({ role }: { role: string }) {
   const map: Record<string, Parameters<typeof Badge>[0]['variant']> = {
-    super_admin: 'default',
-    owner: 'default',
+    platform_owner: 'default',
+    business_owner: 'default',
     admin: 'info',
     cashier: 'outline',
   };
@@ -119,7 +119,7 @@ function StatusBadge({ status }: { status: string }) {
 const defaultForm = {
   email: '',
   full_name: '',
-  role: 'cashier' as 'super_admin' | 'owner' | 'admin' | 'cashier',
+  role: 'cashier' as 'platform_owner' | 'business_owner' | 'admin' | 'cashier',
   phone: '',
   password: '',
 };
@@ -147,7 +147,7 @@ export default function UsersPage() {
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: fetchUsers,
-    enabled: currentUser?.role === 'super_admin',
+    enabled: currentUser?.role === 'business_owner' || currentUser?.role === 'platform_owner',
   });
 
   const createMutation = useMutation({
@@ -205,8 +205,8 @@ export default function UsersPage() {
     onError: (e) => toast.error(e instanceof Error ? e.message : 'Failed to update status'),
   });
 
-  // Guard: only super_admin
-  if (currentUser?.role !== 'super_admin') {
+  // Guard: business_owner (own org) or platform_owner
+  if (currentUser?.role !== 'business_owner' && currentUser?.role !== 'platform_owner') {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <ShieldCheck className="h-12 w-12 text-muted-foreground" />
@@ -407,8 +407,12 @@ export default function UsersPage() {
                 <SelectContent>
                   <SelectItem value="cashier">{t.users.cashier}</SelectItem>
                   <SelectItem value="admin">{t.users.admin}</SelectItem>
-                  <SelectItem value="owner">{t.users.owner}</SelectItem>
-                  <SelectItem value="super_admin">{t.users.super_admin}</SelectItem>
+                  {currentUser?.role === 'platform_owner' && (
+                    <>
+                      <SelectItem value="business_owner">{t.users.business_owner}</SelectItem>
+                      <SelectItem value="platform_owner">{t.users.platform_owner}</SelectItem>
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -480,8 +484,12 @@ export default function UsersPage() {
                   <SelectContent>
                     <SelectItem value="cashier">{t.users.cashier}</SelectItem>
                     <SelectItem value="admin">{t.users.admin}</SelectItem>
-                    <SelectItem value="owner">{t.users.owner}</SelectItem>
-                    <SelectItem value="super_admin">{t.users.super_admin}</SelectItem>
+                    {currentUser?.role === 'platform_owner' && (
+                      <>
+                        <SelectItem value="business_owner">{t.users.business_owner}</SelectItem>
+                        <SelectItem value="platform_owner">{t.users.platform_owner}</SelectItem>
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
               </div>

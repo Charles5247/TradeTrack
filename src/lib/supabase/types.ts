@@ -51,7 +51,7 @@ export type Database = {
           id: string;
           email: string;
           full_name: string;
-          role: 'super_admin' | 'admin' | 'owner' | 'cashier';
+          role: 'platform_owner' | 'business_owner' | 'admin' | 'cashier';
           status: 'active' | 'suspended' | 'inactive';
           organization_id: string | null;
           avatar_url: string | null;
@@ -66,7 +66,7 @@ export type Database = {
           id?: string;
           email: string;
           full_name: string;
-          role: 'super_admin' | 'admin' | 'owner' | 'cashier';
+          role: 'platform_owner' | 'business_owner' | 'admin' | 'cashier';
           status?: 'active' | 'suspended' | 'inactive';
           organization_id?: string | null;
           avatar_url?: string | null;

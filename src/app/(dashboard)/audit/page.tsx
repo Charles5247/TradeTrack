@@ -56,7 +56,7 @@ const actionColors: Record<string, string> = {
 
 export default function AuditPage() {
   return (
-    <AccessGuard allow={['super_admin', 'admin']}>
+    <AccessGuard allow={['business_owner', 'admin']}>
       <AuditPageInner />
     </AccessGuard>
   );
