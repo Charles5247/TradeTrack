@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
 /**
  * TradeTrack - Offline Sync Engine
  * Handles bidirectional sync between IndexedDB and Supabase
  */
 
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from "@/lib/supabase/client";
 import {
   getDB,
   getPendingSyncItems,
   saveToOfflineDB,
   clearOfflineStore,
   type SyncQueueRecord,
-} from './db';
+} from "./db";
 
-type SyncStatus = 'idle' | 'syncing' | 'error' | 'offline';
+type SyncStatus = "idle" | "syncing" | "error" | "offline";
 
 interface SyncState {
   status: SyncStatus;
@@ -28,31 +28,37 @@ type SyncListener = (state: SyncState) => void;
 class SyncEngine {
   private listeners: SyncListener[] = [];
   private state: SyncState = {
-    status: 'idle',
+    status: "idle",
     lastSync: null,
     pendingCount: 0,
     error: null,
   };
   private syncInterval: ReturnType<typeof setInterval> | null = null;
   private isOnline = true;
+  // See sync()'s catch block: throttles retries after a detected
+  // network-level failure so remounts/interval ticks don't hammer an
+  // unreachable Supabase with identical failing requests.
+  private retryCooldownUntil = 0;
+  private readonly RETRY_COOLDOWN_MS = 15000;
 
   constructor() {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       this.isOnline = navigator.onLine;
-      window.addEventListener('online', () => this.handleOnline());
-      window.addEventListener('offline', () => this.handleOffline());
+      window.addEventListener("online", () => this.handleOnline());
+      window.addEventListener("offline", () => this.handleOffline());
     }
   }
 
   private handleOnline() {
     this.isOnline = true;
-    this.setState({ status: 'idle', error: null });
+    this.retryCooldownUntil = 0;
+    this.setState({ status: "idle", error: null });
     this.sync();
   }
 
   private handleOffline() {
     this.isOnline = false;
-    this.setState({ status: 'offline' });
+    this.setState({ status: "offline" });
   }
 
   private setState(partial: Partial<SyncState>) {
@@ -83,26 +89,29 @@ class SyncEngine {
   }
 
   async sync() {
-    if (!this.isOnline || this.state.status === 'syncing') return;
+    if (!this.isOnline || this.state.status === "syncing") return;
+    if (Date.now() < this.retryCooldownUntil) return;
 
-    this.setState({ status: 'syncing', error: null });
+    this.setState({ status: "syncing", error: null });
 
     try {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
-        this.setState({ status: 'idle' });
+        this.setState({ status: "idle" });
         return;
       }
 
       const { data: profile } = await supabase
-        .from('users')
-        .select('organization_id')
-        .eq('id', user.id)
+        .from("users")
+        .select("organization_id")
+        .eq("id", user.id)
         .single();
 
       if (!profile?.organization_id) {
-        this.setState({ status: 'idle' });
+        this.setState({ status: "idle" });
         return;
       }
 
@@ -112,14 +121,33 @@ class SyncEngine {
       await this.pullData(orgId, supabase);
 
       this.setState({
-        status: 'idle',
+        status: "idle",
         lastSync: new Date(),
         pendingCount: 0,
         error: null,
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Sync failed';
-      this.setState({ status: 'error', error: message });
+      // A bare "Failed to fetch" TypeError means the request never even
+      // reached the network stack (no route to the host) — that's a
+      // connectivity problem, not an application error. navigator.onLine
+      // only reflects whether *some* interface is up, so it won't catch
+      // this (e.g. Supabase unreachable but Wi-Fi/LAN otherwise fine) and
+      // won't fire a real 'online' event to recover from later either.
+      // So: on a network-level failure, mark status 'offline' (not
+      // 'error') and set a short retry cooldown — this collapses the
+      // repeated identical failures from every provider remount/interval
+      // tick into at most one attempt per cooldown window, while still
+      // self-healing automatically once connectivity actually returns
+      // (no permanent flag flip that could get stuck).
+      const isNetworkFailure =
+        err instanceof TypeError && /fetch/i.test(err.message);
+      if (isNetworkFailure) {
+        this.retryCooldownUntil = Date.now() + this.RETRY_COOLDOWN_MS;
+        this.setState({ status: "offline", error: null });
+        return;
+      }
+      const message = err instanceof Error ? err.message : "Sync failed";
+      this.setState({ status: "error", error: message });
     }
   }
 
@@ -132,21 +160,21 @@ class SyncEngine {
 
     for (const item of pendingItems) {
       try {
-        await db.put('sync_queue', { ...item, status: 'syncing' });
+        await db.put("sync_queue", { ...item, status: "syncing" });
 
         const { error } = await this.executeSyncOperation(supabase, item);
         if (error) throw error;
 
-        await db.put('sync_queue', {
+        await db.put("sync_queue", {
           ...item,
-          status: 'synced',
+          status: "synced",
           synced_at: new Date().toISOString(),
         });
       } catch (err) {
-        const errMessage = err instanceof Error ? err.message : 'Unknown error';
-        await db.put('sync_queue', {
+        const errMessage = err instanceof Error ? err.message : "Unknown error";
+        await db.put("sync_queue", {
           ...item,
-          status: item.retry_count >= 3 ? 'failed' : 'pending',
+          status: item.retry_count >= 3 ? "failed" : "pending",
           retry_count: item.retry_count + 1,
           error: errMessage,
         });
@@ -186,22 +214,25 @@ class SyncEngine {
    */
   private async executeSyncOperation(
     supabase: ReturnType<typeof createClient>,
-    item: SyncQueueRecord
+    item: SyncQueueRecord,
   ) {
     // Use type assertion to allow dynamic table name
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const client = supabase as any;
 
-    const isAppendOnly = item.table_name === 'sales' || item.table_name === 'sale_items';
+    const isAppendOnly =
+      item.table_name === "sales" || item.table_name === "sale_items";
 
     switch (item.operation) {
-      case 'INSERT':
+      case "INSERT":
         // Append-only tables and fresh inserts both upsert-by-id, which is
         // idempotent on retry — the difference for append-only tables is
         // simply that they are NEVER reached via the 'UPDATE' branch below.
-        return client.from(item.table_name).upsert(item.payload, { onConflict: 'id' });
+        return client
+          .from(item.table_name)
+          .upsert(item.payload, { onConflict: "id" });
 
-      case 'UPDATE': {
+      case "UPDATE": {
         if (isAppendOnly) {
           // Should not normally happen (sales/sale_items are only ever
           // queued as INSERT — see persistOfflineSale), but guard anyway:
@@ -213,14 +244,18 @@ class SyncEngine {
         // change is newer than what's currently on the server.
         const { data: serverRow, error: fetchErr } = await client
           .from(item.table_name)
-          .select('updated_at')
-          .eq('id', item.record_id)
+          .select("updated_at")
+          .eq("id", item.record_id)
           .maybeSingle();
 
         if (fetchErr) return { error: fetchErr };
 
-        const serverUpdatedAt = serverRow?.updated_at ? new Date(serverRow.updated_at).getTime() : 0;
-        const clientUpdatedAt = item.client_updated_at ? new Date(item.client_updated_at).getTime() : 0;
+        const serverUpdatedAt = serverRow?.updated_at
+          ? new Date(serverRow.updated_at).getTime()
+          : 0;
+        const clientUpdatedAt = item.client_updated_at
+          ? new Date(item.client_updated_at).getTime()
+          : 0;
 
         if (serverRow && serverUpdatedAt > clientUpdatedAt) {
           // The server already has a newer version (a concurrent change
@@ -229,71 +264,68 @@ class SyncEngine {
           // considered successful, just superseded.
           console.info(
             `[sync] Dropping stale local UPDATE for ${item.table_name}:${item.record_id} ` +
-            `(server updated_at=${serverRow.updated_at} is newer than local client_updated_at=${item.client_updated_at})`
+              `(server updated_at=${serverRow.updated_at} is newer than local client_updated_at=${item.client_updated_at})`,
           );
           return { error: null };
         }
 
         return client
           .from(item.table_name)
-          .upsert(item.payload, { onConflict: 'id' })
-          .eq('id', item.record_id);
+          .upsert(item.payload, { onConflict: "id" })
+          .eq("id", item.record_id);
       }
 
-      case 'DELETE':
-        return client
-          .from(item.table_name)
-          .delete()
-          .eq('id', item.record_id);
+      case "DELETE":
+        return client.from(item.table_name).delete().eq("id", item.record_id);
 
       default:
-        return { error: new Error('Unknown operation') };
+        return { error: new Error("Unknown operation") };
     }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async pullData(orgId: string, supabase: any) {
     const lastSync = this.state.lastSync;
-    const since = lastSync ? lastSync.toISOString() : '1970-01-01T00:00:00Z';
+    const since = lastSync ? lastSync.toISOString() : "1970-01-01T00:00:00Z";
 
     const { data: products } = await supabase
-      .from('products')
-      .select('*')
-      .eq('organization_id', orgId)
-      .gte('updated_at', since);
+      .from("products")
+      .select("*")
+      .eq("organization_id", orgId)
+      .gte("updated_at", since);
 
     if (products?.length) {
-      await saveToOfflineDB('products', products);
+      await saveToOfflineDB("products", products);
     }
 
     const { data: inventory } = await supabase
-      .from('inventory')
-      .select('*')
-      .eq('organization_id', orgId)
-      .gte('updated_at', since);
+      .from("inventory")
+      .select("*")
+      .eq("organization_id", orgId)
+      .gte("updated_at", since);
 
     if (inventory?.length) {
-      await saveToOfflineDB('inventory', inventory);
+      await saveToOfflineDB("inventory", inventory);
     }
 
     const { data: warehouses } = await supabase
-      .from('warehouses')
-      .select('*')
-      .eq('organization_id', orgId);
+      .from("warehouses")
+      .select("*")
+      .eq("organization_id", orgId);
 
     if (warehouses?.length) {
-      await clearOfflineStore('warehouses');
-      await saveToOfflineDB('warehouses', warehouses);
+      await clearOfflineStore("warehouses");
+      await saveToOfflineDB("warehouses", warehouses);
     }
 
     const { data: categories } = await supabase
-      .from('categories')
-      .select('*')
-      .eq('organization_id', orgId);
+      .from("categories")
+      .select("*")
+      .eq("organization_id", orgId);
 
     if (categories?.length) {
-      await clearOfflineStore('categories');
-      await saveToOfflineDB('categories', categories);
+      await clearOfflineStore("categories");
+      await saveToOfflineDB("categories", categories);
     }
   }
 
@@ -303,7 +335,8 @@ class SyncEngine {
   }
 }
 
-export const syncEngine = typeof window !== 'undefined' ? new SyncEngine() : null;
+export const syncEngine =
+  typeof window !== "undefined" ? new SyncEngine() : null;
 
 export function useSyncEngine() {
   return syncEngine;

@@ -4,9 +4,9 @@
 
 -- Subscription Plans
 INSERT INTO subscription_plans (id, name, price, currency, max_cashiers, max_products, max_warehouses, features) VALUES
-  ('a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'Basic', 3000, 'NGN', 1, 500, 2, '["inventory","sales","reports","receipt_printing"]'),
-  ('b2c3d4e5-f6a7-8901-bcde-f12345678901', 'Standard', 5000, 'NGN', 3, 2000, 5, '["inventory","sales","reports","receipt_printing","daily_summaries","barcode_scanning"]'),
-  ('c3d4e5f6-a7b8-9012-cdef-123456789012', 'Business', 8000, 'NGN', -1, -1, -1, '["inventory","sales","reports","receipt_printing","daily_summaries","barcode_scanning","advanced_reports","priority_support","warehouse_transfers","vendor_consignment","audit_trail","multi_language"]');
+  ('a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'Basic', 5000, 'NGN', 1, 500, 2, '["inventory","sales","reports","receipt_printing"]'),
+  ('b2c3d4e5-f6a7-8901-bcde-f12345678901', 'Standard', 10000, 'NGN', 3, 2000, 5, '["inventory","sales","reports","receipt_printing","daily_summaries","barcode_scanning"]'),
+  ('c3d4e5f6-a7b8-9012-cdef-123456789012', 'Business', 20000, 'NGN', -1, -1, -1, '["inventory","sales","reports","receipt_printing","daily_summaries","barcode_scanning","advanced_reports","priority_support","warehouse_transfers","vendor_consignment","audit_trail","multi_language"]');
 
 -- Demo Organization
 INSERT INTO organizations (id, name, slug, currency, timezone, subscription_status) VALUES
