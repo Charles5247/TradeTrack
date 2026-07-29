@@ -461,20 +461,27 @@ real-time data it cannot actually have — see point 6 in
 
 ## 📦 Distribution Strategy (Desktop / Android / iOS)
 
-The following distribution approach is **confirmed but not yet built** in
-this pass — it is scoped as a separate, greenfield follow-up:
-
 | Platform    | Approach                                                                                          | Status        |
 | ----------- | --------------------------------------------------------------------------------------------------- | -------------- |
-| **Windows** | Electron-wrapped build producing a `.exe` installer                                                 | Not yet built  |
-| **Android** | React Native app producing a side-loaded `.apk` (no Play Store listing)                             | Not yet built  |
+| **Windows** | Thin Electron wrapper (`desktop-app/`) producing a `.exe` NSIS installer                            | ✅ Built — see `desktop-app/README` notes below |
+| **Android** | Thin native WebView wrapper (`android-app/`) producing a side-loaded `.apk` (no Play Store listing) | ✅ Built — see `android-app/README.md` |
 | **iOS**     | Interim PWA "Add to Home Screen" install (native app deferred)                                      | Available today via the existing PWA manifest/service worker |
 | **Both**    | A lightweight "check for update" call against `GET /api/version` (already implemented — see below) | ✅ Implemented |
 
+Both native shells deliberately wrap the existing offline-first PWA
+rather than reimplement it: TradeTrack already ships a service worker,
+an IndexedDB-backed local store, and a `SyncEngine`, so the desktop and
+mobile shells are just a `BrowserWindow` / `WebView` pointed at the
+deployed app URL, plus a handful of native affordances (app icon,
+menu, external-link handling, update polling). See `desktop-app/` and
+`android-app/README.md` for the respective source trees, build steps,
+and known limitations (unsigned installer / sideload-only APK — no
+code-signing certificate or Play Store listing exists yet).
+
 `src/app/api/version/route.ts` is a small, public, always-on
-(`export const dynamic = 'force-dynamic'`) endpoint that both future
-clients can poll to learn the latest available version and download URL
-for their platform:
+(`export const dynamic = 'force-dynamic'`) endpoint that both clients
+poll to learn the latest available version and download URL for their
+platform:
 
 ```json
 {
@@ -487,11 +494,12 @@ for their platform:
 }
 ```
 
-It is metadata-only — it does **not** serve any binary itself — since no
-Electron or React Native build artifacts exist yet. Populating the
-`TRADETRACK_WINDOWS_DOWNLOAD_URL` / `TRADETRACK_ANDROID_DOWNLOAD_URL`
-env vars once those builds exist is all that's needed to make the
-version-check payload point at real installers.
+It is metadata-only — it does **not** serve any binary itself.
+Populating the `TRADETRACK_WINDOWS_DOWNLOAD_URL` /
+`TRADETRACK_ANDROID_DOWNLOAD_URL` env vars with real hosting URLs for
+`TradeTrack-Setup-1.0.0.exe` / `TradeTrack-1.0.0.apk` is all that's
+needed to make the version-check payload point at real installers for
+production distribution.
 
 ## 🌍 Multilingual Support
 
