@@ -1,6 +1,6 @@
-const OFFLINE_AUTH_STORAGE_KEY = 'tradetrack-offline-auth';
-const REMEMBERED_LOGIN_STORAGE_KEY = 'tradetrack-remembered-login';
-const OFFLINE_NAMESPACE_STORAGE_KEY = 'tradetrack-offline-namespace';
+const OFFLINE_AUTH_STORAGE_KEY = "tradetrack-offline-auth";
+const REMEMBERED_LOGIN_STORAGE_KEY = "tradetrack-remembered-login";
+const OFFLINE_NAMESPACE_STORAGE_KEY = "tradetrack-offline-namespace";
 const REMEMBER_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
 
 export interface OfflineAuthSession {
@@ -11,13 +11,43 @@ export interface OfflineAuthSession {
 
 export interface RememberedLoginPayload {
   email: string;
-  password: string;
+  // Never store the raw password — see hashPassword()/verifyPassword()
+  // below. salt is per-entry (random, stored alongside) so the same
+  // password doesn't produce the same stored hash across accounts.
+  salt: string;
+  passwordHash: string;
   profile: Record<string, unknown>;
   createdAt: string;
 }
 
+function toHex(buffer: ArrayBuffer): string {
+  return Array.from(new Uint8Array(buffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function randomSaltHex(): string {
+  const bytes = new Uint8Array(16);
+  window.crypto.getRandomValues(bytes);
+  return toHex(bytes.buffer);
+}
+
+// Salted SHA-256 — this is a "remember this device for offline sign-in"
+// cache, not the account's real password store (Supabase Auth still owns
+// that, and still gates every online sign-in). The threat this defends
+// against is a plaintext credential sitting in localStorage being
+// trivially readable via devtools or an XSS payload; it is not meant to
+// resist offline brute-force the way bcrypt/argon2 would, which is an
+// acceptable tradeoff for a POS terminal's local "stay logged in offline"
+// cache rather than a primary credential store.
+async function hashPassword(password: string, salt: string): Promise<string> {
+  const data = new TextEncoder().encode(`${salt}:${password}`);
+  const digest = await window.crypto.subtle.digest("SHA-256", data);
+  return toHex(digest);
+}
+
 function readStorage<T>(key: string): T | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === "undefined") return null;
 
   try {
     const value = window.localStorage.getItem(key);
@@ -28,7 +58,7 @@ function readStorage<T>(key: string): T | null {
 }
 
 function writeStorage<T>(key: string, value: T): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
 
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
@@ -38,7 +68,7 @@ function writeStorage<T>(key: string, value: T): void {
 }
 
 function removeStorage(key: string): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
 
   try {
     window.localStorage.removeItem(key);
@@ -47,22 +77,28 @@ function removeStorage(key: string): void {
   }
 }
 
-export function setOfflineAccountNamespace(profile?: Record<string, unknown> | null): void {
-  if (typeof window === 'undefined') return;
+export function setOfflineAccountNamespace(
+  profile?: Record<string, unknown> | null,
+): void {
+  if (typeof window === "undefined") return;
 
   try {
     const rawName =
       (profile?.full_name as string | undefined) ||
       (profile?.email as string | undefined) ||
       (profile?.id as string | undefined) ||
-      'default';
+      "default";
 
-    const slug = String(rawName)
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '') || 'default';
+    const slug =
+      String(rawName)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "") || "default";
 
-    const suffix = typeof profile?.id === 'string' && profile.id ? profile.id.slice(0, 8) : 'default';
+    const suffix =
+      typeof profile?.id === "string" && profile.id
+        ? profile.id.slice(0, 8)
+        : "default";
     const namespace = `${slug}-${suffix}`;
 
     window.localStorage.setItem(OFFLINE_NAMESPACE_STORAGE_KEY, namespace);
@@ -72,17 +108,20 @@ export function setOfflineAccountNamespace(profile?: Record<string, unknown> | n
 }
 
 export function getOfflineAccountNamespace(): string {
-  if (typeof window === 'undefined') return 'default';
+  if (typeof window === "undefined") return "default";
 
   try {
     const stored = window.localStorage.getItem(OFFLINE_NAMESPACE_STORAGE_KEY);
-    return stored || 'default';
+    return stored || "default";
   } catch {
-    return 'default';
+    return "default";
   }
 }
 
-export function saveOfflineAuthSession(email: string, profile: Record<string, unknown>): void {
+export function saveOfflineAuthSession(
+  email: string,
+  profile: Record<string, unknown>,
+): void {
   const payload: OfflineAuthSession = {
     email,
     profile,
@@ -108,12 +147,15 @@ export function clearOfflineAuthSession(): void {
 export async function saveRememberedLogin(
   email: string,
   password: string,
-  profile: Record<string, unknown>
+  profile: Record<string, unknown>,
 ): Promise<void> {
   setOfflineAccountNamespace(profile);
+  const salt = randomSaltHex();
+  const passwordHash = await hashPassword(password, salt);
   const payload: RememberedLoginPayload = {
     email,
-    password,
+    salt,
+    passwordHash,
     profile,
     createdAt: new Date().toISOString(),
   };
@@ -123,18 +165,23 @@ export async function saveRememberedLogin(
 
 export async function verifyRememberedLogin(
   email: string,
-  password: string
+  password: string,
 ): Promise<Record<string, unknown> | null> {
-  const entry = readStorage<RememberedLoginPayload>(REMEMBERED_LOGIN_STORAGE_KEY);
+  const entry = readStorage<RememberedLoginPayload>(
+    REMEMBERED_LOGIN_STORAGE_KEY,
+  );
   if (!entry) return null;
 
-  if (entry.email !== email || entry.password !== password) return null;
+  if (entry.email !== email) return null;
 
   const age = Date.now() - new Date(entry.createdAt).getTime();
   if (age > REMEMBER_DURATION_MS) {
     removeStorage(REMEMBERED_LOGIN_STORAGE_KEY);
     return null;
   }
+
+  const candidateHash = await hashPassword(password, entry.salt);
+  if (candidateHash !== entry.passwordHash) return null;
 
   return entry.profile;
 }
