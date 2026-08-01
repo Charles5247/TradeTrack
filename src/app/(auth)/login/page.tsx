@@ -295,7 +295,8 @@ export default function LoginPage() {
         </Card>
 
         <p className="text-center text-xs text-muted-foreground mt-6">
-          © {new Date().getFullYear()} {t.auth.copyright}
+          © {new Date().getFullYear()} {t.auth.copyright} | Powered by
+          {" CAXiE Technologies Ltd"}
         </p>
       </div>
     </div>

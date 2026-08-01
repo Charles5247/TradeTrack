@@ -69,10 +69,13 @@ export function Header() {
   const handleSignOut = async () => {
     try {
       const { createClient } = await import("@/lib/supabase/client");
+      const { clearOfflineAuthSession } =
+        await import("@/lib/offline/auth-cache");
       const supabase = createClient();
       if (user?.id) {
         await clearCachedSession(user.id);
       }
+      clearOfflineAuthSession();
       await supabase.auth.signOut();
       setUser(null);
       router.push("/login");

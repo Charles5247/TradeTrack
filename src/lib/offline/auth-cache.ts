@@ -46,6 +46,32 @@ async function hashPassword(password: string, salt: string): Promise<string> {
   return toHex(digest);
 }
 
+// Separate from Supabase's own sb-*-auth-token cookie: supabase-js clears
+// THAT cookie itself whenever a background token-refresh attempt fails
+// (which happens routinely while offline, roughly whenever the access
+// token's ~1hr lifetime is up) — so it can't be used as evidence of "this
+// device is allowed offline access". This cookie is app-owned, has no
+// bearing on Supabase's own session state, and is set on every successful
+// login (online or via the offline cached-credential fallback). Server
+// gatekeepers (middleware.ts, (dashboard)/layout.tsx) check THIS, not
+// Supabase's cookie, when getUser() can't be verified live.
+// NOTE: the literal cookie name is duplicated (not imported) in
+// middleware.ts and (dashboard)/layout.tsx to avoid pulling this
+// browser-only module (window/document/localStorage) into their bundles
+// (one is an Edge Runtime bundle) — keep the three in sync if renamed.
+export const OFFLINE_SESSION_COOKIE = "tt_offline_session";
+const OFFLINE_SESSION_COOKIE_MAX_AGE = 30 * 24 * 60 * 60; // 30 days, matches REMEMBER_DURATION_MS
+
+function setOfflineSessionCookie(): void {
+  if (typeof document === "undefined") return;
+  document.cookie = `${OFFLINE_SESSION_COOKIE}=1; max-age=${OFFLINE_SESSION_COOKIE_MAX_AGE}; path=/; SameSite=Lax`;
+}
+
+function clearOfflineSessionCookie(): void {
+  if (typeof document === "undefined") return;
+  document.cookie = `${OFFLINE_SESSION_COOKIE}=; max-age=0; path=/; SameSite=Lax`;
+}
+
 function readStorage<T>(key: string): T | null {
   if (typeof window === "undefined") return null;
 
@@ -130,6 +156,7 @@ export function saveOfflineAuthSession(
 
   setOfflineAccountNamespace(profile);
   writeStorage(OFFLINE_AUTH_STORAGE_KEY, payload);
+  setOfflineSessionCookie();
 }
 
 export function getOfflineAuthSession(): OfflineAuthSession | null {
@@ -142,6 +169,7 @@ export function getOfflineAuthSession(): OfflineAuthSession | null {
 export function clearOfflineAuthSession(): void {
   removeStorage(OFFLINE_AUTH_STORAGE_KEY);
   removeStorage(REMEMBERED_LOGIN_STORAGE_KEY);
+  clearOfflineSessionCookie();
 }
 
 export async function saveRememberedLogin(
@@ -161,6 +189,7 @@ export async function saveRememberedLogin(
   };
 
   writeStorage(REMEMBERED_LOGIN_STORAGE_KEY, payload);
+  setOfflineSessionCookie();
 }
 
 export async function verifyRememberedLogin(

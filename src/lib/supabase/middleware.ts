@@ -45,26 +45,22 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse;
   }
 
-  const supabase = createServerClient<Database>(
-    supabaseUrl,
-    supabaseAnonKey,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value),
-          );
-          supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options),
-          );
-        },
+  const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) =>
+          request.cookies.set(name, value),
+        );
+        supabaseResponse = NextResponse.next({ request });
+        cookiesToSet.forEach(({ name, value, options }) =>
+          supabaseResponse.cookies.set(name, value, options),
+        );
       },
     },
-  );
+  });
 
   // IMPORTANT: Do not add logic between createServerClient and
   // supabase.auth.getUser(). A subtle bug exists in refreshing
@@ -96,13 +92,26 @@ export async function updateSession(request: NextRequest) {
   // request through and defer to the client-side AuthProvider, which can
   // fall back to the cached IndexedDB session. Only force a redirect when
   // we're confident there's genuinely no session at all.
+  //
+  // IMPORTANT: supabase-js itself clears its OWN sb-*-auth-token cookie
+  // whenever a background token-refresh attempt fails outright — which it
+  // will, roughly whenever the access token's ~1hr lifetime is up, offline
+  // or not. So relying on that cookie alone means offline access silently
+  // breaks partway through a session once that timer fires. tt_offline_session
+  // is a separate, app-owned cookie (see src/lib/offline/auth-cache.ts)
+  // that Supabase has no power to touch, set on every successful login —
+  // check that too.
   const hasSupabaseSessionCookie = request.cookies
     .getAll()
     .some((c) => c.name.startsWith("sb-") && c.name.includes("auth-token"));
+  const hasOfflineSessionCookie = request.cookies.has("tt_offline_session");
 
   const shouldForceLogin =
     (!user && !authCheckFailed) ||
-    (!user && authCheckFailed && !hasSupabaseSessionCookie);
+    (!user &&
+      authCheckFailed &&
+      !hasSupabaseSessionCookie &&
+      !hasOfflineSessionCookie);
 
   if (isProtectedRoute(pathname) && shouldForceLogin) {
     const loginUrl = request.nextUrl.clone();
