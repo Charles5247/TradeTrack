@@ -24,6 +24,7 @@ const PROTECTED_PREFIXES = [
 
 // Auth-only routes (redirect logged-in users away from these)
 const AUTH_ROUTES = ["/login", "/forgot-password"];
+const OFFLINE_AUTH_COOKIE_NAME = "tradetrack-offline-session";
 
 function isProtectedRoute(pathname: string): boolean {
   return PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
@@ -32,6 +33,22 @@ function isProtectedRoute(pathname: string): boolean {
 function isAuthRoute(pathname: string): boolean {
   return AUTH_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(route),
+  );
+}
+
+export function shouldForceLogin(
+  pathname: string,
+  user: unknown,
+  authCheckFailed: boolean,
+  hasSupabaseSessionCookie: boolean,
+  hasOfflineAuthCookie = false,
+): boolean {
+  if (!isProtectedRoute(pathname)) return false;
+  if (user) return false;
+
+  return (
+    (!authCheckFailed && !user) ||
+    (authCheckFailed && !hasSupabaseSessionCookie && !hasOfflineAuthCookie)
   );
 }
 
@@ -99,12 +116,17 @@ export async function updateSession(request: NextRequest) {
   const hasSupabaseSessionCookie = request.cookies
     .getAll()
     .some((c) => c.name.startsWith("sb-") && c.name.includes("auth-token"));
+  const hasOfflineAuthCookie = request.cookies.has(OFFLINE_AUTH_COOKIE_NAME);
 
-  const shouldForceLogin =
-    (!user && !authCheckFailed) ||
-    (!user && authCheckFailed && !hasSupabaseSessionCookie);
+  const shouldRedirectToLogin = shouldForceLogin(
+    pathname,
+    user,
+    authCheckFailed,
+    hasSupabaseSessionCookie,
+    hasOfflineAuthCookie,
+  );
 
-  if (isProtectedRoute(pathname) && shouldForceLogin) {
+  if (isProtectedRoute(pathname) && shouldRedirectToLogin) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
     loginUrl.searchParams.set("redirect", pathname);

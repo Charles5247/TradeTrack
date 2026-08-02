@@ -1,6 +1,7 @@
 const OFFLINE_AUTH_STORAGE_KEY = "tradetrack-offline-auth";
 const REMEMBERED_LOGIN_STORAGE_KEY = "tradetrack-remembered-login";
 const OFFLINE_NAMESPACE_STORAGE_KEY = "tradetrack-offline-namespace";
+const OFFLINE_AUTH_COOKIE_NAME = "tradetrack-offline-session";
 const REMEMBER_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
 
 export interface OfflineAuthSession {
@@ -77,6 +78,27 @@ function removeStorage(key: string): void {
   }
 }
 
+function setOfflineAuthCookie(): void {
+  if (typeof window === "undefined") return;
+
+  try {
+    const expires = new Date(Date.now() + REMEMBER_DURATION_MS).toUTCString();
+    window.document.cookie = `${OFFLINE_AUTH_COOKIE_NAME}=1; Path=/; Max-Age=${Math.floor(REMEMBER_DURATION_MS / 1000)}; Expires=${expires}; SameSite=Lax`;
+  } catch {
+    // Ignore cookie failures.
+  }
+}
+
+function clearOfflineAuthCookie(): void {
+  if (typeof window === "undefined") return;
+
+  try {
+    window.document.cookie = `${OFFLINE_AUTH_COOKIE_NAME}=; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+  } catch {
+    // Ignore cookie failures.
+  }
+}
+
 export function setOfflineAccountNamespace(
   profile?: Record<string, unknown> | null,
 ): void {
@@ -130,6 +152,7 @@ export function saveOfflineAuthSession(
 
   setOfflineAccountNamespace(profile);
   writeStorage(OFFLINE_AUTH_STORAGE_KEY, payload);
+  setOfflineAuthCookie();
 }
 
 export function getOfflineAuthSession(): OfflineAuthSession | null {
@@ -142,6 +165,7 @@ export function getOfflineAuthSession(): OfflineAuthSession | null {
 export function clearOfflineAuthSession(): void {
   removeStorage(OFFLINE_AUTH_STORAGE_KEY);
   removeStorage(REMEMBERED_LOGIN_STORAGE_KEY);
+  clearOfflineAuthCookie();
 }
 
 export async function saveRememberedLogin(
