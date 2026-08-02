@@ -1,13 +1,18 @@
+<<<<<<< HEAD
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
+=======
+import { DashboardLayout } from '@/components/layout/dashboard-layout';
+>>>>>>> bc81cdde09fe9e08d926018710b30e283dc5c220
 
 export default async function DashboardGroupLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+<<<<<<< HEAD
   const supabase = await createClient();
 
   if (!supabase) {
@@ -67,5 +72,7 @@ export default async function DashboardGroupLayout({
     }
   }
 
+=======
+>>>>>>> bc81cdde09fe9e08d926018710b30e283dc5c220
   return <DashboardLayout>{children}</DashboardLayout>;
 }
