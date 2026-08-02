@@ -1,7 +1,7 @@
-import { jsPDF } from 'jspdf';
-import type { ReceiptData } from '@/lib/receipt/build-receipt';
-import { formatCurrency } from '@/lib/utils/format';
-import { renderBarcodeDataUrl } from '@/lib/barcode/render-barcode';
+import { jsPDF } from "jspdf";
+import type { ReceiptData } from "@/lib/receipt/build-receipt";
+import { formatCurrency } from "@/lib/utils/format";
+import { renderBarcodeDataUrl } from "@/lib/barcode/render-barcode";
 
 /**
  * Renders a single sale/vendor-payment receipt as a narrow, receipt-shaped
@@ -18,10 +18,11 @@ export function downloadReceiptPDF(receipt: ReceiptData) {
   // from line count and pad generously.
   const widthPt = 80 * 2.8346;
   const hasPaymentDetails = Boolean(receipt.cardMasked || receipt.approvalCode);
-  const estimatedLines = 20 + receipt.items.length * 2 + (hasPaymentDetails ? 3 : 0);
+  const estimatedLines =
+    20 + receipt.items.length * 2 + (hasPaymentDetails ? 3 : 0);
   const heightPt = Math.max(340, estimatedLines * 14);
 
-  const doc = new jsPDF({ unit: 'pt', format: [widthPt, heightPt] });
+  const doc = new jsPDF({ unit: "pt", format: [widthPt, heightPt] });
   const marginX = 10;
   let y = 20;
   const lineHeight = 13;
@@ -29,23 +30,27 @@ export function downloadReceiptPDF(receipt: ReceiptData) {
 
   const center = (text: string, size = 10, bold = false, upper = false) => {
     doc.setFontSize(size);
-    doc.setFont('courier', bold ? 'bold' : 'normal');
-    doc.text(upper ? text.toUpperCase() : text, widthPt / 2, y, { align: 'center' });
+    doc.setFont("courier", bold ? "bold" : "normal");
+    doc.text(upper ? text.toUpperCase() : text, widthPt / 2, y, {
+      align: "center",
+    });
     y += lineHeight;
   };
 
   const row = (left: string, right: string, size = 9, bold = false) => {
     doc.setFontSize(size);
-    doc.setFont('courier', bold ? 'bold' : 'normal');
-    doc.text(left, marginX, y);
-    doc.text(right, widthPt - marginX, y, { align: 'right' });
+    doc.setFont("courier", bold ? "bold" : "normal");
+    const maxLeftWidth = width * 0.68;
+    const trimmedLeft = left.length > 18 ? `${left.slice(0, 17)}…` : left;
+    doc.text(trimmedLeft, marginX, y, { maxWidth: maxLeftWidth });
+    doc.text(right, widthPt - marginX, y, { align: "right" });
     y += lineHeight;
   };
 
   const divider = () => {
     doc.setFontSize(8);
-    doc.setFont('courier', 'normal');
-    const asterisks = '*'.repeat(Math.floor(width / 4.2));
+    doc.setFont("courier", "normal");
+    const asterisks = "*".repeat(Math.floor(width / 4.2));
     doc.text(asterisks, marginX, y);
     y += lineHeight * 0.7;
   };
@@ -56,49 +61,63 @@ export function downloadReceiptPDF(receipt: ReceiptData) {
   if (receipt.orgPhone) center(`Telp. ${receipt.orgPhone}`, 8);
   y += 2;
   divider();
-  center('Cash Receipt', 11, true, true);
+  center("Cash Receipt", 11, true, true);
   divider();
 
   // ── Meta ────────────────────────────────────────────────────
-  row('Invoice:', receipt.invoiceNumber, 9, true);
-  row('Date:', new Date(receipt.dateISO).toLocaleString());
-  if (receipt.cashierName) row('Cashier:', receipt.cashierName);
-  if (receipt.customerName) row('Customer:', receipt.customerName);
-  if (receipt.customerPhone) row('Phone:', receipt.customerPhone);
+  row("Invoice:", receipt.invoiceNumber, 9, true);
+  row("Date:", new Date(receipt.dateISO).toLocaleString());
+  if (receipt.cashierName) row("Cashier:", receipt.cashierName);
+  if (receipt.customerName) row("Customer:", receipt.customerName);
+  if (receipt.customerPhone) row("Phone:", receipt.customerPhone);
   divider();
 
   // ── Item table ──────────────────────────────────────────────
   doc.setFontSize(8);
-  doc.setFont('courier', 'bold');
-  doc.text('DESCRIPTION', marginX, y);
-  doc.text('PRICE', widthPt - marginX, y, { align: 'right' });
+  doc.setFont("courier", "bold");
+  doc.text("DESCRIPTION", marginX, y);
+  doc.text("AMOUNT", widthPt - marginX, y, { align: "right" });
   y += lineHeight * 0.9;
 
   receipt.items.forEach((item) => {
     doc.setFontSize(8);
-    doc.setFont('courier', 'normal');
-    doc.text(`${item.quantity} x ${formatCurrency(item.unitPrice)}`, marginX, y, { maxWidth: width });
-    y += lineHeight * 0.85;
-    doc.setFontSize(9);
-    doc.text(item.name, marginX, y, { maxWidth: width * 0.6 });
-    doc.text(formatCurrency(item.total), widthPt - marginX, y, { align: 'right' });
+    doc.setFont("courier", "normal");
+    const itemName =
+      item.name.length > 24 ? `${item.name.slice(0, 23)}…` : item.name;
+    doc.text(
+      `${item.quantity} x ${formatCurrency(item.unitPrice)}`,
+      marginX,
+      y,
+      { maxWidth: width * 0.5 },
+    );
+    doc.text(formatCurrency(item.total), widthPt - marginX, y, {
+      align: "right",
+    });
+    y += lineHeight * 0.9;
+    doc.setFontSize(8);
+    doc.text(itemName, marginX, y, { maxWidth: width * 0.7 });
     y += lineHeight;
   });
 
   divider();
-  row('Subtotal', formatCurrency(receipt.subtotal));
-  if (receipt.discount > 0) row('Discount', `-${formatCurrency(receipt.discount)}`);
-  if (receipt.tax > 0) row('Tax', formatCurrency(receipt.tax));
-  row('TOTAL', formatCurrency(receipt.total), 13, true);
-  row(receipt.paymentMethod === 'cash' ? 'Cash' : 'Paid', formatCurrency(receipt.amountPaid));
-  if (receipt.changeAmount > 0) row('Change', formatCurrency(receipt.changeAmount));
-  if (!hasPaymentDetails) row('Payment', receipt.paymentMethod);
+  row("Subtotal", formatCurrency(receipt.subtotal));
+  if (receipt.discount > 0)
+    row("Discount", `-${formatCurrency(receipt.discount)}`);
+  if (receipt.tax > 0) row("Tax", formatCurrency(receipt.tax));
+  row("TOTAL", formatCurrency(receipt.total), 12, true);
+  row(
+    receipt.paymentMethod === "cash" ? "Cash" : "Paid",
+    formatCurrency(receipt.amountPaid),
+  );
+  if (receipt.changeAmount > 0)
+    row("Change", formatCurrency(receipt.changeAmount));
+  if (!hasPaymentDetails) row("Payment", receipt.paymentMethod);
 
   // ── Payment details (Bank card / Approval Code) ────────────
   if (hasPaymentDetails) {
     divider();
-    if (receipt.cardMasked) row('Bank card', receipt.cardMasked);
-    if (receipt.approvalCode) row('Approval Code', `#${receipt.approvalCode}`);
+    if (receipt.cardMasked) row("Bank card", receipt.cardMasked);
+    if (receipt.approvalCode) row("Approval Code", `#${receipt.approvalCode}`);
   }
   y += 4;
 
@@ -108,8 +127,8 @@ export function downloadReceiptPDF(receipt: ReceiptData) {
 
   y += 4;
   divider();
-  center('Thank you!', 10, true, true);
-  center('Powered by TradeTrack', 7);
+  center("Thank you!", 10, true, true);
+  center("Powered by TradeTrack", 7);
 
   // ── Scannable barcode ───────────────────────────────────────
   if (receipt.barcodeValue) {
@@ -123,11 +142,11 @@ export function downloadReceiptPDF(receipt: ReceiptData) {
       const barcodeHeight = 30;
       doc.addImage(
         barcodeDataUrl,
-        'PNG',
+        "PNG",
         (widthPt - barcodeWidth) / 2,
         y,
         barcodeWidth,
-        barcodeHeight
+        barcodeHeight,
       );
     }
   }

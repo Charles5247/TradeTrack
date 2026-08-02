@@ -1,7 +1,7 @@
-import React from 'react';
-import { formatCurrency } from '@/lib/utils/format';
-import type { ReceiptData } from '@/lib/receipt/build-receipt';
-import { BarcodeImage } from '@/components/receipts/barcode-image';
+import React from "react";
+import { formatCurrency } from "@/lib/utils/format";
+import type { ReceiptData } from "@/lib/receipt/build-receipt";
+import { BarcodeImage } from "@/components/receipts/barcode-image";
 
 /**
  * Renders a sales/vendor receipt formatted like the sample till-roll
@@ -28,10 +28,14 @@ export function Receipt({ data }: { data: ReceiptData }) {
           {data.orgName}
         </div>
         {data.orgAddress && (
-          <div className="receipt-center receipt-small">Address: {data.orgAddress}</div>
+          <div className="receipt-center receipt-small">
+            Address: {data.orgAddress}
+          </div>
         )}
         {data.orgPhone && (
-          <div className="receipt-center receipt-small">Telp. {data.orgPhone}</div>
+          <div className="receipt-center receipt-small">
+            Tel. {data.orgPhone}
+          </div>
         )}
 
         <div className="receipt-divider" />
@@ -40,28 +44,28 @@ export function Receipt({ data }: { data: ReceiptData }) {
 
         {/* Meta */}
         <div className="receipt-row">
-          <span>Invoice:</span>
+          <span>Invoice</span>
           <span className="receipt-bold">{data.invoiceNumber}</span>
         </div>
         <div className="receipt-row">
-          <span>Date:</span>
+          <span>Date</span>
           <span>{new Date(data.dateISO).toLocaleString()}</span>
         </div>
         {data.cashierName && (
           <div className="receipt-row">
-            <span>Cashier:</span>
+            <span>Cashier</span>
             <span>{data.cashierName}</span>
           </div>
         )}
         {data.customerName && (
           <div className="receipt-row">
-            <span>Customer:</span>
+            <span>Customer</span>
             <span>{data.customerName}</span>
           </div>
         )}
         {data.customerPhone && (
           <div className="receipt-row">
-            <span>Phone:</span>
+            <span>Phone</span>
             <span>{data.customerPhone}</span>
           </div>
         )}
@@ -71,16 +75,18 @@ export function Receipt({ data }: { data: ReceiptData }) {
         {/* Item table */}
         <div className="receipt-table-head">
           <span>Description</span>
-          <span>Price</span>
+          <span>Amount</span>
         </div>
         {data.items.map((item, i) => (
-          <div key={i}>
+          <div key={i} className="receipt-item-block">
             <div className="receipt-item-meta">
-              {item.quantity} x {formatCurrency(item.unitPrice)}
+              <span>
+                {item.quantity} x {formatCurrency(item.unitPrice)}
+              </span>
+              <span>{formatCurrency(item.total)}</span>
             </div>
             <div className="receipt-item">
               <span>{item.name}</span>
-              <span>{formatCurrency(item.total)}</span>
             </div>
           </div>
         ))}
@@ -104,12 +110,12 @@ export function Receipt({ data }: { data: ReceiptData }) {
             <span>{formatCurrency(data.tax)}</span>
           </div>
         )}
-        <div className="receipt-row receipt-bold receipt-xl">
+        <div className="receipt-row receipt-total">
           <span>Total</span>
           <span>{formatCurrency(data.total)}</span>
         </div>
         <div className="receipt-row">
-          <span>{data.paymentMethod === 'cash' ? 'Cash' : 'Paid'}</span>
+          <span>{data.paymentMethod === "cash" ? "Cash" : "Paid"}</span>
           <span>{formatCurrency(data.amountPaid)}</span>
         </div>
         {data.changeAmount > 0 && (
@@ -146,11 +152,17 @@ export function Receipt({ data }: { data: ReceiptData }) {
           </>
         )}
 
-        {data.notes && <div className="receipt-center receipt-notes">{data.notes}</div>}
+        {data.notes && (
+          <div className="receipt-center receipt-notes">{data.notes}</div>
+        )}
 
         <div className="receipt-divider" />
-        <div className="receipt-center receipt-bold receipt-uppercase">Thank you!</div>
-        <div className="receipt-center receipt-small">Powered by TradeTrack</div>
+        <div className="receipt-center receipt-bold receipt-uppercase">
+          Thank you!
+        </div>
+        <div className="receipt-center receipt-small">
+          Powered by TradeTrack
+        </div>
 
         {/* Scannable barcode — resolves back to this receipt's full item
             list via /receipts/lookup when scanned. */}

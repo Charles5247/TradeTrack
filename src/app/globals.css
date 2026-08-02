@@ -119,7 +119,7 @@
 
 @layer utilities {
   .text-balance {
-    text-wrap: balance;
+    text-wrap: pretty;
   }
 
   /* Animation utilities */
@@ -177,12 +177,14 @@
 }
 
 .receipt-paper {
-  font-family: 'Courier New', Courier, monospace;
+  font-family: "Courier New", Courier, monospace;
   font-size: 11px;
   line-height: 1.4;
   color: #000;
   background: #fff;
   width: 100%;
+  max-width: 80mm;
+  margin: 0 auto;
   padding: 10px 4mm 14px;
   position: relative;
 }
@@ -191,12 +193,13 @@
    mimicking a torn till-roll edge like the sample receipt. */
 .receipt-paper::before,
 .receipt-paper::after {
-  content: '';
+  content: "";
   position: absolute;
   left: 0;
   right: 0;
   height: 8px;
-  background: linear-gradient(135deg, #fff 50%, transparent 50%),
+  background:
+    linear-gradient(135deg, #fff 50%, transparent 50%),
     linear-gradient(45deg, #fff 50%, transparent 50%);
   background-size: 10px 10px;
   background-position: 0 0;
@@ -246,7 +249,7 @@
 }
 
 .receipt-divider::before {
-  content: '****************************************';
+  content: "****************************************";
 }
 
 .receipt-title {
@@ -265,11 +268,22 @@
   margin: 1px 0;
 }
 
+.receipt-row > span:first-child {
+  color: #1f2937;
+}
+
 .receipt-row > span:last-child {
   text-align: right;
   flex-shrink: 0;
   max-width: 60%;
   white-space: nowrap;
+}
+
+.receipt-total {
+  margin-top: 4px;
+  padding-top: 2px;
+  font-size: 15px;
+  font-weight: 700;
 }
 
 /* Description/Price item table header, mirroring the sample's two-column
@@ -303,9 +317,16 @@
 }
 
 .receipt-item-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
   font-size: 9px;
   color: #333;
   margin: 0 0 2px;
+}
+
+.receipt-item-block {
+  margin: 2px 0 4px;
 }
 
 .receipt-notes {

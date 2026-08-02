@@ -158,56 +158,55 @@ const FALLBACK_PLANS: Plan[] = [
 // ── Data fetchers ─────────────────────────────────────────────
 async function fetchSubscriptionData() {
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
 
-  const { data: profile } = await supabase
-    .from("users")
-    .select("organization_id")
-    .eq("id", user.id)
-    .single();
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return { subscription: null, plans: FALLBACK_PLANS, payments: [] };
+    }
 
-  const orgId = profile?.organization_id;
-  if (!orgId) {
+    const { data: profile } = await supabase
+      .from("users")
+      .select("organization_id")
+      .eq("id", user.id)
+      .single();
+
+    const orgId = profile?.organization_id;
+    if (!orgId) {
+      return { subscription: null, plans: FALLBACK_PLANS, payments: [] };
+    }
+
+    const { data: subscription } = await supabase
+      .from("subscriptions")
+      .select("*, plan:subscription_plans(*)")
+      .eq("organization_id", orgId ?? "")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const { data: plans } = await supabase
+      .from("subscription_plans")
+      .select("*")
+      .order("price", { ascending: true });
+
+    const { data: payments } = await supabase
+      .from("payment_transactions")
+      .select("*")
+      .eq("organization_id", orgId ?? "")
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    return {
+      subscription: subscription as any as Subscription | null,
+      plans: (plans as unknown as Plan[]) || FALLBACK_PLANS,
+      payments: (payments as any as PaymentRecord[]) || [],
+      orgId: orgId ?? "",
+    };
+  } catch {
     return { subscription: null, plans: FALLBACK_PLANS, payments: [] };
   }
-
-  // Fetch current subscription
-  const { data: subscription } = await supabase
-    .from("subscriptions")
-    .select("*, plan:subscription_plans(*)")
-    .eq("organization_id", orgId ?? "")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  // Fetch all plans. RLS already scopes visibility: admin/cashier users only
-  // see is_active=true plans, while 'business_owner'/'platform_owner' also
-  // see inactive ones (business_owner may be grandfathered onto a
-  // deactivated plan; platform_owner manages the full catalog).
-  const { data: plans } = await supabase
-    .from("subscription_plans")
-    .select("*")
-    .order("price", { ascending: true });
-
-  // Fetch payment history
-  const { data: payments } = await supabase
-    .from("payment_transactions")
-    .select("*")
-    .eq("organization_id", orgId ?? "")
-    .order("created_at", { ascending: false })
-    .limit(20);
-
-  return {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    subscription: subscription as any as Subscription | null,
-    plans: (plans as unknown as Plan[]) || FALLBACK_PLANS,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    payments: (payments as any as PaymentRecord[]) || [],
-    orgId: orgId ?? "",
-  };
 }
 
 // ── Sub-components ────────────────────────────────────────────
@@ -639,6 +638,12 @@ export default function SubscriptionsPage() {
 
   const upgradeMutation = useMutation({
     mutationFn: async (planId: string) => {
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        throw new Error(
+          "Subscription payment is unavailable while offline. Please reconnect to the internet and try again.",
+        );
+      }
+
       const supabase = createClient();
       // In production this would integrate with Zainpay.
       // Self-service plan selection for the caller's own org (business_owner);

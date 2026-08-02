@@ -1,18 +1,13 @@
-<<<<<<< HEAD
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-=======
-import { DashboardLayout } from '@/components/layout/dashboard-layout';
->>>>>>> bc81cdde09fe9e08d926018710b30e283dc5c220
 
 export default async function DashboardGroupLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-<<<<<<< HEAD
   const supabase = await createClient();
 
   if (!supabase) {
@@ -31,48 +26,36 @@ export default async function DashboardGroupLayout({
   // the request through via the session cookie, but this layout then
   // redirected to /login anyway on its own, unguarded getUser() call.
   let user = null;
-  let authCheckFailed = false;
 
   try {
     const { data } = await supabase.auth.getUser();
     user = data.user;
   } catch {
-    authCheckFailed = true;
+    // Keep the user on the dashboard when the live auth call fails but the
+    // offline session cookie is still present. This is intentional for
+    // offline-first access.
   }
 
   if (!user) {
-    // A previously-issued Supabase session cookie tells us this browser
-    // has authenticated before. If we couldn't verify it live (offline/
-    // flaky network), don't force a redirect — let the request through
-    // and defer to the client-side AuthProvider, which restores the
-    // cached IndexedDB/localStorage session. Only redirect when we're
-    // confident there's genuinely no session at all (online and
-    // confirmed logged out, or offline with no session cookie ever set).
-    //
-    // IMPORTANT: supabase-js clears its OWN sb-*-auth-token cookie
-    // whenever a background token-refresh attempt fails outright — which
-    // happens routinely offline (roughly once an hour, on the access
-    // token's expiry). tt_offline_session is a separate, app-owned
-    // cookie (see src/lib/offline/auth-cache.ts) set on every successful
-    // login that Supabase has no power to touch — check that too, or
-    // offline access silently breaks partway through a session the
-    // moment that refresh timer fires.
     const cookieStore = await cookies();
     const hasSupabaseSessionCookie = cookieStore
       .getAll()
       .some((c) => c.name.startsWith("sb-") && c.name.includes("auth-token"));
-    const hasOfflineSessionCookie = cookieStore.has("tt_offline_session");
+    const hasOfflineSessionCookie = cookieStore.has(
+      "tradetrack-offline-session",
+    );
 
+    // When the network is down, a null user result from Supabase is not proof
+    // of a logged-out user. If either session cookie is still present, keep the
+    // user on the dashboard and let the client-side auth provider restore the
+    // cached session instead of forcibly bouncing them to /login.
     const shouldForceLogin =
-      !authCheckFailed ||
-      (!hasSupabaseSessionCookie && !hasOfflineSessionCookie);
+      !hasSupabaseSessionCookie && !hasOfflineSessionCookie;
 
     if (shouldForceLogin) {
       redirect("/login");
     }
   }
 
-=======
->>>>>>> bc81cdde09fe9e08d926018710b30e283dc5c220
   return <DashboardLayout>{children}</DashboardLayout>;
 }

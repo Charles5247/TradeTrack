@@ -38,6 +38,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils/cn";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 import { clearCachedSession } from "@/lib/offline/db";
+import { requireOnline } from "@/lib/utils/network";
 import { useI18n } from "@/i18n";
 
 export function Header() {
@@ -59,10 +60,10 @@ export function Header() {
   };
 
   const handleManualSync = () => {
+    if (!requireOnline("Sync upload")) return;
     // Push any queued offline changes (and pull the latest data) right now,
     // on demand — the cashier doesn't have to wait for auto-sync or a
-    // network reconnect event to fire. Safe to call even if already syncing
-    // or offline; syncEngine.sync() no-ops in those cases.
+    // network reconnect event to fire.
     syncEngine?.sync();
   };
 

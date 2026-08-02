@@ -46,10 +46,12 @@ export function shouldForceLogin(
   if (!isProtectedRoute(pathname)) return false;
   if (user) return false;
 
-  return (
-    (!authCheckFailed && !user) ||
-    (authCheckFailed && !hasSupabaseSessionCookie && !hasOfflineAuthCookie)
-  );
+  // Offline-first auth: if we still have a valid browser session cookie or
+  // the app-owned offline auth cookie, we should keep the user in the app even
+  // when Supabase's live getUser() call resolves with null or fails.
+  if (hasSupabaseSessionCookie || hasOfflineAuthCookie) return false;
+
+  return !authCheckFailed || !hasSupabaseSessionCookie || !hasOfflineAuthCookie;
 }
 
 export async function updateSession(request: NextRequest) {
@@ -121,16 +123,6 @@ export async function updateSession(request: NextRequest) {
   const hasSupabaseSessionCookie = request.cookies
     .getAll()
     .some((c) => c.name.startsWith("sb-") && c.name.includes("auth-token"));
-<<<<<<< HEAD
-  const hasOfflineSessionCookie = request.cookies.has("tt_offline_session");
-
-  const shouldForceLogin =
-    (!user && !authCheckFailed) ||
-    (!user &&
-      authCheckFailed &&
-      !hasSupabaseSessionCookie &&
-      !hasOfflineSessionCookie);
-=======
   const hasOfflineAuthCookie = request.cookies.has(OFFLINE_AUTH_COOKIE_NAME);
 
   const shouldRedirectToLogin = shouldForceLogin(
@@ -140,7 +132,6 @@ export async function updateSession(request: NextRequest) {
     hasSupabaseSessionCookie,
     hasOfflineAuthCookie,
   );
->>>>>>> bc81cdde09fe9e08d926018710b30e283dc5c220
 
   if (isProtectedRoute(pathname) && shouldRedirectToLogin) {
     const loginUrl = request.nextUrl.clone();

@@ -85,7 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(null);
           }
         }
-      } catch (networkErr) {
+      } catch {
         // Network completely unavailable – try offline cache
         console.warn("[offline] Network unavailable, loading cached session");
         try {
