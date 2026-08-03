@@ -1,5 +1,6 @@
 import type { ReceiptData } from '@/lib/receipt/build-receipt';
 import { formatCurrency } from '@/lib/utils/format';
+import { wrapReceiptText } from '@/lib/receipt/receipt-layout';
 
 /**
  * Builds raw ESC/POS command bytes for a receipt. ESC/POS is the de-facto
@@ -132,6 +133,13 @@ export function receiptToEscPos(receipt: ReceiptData, charWidth = 32): Uint8Arra
     b.text(label + ' '.repeat(pad) + amount);
   };
 
+  const wrappedText = (text: string, width = charWidth) => {
+    const lines = wrapReceiptText(text, width);
+    for (const line of lines) {
+      b.text(line);
+    }
+  };
+
   const hasPaymentDetails = Boolean(receipt.cardMasked || receipt.approvalCode);
 
   // ── Header ──────────────────────────────────────────────────
@@ -162,7 +170,8 @@ export function receiptToEscPos(receipt: ReceiptData, charWidth = 32): Uint8Arra
   money('DESCRIPTION', 'PRICE');
   receipt.items.forEach((item) => {
     b.text(`  ${item.quantity} x ${formatCurrency(item.unitPrice)}`);
-    money(item.name, formatCurrency(item.total));
+    wrappedText(item.name, Math.max(12, charWidth - 2));
+    b.text(`  ${formatCurrency(item.total)}`);
   });
 
   b.divider(charWidth);
@@ -190,7 +199,7 @@ export function receiptToEscPos(receipt: ReceiptData, charWidth = 32): Uint8Arra
 
   if (receipt.notes) {
     b.align('center');
-    b.text(receipt.notes);
+    wrappedText(receipt.notes, Math.max(16, charWidth));
   }
 
   b.divider(charWidth);

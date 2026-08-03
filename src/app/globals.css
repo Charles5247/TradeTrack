@@ -177,16 +177,19 @@
 }
 
 .receipt-paper {
-  font-family: "Courier New", Courier, monospace;
-  font-size: 11px;
-  line-height: 1.4;
+  font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+  font-size: 10px;
+  line-height: 1.25;
   color: #000;
   background: #fff;
   width: 100%;
   max-width: 80mm;
   margin: 0 auto;
-  padding: 10px 4mm 14px;
+  padding: 6px 4mm 8px;
   position: relative;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 /* Jagged/perforated edge along the very top and bottom of the paper,
@@ -242,14 +245,14 @@
 /* Asterisk-dashed divider, matching the sample receipt's section
    separators. */
 .receipt-divider {
-  margin: 6px 0;
+  margin: 5px 0;
   white-space: nowrap;
   overflow: hidden;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
 }
 
 .receipt-divider::before {
-  content: "****************************************";
+  content: "********************************";
 }
 
 .receipt-title {
@@ -261,28 +264,31 @@
 }
 
 .receipt-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px;
+  align-items: start;
   margin: 1px 0;
 }
 
 .receipt-row > span:first-child {
   color: #1f2937;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .receipt-row > span:last-child {
   text-align: right;
   flex-shrink: 0;
-  max-width: 60%;
-  white-space: nowrap;
+  max-width: 56%;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .receipt-total {
   margin-top: 4px;
   padding-top: 2px;
-  font-size: 15px;
+  font-size: 11px;
   font-weight: 700;
 }
 
@@ -294,7 +300,8 @@
   font-weight: 700;
   margin: 4px 0 2px;
   text-transform: uppercase;
-  font-size: 10px;
+  font-size: 9px;
+  letter-spacing: 0.3px;
 }
 
 .receipt-item {
@@ -302,25 +309,26 @@
   justify-content: space-between;
   gap: 8px;
   margin: 2px 0;
+  align-items: start;
 }
 
 .receipt-item > span:first-child {
   flex: 1;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
 }
 
 .receipt-item > span:last-child {
   flex-shrink: 0;
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .receipt-item-meta {
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  font-size: 9px;
+  font-size: 8.5px;
   color: #333;
   margin: 0 0 2px;
 }
@@ -342,16 +350,16 @@
 
 /* Barcode area at the very bottom of the receipt. */
 .receipt-barcode {
-  margin-top: 10px;
+  margin-top: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
 .receipt-barcode svg {
-  width: 85%;
+  width: 92%;
   max-width: 220px;
-  height: 42px;
+  height: 36px;
 }
 
 .receipt-barcode-value {

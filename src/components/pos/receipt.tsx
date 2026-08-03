@@ -44,28 +44,28 @@ export function Receipt({ data }: { data: ReceiptData }) {
 
         {/* Meta */}
         <div className="receipt-row">
-          <span>Invoice</span>
+          <span>Invoice:</span>
           <span className="receipt-bold">{data.invoiceNumber}</span>
         </div>
         <div className="receipt-row">
-          <span>Date</span>
+          <span>Date:</span>
           <span>{new Date(data.dateISO).toLocaleString()}</span>
         </div>
         {data.cashierName && (
           <div className="receipt-row">
-            <span>Cashier</span>
+            <span>Cashier:</span>
             <span>{data.cashierName}</span>
           </div>
         )}
         {data.customerName && (
           <div className="receipt-row">
-            <span>Customer</span>
+            <span>Customer:</span>
             <span>{data.customerName}</span>
           </div>
         )}
         {data.customerPhone && (
           <div className="receipt-row">
-            <span>Phone</span>
+            <span>Phone:</span>
             <span>{data.customerPhone}</span>
           </div>
         )}
@@ -95,38 +95,38 @@ export function Receipt({ data }: { data: ReceiptData }) {
 
         {/* Totals */}
         <div className="receipt-row">
-          <span>Subtotal</span>
+          <span>Subtotal:</span>
           <span>{formatCurrency(data.subtotal)}</span>
         </div>
         {data.discount > 0 && (
           <div className="receipt-row">
-            <span>Discount</span>
+            <span>Discount:</span>
             <span>-{formatCurrency(data.discount)}</span>
           </div>
         )}
         {data.tax > 0 && (
           <div className="receipt-row">
-            <span>Tax</span>
+            <span>Tax:</span>
             <span>{formatCurrency(data.tax)}</span>
           </div>
         )}
         <div className="receipt-row receipt-total">
-          <span>Total</span>
+          <span>Total:</span>
           <span>{formatCurrency(data.total)}</span>
         </div>
         <div className="receipt-row">
-          <span>{data.paymentMethod === "cash" ? "Cash" : "Paid"}</span>
+          <span>{data.paymentMethod === "cash" ? "Cash:" : "Paid:"}</span>
           <span>{formatCurrency(data.amountPaid)}</span>
         </div>
         {data.changeAmount > 0 && (
           <div className="receipt-row">
-            <span>Change</span>
+            <span>Change:</span>
             <span>{formatCurrency(data.changeAmount)}</span>
           </div>
         )}
         {!showPaymentDetails && (
           <div className="receipt-row">
-            <span>Payment</span>
+            <span>Payment:</span>
             <span>{data.paymentMethod}</span>
           </div>
         )}
@@ -138,13 +138,13 @@ export function Receipt({ data }: { data: ReceiptData }) {
             <div className="receipt-payment-details">
               {data.cardMasked && (
                 <div className="receipt-row">
-                  <span>Bank card</span>
+                  <span>Bank card:</span>
                   <span>{data.cardMasked}</span>
                 </div>
               )}
               {data.approvalCode && (
                 <div className="receipt-row">
-                  <span>Approval Code</span>
+                  <span>Approval Code:</span>
                   <span>#{data.approvalCode}</span>
                 </div>
               )}
