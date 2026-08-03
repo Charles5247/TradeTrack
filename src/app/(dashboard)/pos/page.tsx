@@ -450,9 +450,9 @@ function POSPageInner() {
     window.print();
   };
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     if (!receiptData) return;
-    downloadReceiptPDF(receiptData);
+    await downloadReceiptPDF(receiptData);
   };
 
   const handleHardwarePrint = async () => {

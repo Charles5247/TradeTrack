@@ -13,7 +13,22 @@ import { wrapReceiptText } from "@/lib/receipt/receipt-layout";
  * the same layout used by the browser print view and the ESC/POS printer
  * output, so all three never drift out of sync.
  */
-export function downloadReceiptPDF(receipt: ReceiptData) {
+async function loadImageDataUrl(url: string): Promise<string | undefined> {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(undefined);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return undefined;
+  }
+}
+
+export async function downloadReceiptPDF(receipt: ReceiptData) {
   const widthPt = 80 * 2.8346;
   const hasPaymentDetails = Boolean(receipt.cardMasked || receipt.approvalCode);
   const marginX = 10;
@@ -33,6 +48,27 @@ export function downloadReceiptPDF(receipt: ReceiptData) {
     50;
   const doc = new jsPDF({ unit: "pt", format: [widthPt, Math.max(320, estimatedHeight)] });
   let y = 16;
+
+  if (receipt.receiptTemplateUrl) {
+    const dataUrl = await loadImageDataUrl(receipt.receiptTemplateUrl);
+    if (dataUrl) {
+      const format = dataUrl.startsWith("data:image/png") ? "PNG" : "JPEG";
+      doc.addImage(dataUrl, format, 0, 0, widthPt, Math.max(320, estimatedHeight));
+    }
+  }
+
+  if (receipt.receiptTemplateUrl) {
+    try {
+      const image = new Image();
+      image.crossOrigin = 'anonymous';
+      image.src = receipt.receiptTemplateUrl;
+      image.onload = () => {
+        doc.addImage(image, 'JPEG', 0, 0, widthPt, Math.max(320, estimatedHeight));
+      };
+    } catch {
+      // Fallback to plain white background if the uploaded template fails.
+    }
+  }
 
   const center = (text: string, size = 9, bold = false, upper = false) => {
     doc.setFontSize(size);
