@@ -182,14 +182,8 @@ export function receiptToEscPos(receipt: ReceiptData, charWidth = 32): Uint8Arra
   // ── Item table ──────────────────────────────────────────────
   b.text('QTY DESCRIPTION                 AMT');
   receipt.items.forEach((item) => {
-<<<<<<< HEAD
     const description = `${item.name} @ ${formatCurrency(item.unitPrice)}`;
     money(`${item.quantity} ${description}`.slice(0, charWidth - 1), formatCurrency(item.total));
-=======
-    b.text(`  ${item.quantity} x ${formatCurrency(item.unitPrice)}`);
-    wrappedText(item.name, Math.max(12, charWidth - 2));
-    b.text(`  ${formatCurrency(item.total)}`);
->>>>>>> 1b4cb589b4c2da26a56bc265568a3bde488d910b
   });
 
   b.divider(charWidth);

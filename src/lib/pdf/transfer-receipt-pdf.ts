@@ -1,11 +1,7 @@
 import { jsPDF } from 'jspdf';
 import type { TransferReceiptData } from '@/lib/receipt/build-transfer-receipt';
-<<<<<<< HEAD
 import { renderQRCodeDataUrl } from '@/lib/qr/render-qr';
-=======
-import { renderBarcodeDataUrl } from '@/lib/barcode/render-barcode';
 import { wrapReceiptText } from '@/lib/receipt/receipt-layout';
->>>>>>> 1b4cb589b4c2da26a56bc265568a3bde488d910b
 
 /**
  * Downloadable PDF for a warehouse stock transfer — the distinct
@@ -95,19 +91,11 @@ export async function downloadTransferReceiptPDF(data: TransferReceiptData) {
   center('Powered by TradeTrack', 7.5);
 
   if (data.barcodeValue) {
-<<<<<<< HEAD
     const qrDataUrl = await renderQRCodeDataUrl(data.barcodeValue);
     if (qrDataUrl) {
       y += 4;
       const qrSize = 78;
       doc.addImage(qrDataUrl, 'PNG', (widthPt - qrSize) / 2, y, qrSize, qrSize);
-=======
-    const barcodeDataUrl = renderBarcodeDataUrl(data.barcodeValue, { width: 1.4, height: 34 });
-    if (barcodeDataUrl) {
-      const barcodeWidth = width * 0.75;
-      const barcodeHeight = 28;
-      doc.addImage(barcodeDataUrl, 'PNG', (widthPt - barcodeWidth) / 2, y + 4, barcodeWidth, barcodeHeight);
->>>>>>> 1b4cb589b4c2da26a56bc265568a3bde488d910b
     }
   }
 

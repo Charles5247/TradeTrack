@@ -315,13 +315,9 @@
 
 .receipt-item > span:nth-child(2) {
   min-width: 0;
-<<<<<<< HEAD
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-=======
-  overflow-wrap: anywhere;
->>>>>>> 1b4cb589b4c2da26a56bc265568a3bde488d910b
 }
 
 .receipt-table-head > span:last-child,
@@ -330,22 +326,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-<<<<<<< HEAD
-=======
-.receipt-item-meta {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 8.5px;
-  color: #333;
-  margin: 0 0 2px;
-}
-
-.receipt-item-block {
-  margin: 2px 0 4px;
-}
-
->>>>>>> 1b4cb589b4c2da26a56bc265568a3bde488d910b
 .receipt-notes {
   margin-top: 4px;
   font-style: italic;
@@ -357,29 +337,17 @@
   margin: 4px 0;
 }
 
-/* Barcode area at the very bottom of the receipt. */
-<<<<<<< HEAD
+/* QR area at the very bottom of the receipt. */
 .receipt-qr {
   margin-top: 10px;
-=======
-.receipt-barcode {
-  margin-top: 8px;
->>>>>>> 1b4cb589b4c2da26a56bc265568a3bde488d910b
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-<<<<<<< HEAD
 .receipt-qr svg {
   width: 96px;
   height: 96px;
-=======
-.receipt-barcode svg {
-  width: 92%;
-  max-width: 220px;
-  height: 36px;
->>>>>>> 1b4cb589b4c2da26a56bc265568a3bde488d910b
 }
 
 .receipt-barcode-value {
