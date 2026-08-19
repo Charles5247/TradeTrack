@@ -108,6 +108,18 @@ class EscPosBuilder {
     return this;
   }
 
+  /** Prints a native ESC/POS QR code (model 2, error correction M). */
+  qrCode(value: string) {
+    const data = textToBytes(value);
+    const length = data.length + 3;
+    this.bytes.push(GS, 0x28, 0x6b, 4, 0, 49, 65, 50, 0);
+    this.bytes.push(GS, 0x28, 0x6b, 3, 0, 49, 67, 5);
+    this.bytes.push(GS, 0x28, 0x6b, 3, 0, 49, 69, 49);
+    this.bytes.push(GS, 0x28, 0x6b, length & 0xff, length >> 8, 49, 80, 48, ...data);
+    this.bytes.push(GS, 0x28, 0x6b, 3, 0, 49, 81, 48);
+    return this;
+  }
+
   cut() {
     this.bytes.push(GS, 0x56, 0x00); // GS V 0 — full cut
     return this;
@@ -146,8 +158,9 @@ export function receiptToEscPos(receipt: ReceiptData, charWidth = 32): Uint8Arra
   b.feed(1);
   b.divider(charWidth);
   b.bold(true);
-  b.text('CASH RECEIPT');
+  b.text('INVOICE');
   b.bold(false);
+  b.text('Current Bill');
   b.divider(charWidth);
 
   // ── Meta ────────────────────────────────────────────────────
@@ -159,10 +172,10 @@ export function receiptToEscPos(receipt: ReceiptData, charWidth = 32): Uint8Arra
   b.divider(charWidth);
 
   // ── Item table ──────────────────────────────────────────────
-  money('DESCRIPTION', 'PRICE');
+  b.text('QTY DESCRIPTION                 AMT');
   receipt.items.forEach((item) => {
-    b.text(`  ${item.quantity} x ${formatCurrency(item.unitPrice)}`);
-    money(item.name, formatCurrency(item.total));
+    const description = `${item.name} @ ${formatCurrency(item.unitPrice)}`;
+    money(`${item.quantity} ${description}`.slice(0, charWidth - 1), formatCurrency(item.total));
   });
 
   b.divider(charWidth);
@@ -203,7 +216,7 @@ export function receiptToEscPos(receipt: ReceiptData, charWidth = 32): Uint8Arra
   // ── Scannable barcode ───────────────────────────────────────
   if (receipt.barcodeValue) {
     b.feed(1);
-    b.barcode(receipt.barcodeValue);
+    b.qrCode(receipt.barcodeValue);
   }
 
   b.feed(3);

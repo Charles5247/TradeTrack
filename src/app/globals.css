@@ -289,8 +289,9 @@
 /* Description/Price item table header, mirroring the sample's two-column
    layout. */
 .receipt-table-head {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  column-gap: 6px;
   font-weight: 700;
   margin: 4px 0 2px;
   text-transform: uppercase;
@@ -298,35 +299,22 @@
 }
 
 .receipt-item {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  column-gap: 6px;
   margin: 2px 0;
 }
 
-.receipt-item > span:first-child {
-  flex: 1;
+.receipt-item > span:nth-child(2) {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
+.receipt-table-head > span:last-child,
 .receipt-item > span:last-child {
-  flex-shrink: 0;
   text-align: right;
-}
-
-.receipt-item-meta {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 9px;
-  color: #333;
-  margin: 0 0 2px;
-}
-
-.receipt-item-block {
-  margin: 2px 0 4px;
 }
 
 .receipt-notes {
@@ -341,17 +329,16 @@
 }
 
 /* Barcode area at the very bottom of the receipt. */
-.receipt-barcode {
+.receipt-qr {
   margin-top: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.receipt-barcode svg {
-  width: 85%;
-  max-width: 220px;
-  height: 42px;
+.receipt-qr svg {
+  width: 96px;
+  height: 96px;
 }
 
 .receipt-barcode-value {

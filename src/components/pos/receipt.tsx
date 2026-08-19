@@ -39,7 +39,8 @@ export function Receipt({ data }: { data: ReceiptData }) {
         )}
 
         <div className="receipt-divider" />
-        <div className="receipt-title">Cash Receipt</div>
+        <div className="receipt-title">Invoice</div>
+        <div className="receipt-center">Current Bill</div>
         <div className="receipt-divider" />
 
         {/* Meta */}
@@ -74,20 +75,17 @@ export function Receipt({ data }: { data: ReceiptData }) {
 
         {/* Item table */}
         <div className="receipt-table-head">
+          <span>Qty</span>
           <span>Description</span>
-          <span>Amount</span>
+          <span>Amt</span>
         </div>
         {data.items.map((item, i) => (
-          <div key={i} className="receipt-item-block">
-            <div className="receipt-item-meta">
-              <span>
-                {item.quantity} x {formatCurrency(item.unitPrice)}
-              </span>
-              <span>{formatCurrency(item.total)}</span>
-            </div>
-            <div className="receipt-item">
-              <span>{item.name}</span>
-            </div>
+          <div key={i} className="receipt-item">
+            <span>{item.quantity}</span>
+            <span>
+              {item.name} @ {formatCurrency(item.unitPrice)}
+            </span>
+            <span>{formatCurrency(item.total)}</span>
           </div>
         ))}
 
@@ -167,7 +165,7 @@ export function Receipt({ data }: { data: ReceiptData }) {
         {/* Scannable barcode — resolves back to this receipt's full item
             list via /receipts/lookup when scanned. */}
         {data.barcodeValue && (
-          <div className="receipt-barcode">
+          <div className="receipt-qr">
             <BarcodeImage value={data.barcodeValue} />
           </div>
         )}

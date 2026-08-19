@@ -219,6 +219,9 @@ class SyncEngine {
     // Use type assertion to allow dynamic table name
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const client = supabase as any;
+    // `synced` is a local IndexedDB marker; it is not a column on the
+    // Supabase sales table and must never be sent through the Data API.
+    const { synced: _localSynced, ...serverPayload } = item.payload;
 
     const isAppendOnly =
       item.table_name === "sales" || item.table_name === "sale_items";
@@ -230,7 +233,7 @@ class SyncEngine {
         // simply that they are NEVER reached via the 'UPDATE' branch below.
         return client
           .from(item.table_name)
-          .upsert(item.payload, { onConflict: "id" });
+          .upsert(serverPayload, { onConflict: "id" });
 
       case "UPDATE": {
         if (isAppendOnly) {
@@ -271,7 +274,7 @@ class SyncEngine {
 
         return client
           .from(item.table_name)
-          .upsert(item.payload, { onConflict: "id" })
+          .upsert(serverPayload, { onConflict: "id" })
           .eq("id", item.record_id);
       }
 

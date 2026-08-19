@@ -52,6 +52,7 @@ import { downloadReceiptPDF } from "@/lib/pdf/receipt-pdf";
 import { Receipt } from "@/components/pos/receipt";
 import { getAllFromOfflineDB } from "@/lib/offline/db";
 import { persistOfflineSale } from "@/lib/offline/sales";
+import { syncEngine } from "@/lib/offline/sync-engine";
 import { generateId } from "@/lib/utils/id";
 import { requireOnline } from "@/lib/utils/network";
 
@@ -187,72 +188,30 @@ async function completeSale(payload: {
   notes?: string;
   receipt_url?: string;
 }) {
-  const supabase = createClient();
   const invoiceNumber = `INV-${String(Date.now()).slice(-6)}`;
+  // Always commit locally first. A stale `navigator.onLine` state must never
+  // block checkout or prevent a receipt from being available.
+  const saleRecord = await persistOfflineSale({ ...payload, invoice_number: invoiceNumber });
 
-  try {
-    const { error: saleError } = await supabase.from("sales").insert({
-      organization_id: payload.organization_id,
-      invoice_number: invoiceNumber,
-      cashier_id: payload.cashier_id,
-      warehouse_id: payload.warehouse_id,
-      customer_name: payload.customer_name || null,
-      customer_phone: payload.customer_phone || null,
-      subtotal: payload.subtotal,
-      discount: payload.discount,
-      tax: payload.tax,
-      total: payload.total,
-      amount_paid: payload.amount_paid,
-      change_amount: payload.change_amount,
-      payment_method:
-        payload.payment_method as import("@/lib/supabase/types").PaymentMethod,
-      payment_status: payload.amount_paid >= payload.total ? "paid" : "partial",
-      status: "completed",
-      notes: payload.notes || null,
-      receipt_url: payload.receipt_url || null,
-    });
+  // Sync remains best-effort and is intentionally outside the sale workflow.
+  if (typeof window !== "undefined" && navigator.onLine) void syncEngine?.sync();
 
-    if (saleError) throw saleError;
-
-    return {
-      id: generateId(),
-      invoice_number: invoiceNumber,
-      subtotal: payload.subtotal,
-      discount: payload.discount,
-      tax: payload.tax,
-      total: payload.total,
-      amount_paid: payload.amount_paid,
-      change_amount: payload.change_amount,
-      payment_method: payload.payment_method,
-      customer_name: payload.customer_name,
-      customer_phone: payload.customer_phone,
-      notes: payload.notes,
-      receipt_url: payload.receipt_url,
-      created_at: new Date().toISOString(),
-    };
-  } catch (error) {
-    const saleRecord = await persistOfflineSale({
-      ...payload,
-      invoice_number: invoiceNumber,
-    });
-
-    return {
-      id: saleRecord.id,
-      invoice_number: saleRecord.invoice_number,
-      subtotal: saleRecord.subtotal,
-      discount: saleRecord.discount,
-      tax: saleRecord.tax,
-      total: saleRecord.total,
-      amount_paid: saleRecord.amount_paid,
-      change_amount: saleRecord.change_amount,
-      payment_method: saleRecord.payment_method,
-      customer_name: payload.customer_name,
-      customer_phone: payload.customer_phone,
-      notes: payload.notes,
-      receipt_url: payload.receipt_url,
-      created_at: saleRecord.created_at,
-    };
-  }
+  return {
+    id: saleRecord.id,
+    invoice_number: saleRecord.invoice_number,
+    subtotal: saleRecord.subtotal,
+    discount: saleRecord.discount,
+    tax: saleRecord.tax,
+    total: saleRecord.total,
+    amount_paid: saleRecord.amount_paid,
+    change_amount: saleRecord.change_amount,
+    payment_method: saleRecord.payment_method,
+    customer_name: payload.customer_name,
+    customer_phone: payload.customer_phone,
+    notes: payload.notes,
+    receipt_url: payload.receipt_url,
+    created_at: saleRecord.created_at,
+  };
 }
 
 export default function POSPage() {
@@ -452,7 +411,7 @@ function POSPageInner() {
 
   const handleDownloadPDF = () => {
     if (!receiptData) return;
-    downloadReceiptPDF(receiptData);
+    void downloadReceiptPDF(receiptData);
   };
 
   const handleHardwarePrint = async () => {

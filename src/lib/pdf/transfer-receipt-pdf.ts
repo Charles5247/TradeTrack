@@ -1,6 +1,6 @@
 import { jsPDF } from 'jspdf';
 import type { TransferReceiptData } from '@/lib/receipt/build-transfer-receipt';
-import { renderBarcodeDataUrl } from '@/lib/barcode/render-barcode';
+import { renderQRCodeDataUrl } from '@/lib/qr/render-qr';
 
 /**
  * Downloadable PDF for a warehouse stock transfer — the distinct
@@ -8,7 +8,7 @@ import { renderBarcodeDataUrl } from '@/lib/barcode/render-barcode';
  * "Cash Receipt" template in receipt-pdf.ts), sharing the same paper
  * size, asterisk dividers, and scannable barcode.
  */
-export function downloadTransferReceiptPDF(data: TransferReceiptData) {
+export async function downloadTransferReceiptPDF(data: TransferReceiptData) {
   const widthPt = 80 * 2.8346;
   const heightPt = 380;
   const doc = new jsPDF({ unit: 'pt', format: [widthPt, heightPt] });
@@ -86,12 +86,11 @@ export function downloadTransferReceiptPDF(data: TransferReceiptData) {
   center('Powered by TradeTrack', 7);
 
   if (data.barcodeValue) {
-    const barcodeDataUrl = renderBarcodeDataUrl(data.barcodeValue, { width: 1.6, height: 36 });
-    if (barcodeDataUrl) {
+    const qrDataUrl = await renderQRCodeDataUrl(data.barcodeValue);
+    if (qrDataUrl) {
       y += 4;
-      const barcodeWidth = width * 0.75;
-      const barcodeHeight = 30;
-      doc.addImage(barcodeDataUrl, 'PNG', (widthPt - barcodeWidth) / 2, y, barcodeWidth, barcodeHeight);
+      const qrSize = 78;
+      doc.addImage(qrDataUrl, 'PNG', (widthPt - qrSize) / 2, y, qrSize, qrSize);
     }
   }
 

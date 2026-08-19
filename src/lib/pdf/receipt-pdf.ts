@@ -1,7 +1,7 @@
 import { jsPDF } from "jspdf";
 import type { ReceiptData } from "@/lib/receipt/build-receipt";
 import { formatCurrency } from "@/lib/utils/format";
-import { renderBarcodeDataUrl } from "@/lib/barcode/render-barcode";
+import { renderQRCodeDataUrl } from "@/lib/qr/render-qr";
 
 /**
  * Renders a single sale/vendor-payment receipt as a narrow, receipt-shaped
@@ -12,7 +12,7 @@ import { renderBarcodeDataUrl } from "@/lib/barcode/render-barcode";
  * the same layout used by the browser print view and the ESC/POS printer
  * output, so all three never drift out of sync.
  */
-export function downloadReceiptPDF(receipt: ReceiptData) {
+export async function downloadReceiptPDF(receipt: ReceiptData) {
   // 80mm thermal-roll width in points (1mm ≈ 2.8346pt), generous height that
   // auto-grows isn't supported by jsPDF page size, so we estimate height
   // from line count and pad generously.
@@ -61,7 +61,8 @@ export function downloadReceiptPDF(receipt: ReceiptData) {
   if (receipt.orgPhone) center(`Telp. ${receipt.orgPhone}`, 8);
   y += 2;
   divider();
-  center("Cash Receipt", 11, true, true);
+  center("Invoice", 11, true, true);
+  center("Current Bill", 9);
   divider();
 
   // ── Meta ────────────────────────────────────────────────────
@@ -75,7 +76,8 @@ export function downloadReceiptPDF(receipt: ReceiptData) {
   // ── Item table ──────────────────────────────────────────────
   doc.setFontSize(8);
   doc.setFont("courier", "bold");
-  doc.text("DESCRIPTION", marginX, y);
+  doc.text("QTY", marginX, y);
+  doc.text("DESCRIPTION", marginX + 22, y);
   doc.text("AMOUNT", widthPt - marginX, y, { align: "right" });
   y += lineHeight * 0.9;
 
@@ -84,18 +86,13 @@ export function downloadReceiptPDF(receipt: ReceiptData) {
     doc.setFont("courier", "normal");
     const itemName =
       item.name.length > 24 ? `${item.name.slice(0, 23)}…` : item.name;
-    doc.text(
-      `${item.quantity} x ${formatCurrency(item.unitPrice)}`,
-      marginX,
-      y,
-      { maxWidth: width * 0.5 },
-    );
+    doc.text(String(item.quantity), marginX, y);
+    doc.text(`${itemName} @ ${formatCurrency(item.unitPrice)}`, marginX + 22, y, {
+      maxWidth: width * 0.52,
+    });
     doc.text(formatCurrency(item.total), widthPt - marginX, y, {
       align: "right",
     });
-    y += lineHeight * 0.9;
-    doc.setFontSize(8);
-    doc.text(itemName, marginX, y, { maxWidth: width * 0.7 });
     y += lineHeight;
   });
 
@@ -132,21 +129,17 @@ export function downloadReceiptPDF(receipt: ReceiptData) {
 
   // ── Scannable barcode ───────────────────────────────────────
   if (receipt.barcodeValue) {
-    const barcodeDataUrl = renderBarcodeDataUrl(receipt.barcodeValue, {
-      width: 1.6,
-      height: 36,
-    });
-    if (barcodeDataUrl) {
+    const qrDataUrl = await renderQRCodeDataUrl(receipt.barcodeValue);
+    if (qrDataUrl) {
       y += 4;
-      const barcodeWidth = width * 0.75;
-      const barcodeHeight = 30;
+      const qrSize = 78;
       doc.addImage(
-        barcodeDataUrl,
+        qrDataUrl,
         "PNG",
-        (widthPt - barcodeWidth) / 2,
+        (widthPt - qrSize) / 2,
         y,
-        barcodeWidth,
-        barcodeHeight,
+        qrSize,
+        qrSize,
       );
     }
   }

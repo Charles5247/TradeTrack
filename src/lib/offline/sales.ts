@@ -68,13 +68,37 @@ export async function persistOfflineSale(payload: OfflineSalePayload) {
   }));
 
   const db = await getDB();
-  await db.put('sales', saleRecord);
+  const transaction = db.transaction(['sales', 'sale_items', 'inventory'], 'readwrite');
+  const inventoryUpdates: Record<string, unknown>[] = [];
+  await transaction.objectStore('sales').put(saleRecord);
   for (const item of saleItems) {
-    await db.put('sale_items', item);
+    await transaction.objectStore('sale_items').put(item);
+
+    // Apply the stock reduction locally so subsequent offline sales see the
+    // correct availability. The update is queued after the transaction.
+    const inventory = await transaction.objectStore('inventory').getAll();
+    const stock = inventory.find(
+      (record: { product_id: string; warehouse_id: string }) =>
+        record.product_id === item.product_id &&
+        record.warehouse_id === item.warehouse_id,
+    ) as Record<string, unknown> | undefined;
+    if (stock) {
+      const updated = {
+        ...stock,
+        quantity: Math.max(0, Number(stock.quantity ?? 0) - item.quantity),
+        updated_at: createdAt,
+      };
+      await transaction.objectStore('inventory').put(updated);
+      inventoryUpdates.push(updated);
+    }
   }
+  await transaction.done;
   await addToSyncQueue('sales', 'INSERT', saleId, saleRecord);
   for (const item of saleItems) {
     await addToSyncQueue('sale_items', 'INSERT', item.id, item);
+  }
+  for (const inventory of inventoryUpdates) {
+    await addToSyncQueue('inventory', 'UPDATE', String(inventory.id), inventory);
   }
 
   return saleRecord;
