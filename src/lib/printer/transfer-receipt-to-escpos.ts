@@ -1,4 +1,5 @@
 import type { TransferReceiptData } from '@/lib/receipt/build-transfer-receipt';
+import { wrapReceiptText } from '@/lib/receipt/receipt-layout';
 
 /**
  * ESC/POS bytes for the distinct "Stock Transfer Note" thermal-print
@@ -102,6 +103,13 @@ export function transferReceiptToEscPos(data: TransferReceiptData, charWidth = 3
     b.text(label + ' '.repeat(pad) + value);
   };
 
+  const wrappedText = (text: string, width = charWidth) => {
+    const lines = wrapReceiptText(text, width);
+    for (const line of lines) {
+      b.text(line);
+    }
+  };
+
   b.align('center');
   b.doubleSize(true);
   b.bold(true);
@@ -127,7 +135,8 @@ export function transferReceiptToEscPos(data: TransferReceiptData, charWidth = 3
   b.divider(charWidth);
 
   const productLabel = data.productSku ? `${data.productName} (${data.productSku})` : data.productName;
-  row(productLabel.slice(0, charWidth - 6), `x${data.quantity}`);
+  wrappedText(productLabel, Math.max(12, charWidth - 6));
+  b.text(`Qty: ${data.quantity}`);
   b.divider(charWidth);
 
   if (data.initiatedBy) b.text(`Initiated by: ${data.initiatedBy}`);
@@ -138,7 +147,7 @@ export function transferReceiptToEscPos(data: TransferReceiptData, charWidth = 3
 
   if (data.notes) {
     b.align('center');
-    b.text(data.notes);
+    wrappedText(data.notes, Math.max(16, charWidth));
   }
 
   b.divider(charWidth);
