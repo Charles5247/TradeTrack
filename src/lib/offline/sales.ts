@@ -71,17 +71,30 @@ export async function persistOfflineSale(payload: OfflineSalePayload) {
   const transaction = db.transaction(['sales', 'sale_items', 'inventory'], 'readwrite');
   const inventoryUpdates: Record<string, unknown>[] = [];
   await transaction.objectStore('sales').put(saleRecord);
+
+  // Fetch the full inventory list ONCE up front and look up each cart
+  // line's matching stock row in memory, instead of re-reading the entire
+  // `inventory` store on every single iteration of this loop.
+  const inventory = (await transaction.objectStore('inventory').getAll()) as Record<
+    string,
+    unknown
+  >[];
+  const inventoryByProductWarehouse = new Map<string, Record<string, unknown>>();
+  for (const record of inventory) {
+    inventoryByProductWarehouse.set(
+      `${record.product_id as string}::${record.warehouse_id as string}`,
+      record,
+    );
+  }
+
   for (const item of saleItems) {
     await transaction.objectStore('sale_items').put(item);
 
     // Apply the stock reduction locally so subsequent offline sales see the
     // correct availability. The update is queued after the transaction.
-    const inventory = await transaction.objectStore('inventory').getAll();
-    const stock = inventory.find(
-      (record: { product_id: string; warehouse_id: string }) =>
-        record.product_id === item.product_id &&
-        record.warehouse_id === item.warehouse_id,
-    ) as Record<string, unknown> | undefined;
+    const stock = inventoryByProductWarehouse.get(
+      `${item.product_id}::${item.warehouse_id}`,
+    );
     if (stock) {
       const updated = {
         ...stock,
@@ -90,16 +103,28 @@ export async function persistOfflineSale(payload: OfflineSalePayload) {
       };
       await transaction.objectStore('inventory').put(updated);
       inventoryUpdates.push(updated);
+      // Keep the in-memory snapshot consistent in case the same
+      // product/warehouse appears in more than one cart line.
+      inventoryByProductWarehouse.set(
+        `${item.product_id}::${item.warehouse_id}`,
+        updated,
+      );
     }
   }
   await transaction.done;
-  await addToSyncQueue('sales', 'INSERT', saleId, saleRecord);
-  for (const item of saleItems) {
-    await addToSyncQueue('sale_items', 'INSERT', item.id, item);
-  }
-  for (const inventory of inventoryUpdates) {
-    await addToSyncQueue('inventory', 'UPDATE', String(inventory.id), inventory);
-  }
+
+  // Queue the sale, every sale item, and every inventory update
+  // concurrently rather than serially with `await` in a loop — each
+  // `addToSyncQueue` call is now index-scoped (see db.ts), but there is
+  // still no reason to pay N round-trips back-to-back on the critical path
+  // to rendering the receipt when they don't depend on one another.
+  await Promise.all([
+    addToSyncQueue('sales', 'INSERT', saleId, saleRecord),
+    ...saleItems.map((item) => addToSyncQueue('sale_items', 'INSERT', item.id, item)),
+    ...inventoryUpdates.map((inv) =>
+      addToSyncQueue('inventory', 'UPDATE', String(inv.id), inv),
+    ),
+  ]);
 
   return saleRecord;
 }
