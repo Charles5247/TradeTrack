@@ -79,6 +79,7 @@ class SyncEngine {
   }
 
   startAutoSync(intervalMs = 30000) {
+    if (this.syncInterval) clearInterval(this.syncInterval);
     this.syncInterval = setInterval(() => {
       if (this.isOnline) this.sync();
     }, intervalMs);
@@ -88,7 +89,18 @@ class SyncEngine {
     if (this.syncInterval) clearInterval(this.syncInterval);
   }
 
-  async sync() {
+  async sync(force = false) {
+    // `navigator.onLine` can change without a new SyncEngine instance
+    // (notably while DevTools simulates offline mode). Re-check it before
+    // constructing any Supabase request, including auth token refreshes.
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      this.handleOffline();
+      return;
+    }
+    if (force) {
+      this.isOnline = true;
+      this.retryCooldownUntil = 0;
+    }
     if (!this.isOnline || this.state.status === "syncing") return;
     if (Date.now() < this.retryCooldownUntil) return;
 
@@ -142,6 +154,7 @@ class SyncEngine {
       const isNetworkFailure =
         err instanceof TypeError && /fetch/i.test(err.message);
       if (isNetworkFailure) {
+        this.isOnline = false;
         this.retryCooldownUntil = Date.now() + this.RETRY_COOLDOWN_MS;
         this.setState({ status: "offline", error: null });
         return;

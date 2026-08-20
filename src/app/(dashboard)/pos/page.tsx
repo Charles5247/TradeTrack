@@ -52,7 +52,6 @@ import { downloadReceiptPDF } from "@/lib/pdf/receipt-pdf";
 import { Receipt } from "@/components/pos/receipt";
 import { getAllFromOfflineDB } from "@/lib/offline/db";
 import { persistOfflineSale } from "@/lib/offline/sales";
-import { syncEngine } from "@/lib/offline/sync-engine";
 import { generateId } from "@/lib/utils/id";
 import { requireOnline } from "@/lib/utils/network";
 
@@ -192,9 +191,6 @@ async function completeSale(payload: {
   // Always commit locally first. A stale `navigator.onLine` state must never
   // block checkout or prevent a receipt from being available.
   const saleRecord = await persistOfflineSale({ ...payload, invoice_number: invoiceNumber });
-
-  // Sync remains best-effort and is intentionally outside the sale workflow.
-  if (typeof window !== "undefined" && navigator.onLine) void syncEngine?.sync();
 
   return {
     id: saleRecord.id,
