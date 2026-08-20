@@ -11,6 +11,7 @@ import {
   getPendingSyncItems,
   saveToOfflineDB,
   clearOfflineStore,
+  pruneSyncedQueueItems,
   type SyncQueueRecord,
 } from "./db";
 
@@ -131,6 +132,18 @@ class SyncEngine {
 
       await this.pushChanges();
       await this.pullData(orgId, supabase);
+
+      // Housekeeping only — never let a pruning failure mark an otherwise
+      // successful sync as errored. See db.ts's `pruneSyncedQueueItems` for
+      // why this matters: without it, `sync_queue` only ever grows, and
+      // every future `addToSyncQueue` call (on the critical path to
+      // rendering a sale's receipt) gets slower as the queue's all-time
+      // history grows.
+      try {
+        await pruneSyncedQueueItems();
+      } catch (pruneErr) {
+        console.warn("[sync] Failed to prune synced queue items:", pruneErr);
+      }
 
       this.setState({
         status: "idle",

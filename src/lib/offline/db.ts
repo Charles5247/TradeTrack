@@ -296,14 +296,22 @@ export async function addToSyncQueue(
   payload: Record<string, unknown>
 ): Promise<void> {
   const db = await getDB();
-  const existingItems = await db.getAll('sync_queue');
-  const alreadyQueued = existingItems.some((item) => {
+  // Only rows that could possibly still be "in flight" are relevant to the
+  // duplicate check below. Using the `by-status` index to fetch just the
+  // 'pending' and 'syncing' rows (instead of db.getAll, which reads and
+  // JS-scans EVERY row ever written to this table — including years of
+  // already-'synced' history) keeps this call's cost proportional to the
+  // current backlog, not to the store's all-time size.
+  const [pendingItems, syncingItems] = await Promise.all([
+    db.getAllFromIndex('sync_queue', 'by-status', 'pending'),
+    db.getAllFromIndex('sync_queue', 'by-status', 'syncing'),
+  ]);
+  const alreadyQueued = [...pendingItems, ...syncingItems].some((item) => {
     const record = item as SyncQueueRecord;
     return (
       record.table_name === tableName &&
       record.record_id === recordId &&
-      record.operation === operation &&
-      ['pending', 'syncing'].includes(record.status)
+      record.operation === operation
     );
   });
 
@@ -335,6 +343,43 @@ export async function getPendingSyncItems(): Promise<SyncQueueRecord[]> {
   const db = await getDB();
   const items = await db.getAllFromIndex('sync_queue', 'by-status', 'pending');
   return items as SyncQueueRecord[];
+}
+
+/**
+ * Deletes `sync_queue` rows that have already synced successfully and are
+ * older than `olderThanDays`. Without this, the table only ever grows —
+ * every `addToSyncQueue` call (and, before the `by-status` index fix above,
+ * every duplicate check) pays the cost of that unbounded history forever.
+ * Uses the `by-status` index to fetch only 'synced' rows (never touches
+ * 'pending'/'syncing'/'failed' rows at all) and deletes the stale ones in a
+ * single readwrite transaction.
+ */
+export async function pruneSyncedQueueItems(olderThanDays = 3): Promise<number> {
+  const db = await getDB();
+  const syncedItems = (await db.getAllFromIndex(
+    'sync_queue',
+    'by-status',
+    'synced'
+  )) as SyncQueueRecord[];
+
+  if (syncedItems.length === 0) return 0;
+
+  const cutoff = Date.now() - olderThanDays * 24 * 60 * 60 * 1000;
+  const staleIds = syncedItems
+    .filter((item) => {
+      const timestamp = item.synced_at ?? item.created_at;
+      const time = timestamp ? new Date(timestamp).getTime() : 0;
+      return time <= cutoff;
+    })
+    .map((item) => item.id);
+
+  if (staleIds.length === 0) return 0;
+
+  const tx = db.transaction('sync_queue', 'readwrite');
+  const store = tx.objectStore('sync_queue');
+  await Promise.all([...staleIds.map((id) => store.delete(id)), tx.done]);
+
+  return staleIds.length;
 }
 
 // Export types for use in other modules
