@@ -405,7 +405,7 @@ function POSPageInner() {
     window.print();
   };
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     if (!receiptData) return;
     void downloadReceiptPDF(receiptData);
   };

@@ -24,6 +24,27 @@ export async function downloadReceiptPDF(receipt: ReceiptData) {
   const doc = new jsPDF({ unit: "pt", format: [widthPt, Math.max(360, estimatedHeight)] });
   let y = 16;
 
+  if (receipt.receiptTemplateUrl) {
+    const dataUrl = await loadImageDataUrl(receipt.receiptTemplateUrl);
+    if (dataUrl) {
+      const format = dataUrl.startsWith("data:image/png") ? "PNG" : "JPEG";
+      doc.addImage(dataUrl, format, 0, 0, widthPt, Math.max(320, estimatedHeight));
+    }
+  }
+
+  if (receipt.receiptTemplateUrl) {
+    try {
+      const image = new Image();
+      image.crossOrigin = 'anonymous';
+      image.src = receipt.receiptTemplateUrl;
+      image.onload = () => {
+        doc.addImage(image, 'JPEG', 0, 0, widthPt, Math.max(320, estimatedHeight));
+      };
+    } catch {
+      // Fallback to plain white background if the uploaded template fails.
+    }
+  }
+
   const center = (text: string, size = 9, bold = false, upper = false) => {
     doc.setFontSize(size);
     doc.setFont("helvetica", bold ? "bold" : "normal");

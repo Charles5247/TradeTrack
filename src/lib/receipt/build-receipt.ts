@@ -32,6 +32,8 @@ export interface ReceiptData {
     unitPrice: number;
     total: number;
   }>;
+  receiptTemplateUrl?: string;
+
   subtotal: number;
   discount: number;
   tax: number;
@@ -72,6 +74,7 @@ export interface BuildReceiptInput {
     created_at?: string;
     card_masked?: string;
     approval_code?: string;
+    receipt_url?: string;
   };
   items: CartItem[];
   orgName: string;
@@ -117,6 +120,7 @@ export function buildReceiptData({
     approvalCode: sale.approval_code,
     notes: sale.notes,
     currency,
+    receiptTemplateUrl: sale.receipt_url || undefined,
     barcodeValue: sale.invoice_number,
   };
 }

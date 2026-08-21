@@ -253,6 +253,7 @@ function VendorsPageInner() {
         customer_phone: vendor.vendor_phone,
         notes: vendor.notes,
         created_at: vendor.created_at,
+        receipt_url: vendor.receipt_url ?? undefined,
       },
       items: items.map((item) => ({
         product: { name: item.name } as never,
