@@ -73,6 +73,17 @@ class EscPosBuilder {
     return this;
   }
 
+  qrCode(value: string) {
+    const data = textToBytes(value);
+    const length = data.length + 3;
+    this.bytes.push(GS, 0x28, 0x6b, 4, 0, 49, 65, 50, 0);
+    this.bytes.push(GS, 0x28, 0x6b, 3, 0, 49, 67, 5);
+    this.bytes.push(GS, 0x28, 0x6b, 3, 0, 49, 69, 49);
+    this.bytes.push(GS, 0x28, 0x6b, length & 0xff, length >> 8, 49, 80, 48, ...data);
+    this.bytes.push(GS, 0x28, 0x6b, 3, 0, 49, 81, 48);
+    return this;
+  }
+
   cut() {
     this.bytes.push(GS, 0x56, 0x00);
     return this;
@@ -148,7 +159,7 @@ export function transferReceiptToEscPos(data: TransferReceiptData, charWidth = 3
 
   if (data.barcodeValue) {
     b.feed(1);
-    b.barcode(data.barcodeValue);
+    b.qrCode(data.barcodeValue);
   }
 
   b.feed(3);

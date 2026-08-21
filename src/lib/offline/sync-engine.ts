@@ -11,6 +11,7 @@ import {
   getPendingSyncItems,
   saveToOfflineDB,
   clearOfflineStore,
+  pruneSyncedQueueItems,
   type SyncQueueRecord,
 } from "./db";
 
@@ -79,6 +80,7 @@ class SyncEngine {
   }
 
   startAutoSync(intervalMs = 30000) {
+    if (this.syncInterval) clearInterval(this.syncInterval);
     this.syncInterval = setInterval(() => {
       if (this.isOnline) this.sync();
     }, intervalMs);
@@ -88,7 +90,18 @@ class SyncEngine {
     if (this.syncInterval) clearInterval(this.syncInterval);
   }
 
-  async sync() {
+  async sync(force = false) {
+    // `navigator.onLine` can change without a new SyncEngine instance
+    // (notably while DevTools simulates offline mode). Re-check it before
+    // constructing any Supabase request, including auth token refreshes.
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      this.handleOffline();
+      return;
+    }
+    if (force) {
+      this.isOnline = true;
+      this.retryCooldownUntil = 0;
+    }
     if (!this.isOnline || this.state.status === "syncing") return;
     if (Date.now() < this.retryCooldownUntil) return;
 
@@ -120,6 +133,18 @@ class SyncEngine {
       await this.pushChanges();
       await this.pullData(orgId, supabase);
 
+      // Housekeeping only — never let a pruning failure mark an otherwise
+      // successful sync as errored. See db.ts's `pruneSyncedQueueItems` for
+      // why this matters: without it, `sync_queue` only ever grows, and
+      // every future `addToSyncQueue` call (on the critical path to
+      // rendering a sale's receipt) gets slower as the queue's all-time
+      // history grows.
+      try {
+        await pruneSyncedQueueItems();
+      } catch (pruneErr) {
+        console.warn("[sync] Failed to prune synced queue items:", pruneErr);
+      }
+
       this.setState({
         status: "idle",
         lastSync: new Date(),
@@ -142,6 +167,7 @@ class SyncEngine {
       const isNetworkFailure =
         err instanceof TypeError && /fetch/i.test(err.message);
       if (isNetworkFailure) {
+        this.isOnline = false;
         this.retryCooldownUntil = Date.now() + this.RETRY_COOLDOWN_MS;
         this.setState({ status: "offline", error: null });
         return;
@@ -219,6 +245,9 @@ class SyncEngine {
     // Use type assertion to allow dynamic table name
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const client = supabase as any;
+    // `synced` is a local IndexedDB marker; it is not a column on the
+    // Supabase sales table and must never be sent through the Data API.
+    const { synced: _localSynced, ...serverPayload } = item.payload;
 
     const isAppendOnly =
       item.table_name === "sales" || item.table_name === "sale_items";
@@ -230,7 +259,7 @@ class SyncEngine {
         // simply that they are NEVER reached via the 'UPDATE' branch below.
         return client
           .from(item.table_name)
-          .upsert(item.payload, { onConflict: "id" });
+          .upsert(serverPayload, { onConflict: "id" });
 
       case "UPDATE": {
         if (isAppendOnly) {
@@ -271,7 +300,7 @@ class SyncEngine {
 
         return client
           .from(item.table_name)
-          .upsert(item.payload, { onConflict: "id" })
+          .upsert(serverPayload, { onConflict: "id" })
           .eq("id", item.record_id);
       }
 

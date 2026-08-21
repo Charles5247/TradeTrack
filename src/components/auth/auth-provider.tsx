@@ -25,6 +25,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const supabase = createClient();
 
+    const loadCachedUser = async () => {
+      const cached = await getAnyCachedSession();
+      const offlineSession = getOfflineAuthSession();
+      if (cached) {
+        setUser(cached.profile as unknown as User);
+      } else if (offlineSession) {
+        setUser(offlineSession.profile as unknown as User);
+      } else {
+        setUser(null);
+      }
+    };
+
+    const startOnlineAuth = () => {
+      void supabase.auth.startAutoRefresh();
+    };
+    const stopOfflineAuth = () => {
+      void supabase.auth.stopAutoRefresh();
+    };
+
+    if (typeof navigator !== "undefined" && navigator.onLine) {
+      startOnlineAuth();
+    } else {
+      stopOfflineAuth();
+    }
+
     async function loadOrgSettings(organizationId: string | undefined) {
       if (!organizationId) return;
       try {
@@ -45,6 +70,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     async function loadUser() {
+      // Do not call getUser() offline: it can attempt to refresh an expired
+      // token and block the browser with repeated failed network requests.
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        await loadCachedUser();
+        setLoading(false);
+        return;
+      }
+
       try {
         // 1. Try online fetch first
         const {
@@ -70,34 +103,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         } else {
           // 2. Fall back to IndexedDB cached session (offline mode)
-          const cached = await getAnyCachedSession();
-          const offlineSession = getOfflineAuthSession();
-          if (cached) {
-            console.info("[offline] Using cached session for user:", cached.id);
-            setUser(cached.profile as unknown as User);
-          } else if (offlineSession) {
-            console.info(
-              "[offline] Using remembered offline auth session for:",
-              offlineSession.email,
-            );
-            setUser(offlineSession.profile as unknown as User);
-          } else {
-            setUser(null);
-          }
+          await loadCachedUser();
         }
       } catch {
         // Network completely unavailable – try offline cache
         console.warn("[offline] Network unavailable, loading cached session");
         try {
-          const cached = await getAnyCachedSession();
-          const offlineSession = getOfflineAuthSession();
-          if (cached) {
-            setUser(cached.profile as unknown as User);
-          } else if (offlineSession) {
-            setUser(offlineSession.profile as unknown as User);
-          } else {
-            setUser(null);
-          }
+          await loadCachedUser();
         } catch {
           setUser(null);
         }
@@ -107,6 +119,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     loadUser();
+
+    window.addEventListener("online", startOnlineAuth);
+    window.addEventListener("offline", stopOfflineAuth);
 
     // Listen to auth state changes
     const {
@@ -186,7 +201,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      window.removeEventListener("online", startOnlineAuth);
+      window.removeEventListener("offline", stopOfflineAuth);
+      subscription.unsubscribe();
+    };
   }, [
     setUser,
     setLoading,

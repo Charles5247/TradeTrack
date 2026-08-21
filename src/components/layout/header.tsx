@@ -64,7 +64,7 @@ export function Header() {
     // Push any queued offline changes (and pull the latest data) right now,
     // on demand — the cashier doesn't have to wait for auto-sync or a
     // network reconnect event to fire.
-    syncEngine?.sync();
+    void syncEngine?.sync(true);
   };
 
   const handleSignOut = async () => {

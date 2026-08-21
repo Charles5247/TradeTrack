@@ -1,0 +1,42 @@
+services:
+  - type: web
+    name: tradetrack-web
+    env: node
+    plan: free
+    rootDir: .
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_APP_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: NEXT_PUBLIC_APP_VERSION
+        value: 1.0.0
+      - key: ZAINPAY_PUBLIC_KEY
+        sync: false
+      - key: ZAINPAY_PRIVATE_KEY
+        sync: false
+      - key: ZAINPAY_BASE_URL
+        sync: false
+      - key: ZAINPAY_DEFAULT_ZAINBOX
+        sync: false
+      - key: ZAINPAY_WEBHOOK_SECRET
+        sync: false
+      - key: TRADETRACK_WINDOWS_LATEST_VERSION
+        value: 1.0.0
+      - key: TRADETRACK_WINDOWS_DOWNLOAD_URL
+        value: ""
+      - key: TRADETRACK_ANDROID_LATEST_VERSION
+        value: 1.0.0
+      - key: TRADETRACK_ANDROID_DOWNLOAD_URL
+        value: ""
+      - key: TRADETRACK_ANDROID_UNKNOWN_SOURCES_HELP_URL
+        value: ""

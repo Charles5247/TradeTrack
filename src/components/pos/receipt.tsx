@@ -51,9 +51,10 @@ export function Receipt({ data }: { data: ReceiptData }) {
             </div>
           )}
 
-          <div className="receipt-divider" />
-          <div className="receipt-title">Cash Receipt</div>
-          <div className="receipt-divider" />
+        <div className="receipt-divider" />
+        <div className="receipt-title">Invoice</div>
+        <div className="receipt-center">Current Bill</div>
+        <div className="receipt-divider" />
 
           {/* Meta */}
           <div className="receipt-row">
@@ -64,24 +65,31 @@ export function Receipt({ data }: { data: ReceiptData }) {
             <span>Date:</span>
             <span>{new Date(data.dateISO).toLocaleString()}</span>
           </div>
-          {data.cashierName && (
-            <div className="receipt-row">
-              <span>Cashier:</span>
-              <span>{data.cashierName}</span>
-            </div>
-          )}
-          {data.customerName && (
-            <div className="receipt-row">
-              <span>Customer:</span>
-              <span>{data.customerName}</span>
-            </div>
-          )}
-          {data.customerPhone && (
-            <div className="receipt-row">
-              <span>Phone:</span>
-              <span>{data.customerPhone}</span>
-            </div>
-          )}
+        )}
+        {data.customerPhone && (
+          <div className="receipt-row">
+            <span>Phone:</span>
+            <span>{data.customerPhone}</span>
+          </div>
+        )}
+
+        <div className="receipt-divider" />
+
+        {/* Item table */}
+        <div className="receipt-table-head">
+          <span>Qty</span>
+          <span>Description</span>
+          <span>Amt</span>
+        </div>
+        {data.items.map((item, i) => (
+          <div key={i} className="receipt-item">
+            <span>{item.quantity}</span>
+            <span>
+              {item.name} @ {formatCurrency(item.unitPrice)}
+            </span>
+            <span>{formatCurrency(item.total)}</span>
+          </div>
+        ))}
 
           <div className="receipt-divider" />
 
@@ -169,12 +177,11 @@ export function Receipt({ data }: { data: ReceiptData }) {
             <div className="receipt-center receipt-notes">{data.notes}</div>
           )}
 
-          <div className="receipt-divider" />
-          <div className="receipt-center receipt-bold receipt-uppercase">
-            Thank you!
-          </div>
-          <div className="receipt-center receipt-small">
-            Powered by TradeTrack
+        {/* Scannable barcode — resolves back to this receipt's full item
+            list via /receipts/lookup when scanned. */}
+        {data.barcodeValue && (
+          <div className="receipt-qr">
+            <BarcodeImage value={data.barcodeValue} />
           </div>
 
           {/* Scannable barcode — resolves back to this receipt's full item
