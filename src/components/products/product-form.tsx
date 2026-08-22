@@ -14,6 +14,7 @@ import { ImageUpload } from './image-upload';
 import { productSchema } from '@/lib/validations';
 import { createClient } from '@/lib/supabase/client';
 import { createAuditEntry } from '@/lib/utils/client-audit';
+import { canAddProduct, productLimitMessage, resolveSubscriptionPlan } from '@/lib/subscriptions/plan-limits';
 import type { Product } from '@/types';
 import type { z } from 'zod';
 
@@ -65,6 +66,51 @@ export function ProductForm({ product, categories, onSuccess, onCancel }: Produc
         .single();
 
       const orgId = profile?.organization_id ?? '';
+
+      // Enforce the FREE plan's max_products ceiling (and any other
+      // tier's cap) before creating a NEW product. Updates to existing
+      // products are never blocked. Fails open if subscription data is
+      // unavailable (offline-first: never block on a transient fetch).
+      if (!product?.id && orgId) {
+        try {
+          const [{ data: subscription }, { data: allPlans }, { count: productCount }] =
+            await Promise.all([
+              supabase
+                .from('subscriptions')
+                .select('id, plan_id, status')
+                .eq('organization_id', orgId)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle(),
+              supabase.from('subscription_plans').select('*'),
+              supabase
+                .from('products')
+                .select('id', { count: 'exact', head: true })
+                .eq('organization_id', orgId),
+            ]);
+
+          const plan = resolveSubscriptionPlan(
+            subscription as { id: string; plan_id: string; status: string } | null,
+            (allPlans as unknown as Array<{
+              id: string;
+              name: string;
+              max_cashiers: number;
+              max_products: number | null;
+              max_warehouses: number | null;
+              features: string[];
+              is_active?: boolean;
+            }>) || [],
+          );
+
+          if (plan && !canAddProduct(productCount ?? 0, plan)) {
+            toast.error(productLimitMessage(plan.max_products as number));
+            setIsLoading(false);
+            return;
+          }
+        } catch {
+          // Fail open: never block product creation on a limit-check error.
+        }
+      }
 
       const payload = {
         name: data.name,

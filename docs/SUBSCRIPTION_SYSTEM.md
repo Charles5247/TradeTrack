@@ -8,13 +8,72 @@ TRADETRACK uses a subscription-based SaaS model. Each organization subscribes to
 
 ## Subscription Plans
 
-| Plan | Price (Monthly) | Devices | Features |
-|------|-----------------|---------|---------|
-| **Starter** | ₦5,000 | 1 | POS, Inventory, Basic Reports |
-| **Professional** | ₦15,000 | 5 | All Starter + Advanced Reports, Warehouses, Vendors |
-| **Enterprise** | ₦50,000 | Unlimited | All features + Priority Support, API Access, Custom Integrations |
+> **Restructured in migration 010** from the original 3-tier ladder
+> (Basic ₦3,000 / Standard ₦5,000 / Business ₦8,000, actually seeded by
+> migration 003 — see "Legacy Plans" below for a note on a since-fixed
+> naming inconsistency in this doc) to a 5-tier ladder modeled on
+> Sortly's pricing-page pattern, adapted to TradeTrack's actual features
+> and priced in Naira. The 3 old rows were **deactivated** (`is_active =
+> false`), never deleted, so organizations still subscribed to one of
+> them keep working unaffected.
 
-Plans are seeded in the `subscription_plans` table via migration 003.
+| Plan | Price (Monthly) | Price (Yearly) | Cashiers | Products | Locations | "Best for..." |
+|------|------------------|-----------------|----------|----------|-----------|----------------|
+| **Free** | ₦0 | — | 1 | 50 | 1 | Getting started |
+| **Starter** | ₦5,000 | ₦48,000 (save ₦12,000) | 2 | 300 | 1 | A single shop finding its rhythm |
+| **Growth** ⭐ Most Popular | ₦15,000 | ₦144,000 (save ₦36,000) | 5 | 1,500 | 3 | Multi-cashier shops that need real oversight |
+| **Business** | ₦30,000 | ₦288,000 (save ₦72,000) | 12 | 5,000 | 8 | Growing operations with multiple staff roles |
+| **Enterprise** | Talk to Sales | Talk to Sales | Unlimited | Unlimited | Unlimited | Custom multi-branch operations |
+
+Yearly pricing is **not** stored as separate catalog rows — it is
+computed client-side as `monthly × 12 × 0.8` (an exact 20% discount),
+in `computeYearlyPricing()` in `src/app/(dashboard)/subscriptions/page.tsx`.
+Enterprise has no self-serve price; its "Talk to Sales" CTA links to a
+`mailto:` address instead of triggering the Zainpay checkout flow.
+
+### Feature Matrix
+
+Each tier includes everything in the tier below it, plus:
+
+| Plan | Newly unlocked features |
+|------|--------------------------|
+| **Free** | `pos`, `inventory`, `basic_reports` |
+| **Starter** | + `receipt_printing`, `daily_summaries` |
+| **Growth** | + `advanced_reports`, `warehouses`, `vendors`, `barcode_label_printing`, `low_stock_alerts` |
+| **Business** | + `purchase_orders`, `custom_role_permissions`, `priority_support` |
+| **Enterprise** | + `api_access`, `webhooks`, `dedicated_account_manager` |
+
+> **Not yet built in the product:** `barcode_label_printing` (only
+> barcode/QR codes on receipts exist today) and `purchase_orders` (only
+> warehouse-to-warehouse stock **transfers** exist today, not a
+> supplier-facing PO workflow). These are plan-catalog feature flags
+> with gating infrastructure ready (see "Plan Feature Enforcement"
+> below), but no UI entry point exists to gate yet — building those
+> product surfaces is tracked as separate future work, not part of
+> this restructure.
+
+### Legacy Plans
+
+> **Note:** an earlier revision of this doc described the original
+> lineup as "Starter / Professional / Enterprise". The actual rows
+> seeded by migration 003 are **Basic** (₦3,000), **Standard**
+> (₦5,000), and **Business** (₦8,000) — corrected here to match what
+> migration 003 and migration 010 (which deactivates these exact rows
+> by UUID) actually reference.
+
+The original 3 plans (Basic ₦3,000 / Standard ₦5,000 / Business ₦8,000,
+seeded by migration 003) still exist as rows in `subscription_plans`
+with `is_active = false`. Any organization whose `subscriptions.plan_id`
+still points at one of these rows continues to resolve its plan,
+limits, and features exactly as before — deactivating a plan only
+removes it from the self-serve "Plans" tab for **new** subscriptions,
+it does not affect existing subscribers. See `resolveSubscriptionPlan()`
+in `src/lib/subscriptions/plan-limits.ts`, which looks a subscription's
+plan up by `plan_id` against the full plan list (active + inactive),
+not an `is_active`-filtered one.
+
+Plans are seeded in the `subscription_plans` table via migration 003
+(original 3) and migration 010 (restructure to 5 + legacy deactivation).
 
 ---
 
@@ -23,28 +82,41 @@ Plans are seeded in the `subscription_plans` table via migration 003.
 ### `subscription_plans`
 
 ```sql
-id            TEXT PRIMARY KEY   -- e.g. 'starter', 'professional', 'enterprise'
-name          TEXT NOT NULL
-price         NUMERIC(10,2)      -- monthly price in NGN
-billing_cycle TEXT               -- 'monthly' | 'yearly'
-features      JSONB              -- array of feature strings
-max_users     INTEGER
-max_products  INTEGER
-max_locations INTEGER
-is_active     BOOLEAN
+id            UUID PRIMARY KEY
+name          TEXT NOT NULL       -- 'Free' | 'Starter' | 'Growth' | 'Business' | 'Enterprise'
+price         DECIMAL(10,2)       -- monthly price in NGN (0 for Free/Enterprise)
+currency      TEXT DEFAULT 'NGN'
+billing_cycle VARCHAR(20)         -- 'monthly' | 'yearly' (added in migration 003)
+features      JSONB               -- array of feature-flag strings
+max_cashiers  INTEGER             -- a.k.a. "max users" in the pricing UI; -1 = unlimited
+max_products  INTEGER             -- -1 = unlimited
+max_warehouses INTEGER            -- a.k.a. "max locations" in the pricing UI; -1 = unlimited
+is_active     BOOLEAN             -- false = hidden from self-serve Plans tab, legacy plans only
+is_popular    BOOLEAN             -- true = "Most Popular" badge (Growth, post-migration 010)
+trial_days    INTEGER
+created_at    TIMESTAMPTZ
 ```
+
+> Column names predate this restructure: `max_cashiers` and
+> `max_warehouses` are the actual DB/TypeScript field names backing
+> what the pricing spec calls "max users" and "max locations" — there
+> is no separate `max_users`/`max_locations` column.
 
 ### `subscriptions`
 
 ```sql
 id               UUID
 organization_id  UUID → organizations.id
-plan_id          TEXT → subscription_plans.id
-status           TEXT  -- 'trial' | 'active' | 'past_due' | 'cancelled' | 'expired'
-start_date       TIMESTAMPTZ
-end_date         TIMESTAMPTZ
-payment_method   TEXT  -- 'cash' | 'transfer' | 'pos_terminal'
-billing_cycle    TEXT  -- 'monthly' | 'yearly'
+plan_id          UUID → subscription_plans.id
+status           TEXT  -- 'active' | 'expired' | 'cancelled' | 'trial'
+starts_at        TIMESTAMPTZ
+expires_at       TIMESTAMPTZ
+created_by       UUID
+created_at       TIMESTAMPTZ
+auto_renew       BOOLEAN
+payment_reference TEXT
+billing_cycle    VARCHAR(20)  -- 'monthly' | 'yearly' (added in migration 010 — this table
+                               -- had no billing_cycle column before the 5-tier restructure)
 ```
 
 ### `payment_transactions`
@@ -102,18 +174,41 @@ cancelled
 
 ## Plan Feature Enforcement
 
-Feature gates are checked at the component level:
+Feature-gate and plan-limit logic lives in
+`src/lib/subscriptions/plan-limits.ts` — a framework-free module (no
+Supabase/React imports) so it is directly unit-testable and reusable
+from both server routes and client components. Key exports:
+
+| Function | Purpose |
+|---|---|
+| `resolveSubscriptionPlan(subscription, allPlans)` | Looks up a subscription's plan by `plan_id` against the **full** plan list (active + inactive) — the mechanism that keeps legacy/deactivated-plan subscribers working correctly. |
+| `canAddProduct(currentCount, plan)` | Returns `false` once `currentCount >= plan.max_products` (unless `-1`/unlimited). Fails open (`true`) if `plan` is unavailable. |
+| `hasFeature(plan, featureFlag)` | Whether a plan includes a given feature flag. Fails closed (`false`) if `plan` is unavailable. |
+| `getMinTierForFeature(flag)` / `upgradePromptMessage(flag)` | Minimum tier + ready-to-render copy for gated flags: `receipt_printing`/`daily_summaries` → Starter; `advanced_reports`/`warehouses`/`vendors`/`barcode_label_printing`/`low_stock_alerts` → Growth; `purchase_orders`/`custom_role_permissions`/`priority_support` → Business; `api_access`/`webhooks`/`dedicated_account_manager` → Enterprise. |
+
+Currently wired in:
 
 ```typescript
-// Example: check if user can add more products
-const subscription = useAuthStore(s => s.subscription);
-const plan = PLANS[subscription?.plan_id ?? 'starter'];
+// src/components/products/product-form.tsx — blocks creating a NEW
+// product once the org's plan limit is reached (updates are never
+// blocked; fails open if the limit check itself errors out, since a
+// transient fetch failure must never block product creation).
+const plan = resolveSubscriptionPlan(subscription, allPlans);
 
-if (productCount >= plan.max_products) {
-  toast.error('Upgrade your plan to add more products');
+if (plan && !canAddProduct(currentProductCount, plan)) {
+  toast.error(productLimitMessage(plan.max_products));
   return;
 }
 ```
+
+**Not yet wired in (ticketed as future work):** `barcode_label_printing`,
+`purchase_orders`, `custom_role_permissions`, `api_access`, and
+`webhooks` have no real UI entry point in TradeTrack yet (see "Feature
+Matrix" above). Once those product surfaces are built, gating them is a
+one-line `hasFeature(plan, 'purchase_orders')` check wrapped around the
+entry point, rendering `upgradePromptMessage('purchase_orders')`
+("Purchase Orders is available on the Business plan and above —
+Upgrade to unlock it.") instead of hiding the entry point outright.
 
 ---
 
@@ -128,9 +223,20 @@ The subscriptions page has 3 tabs:
 - "Upgrade" and "Manage Billing" buttons
 
 ### Plans Tab
-- Side-by-side plan comparison
-- "Current Plan" badge on active plan
-- Upgrade/downgrade buttons (triggers Zainpay payment flow)
+- 5 plan cards in a row (Free/Starter/Growth/Business/Enterprise),
+  responsive: stacks to 1 column on mobile, 2-3 on tablet, 5 on desktop
+- Monthly/Yearly toggle above the cards, recomputes price + "You'll
+  save ₦X, billed at ₦Y/yr" line client-side per card
+- Each card: icon, plan name, one-line "Best for..." tagline, price
+  with "/mo" or "/yr" suffix, feature checklist with "+"-prefixed items
+  **exclusive** to that tier (earlier tiers' features are implied, not
+  re-listed)
+- Growth card carries the "Most Popular" ribbon in TradeTrack's
+  existing primary accent color
+- "Current Plan" badge on the organization's active plan
+- Upgrade buttons trigger the self-serve subscription flow (Zainpay for
+  paid tiers); the Enterprise card has no self-serve price — its CTA is
+  "Talk to Sales", a `mailto:` link, not a Zainpay checkout trigger
 
 ### Billing Tab
 - Invoice history table
@@ -143,8 +249,15 @@ The subscriptions page has 3 tabs:
 ## Billing Cycle
 
 - Default: **Monthly**
-- Yearly option available (10-20% discount depending on plan)
-- `billing_cycle` stored on both `subscriptions` and `subscription_plans`
+- Yearly option available at an exact 20% discount on every priced tier
+  (Starter/Growth/Business), computed client-side as `monthly × 12 ×
+  0.8` — not stored as separate catalog rows
+- `billing_cycle` stored on both `subscription_plans` (since migration
+  003) and `subscriptions` (added in migration 010, alongside the
+  5-tier restructure — the per-org `subscriptions` row previously had
+  no way to record which cycle a customer actually chose at checkout)
+- Free (₦0) and Enterprise (custom quote) plans never show a yearly
+  price or savings line
 
 ---
 

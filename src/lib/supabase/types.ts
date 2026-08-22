@@ -622,6 +622,7 @@ export type Database = {
           created_at: string;
           auto_renew: boolean | null;
           payment_reference: string | null;
+          billing_cycle: string | null;
         };
         Insert: {
           id?: string;
@@ -634,6 +635,7 @@ export type Database = {
           created_at?: string;
           auto_renew?: boolean | null;
           payment_reference?: string | null;
+          billing_cycle?: string | null;
         };
         Update: Partial<Database['public']['Tables']['subscriptions']['Insert']>;
         Relationships: [];
