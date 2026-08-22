@@ -43,7 +43,7 @@ export const UNLIMITED = -1;
  * catalog.
  *
  * This is the mechanism that keeps EXISTING subscribers on a plan that
- * has since been deactivated (e.g. the legacy "Professional" plan
+ * has since been deactivated (e.g. the legacy "Standard" plan
  * retired by migration 010) working correctly: `subscriptions.plan_id`
  * is a stable FK, so a subscriber's resolved plan/limits do not change
  * just because the catalog was restructured -- only `is_active` flips to

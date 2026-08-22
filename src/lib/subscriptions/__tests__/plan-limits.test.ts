@@ -73,9 +73,9 @@ const ENTERPRISE_PLAN: PlanLike = {
 
 // The legacy 3-tier catalog row this restructure deactivates rather than
 // deletes. `is_active: false` after migration 010 runs.
-const LEGACY_PROFESSIONAL_PLAN: PlanLike = {
+const LEGACY_STANDARD_PLAN: PlanLike = {
   id: "a2222222-0000-0000-0000-000000000002",
-  name: "Professional",
+  name: "Standard",
   max_cashiers: 5,
   max_products: 1000,
   max_warehouses: 3,
@@ -88,7 +88,7 @@ const ALL_PLANS = [
   STARTER_PLAN,
   GROWTH_PLAN,
   ENTERPRISE_PLAN,
-  LEGACY_PROFESSIONAL_PLAN,
+  LEGACY_STANDARD_PLAN,
 ];
 
 describe("resolveSubscriptionPlan", () => {
@@ -100,14 +100,14 @@ describe("resolveSubscriptionPlan", () => {
     // (or any other plan) just because is_active flipped to false.
     const legacySubscription = {
       id: "sub-legacy-1",
-      plan_id: LEGACY_PROFESSIONAL_PLAN.id,
+      plan_id: LEGACY_STANDARD_PLAN.id,
       status: "active",
     };
 
     const resolved = resolveSubscriptionPlan(legacySubscription, ALL_PLANS);
 
     expect(resolved).not.toBeNull();
-    expect(resolved?.name).toBe("Professional");
+    expect(resolved?.name).toBe("Standard");
     expect(resolved?.is_active).toBe(false);
     expect(resolved?.max_products).toBe(1000);
 
