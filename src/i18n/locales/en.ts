@@ -862,6 +862,8 @@ export const en = {
     products_count: "{count} products",
     unlimited: "Unlimited",
     unlimited_products: "Unlimited products",
+    talk_to_sales: "Talk to Sales",
+    yearly_savings_line: "You'll save {savings}, billed at {yearly}/yr",
     updated_success: "Subscription updated successfully",
     update_failed: "Failed to update subscription",
     add_plan: "Add Plan",

@@ -837,6 +837,8 @@ export const ha = {
     cashiers_count: 'ma\'ajin kuɗi',
     products_count: 'kaya {count}',
     unlimited: 'Ba Iyaka',
+    talk_to_sales: 'Tuntuɓi Sashen Tallace-tallace',
+    yearly_savings_line: 'Za ka ajiye {savings}, ana caji {yearly}/shekara',
     unlimited_products: 'Kaya ba iyaka',
     updated_success: 'An sabunta rajista cikin nasara',
     update_failed: 'An kasa sabunta rajista',

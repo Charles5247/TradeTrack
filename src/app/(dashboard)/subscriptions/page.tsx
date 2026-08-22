@@ -18,6 +18,10 @@ import {
   Pencil,
   Trash2,
   Loader2,
+  Sparkles,
+  TrendingUp,
+  Building2,
+  Mail,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -77,6 +81,7 @@ interface Subscription {
   starts_at: string;
   expires_at: string;
   created_at: string;
+  billing_cycle?: string;
   plan?: Plan;
 }
 
@@ -92,42 +97,60 @@ interface PaymentRecord {
 }
 
 // ── Fallback plans if DB unavailable ────────────────────────
+// Mirrors migration 010's 5-tier ladder (Free → Starter → Growth
+// [Most Popular] → Business → Enterprise). Kept in sync manually since
+// this is only a client-side fallback for when the DB is unreachable.
 const FALLBACK_PLANS: Plan[] = [
   {
-    id: "basic",
-    name: "Basic",
-    price: 3000,
+    id: "free",
+    name: "Free",
+    price: 0,
     currency: "NGN",
     billing_cycle: "monthly",
     max_cashiers: 1,
-    max_products: 500,
+    max_products: 50,
+    max_warehouses: 1,
+    features: ["pos", "inventory", "basic_reports"],
+    is_active: true,
+  },
+  {
+    id: "starter",
+    name: "Starter",
+    price: 5000,
+    currency: "NGN",
+    billing_cycle: "monthly",
+    max_cashiers: 2,
+    max_products: 300,
     max_warehouses: 1,
     features: [
-      "Inventory Management",
-      "Basic Sales",
-      "Sales Reports",
-      "Offline Mode",
-      "1 Cashier",
+      "pos",
+      "inventory",
+      "basic_reports",
+      "receipt_printing",
+      "daily_summaries",
     ],
     is_active: true,
   },
   {
-    id: "standard",
-    name: "Standard",
-    price: 5000,
+    id: "growth",
+    name: "Growth",
+    price: 15000,
     currency: "NGN",
     billing_cycle: "monthly",
-    max_cashiers: 3,
-    max_products: 2000,
-    max_warehouses: 2,
+    max_cashiers: 5,
+    max_products: 1500,
+    max_warehouses: 3,
     features: [
-      "Everything in Basic",
-      "Receipt Printing",
-      "Daily Summaries",
-      "Vendor Consignment",
-      "Warehouse Transfers",
-      "3 Cashiers",
-      "Priority Support",
+      "pos",
+      "inventory",
+      "basic_reports",
+      "receipt_printing",
+      "daily_summaries",
+      "advanced_reports",
+      "warehouses",
+      "vendors",
+      "barcode_label_printing",
+      "low_stock_alerts",
     ],
     is_active: true,
     is_popular: true,
@@ -135,25 +158,152 @@ const FALLBACK_PLANS: Plan[] = [
   {
     id: "business",
     name: "Business",
-    price: 8000,
+    price: 30000,
+    currency: "NGN",
+    billing_cycle: "monthly",
+    max_cashiers: 12,
+    max_products: 5000,
+    max_warehouses: 8,
+    features: [
+      "pos",
+      "inventory",
+      "basic_reports",
+      "receipt_printing",
+      "daily_summaries",
+      "advanced_reports",
+      "warehouses",
+      "vendors",
+      "barcode_label_printing",
+      "low_stock_alerts",
+      "purchase_orders",
+      "custom_role_permissions",
+      "priority_support",
+    ],
+    is_active: true,
+  },
+  {
+    id: "enterprise",
+    name: "Enterprise",
+    price: 0,
     currency: "NGN",
     billing_cycle: "monthly",
     max_cashiers: -1,
-    max_products: null,
-    max_warehouses: null,
+    max_products: -1,
+    max_warehouses: -1,
     features: [
-      "Everything in Standard",
-      "Unlimited Products",
-      "Unlimited Warehouses",
-      "Unlimited Cashiers",
-      "Advanced Reports",
-      "Audit Trail",
-      "API Access",
-      "Dedicated Support",
+      "pos",
+      "inventory",
+      "basic_reports",
+      "receipt_printing",
+      "daily_summaries",
+      "advanced_reports",
+      "warehouses",
+      "vendors",
+      "barcode_label_printing",
+      "low_stock_alerts",
+      "purchase_orders",
+      "custom_role_permissions",
+      "priority_support",
+      "api_access",
+      "webhooks",
+      "dedicated_account_manager",
     ],
     is_active: true,
   },
 ];
+
+/** Machine feature-flag id → human-readable label + one-line note for
+ *  flags that map to features not yet built in the product (used to
+ *  render an "Upgrade" prompt instead of a working entry point). */
+const FEATURE_LABELS: Record<string, string> = {
+  pos: "Point of Sale",
+  inventory: "Inventory Management",
+  basic_reports: "Basic Reports",
+  receipt_printing: "Receipt Printing",
+  daily_summaries: "Daily Sales Summaries",
+  advanced_reports: "Advanced Reports",
+  warehouses: "Multiple Warehouses",
+  vendors: "Vendor Consignment",
+  barcode_label_printing: "Barcode Label Printing",
+  low_stock_alerts: "Low Stock Alerts",
+  purchase_orders: "Purchase Orders",
+  custom_role_permissions: "Custom Role Permissions",
+  priority_support: "Priority Support",
+  api_access: "API Access",
+  webhooks: "Webhooks",
+  dedicated_account_manager: "Dedicated Account Manager",
+};
+
+/** Ordered tier ladder used to compute "everything in the previous
+ *  tier is implied" — each card only lists features NOT already present
+ *  in the tier immediately before it. */
+const PLAN_TIER_ORDER = ["Free", "Starter", "Growth", "Business", "Enterprise"];
+
+/** One-line "Best for ..." description per tier, matching Sortly's
+ *  pattern of a short positioning line under the plan name. */
+const PLAN_TAGLINES: Record<string, string> = {
+  Free: "Best for getting started",
+  Starter: "Best for a single shop finding its rhythm",
+  Growth: "Best for multi-cashier shops that need real oversight",
+  Business: "Best for growing operations with multiple staff roles",
+  Enterprise: "Best for custom multi-branch operations",
+};
+
+/** Icon per tier (kept as TradeTrack's existing accent color via the
+ *  card's className, not per-icon color, matching the pre-existing
+ *  design system rather than introducing new brand colors). */
+const PLAN_ICONS: Record<string, typeof Zap> = {
+  Free: Sparkles,
+  Starter: Zap,
+  Growth: TrendingUp,
+  Business: Building2,
+  Enterprise: Shield,
+};
+
+/** Returns only the features in `plan` that are NOT already present in
+ *  the previous tier's feature list — i.e. what's newly unlocked at this
+ *  tier — so the UI can render "+ Feature" checklists without repeating
+ *  earlier tiers' inclusions. Falls back to the full feature list for
+ *  tiers with no known predecessor (e.g. custom/legacy plan names) so
+ *  nothing is silently hidden. */
+function getExclusiveFeatures(plan: Plan, allPlans: Plan[]): string[] {
+  const tierIndex = PLAN_TIER_ORDER.indexOf(plan.name);
+  if (tierIndex <= 0) return plan.features;
+
+  const previousTierName = PLAN_TIER_ORDER[tierIndex - 1];
+  const previousPlan = allPlans.find(
+    (p) => p.name === previousTierName && p.billing_cycle === plan.billing_cycle,
+  );
+  if (!previousPlan) return plan.features;
+
+  const previousFeatureSet = new Set(previousPlan.features);
+  return plan.features.filter((f) => !previousFeatureSet.has(f));
+}
+
+/** Annual price + savings for a monthly-priced plan, using an exact
+ *  20%-off-annual formula (monthly × 12 × 0.8). Matches migration 010's
+ *  documented numbers exactly (e.g. Starter ₦5,000 → ₦48,000/yr, save
+ *  ₦12,000). Enterprise (custom quote) and Free (₦0) plans return zeros;
+ *  callers should not render a savings line for those. */
+function computeYearlyPricing(monthlyPrice: number): {
+  yearlyPrice: number;
+  yearlySavings: number;
+} {
+  if (!monthlyPrice) return { yearlyPrice: 0, yearlySavings: 0 };
+  const fullYearPrice = monthlyPrice * 12;
+  const yearlyPrice = Math.round(fullYearPrice * 0.8);
+  return { yearlyPrice, yearlySavings: fullYearPrice - yearlyPrice };
+}
+
+/** Enterprise is priced as "custom quote" — no self-serve checkout, so
+ *  its price/CTA rendering differs from every other card (mailto link
+ *  instead of triggering Zainpay). Identified by name since the id is
+ *  DB-generated and may differ per environment. */
+function isEnterprisePlan(plan: Plan): boolean {
+  return plan.name === "Enterprise";
+}
+
+const SALES_CONTACT_EMAIL = "sales@tradetrack.ng";
 
 // ── Data fetchers ─────────────────────────────────────────────
 async function fetchSubscriptionData() {
@@ -212,24 +362,36 @@ async function fetchSubscriptionData() {
 // ── Sub-components ────────────────────────────────────────────
 function PlanCard({
   plan,
+  allPlans,
   currentPlanId,
+  billingCycle,
   onSelect,
   isLoading,
 }: {
   plan: Plan;
+  allPlans: Plan[];
   currentPlanId?: string;
+  billingCycle: "monthly" | "yearly";
   onSelect: (planId: string) => void;
   isLoading: boolean;
 }) {
   const { t } = useI18n();
   const isCurrent = plan.id === currentPlanId;
-  const Icon = plan.is_popular ? Star : plan.name === "Business" ? Shield : Zap;
+  const isEnterprise = isEnterprisePlan(plan);
+  const Icon = PLAN_ICONS[plan.name] ?? Zap;
+  const tagline = PLAN_TAGLINES[plan.name];
+  const exclusiveFeatures = getExclusiveFeatures(plan, allPlans);
+
+  const { yearlyPrice, yearlySavings } = computeYearlyPricing(plan.price);
+  const showAsYearly = billingCycle === "yearly" && plan.price > 0 && !isEnterprise;
+  const displayedPrice = showAsYearly ? yearlyPrice : plan.price;
+  const priceSuffix = showAsYearly ? "/yr" : "/mo";
 
   return (
     <Card
-      className={`relative transition-all ${
+      className={`relative flex flex-col transition-all ${
         plan.is_popular
-          ? "border-primary shadow-lg ring-1 ring-primary"
+          ? "border-primary shadow-lg ring-2 ring-primary md:scale-[1.03] z-10"
           : isCurrent
             ? "border-green-500 ring-1 ring-green-500"
             : ""
@@ -237,7 +399,8 @@ function PlanCard({
     >
       {plan.is_popular && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <Badge className="bg-primary text-primary-foreground px-3">
+          <Badge className="bg-primary text-primary-foreground px-3 shadow-sm">
+            <Star className="h-3 w-3 mr-1 fill-current" />
             {t.subscriptions.most_popular}
           </Badge>
         </div>
@@ -273,20 +436,43 @@ function PlanCard({
           </div>
           <CardTitle className="text-lg">{plan.name}</CardTitle>
         </div>
-        <div className="mt-2">
-          <span className="text-3xl font-bold">
-            {formatCurrency(plan.price)}
-          </span>
-          <span className="text-muted-foreground text-sm">
-            /{plan.billing_cycle}
-          </span>
+
+        {tagline && (
+          <CardDescription className="text-xs">{tagline}</CardDescription>
+        )}
+
+        <div className="mt-3">
+          {isEnterprise ? (
+            <span className="text-2xl font-bold">
+              {t.subscriptions.talk_to_sales}
+            </span>
+          ) : (
+            <>
+              <span className="text-3xl font-bold">
+                {formatCurrency(displayedPrice)}
+              </span>
+              <span className="text-muted-foreground text-sm">
+                {priceSuffix}
+              </span>
+            </>
+          )}
         </div>
-        <CardDescription className="mt-1">
+
+        {/* Savings line for annual billing */}
+        {showAsYearly && yearlySavings > 0 && (
+          <p className="text-xs text-green-600 dark:text-green-500 font-medium mt-1">
+            {t.subscriptions.yearly_savings_line
+              .replace("{savings}", formatCurrency(yearlySavings))
+              .replace("{yearly}", formatCurrency(yearlyPrice))}
+          </p>
+        )}
+
+        <CardDescription className="mt-2">
           {plan.max_cashiers === -1
             ? t.subscriptions.unlimited
             : plan.max_cashiers}{" "}
           {t.subscriptions.cashiers_count} ·{" "}
-          {plan.max_products
+          {plan.max_products && plan.max_products > 0
             ? t.subscriptions.products_count.replace(
                 "{count}",
                 plan.max_products.toLocaleString(),
@@ -295,28 +481,40 @@ function PlanCard({
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="space-y-3">
-        <ul className="space-y-2">
-          {plan.features.map((feature) => (
-            <li key={feature} className="flex items-center gap-2 text-sm">
-              <CheckCircle className="h-4 w-4 text-green-500 shrink-0" />
-              {feature}
+      <CardContent className="space-y-3 flex flex-col flex-1">
+        <ul className="space-y-2 flex-1">
+          {exclusiveFeatures.map((feature) => (
+            <li key={feature} className="flex items-start gap-2 text-sm">
+              <CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+              <span>
+                <span className="text-muted-foreground mr-1">+</span>
+                {FEATURE_LABELS[feature] ?? feature}
+              </span>
             </li>
           ))}
         </ul>
 
-        <Button
-          className="w-full mt-4"
-          variant={
-            isCurrent ? "outline" : plan.is_popular ? "default" : "outline"
-          }
-          disabled={isCurrent || isLoading}
-          onClick={() => onSelect(plan.id)}
-        >
-          {isCurrent
-            ? t.subscriptions.current_plan_badge
-            : t.subscriptions.select_plan}
-        </Button>
+        {isEnterprise ? (
+          <Button className="w-full mt-4" variant="outline" asChild>
+            <a href={`mailto:${SALES_CONTACT_EMAIL}?subject=${encodeURIComponent("TradeTrack Enterprise Plan Inquiry")}`}>
+              <Mail className="h-4 w-4 mr-2" />
+              {t.subscriptions.talk_to_sales}
+            </a>
+          </Button>
+        ) : (
+          <Button
+            className="w-full mt-4"
+            variant={
+              isCurrent ? "outline" : plan.is_popular ? "default" : "outline"
+            }
+            disabled={isCurrent || isLoading}
+            onClick={() => onSelect(plan.id)}
+          >
+            {isCurrent
+              ? t.subscriptions.current_plan_badge
+              : t.subscriptions.select_plan}
+          </Button>
+        )}
       </CardContent>
     </Card>
   );
@@ -608,6 +806,9 @@ export default function SubscriptionsPage() {
   const [planDialogOpen, setPlanDialogOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
   const [deletingPlan, setDeletingPlan] = useState<Plan | null>(null);
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">(
+    "monthly",
+  );
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["subscriptions"],
@@ -637,7 +838,13 @@ export default function SubscriptionsPage() {
   });
 
   const upgradeMutation = useMutation({
-    mutationFn: async (planId: string) => {
+    mutationFn: async ({
+      planId,
+      cycle,
+    }: {
+      planId: string;
+      cycle: "monthly" | "yearly";
+    }) => {
       if (typeof navigator !== "undefined" && !navigator.onLine) {
         throw new Error(
           "Subscription payment is unavailable while offline. Please reconnect to the internet and try again.",
@@ -660,7 +867,11 @@ export default function SubscriptionsPage() {
         .single();
 
       const expiresAt = new Date();
-      expiresAt.setMonth(expiresAt.getMonth() + 1);
+      if (cycle === "yearly") {
+        expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+      } else {
+        expiresAt.setMonth(expiresAt.getMonth() + 1);
+      }
 
       // Upsert subscription
       const { error } = await supabase.from("subscriptions").upsert({
@@ -670,7 +881,8 @@ export default function SubscriptionsPage() {
         starts_at: new Date().toISOString(),
         expires_at: expiresAt.toISOString(),
         created_by: authUser.id,
-      });
+        billing_cycle: cycle,
+      } as never);
       if (error) throw error;
 
       // Audit log
@@ -682,7 +894,7 @@ export default function SubscriptionsPage() {
           action: "SUBSCRIPTION_CHANGE",
           resource_type: "subscription",
           resource_id: planId,
-          new_values: { plan_id: planId, status: "active" },
+          new_values: { plan_id: planId, status: "active", billing_cycle: cycle },
         })
         .then(() => {}); // Non-blocking, ignore RLS errors
     },
@@ -949,7 +1161,7 @@ export default function SubscriptionsPage() {
       {/* Plans Tab */}
       {activeTab === "plans" && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-lg font-semibold">
                 {t.subscriptions.choose_a_plan}
@@ -958,32 +1170,62 @@ export default function SubscriptionsPage() {
                 {t.subscriptions.select_plan_desc}
               </p>
             </div>
-            {canManagePlans && (
-              <Button
-                onClick={() => {
-                  setEditingPlan(null);
-                  setPlanDialogOpen(true);
-                }}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                {t.subscriptions.add_plan}
-              </Button>
-            )}
+            <div className="flex items-center gap-3">
+              <div className="inline-flex items-center rounded-lg border bg-muted p-1">
+                <button
+                  type="button"
+                  onClick={() => setBillingCycle("monthly")}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    billingCycle === "monthly"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {t.subscriptions.monthly}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBillingCycle("yearly")}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    billingCycle === "yearly"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {t.subscriptions.yearly}
+                </button>
+              </div>
+              {canManagePlans && (
+                <Button
+                  onClick={() => {
+                    setEditingPlan(null);
+                    setPlanDialogOpen(true);
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  {t.subscriptions.add_plan}
+                </Button>
+              )}
+            </div>
           </div>
           {isLoading ? (
-            <div className="grid gap-6 md:grid-cols-3">
-              {[1, 2, 3].map((i) => (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+              {[1, 2, 3, 4, 5].map((i) => (
                 <Skeleton key={i} className="h-96" />
               ))}
             </div>
           ) : (
-            <div className="grid gap-6 md:grid-cols-3 mt-8">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 mt-8">
               {plans.map((plan) => (
                 <div key={plan.id} className="space-y-2">
                   <PlanCard
                     plan={plan}
+                    allPlans={plans}
                     currentPlanId={subscription?.plan_id}
-                    onSelect={(planId) => upgradeMutation.mutate(planId)}
+                    billingCycle={billingCycle}
+                    onSelect={(planId) =>
+                      upgradeMutation.mutate({ planId, cycle: billingCycle })
+                    }
                     isLoading={upgradeMutation.isPending}
                   />
                   {canManagePlans && (
