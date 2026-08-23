@@ -22,9 +22,22 @@ const PROTECTED_PREFIXES = [
   "/merchants",
 ];
 
-// Auth-only routes (redirect logged-in users away from these)
-const AUTH_ROUTES = ["/login", "/forgot-password"];
+// Auth-only routes (redirect logged-in users away from these).
+// /signup is included alongside /login/forgot-password so an already
+// signed-in visitor who lands on the public signup form (e.g. via a
+// bookmarked /signup?plan=... link) is bounced straight to /dashboard
+// instead of being shown an account-creation form they don't need.
+const AUTH_ROUTES = ["/login", "/forgot-password", "/signup"];
 const OFFLINE_AUTH_COOKIE_NAME = "tradetrack-offline-session";
+
+// Public marketing route group (src/app/(marketing)/) — explicitly
+// enumerated rather than relying on "not in PROTECTED_PREFIXES" so
+// their public status is unambiguous and future PROTECTED_PREFIXES
+// additions can't accidentally shadow them. None of these require a
+// session; middleware never redirects them to /login regardless of
+// auth state (the "/" + authenticated-user redirect below is the one
+// deliberate exception, sending logged-in users straight to the app).
+const PUBLIC_MARKETING_ROUTES = ["/", "/pricing", "/features", "/download"];
 
 function isProtectedRoute(pathname: string): boolean {
   return PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
@@ -33,6 +46,12 @@ function isProtectedRoute(pathname: string): boolean {
 function isAuthRoute(pathname: string): boolean {
   return AUTH_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(route),
+  );
+}
+
+function isPublicMarketingRoute(pathname: string): boolean {
+  return PUBLIC_MARKETING_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
 }
 
@@ -124,6 +143,17 @@ export async function updateSession(request: NextRequest) {
     .getAll()
     .some((c) => c.name.startsWith("sb-") && c.name.includes("auth-token"));
   const hasOfflineAuthCookie = request.cookies.has(OFFLINE_AUTH_COOKIE_NAME);
+
+  // Explicit public allow-list: the marketing route group must always
+  // be reachable logged-out, and must never be forced through the
+  // login redirect below — even if a future edit to PROTECTED_PREFIXES
+  // accidentally overlaps one of these paths. The one exception is the
+  // authenticated-user redirect for "/" further down, which sends
+  // already-signed-in visitors straight to /dashboard instead of
+  // re-showing them the marketing homepage.
+  if (isPublicMarketingRoute(pathname) && !(user && pathname === "/")) {
+    return supabaseResponse;
+  }
 
   const shouldRedirectToLogin = shouldForceLogin(
     pathname,

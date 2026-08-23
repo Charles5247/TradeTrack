@@ -19,6 +19,20 @@ export const resetPasswordSchema = z.object({
   path: ['confirmPassword'],
 });
 
+// ── Signup (public self-serve, /signup) ─────────────────────────
+export const signupSchema = z.object({
+  business_name: z.string().min(2, 'Business name is required'),
+  full_name: z.string().min(2, 'Your name is required'),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  confirmPassword: z.string(),
+  phone: z.string().optional(),
+  plan_id: z.string().optional(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ['confirmPassword'],
+});
+
 // ── User Management ───────────────────────────────────────────
 export const createUserSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -152,6 +166,7 @@ export const organizationSchema = z.object({
 export type LoginFormData = z.infer<typeof loginSchema>;
 export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
+export type SignupFormData = z.infer<typeof signupSchema>;
 export type CreateUserFormData = z.infer<typeof createUserSchema>;
 export type UpdateUserFormData = z.infer<typeof updateUserSchema>;
 export type ProductFormData = z.infer<typeof productSchema>;
