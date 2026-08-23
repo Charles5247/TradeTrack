@@ -24,10 +24,14 @@ import android.webkit.WebViewClient;
  */
 public class MainActivity extends Activity {
 
-    // Default production URL. Override at build/config time if needed by
-    // editing this constant (kept simple and dependency-free for this
-    // resource-constrained build environment).
-    private static final String APP_URL = "https://tradetrack.ng";
+    // Launch URL is a Gradle-generated BuildConfig field (see
+    // android-app/app/build.gradle's defaultConfig.buildConfigField),
+    // not a hardcoded literal — this lets the production domain be
+    // overridden at build time via `-PappUrl=https://...` without
+    // touching this file. Defaults to https://tradetrack.ng/login when
+    // no -PappUrl is supplied. See android-app/README.md → "Rebuilding
+    // with a different domain".
+    private static final String APP_URL = BuildConfig.APP_URL;
 
     private WebView webView;
 

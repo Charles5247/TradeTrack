@@ -91,13 +91,51 @@ keystore before publishing to the Play Store or distributing broadly**,
 since whoever holds that key can publish updates that Android will
 accept as coming from the same app.
 
+## Rebuilding with a different domain
+
+`APP_URL` is generated at build time as a Gradle `BuildConfig` field
+(`android-app/app/build.gradle` → `defaultConfig.buildConfigField`),
+**not** a hardcoded literal in `MainActivity.java`. This means the
+production domain can be changed without touching any Java source file:
+
+```bash
+# Default build — uses the fallback domain (tradetrack.ng) baked into
+# build.gradle:
+gradle assembleRelease --no-daemon
+
+# Point a specific build at a different domain, e.g. once tradetrack.com
+# is secured and ready to go live, WITHOUT editing any source file:
+gradle assembleRelease --no-daemon -PappUrl=https://tradetrack.com
+```
+
+Both commands produce `app/build/outputs/apk/release/app-release-unsigned.apk`
+— sign it as described below before installing.
+
+The resulting `BuildConfig.APP_URL` value is always `{domain}/login`
+(the `/login` suffix is appended automatically inside `build.gradle`,
+not passed in `-PappUrl`) since `/` on the web app now serves the
+public marketing site — sending the shell straight to `/login` means
+an already-authenticated trader is forwarded on to `/dashboard`
+automatically by the web app's own auth middleware, with no extra step.
+
+**Do not assume `tradetrack.com` is secured yet.** The default
+fallback baked into `build.gradle` (when `-PappUrl` is not passed)
+remains `https://tradetrack.ng` until told otherwise — this
+mechanism only makes the domain swappable at build time, it does not
+perform any actual domain change.
+
+To make a permanent change to the *default* (i.e. change what happens
+when nobody passes `-PappUrl` at all), edit the fallback string inside
+the `buildConfigField` line in `android-app/app/build.gradle`'s
+`defaultConfig` block and rebuild.
+
 ## Known limitations
 
 - Unsigned by any recognized CA / not published through Play Store, so
   users must enable "Install from unknown sources" to sideload it.
 - No push notifications, no background sync outside of what the
   WebView + service worker already provide while the app is foregrounded.
-- `APP_URL` in `MainActivity.java` is a compile-time constant (matches
-  the desktop shell's `config.js` production fallback URL) rather than
-  a runtime-configurable setting; update and rebuild to point at a
-  different environment.
+- `APP_URL` is resolved once at build time via the `BuildConfig`
+  mechanism described above (see "Rebuilding with a different domain")
+  rather than being changeable at runtime inside an already-installed
+  APK; changing domains always requires a new build.
