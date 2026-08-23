@@ -6,16 +6,16 @@
  *                          users scoped to their OWN organization_id (no
  *                          self-elevation, cannot create business_owner or
  *                          platform_owner accounts).
- * GET    /api/users   - List all users for the organization
+ * GET    /api/users   - List all users for the organization (business_owner only)
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { createClient as createServiceClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
-import type { Database } from '@/lib/supabase/types';
+import { NextRequest, NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
+import { cookies } from "next/headers";
+import type { Database } from "@/lib/supabase/types";
 
-type UserRow = Database['public']['Tables']['users']['Row'];
+type UserRow = Database["public"]["Tables"]["users"]["Row"];
 
 async function getAuthenticatedUser(): Promise<UserRow | null> {
   const cookieStore = await cookies();
@@ -27,16 +27,19 @@ async function getAuthenticatedUser(): Promise<UserRow | null> {
         getAll: () => cookieStore.getAll(),
         setAll: () => {},
       },
-    }
+    },
   );
 
-  const { data: { user }, error } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
   if (error || !user) return null;
 
   const { data: profile } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', user.id)
+    .from("users")
+    .select("*")
+    .eq("id", user.id)
     .single();
 
   return profile;
@@ -46,14 +49,14 @@ function getServiceClient() {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!serviceKey) {
     throw new Error(
-      'SUPABASE_SERVICE_ROLE_KEY is not configured. ' +
-        'Add it to your environment variables to enable user management.'
+      "SUPABASE_SERVICE_ROLE_KEY is not configured. " +
+        "Add it to your environment variables to enable user management.",
     );
   }
   return createServiceClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     serviceKey,
-    { auth: { autoRefreshToken: false, persistSession: false } }
+    { auth: { autoRefreshToken: false, persistSession: false } },
   );
 }
 
@@ -63,63 +66,79 @@ export async function POST(request: NextRequest) {
   try {
     const currentUser = await getAuthenticatedUser();
     if (!currentUser) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const isPlatformOwner = currentUser.role === 'platform_owner';
-    const isBusinessOwner = currentUser.role === 'business_owner';
+    const isPlatformOwner = currentUser.role === "platform_owner";
+    const isBusinessOwner = currentUser.role === "business_owner";
     if (!isPlatformOwner && !isBusinessOwner) {
       return NextResponse.json(
-        { error: 'Forbidden: Only Business Owners and Platform Owners can create users' },
-        { status: 403 }
+        {
+          error:
+            "Forbidden: Only Business Owners and Platform Owners can create users",
+        },
+        { status: 403 },
       );
     }
 
     const body = await request.json();
-    const { email, full_name, role, phone, password, organization_id } = body as Record<string, string>;
+    const { email, full_name, role, phone, password, organization_id } =
+      body as Record<string, string>;
 
     if (!email || !full_name || !role || !password) {
       return NextResponse.json(
-        { error: 'Missing required fields: email, full_name, role, password' },
-        { status: 400 }
+        { error: "Missing required fields: email, full_name, role, password" },
+        { status: 400 },
       );
     }
     if (password.length < 8) {
-      return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Password must be at least 8 characters" },
+        { status: 400 },
+      );
     }
-    if (!['platform_owner', 'business_owner', 'admin', 'cashier'].includes(role)) {
-      return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
+    if (
+      !["platform_owner", "business_owner", "admin", "cashier"].includes(role)
+    ) {
+      return NextResponse.json({ error: "Invalid role" }, { status: 400 });
     }
 
     // A business_owner is confined to their own org and may never create
     // (or escalate a user into) a business_owner/platform_owner account —
     // that would be a privilege-escalation / cross-tenant leak.
     if (isBusinessOwner) {
-      if (role === 'business_owner' || role === 'platform_owner') {
+      if (role === "business_owner" || role === "platform_owner") {
         return NextResponse.json(
-          { error: 'Forbidden: Business Owners can only create admin or cashier users' },
-          { status: 403 }
+          {
+            error:
+              "Forbidden: Business Owners can only create admin or cashier users",
+          },
+          { status: 403 },
         );
       }
       if (organization_id && organization_id !== currentUser.organization_id) {
         return NextResponse.json(
-          { error: 'Forbidden: Cannot create users outside your own organization' },
-          { status: 403 }
+          {
+            error:
+              "Forbidden: Cannot create users outside your own organization",
+          },
+          { status: 403 },
         );
       }
     }
 
     const serviceSupabase = getServiceClient();
     const orgId = isBusinessOwner
-      ? (currentUser.organization_id || '')
-      : (organization_id || currentUser.organization_id || '');
+      ? currentUser.organization_id || ""
+      : organization_id || currentUser.organization_id || "";
 
     // 1. Create auth user
-    const { data: authData, error: authErr } = await serviceSupabase.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { full_name, role },
-    });
+    const { data: authData, error: authErr } =
+      await serviceSupabase.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { full_name, role },
+      });
 
     if (authErr) {
       return NextResponse.json({ error: authErr.message }, { status: 400 });
@@ -127,39 +146,39 @@ export async function POST(request: NextRequest) {
 
     // 2. Create profile in users table
     const { data: profile, error: profileErr } = await serviceSupabase
-      .from('users')
+      .from("users")
       .insert({
         id: authData.user.id,
         email,
         full_name,
-        role: role as UserRow['role'],
+        role: role as UserRow["role"],
         phone: phone || null,
         organization_id: orgId,
-        status: 'active' as UserRow['status'],
+        status: "active" as UserRow["status"],
         settings: {},
       })
-      .select('*')
+      .select("*")
       .single();
 
     if (profileErr) {
       // Rollback auth user
-      await serviceSupabase.auth.admin.deleteUser(authData.user.id).catch(() => {});
+      await serviceSupabase.auth.admin
+        .deleteUser(authData.user.id)
+        .catch(() => {});
       return NextResponse.json({ error: profileErr.message }, { status: 500 });
     }
 
     // 3. Audit log (best-effort)
     if (orgId) {
       try {
-        await serviceSupabase
-          .from('audit_logs')
-          .insert({
-            organization_id: orgId,
-            user_id: currentUser.id,
-            action: 'CREATE_USER',
-            resource_type: 'user',
-            resource_id: authData.user.id,
-            new_values: { email, full_name, role },
-          });
+        await serviceSupabase.from("audit_logs").insert({
+          organization_id: orgId,
+          user_id: currentUser.id,
+          action: "CREATE_USER",
+          resource_type: "user",
+          resource_id: authData.user.id,
+          new_values: { email, full_name, role },
+        });
       } catch {
         // Ignore audit errors
       }
@@ -167,8 +186,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ user: profile }, { status: 201 });
   } catch (err) {
-    console.error('[POST /api/users]', err);
-    const message = err instanceof Error ? err.message : 'Internal server error';
+    console.error("[POST /api/users]", err);
+    const message =
+      err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -179,28 +199,31 @@ export async function GET() {
   try {
     const currentUser = await getAuthenticatedUser();
     if (!currentUser) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    if (currentUser.role !== 'platform_owner' && currentUser.role !== 'business_owner') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+    // Only a merchant's business_owner lists users through this endpoint.
+    // platform_owner (TradeTrack staff, cross-org) has no Users screen and
+    // no organization_id — the org-scoped query below would otherwise fail
+    // with a 500 for them (organization_id = '' matches nothing and the
+    // service-role query errors on the empty filter).
+    if (currentUser.role !== "business_owner") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const serviceSupabase = getServiceClient();
-    // platform_owner has no dedicated "list all users across orgs" UI here —
-    // this endpoint still scopes to the caller's own org for both roles.
-    // (Cross-org data is served exclusively from the platform dashboard's
-    // read-only merchant/subscription views, never from this users list.)
     const { data: users, error } = await serviceSupabase
-      .from('users')
-      .select('*')
-      .eq('organization_id', currentUser.organization_id ?? '')
-      .order('created_at', { ascending: false });
+      .from("users")
+      .select("*")
+      .eq("organization_id", currentUser.organization_id ?? "")
+      .order("created_at", { ascending: false });
 
     if (error) throw error;
 
     return NextResponse.json({ users });
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Internal server error';
+    const message =
+      err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

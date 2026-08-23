@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Package,
@@ -24,13 +24,13 @@ import {
   Building2,
   Shield,
   Search,
-} from 'lucide-react';
-import { cn } from '@/lib/utils/cn';
-import { useUIStore, useAuthStore } from '@/store';
-import { Badge } from '@/components/ui/badge';
-import { useI18n } from '@/i18n';
-import { useOrganization } from '@/components/shared/organization-provider';
-import type { UserRole } from '@/types';
+} from "lucide-react";
+import { cn } from "@/lib/utils/cn";
+import { useUIStore, useAuthStore } from "@/store";
+import { Badge } from "@/components/ui/badge";
+import { useI18n } from "@/i18n";
+import { useOrganization } from "@/components/shared/organization-provider";
+import type { UserRole } from "@/types";
 
 interface NavItem {
   navKey: string;
@@ -46,37 +46,106 @@ interface NavItem {
 // merchant's own operational data (Products, Inventory, POS, Sales History,
 // Warehouses, Transfers, Vendor Sales, Reports, Audit Trail) — those screens
 // are gated to business_owner/admin only. platform_owner instead sees the
-// two truly platform-level screens: Admin (the platform dashboard) and
-// Merchants (the cross-org merchant directory) — both marked
-// `platformOnly: true` below.
+// platform-level screens: Admin (the platform dashboard), Merchants (the
+// cross-org merchant directory), Subscriptions (global plan catalog
+// management), Settings, and Notifications.
 //
-// Users and Subscriptions are PER-ORG screens, not platform-level: a
-// business_owner uses Users to manage admin/cashier accounts within their
-// own org, and Subscriptions to view plans / self-service pick their own
-// org's plan (see migration 008's plans/subscriptions RLS policies).
-// platform_owner also has access to both — Users for TradeTrack's own
-// internal staff accounts, Subscriptions to manage the global plan catalog
-// (create/edit/delete packages) — but platform_owner has NO write access
-// into any individual merchant's operational data via these or any other
-// screen.
+// Users is a PER-ORG screen, not platform-level: a business_owner uses it to
+// manage admin/cashier accounts within their own org. platform_owner does NOT
+// see Users — internal staff account management is handled elsewhere.
+// Subscriptions is also per-org for business_owner (view plans / self-service
+// pick their own org's plan), but for platform_owner it's the global plan
+// catalog (create/edit/delete packages).
 const navItems: NavItem[] = [
-  { navKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { navKey: 'products', href: '/products', icon: Package, roles: ['business_owner', 'admin'] },
-  { navKey: 'inventory', href: '/inventory', icon: Warehouse, roles: ['business_owner', 'admin'] },
-  { navKey: 'pos', href: '/pos', icon: ShoppingCart, roles: ['business_owner', 'admin', 'cashier'] },
-  { navKey: 'sales', href: '/sales', icon: History, roles: ['business_owner', 'admin'] },
-  { navKey: 'warehouses', href: '/warehouses', icon: Warehouse, roles: ['business_owner', 'admin'] },
-  { navKey: 'transfers', href: '/transfers', icon: ArrowLeftRight, roles: ['business_owner', 'admin'] },
-  { navKey: 'receiptLookup', href: '/receipts/lookup', icon: Search, roles: ['business_owner', 'admin', 'cashier'] },
-  { navKey: 'vendors', href: '/vendors', icon: UserCheck, roles: ['business_owner', 'admin'] },
-  { navKey: 'reports', href: '/reports', icon: BarChart3, roles: ['business_owner', 'admin'] },
-  { navKey: 'audit', href: '/audit', icon: ClipboardList, roles: ['business_owner', 'admin'] },
-  { navKey: 'notifications', href: '/notifications', icon: Bell },
-  { navKey: 'users', href: '/users', icon: Users, roles: ['business_owner', 'platform_owner'] },
-  { navKey: 'subscriptions', href: '/subscriptions', icon: CreditCard, roles: ['business_owner', 'platform_owner'] },
-  { navKey: 'admin', href: '/admin', icon: Shield, roles: ['platform_owner'], platformOnly: true },
-  { navKey: 'merchants', href: '/merchants', icon: Building2, roles: ['platform_owner'], platformOnly: true },
-  { navKey: 'settings', href: '/settings', icon: Settings },
+  {
+    navKey: "dashboard",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+    roles: ["business_owner", "admin", "cashier"],
+  },
+  {
+    navKey: "products",
+    href: "/products",
+    icon: Package,
+    roles: ["business_owner", "admin"],
+  },
+  {
+    navKey: "inventory",
+    href: "/inventory",
+    icon: Warehouse,
+    roles: ["business_owner", "admin"],
+  },
+  {
+    navKey: "pos",
+    href: "/pos",
+    icon: ShoppingCart,
+    roles: ["business_owner", "admin", "cashier"],
+  },
+  {
+    navKey: "sales",
+    href: "/sales",
+    icon: History,
+    roles: ["business_owner", "admin"],
+  },
+  {
+    navKey: "warehouses",
+    href: "/warehouses",
+    icon: Warehouse,
+    roles: ["business_owner", "admin"],
+  },
+  {
+    navKey: "transfers",
+    href: "/transfers",
+    icon: ArrowLeftRight,
+    roles: ["business_owner", "admin"],
+  },
+  {
+    navKey: "receiptLookup",
+    href: "/receipts/lookup",
+    icon: Search,
+    roles: ["business_owner", "admin", "cashier"],
+  },
+  {
+    navKey: "vendors",
+    href: "/vendors",
+    icon: UserCheck,
+    roles: ["business_owner", "admin"],
+  },
+  {
+    navKey: "reports",
+    href: "/reports",
+    icon: BarChart3,
+    roles: ["business_owner", "admin"],
+  },
+  {
+    navKey: "audit",
+    href: "/audit",
+    icon: ClipboardList,
+    roles: ["business_owner", "admin"],
+  },
+  { navKey: "notifications", href: "/notifications", icon: Bell },
+  { navKey: "users", href: "/users", icon: Users, roles: ["business_owner"] },
+  {
+    navKey: "subscriptions",
+    href: "/subscriptions",
+    icon: CreditCard,
+    roles: ["business_owner", "platform_owner"],
+  },
+  {
+    navKey: "admin",
+    href: "/admin",
+    icon: Shield,
+    roles: ["platform_owner"],
+    platformOnly: true,
+  },
+  {
+    navKey: "merchants",
+    href: "/merchants",
+    icon: Building2,
+    roles: ["platform_owner"],
+    platformOnly: true,
+  },
+  { navKey: "settings", href: "/settings", icon: Settings },
 ];
 
 export function Sidebar() {
@@ -87,13 +156,34 @@ export function Sidebar() {
   const { t } = useI18n();
 
   const orgLabel =
-    organization?.name ?? (user?.role === 'platform_owner' ? 'TradeTrack Platform' : t.app.name);
+    organization?.name ??
+    (user?.role === "platform_owner" ? "TradeTrack Platform" : t.app.name);
 
   const filteredItems = navItems.filter((item) => {
     if (!item.roles) return true;
     if (!user) return false;
     return item.roles.includes(user.role as UserRole);
   });
+
+  // platform_owner's nav order differs from the array's natural order:
+  // Dashboard(admin) → Merchants → Subscriptions → Settings → Notifications.
+  // This is a role-scoped re-sort only — the base navItems array order is
+  // untouched so business_owner/admin/cashier layouts are unaffected.
+  const PLATFORM_OWNER_ORDER = [
+    "admin",
+    "merchants",
+    "subscriptions",
+    "settings",
+    "notifications",
+  ];
+  const orderedItems =
+    user?.role === "platform_owner"
+      ? [...filteredItems].sort(
+          (a, b) =>
+            PLATFORM_OWNER_ORDER.indexOf(a.navKey) -
+            PLATFORM_OWNER_ORDER.indexOf(b.navKey),
+        )
+      : filteredItems;
 
   return (
     <>
@@ -108,11 +198,11 @@ export function Sidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed left-0 top-0 z-30 h-full bg-card border-r border-border transition-all duration-300 flex flex-col',
-          sidebarOpen ? 'w-64' : 'w-16',
-          'lg:relative lg:z-auto',
-          !sidebarOpen && 'max-lg:translate-x-[-100%]',
-          sidebarOpen && 'max-lg:translate-x-0'
+          "fixed left-0 top-0 z-30 h-full bg-card border-r border-border transition-all duration-300 flex flex-col",
+          sidebarOpen ? "w-64" : "w-16",
+          "lg:relative lg:z-auto",
+          !sidebarOpen && "max-lg:translate-x-[-100%]",
+          sidebarOpen && "max-lg:translate-x-0",
         )}
       >
         {/* Logo */}
@@ -123,18 +213,22 @@ export function Sidebar() {
             </div>
             {sidebarOpen && (
               <div className="min-w-0">
-                <p className="font-bold text-sm leading-none truncate">{t.app.name}</p>
-                <p className="text-xs text-muted-foreground truncate">{t.app.tagline}</p>
+                <p className="font-bold text-sm leading-none truncate">
+                  {t.app.name}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {t.app.tagline}
+                </p>
               </div>
             )}
           </div>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className={cn(
-              'ml-auto p-1 rounded-md hover:bg-accent transition-colors shrink-0',
-              !sidebarOpen && 'mx-auto'
+              "ml-auto p-1 rounded-md hover:bg-accent transition-colors shrink-0",
+              !sidebarOpen && "mx-auto",
             )}
-            aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+            aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
           >
             {sidebarOpen ? (
               <ChevronLeft className="h-4 w-4" />
@@ -158,34 +252,44 @@ export function Sidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
-          {filteredItems.map((item) => {
-            const isActive = pathname === item.href ||
-              (item.href !== '/dashboard' && pathname.startsWith(item.href));
+          {orderedItems.map((item) => {
+            const isActive =
+              pathname === item.href ||
+              (item.href !== "/dashboard" && pathname.startsWith(item.href));
             const Icon = item.icon;
-            const label = t.nav[item.navKey as keyof typeof t.nav] ?? item.navKey;
+            const label =
+              t.nav[item.navKey as keyof typeof t.nav] ?? item.navKey;
 
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'flex items-center gap-3 px-2 py-2 rounded-md text-sm font-medium transition-colors group relative',
+                  "flex items-center gap-3 px-2 py-2 rounded-md text-sm font-medium transition-colors group relative",
                   isActive
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
-                  !sidebarOpen && 'justify-center'
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                  !sidebarOpen && "justify-center",
                 )}
                 onClick={() => {
                   if (window.innerWidth < 1024) setSidebarOpen(false);
                 }}
               >
-                <Icon className={cn('h-4 w-4 shrink-0', isActive ? 'text-primary-foreground' : '')} />
+                <Icon
+                  className={cn(
+                    "h-4 w-4 shrink-0",
+                    isActive ? "text-primary-foreground" : "",
+                  )}
+                />
                 {sidebarOpen && (
                   <>
                     <span className="flex-1 truncate">{label}</span>
                     {item.badge && item.badge > 0 && (
-                      <Badge variant="destructive" className="text-xs py-0 px-1.5 h-5">
-                        {item.badge > 99 ? '99+' : item.badge}
+                      <Badge
+                        variant="destructive"
+                        className="text-xs py-0 px-1.5 h-5"
+                      >
+                        {item.badge > 99 ? "99+" : item.badge}
                       </Badge>
                     )}
                   </>
@@ -212,7 +316,9 @@ export function Sidebar() {
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-medium truncate">{user.full_name}</p>
-                <p className="text-xs text-muted-foreground capitalize truncate">{user.role.replace('_', ' ')}</p>
+                <p className="text-xs text-muted-foreground capitalize truncate">
+                  {user.role.replace("_", " ")}
+                </p>
               </div>
             </div>
           </div>

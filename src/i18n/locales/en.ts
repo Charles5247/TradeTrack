@@ -99,7 +99,7 @@ export const en = {
     settings: "Settings",
     users: "Users",
     subscriptions: "Subscriptions",
-    admin: "Owner Dashboard",
+    admin: "Dashboard",
     merchants: "Merchants",
     platform: "Platform",
   },
@@ -499,8 +499,7 @@ export const en = {
     last_login: "Last Login",
     no_users: "No users found",
     access_denied: "Access Denied",
-    access_denied_desc:
-      "Only business owners and platform owners can manage users.",
+    access_denied_desc: "Only business owners can manage users.",
     subtitle: "{count} user(s) in your organization",
     phone: "Phone",
     status: "Status",
