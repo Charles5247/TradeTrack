@@ -69,6 +69,42 @@ several GB of RAM and a normal wine install (or when building on
 actual Windows/macOS, where electron-builder doesn't need wine at all
 for signing/resource-editing).
 
+## Rebuilding with a different domain
+
+`config.js` resolves the production URL in this order, so there are
+three ways to point the shell at a different domain — from least to
+most permanent:
+
+1. **Environment variable (no rebuild)** — set `TRADETRACK_APP_URL`
+   before launching the installed app, e.g. via a wrapper script or
+   the OS environment. Takes effect immediately, no rebuild needed.
+2. **`tradetrack-config.json` (no rebuild)** — drop a JSON file next
+   to the installed executable (or in this directory during local
+   testing) containing `{ "appUrl": "https://tradetrack.com" }`. Lets
+   a reseller/IT admin repoint an already-installed copy without
+   rebuilding or redistributing anything.
+3. **Rebuild with the constant changed (permanent default)** — edit
+   the single `DEFAULT_APP_URL` constant near the top of `config.js`
+   (clearly marked with a comment block), then rebuild:
+   ```bash
+   npx electron-builder --win --x64 --publish never
+   ```
+
+**Do not assume `tradetrack.com` is secured yet.** `DEFAULT_APP_URL`
+remains `https://tradetrack.ng` until told otherwise — this mechanism
+only makes the domain swappable, it does not perform any actual
+domain change.
+
+Whichever method is used, the shell always launches at `{domain}/login`
+(see `DEFAULT_LAUNCH_PATH` / `getLaunchUrl()` in `config.js`), not the
+domain root — `/` on the web app now serves the public marketing site,
+so launching at `/login` means an already-authenticated trader is
+forwarded on to `/dashboard` automatically by the web app's own auth
+middleware, with no extra step. This launch path is derived from
+whichever origin resolves from steps 1–3 above; it is not a second
+hardcoded URL, and `getAppUrl()` (the bare origin, used for the
+external-link-vs-in-app-navigation check in `main.js`) is unaffected.
+
 ## Known limitations
 
 - **Unsigned installer** — no code-signing certificate is available in
@@ -80,3 +116,6 @@ for signing/resource-editing).
   `GET /api/version` against `app.getVersion()` but does not
   download/install updates automatically; users must download and run
   the new installer themselves.
+- **Windows only** — `package.json`'s `electron-builder` config only
+  defines a `win` target (NSIS, x64). There is no macOS build; the
+  public Download page must not claim one exists.

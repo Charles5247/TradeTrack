@@ -12,6 +12,24 @@ android {
         targetSdk 34
         versionCode 1
         versionName "1.0.0"
+
+        // ─────────────────────────────────────────────────────────
+        // Production domain — the ONLY hardcoded copy of it in this
+        // module. Do NOT assume tradetrack.com is secured yet; keep
+        // tradetrack.ng as the fallback until told otherwise.
+        //
+        // Override at build time without touching any source file:
+        //   ./gradlew assembleRelease -PappUrl=https://tradetrack.com
+        //
+        // MainActivity.java reads this via BuildConfig.APP_URL instead
+        // of a literal string constant. The path is "/login" (not the
+        // domain root) because "/" now serves the public marketing
+        // site — the web app's auth middleware forwards an
+        // already-authenticated session on to /dashboard automatically,
+        // so returning users see no extra step.
+        // ─────────────────────────────────────────────────────────
+        buildConfigField "String", "APP_URL",
+            "\"${project.findProperty('appUrl') ?: 'https://tradetrack.ng'}/login\""
     }
 
     buildTypes {

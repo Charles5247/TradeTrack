@@ -12,7 +12,7 @@ const { app, BrowserWindow, Menu, ipcMain, shell, dialog } = require('electron')
 const path = require('path');
 const https = require('https');
 const http = require('http');
-const { getAppUrl, getVersionCheckUrl } = require('./config');
+const { getAppUrl, getLaunchUrl, getVersionCheckUrl } = require('./config');
 const { buildMenu } = require('./menu');
 
 const APP_VERSION = app.getVersion();
@@ -40,12 +40,23 @@ function createWindow() {
 
   Menu.setApplicationMenu(buildMenu(mainWindow, checkForUpdates));
 
-  const targetUrl = getAppUrl();
-  mainWindow.loadURL(targetUrl).catch((err) => {
-    console.error('[TradeTrack Desktop] Failed to load app URL:', targetUrl, err);
+  // targetOrigin (e.g. "https://tradetrack.ng") is used ONLY to decide
+  // whether a link is "in-app" vs. "external" below. launchUrl (the
+  // same origin + "/login") is what actually loads first — the app's
+  // "/" now serves the public marketing site, so returning traders are
+  // sent straight to /login instead (the web app's auth middleware
+  // silently forwards an already-authenticated session on to
+  // /dashboard). Keeping these as two separate values, both derived
+  // from config.js, means in-app navigation to any post-login path
+  // (e.g. /dashboard, /pos) still correctly matches targetOrigin and
+  // stays inside the window instead of being treated as "external".
+  const targetOrigin = getAppUrl();
+  const launchUrl = getLaunchUrl();
+  mainWindow.loadURL(launchUrl).catch((err) => {
+    console.error('[TradeTrack Desktop] Failed to load app URL:', launchUrl, err);
     dialog.showErrorBox(
       'Unable to connect',
-      `TradeTrack could not reach ${targetUrl}.\n\n` +
+      `TradeTrack could not reach ${launchUrl}.\n\n` +
         'Check your internet connection and try again. Once TradeTrack has ' +
         'loaded successfully at least once, it will keep working offline ' +
         'for cached data and queued sales.'
@@ -55,7 +66,7 @@ function createWindow() {
   // Open any external links (e.g. "Learn more" links pointing off-app) in
   // the user's default browser instead of inside the app window.
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (!url.startsWith(targetUrl)) {
+    if (!url.startsWith(targetOrigin)) {
       shell.openExternal(url);
       return { action: 'deny' };
     }
