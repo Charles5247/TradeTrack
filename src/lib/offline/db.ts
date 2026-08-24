@@ -4,9 +4,9 @@
  * VERSION 2 - includes user_sessions store for offline login
  */
 
-import { openDB, type IDBPDatabase } from 'idb';
-import { generateId } from '@/lib/utils/id';
-import { getOfflineAccountNamespace } from './auth-cache';
+import { openDB, type IDBPDatabase } from "idb";
+import { generateId } from "@/lib/utils/id";
+import { getOfflineAccountNamespace } from "./auth-cache";
 
 // Use a plain interface without the DBSchema constraint to avoid index signature conflicts
 interface ProductRecord {
@@ -74,10 +74,10 @@ interface CategoryRecord {
 interface SyncQueueRecord {
   id: string;
   table_name: string;
-  operation: 'INSERT' | 'UPDATE' | 'DELETE';
+  operation: "INSERT" | "UPDATE" | "DELETE";
   record_id: string;
   payload: Record<string, unknown>;
-  status: 'pending' | 'syncing' | 'synced' | 'failed';
+  status: "pending" | "syncing" | "synced" | "failed";
   retry_count: number;
   error?: string;
   created_at: string;
@@ -112,15 +112,15 @@ interface UserSessionRecord {
 
 // Store name type
 type StoreNames =
-  | 'products'
-  | 'inventory'
-  | 'sales'
-  | 'sale_items'
-  | 'warehouses'
-  | 'categories'
-  | 'sync_queue'
-  | 'pending_receipts'
-  | 'user_sessions';
+  | "products"
+  | "inventory"
+  | "sales"
+  | "sale_items"
+  | "warehouses"
+  | "categories"
+  | "sync_queue"
+  | "pending_receipts"
+  | "user_sessions";
 
 // Use any for the generic DB to avoid complex type gymnastics with idb
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -141,54 +141,111 @@ export async function getDB(): Promise<TradeTrackIDB> {
   dbInstance = null;
   activeDbName = null;
 
-  dbInstance = await openDB(dbName, 2, {
-    upgrade(db, oldVersion) {
+  dbInstance = await openDB(dbName, 3, {
+    upgrade(db, oldVersion, _newVersion, transaction) {
       // -- v1 stores --
-      if (!db.objectStoreNames.contains('products')) {
-        const productsStore = db.createObjectStore('products', { keyPath: 'id' });
-        productsStore.createIndex('by-sku', 'sku', { unique: false });
-        productsStore.createIndex('by-barcode', 'barcode', { unique: false });
-        productsStore.createIndex('by-org', 'organization_id', { unique: false });
+      if (!db.objectStoreNames.contains("products")) {
+        const productsStore = db.createObjectStore("products", {
+          keyPath: "id",
+        });
+        productsStore.createIndex("by-sku", "sku", { unique: false });
+        productsStore.createIndex("by-barcode", "barcode", { unique: false });
+        productsStore.createIndex("by-org", "organization_id", {
+          unique: false,
+        });
       }
-      if (!db.objectStoreNames.contains('inventory')) {
-        const inventoryStore = db.createObjectStore('inventory', { keyPath: 'id' });
-        inventoryStore.createIndex('by-product', 'product_id', { unique: false });
-        inventoryStore.createIndex('by-warehouse', 'warehouse_id', { unique: false });
-        inventoryStore.createIndex('by-org', 'organization_id', { unique: false });
+      if (!db.objectStoreNames.contains("inventory")) {
+        const inventoryStore = db.createObjectStore("inventory", {
+          keyPath: "id",
+        });
+        inventoryStore.createIndex("by-product", "product_id", {
+          unique: false,
+        });
+        inventoryStore.createIndex("by-warehouse", "warehouse_id", {
+          unique: false,
+        });
+        inventoryStore.createIndex("by-org", "organization_id", {
+          unique: false,
+        });
       }
-      if (!db.objectStoreNames.contains('sales')) {
-        const salesStore = db.createObjectStore('sales', { keyPath: 'id' });
-        salesStore.createIndex('by-org', 'organization_id', { unique: false });
-        salesStore.createIndex('by-cashier', 'cashier_id', { unique: false });
-        salesStore.createIndex('by-synced', 'synced', { unique: false });
+      if (!db.objectStoreNames.contains("sales")) {
+        const salesStore = db.createObjectStore("sales", { keyPath: "id" });
+        salesStore.createIndex("by-org", "organization_id", { unique: false });
+        salesStore.createIndex("by-cashier", "cashier_id", { unique: false });
+        salesStore.createIndex("by-synced", "synced", { unique: false });
       }
-      if (!db.objectStoreNames.contains('sale_items')) {
-        const saleItemsStore = db.createObjectStore('sale_items', { keyPath: 'id' });
-        saleItemsStore.createIndex('by-sale', 'sale_id', { unique: false });
+      if (!db.objectStoreNames.contains("sale_items")) {
+        const saleItemsStore = db.createObjectStore("sale_items", {
+          keyPath: "id",
+        });
+        saleItemsStore.createIndex("by-sale", "sale_id", { unique: false });
       }
-      if (!db.objectStoreNames.contains('warehouses')) {
-        const warehousesStore = db.createObjectStore('warehouses', { keyPath: 'id' });
-        warehousesStore.createIndex('by-org', 'organization_id', { unique: false });
+      if (!db.objectStoreNames.contains("warehouses")) {
+        const warehousesStore = db.createObjectStore("warehouses", {
+          keyPath: "id",
+        });
+        warehousesStore.createIndex("by-org", "organization_id", {
+          unique: false,
+        });
       }
-      if (!db.objectStoreNames.contains('categories')) {
-        const categoriesStore = db.createObjectStore('categories', { keyPath: 'id' });
-        categoriesStore.createIndex('by-org', 'organization_id', { unique: false });
+      if (!db.objectStoreNames.contains("categories")) {
+        const categoriesStore = db.createObjectStore("categories", {
+          keyPath: "id",
+        });
+        categoriesStore.createIndex("by-org", "organization_id", {
+          unique: false,
+        });
       }
-      if (!db.objectStoreNames.contains('sync_queue')) {
-        const syncStore = db.createObjectStore('sync_queue', { keyPath: 'id' });
-        syncStore.createIndex('by-status', 'status', { unique: false });
-        syncStore.createIndex('by-table', 'table_name', { unique: false });
+      if (!db.objectStoreNames.contains("sync_queue")) {
+        const syncStore = db.createObjectStore("sync_queue", { keyPath: "id" });
+        syncStore.createIndex("by-status", "status", { unique: false });
+        syncStore.createIndex("by-table", "table_name", { unique: false });
+        // Composite index backing the duplicate check in addToSyncQueue().
+        // Lets the "is this exact change already queued?" lookup be a single
+        // indexed read instead of scanning the whole pending/syncing backlog
+        // on every call — critical on the checkout → receipt path, where
+        // persistOfflineSale() queues the sale + every line item + every
+        // inventory update in one burst.
+        syncStore.createIndex(
+          "by-queue-key",
+          ["table_name", "record_id", "operation"],
+          { unique: false },
+        );
       }
-      if (!db.objectStoreNames.contains('pending_receipts')) {
-        const receiptsStore = db.createObjectStore('pending_receipts', { keyPath: 'id' });
-        receiptsStore.createIndex('by-synced', 'synced', { unique: false });
+      if (!db.objectStoreNames.contains("pending_receipts")) {
+        const receiptsStore = db.createObjectStore("pending_receipts", {
+          keyPath: "id",
+        });
+        receiptsStore.createIndex("by-synced", "synced", { unique: false });
       }
 
       // -- v2 stores --
       if (oldVersion < 2) {
-        if (!db.objectStoreNames.contains('user_sessions')) {
-          const sessionsStore = db.createObjectStore('user_sessions', { keyPath: 'id' });
-          sessionsStore.createIndex('by-email', 'profile.email', { unique: false });
+        if (!db.objectStoreNames.contains("user_sessions")) {
+          const sessionsStore = db.createObjectStore("user_sessions", {
+            keyPath: "id",
+          });
+          sessionsStore.createIndex("by-email", "profile.email", {
+            unique: false,
+          });
+        }
+      }
+
+      // -- v3: composite index on sync_queue for O(1) duplicate checks --
+      // Existing databases (created at v1/v2) already have the sync_queue
+      // store, so the index creation above inside the `!contains` branch
+      // never runs for them. Create it here for any DB upgrading to v3.
+      // `db.objectStore()` is not available on the IDBDatabase object —
+      // object stores during an upgrade are accessed through the upgrade
+      // transaction (the 4th callback argument).
+      if (oldVersion < 3 && db.objectStoreNames.contains("sync_queue")) {
+        const syncStore = transaction.objectStore("sync_queue");
+        if (!syncStore.indexNames.contains("by-queue-key")) {
+          syncStore.createIndex(
+            "by-queue-key",
+            ["table_name", "record_id", "operation"],
+            { unique: false },
+          );
         }
       }
     },
@@ -202,7 +259,7 @@ export async function getDB(): Promise<TradeTrackIDB> {
 
 export async function cacheUserSession(
   userId: string,
-  profile: Record<string, unknown>
+  profile: Record<string, unknown>,
 ): Promise<void> {
   try {
     const db = await getDB();
@@ -211,16 +268,18 @@ export async function cacheUserSession(
       profile,
       cached_at: new Date().toISOString(),
     };
-    await db.put('user_sessions', record);
+    await db.put("user_sessions", record);
   } catch (err) {
-    console.warn('[offline] Failed to cache user session:', err);
+    console.warn("[offline] Failed to cache user session:", err);
   }
 }
 
-export async function getCachedUserSession(userId: string): Promise<UserSessionRecord | null> {
+export async function getCachedUserSession(
+  userId: string,
+): Promise<UserSessionRecord | null> {
   try {
     const db = await getDB();
-    const entry = await db.get('user_sessions', userId);
+    const entry = await db.get("user_sessions", userId);
     return (entry as UserSessionRecord) ?? null;
   } catch {
     return null;
@@ -230,7 +289,7 @@ export async function getCachedUserSession(userId: string): Promise<UserSessionR
 export async function getAnyCachedSession(): Promise<UserSessionRecord | null> {
   try {
     const db = await getDB();
-    const all = await db.getAll('user_sessions');
+    const all = await db.getAll("user_sessions");
     return (all[0] as UserSessionRecord) ?? null;
   } catch {
     return null;
@@ -240,7 +299,7 @@ export async function getAnyCachedSession(): Promise<UserSessionRecord | null> {
 export async function clearCachedSession(userId: string): Promise<void> {
   try {
     const db = await getDB();
-    await db.delete('user_sessions', userId);
+    await db.delete("user_sessions", userId);
   } catch {
     // Ignore
   }
@@ -250,27 +309,24 @@ export async function clearCachedSession(userId: string): Promise<void> {
 
 export async function saveToOfflineDB<T>(
   storeName: StoreNames,
-  records: T[]
+  records: T[],
 ): Promise<void> {
   const db = await getDB();
-  const tx = db.transaction(storeName, 'readwrite');
+  const tx = db.transaction(storeName, "readwrite");
   const store = tx.objectStore(storeName);
-  await Promise.all([
-    ...records.map((record) => store.put(record)),
-    tx.done,
-  ]);
+  await Promise.all([...records.map((record) => store.put(record)), tx.done]);
 }
 
 export async function getFromOfflineDB<T>(
   storeName: StoreNames,
-  key: string
+  key: string,
 ): Promise<T | undefined> {
   const db = await getDB();
   return db.get(storeName, key) as Promise<T | undefined>;
 }
 
 export async function getAllFromOfflineDB<T>(
-  storeName: StoreNames
+  storeName: StoreNames,
 ): Promise<T[]> {
   const db = await getDB();
   return db.getAll(storeName) as Promise<T[]>;
@@ -278,7 +334,7 @@ export async function getAllFromOfflineDB<T>(
 
 export async function deleteFromOfflineDB(
   storeName: StoreNames,
-  key: string
+  key: string,
 ): Promise<void> {
   const db = await getDB();
   await db.delete(storeName, key);
@@ -291,29 +347,27 @@ export async function clearOfflineStore(storeName: StoreNames): Promise<void> {
 
 export async function addToSyncQueue(
   tableName: string,
-  operation: 'INSERT' | 'UPDATE' | 'DELETE',
+  operation: "INSERT" | "UPDATE" | "DELETE",
   recordId: string,
-  payload: Record<string, unknown>
+  payload: Record<string, unknown>,
 ): Promise<void> {
   const db = await getDB();
-  // Only rows that could possibly still be "in flight" are relevant to the
-  // duplicate check below. Using the `by-status` index to fetch just the
-  // 'pending' and 'syncing' rows (instead of db.getAll, which reads and
-  // JS-scans EVERY row ever written to this table — including years of
-  // already-'synced' history) keeps this call's cost proportional to the
-  // current backlog, not to the store's all-time size.
-  const [pendingItems, syncingItems] = await Promise.all([
-    db.getAllFromIndex('sync_queue', 'by-status', 'pending'),
-    db.getAllFromIndex('sync_queue', 'by-status', 'syncing'),
-  ]);
-  const alreadyQueued = [...pendingItems, ...syncingItems].some((item) => {
-    const record = item as SyncQueueRecord;
-    return (
-      record.table_name === tableName &&
-      record.record_id === recordId &&
-      record.operation === operation
-    );
-  });
+  // Duplicate check: only rows that could still be "in flight" (pending or
+  // syncing) matter. Instead of scanning the whole backlog, use the
+  // `by-queue-key` composite index to fetch ONLY rows matching this exact
+  // (table_name, record_id, operation) — a single indexed read that is
+  // O(1) regardless of how large the pending/syncing backlog has grown.
+  // This is on the critical path to rendering a sale's receipt, where
+  // persistOfflineSale() queues the sale + every line item + every
+  // inventory update in one burst, so it must not scale with backlog size.
+  const existing = (await db.getAllFromIndex("sync_queue", "by-queue-key", [
+    tableName,
+    recordId,
+    operation,
+  ])) as SyncQueueRecord[];
+  const alreadyQueued = existing.some(
+    (record) => record.status === "pending" || record.status === "syncing",
+  );
 
   if (alreadyQueued) return;
 
@@ -322,7 +376,7 @@ export async function addToSyncQueue(
   // conflict check on UPDATE operations. Falls back to "now" if the
   // payload doesn't carry one (e.g. a partial-field update).
   const clientUpdatedAt =
-    (typeof payload.updated_at === 'string' && payload.updated_at) ||
+    (typeof payload.updated_at === "string" && payload.updated_at) ||
     new Date().toISOString();
 
   const record: SyncQueueRecord = {
@@ -331,17 +385,17 @@ export async function addToSyncQueue(
     operation,
     record_id: recordId,
     payload,
-    status: 'pending',
+    status: "pending",
     retry_count: 0,
     created_at: new Date().toISOString(),
     client_updated_at: clientUpdatedAt,
   };
-  await db.add('sync_queue', record);
+  await db.add("sync_queue", record);
 }
 
 export async function getPendingSyncItems(): Promise<SyncQueueRecord[]> {
   const db = await getDB();
-  const items = await db.getAllFromIndex('sync_queue', 'by-status', 'pending');
+  const items = await db.getAllFromIndex("sync_queue", "by-status", "pending");
   return items as SyncQueueRecord[];
 }
 
@@ -354,12 +408,14 @@ export async function getPendingSyncItems(): Promise<SyncQueueRecord[]> {
  * 'pending'/'syncing'/'failed' rows at all) and deletes the stale ones in a
  * single readwrite transaction.
  */
-export async function pruneSyncedQueueItems(olderThanDays = 3): Promise<number> {
+export async function pruneSyncedQueueItems(
+  olderThanDays = 3,
+): Promise<number> {
   const db = await getDB();
   const syncedItems = (await db.getAllFromIndex(
-    'sync_queue',
-    'by-status',
-    'synced'
+    "sync_queue",
+    "by-status",
+    "synced",
   )) as SyncQueueRecord[];
 
   if (syncedItems.length === 0) return 0;
@@ -375,8 +431,8 @@ export async function pruneSyncedQueueItems(olderThanDays = 3): Promise<number> 
 
   if (staleIds.length === 0) return 0;
 
-  const tx = db.transaction('sync_queue', 'readwrite');
-  const store = tx.objectStore('sync_queue');
+  const tx = db.transaction("sync_queue", "readwrite");
+  const store = tx.objectStore("sync_queue");
   await Promise.all([...staleIds.map((id) => store.delete(id)), tx.done]);
 
   return staleIds.length;
