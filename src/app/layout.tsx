@@ -6,6 +6,7 @@ import { Toaster } from "sonner";
 import { QueryProvider } from "@/components/shared/query-provider";
 import { ServiceWorkerRegister } from "@/components/shared/sw-register";
 import { AuthProvider } from "@/components/auth/auth-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider } from "@/i18n";
 import { cookies } from "next/headers";
 import "./globals.css";
@@ -100,14 +101,16 @@ export default async function RootLayout({
           <QueryProvider>
             <AuthProvider>
               <I18nProvider defaultLocale={locale}>
-                {children}
-                <Toaster
-                  position="top-right"
-                  richColors
-                  closeButton
-                  duration={4000}
-                />
-                <ServiceWorkerRegister />
+                <TooltipProvider delayDuration={200}>
+                  {children}
+                  <Toaster
+                    position="top-right"
+                    richColors
+                    closeButton
+                    duration={4000}
+                  />
+                  <ServiceWorkerRegister />
+                </TooltipProvider>
               </I18nProvider>
             </AuthProvider>
           </QueryProvider>

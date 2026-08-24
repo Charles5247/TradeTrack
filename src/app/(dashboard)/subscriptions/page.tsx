@@ -54,8 +54,18 @@ import { useI18n } from "@/i18n";
 import {
   PlanCard,
   FALLBACK_PLANS,
+  FEATURE_LABELS,
   type Plan,
 } from "@/components/subscriptions/plan-card";
+import {
+  isPendingFeature,
+  filterDisplayFeatures,
+} from "@/lib/subscriptions/plan-limits";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // ── Types ─────────────────────────────────────────────────────
 interface Subscription {
@@ -742,15 +752,48 @@ export default function SubscriptionsPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {subscription.plan.features?.map((feature: string) => (
-                        <div
-                          key={feature}
-                          className="flex items-center gap-2 text-sm"
-                        >
-                          <CheckCircle className="h-4 w-4 text-green-500 shrink-0" />
-                          {feature}
-                        </div>
-                      ))}
+                      {filterDisplayFeatures(
+                        subscription.plan.features || [],
+                      ).map((feature: string) => {
+                        const pending = isPendingFeature(feature);
+                        return (
+                          <div
+                            key={feature}
+                            className="flex items-center gap-2 text-sm"
+                          >
+                            <CheckCircle
+                              className={`h-4 w-4 shrink-0 ${
+                                pending
+                                  ? "text-muted-foreground"
+                                  : "text-green-500"
+                              }`}
+                            />
+                            <span
+                              className={
+                                pending ? "text-muted-foreground" : undefined
+                              }
+                            >
+                              {FEATURE_LABELS[feature] ?? feature}
+                            </span>
+                            {pending && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge
+                                    variant="warning"
+                                    className="align-middle text-[10px] py-0 px-1.5 cursor-help"
+                                  >
+                                    <Clock className="h-2.5 w-2.5 mr-1" />
+                                    {t.subscriptions.rolling_out_soon}
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  {t.subscriptions.rolling_out_soon_tooltip}
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                     <div className="mt-4 pt-4 border-t flex gap-3">
                       <Button

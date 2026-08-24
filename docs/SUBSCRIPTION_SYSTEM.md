@@ -44,13 +44,21 @@ Each tier includes everything in the tier below it, plus:
 | **Enterprise** | + `api_access`, `webhooks`, `dedicated_account_manager` |
 
 > **Not yet built in the product:** `barcode_label_printing` (only
-> barcode/QR codes on receipts exist today) and `purchase_orders` (only
-> warehouse-to-warehouse stock **transfers** exist today, not a
-> supplier-facing PO workflow). These are plan-catalog feature flags
-> with gating infrastructure ready (see "Plan Feature Enforcement"
-> below), but no UI entry point exists to gate yet — building those
-> product surfaces is tracked as separate future work, not part of
-> this restructure.
+> barcode/QR codes on receipts exist today — no dedicated label-printing
+> surface). This is a plan-catalog feature flag with gating
+> infrastructure ready (see "Plan Feature Enforcement" below), but no UI
+> entry point exists to gate yet — building that product surface is
+> tracked as separate future work, not part of this restructure.
+>
+> `purchase_orders` **is now live** (minimal draft → sent → received
+> workflow at `/purchase-orders`, gated with `hasFeature(plan,
+> 'purchase_orders')` — see "Plan Feature Enforcement" below). It exists
+> alongside, and is distinct from, the warehouse-to-warehouse stock
+> **transfers** feature: transfers move existing stock between an
+> org's own warehouses, while purchase orders bring new stock in from a
+> supplier. Partial receiving, PO approval workflows, PDF export,
+> purchasing analytics, and supplier payment automation are explicitly
+> out of scope for this minimal version.
 
 ### Legacy Plans
 
@@ -201,14 +209,29 @@ if (plan && !canAddProduct(currentProductCount, plan)) {
 }
 ```
 
+```typescript
+// src/app/(dashboard)/purchase-orders/page.tsx — gates the entire
+// Purchase Orders page behind the Business-tier `purchase_orders`
+// flag. Fails open (never blocks the page) if the plan itself can't
+// be resolved — same "fail open" precedent as canAddProduct() above —
+// but explicitly locks the page (with an upgrade prompt in place of
+// the feature) once a plan IS resolved and it doesn't include the flag.
+const plan = resolveSubscriptionPlan(subscription, allPlans);
+const featureLocked = !!plan && !hasFeature(plan, 'purchase_orders');
+
+if (featureLocked) {
+  return <UpgradePrompt message={upgradePromptMessage('purchase_orders')} />;
+  // "Purchase Orders is available on the Business plan and above —
+  // Upgrade to unlock it."
+}
+```
+
 **Not yet wired in (ticketed as future work):** `barcode_label_printing`,
-`purchase_orders`, `custom_role_permissions`, `api_access`, and
-`webhooks` have no real UI entry point in TradeTrack yet (see "Feature
-Matrix" above). Once those product surfaces are built, gating them is a
-one-line `hasFeature(plan, 'purchase_orders')` check wrapped around the
-entry point, rendering `upgradePromptMessage('purchase_orders')`
-("Purchase Orders is available on the Business plan and above —
-Upgrade to unlock it.") instead of hiding the entry point outright.
+`custom_role_permissions`, `api_access`, and `webhooks` have no real UI
+entry point in TradeTrack yet (see "Feature Matrix" above). Once those
+product surfaces are built, gating them follows the same one-line
+`hasFeature(plan, flag)` + `upgradePromptMessage(flag)` pattern shown
+above for `purchase_orders`.
 
 ---
 

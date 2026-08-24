@@ -168,6 +168,46 @@ export interface WarehouseTransfer {
   receiver?: User;
 }
 
+// ── Purchase Orders ──────────────────────────────────────────
+// Minimal PO feature (migration 011_purchase_orders.sql) backing the
+// Business-tier "purchase_orders" subscription flag. Workflow:
+// draft -> sent -> received|cancelled. Partial receiving, approval
+// workflows, PDF export and purchasing analytics are out of scope.
+export type PurchaseOrderStatus = 'draft' | 'sent' | 'received' | 'cancelled';
+
+export interface PurchaseOrder {
+  id: string;
+  organization_id: string;
+  supplier_id: string;
+  status: PurchaseOrderStatus;
+  expected_date?: string;
+  total_value: number;
+  notes?: string;
+  created_by: string;
+  sent_at?: string;
+  received_by?: string;
+  received_at?: string;
+  created_at: string;
+  updated_at: string;
+  // Joined fields
+  supplier?: Supplier;
+  creator?: User;
+  receiver?: User;
+  items?: PurchaseOrderItem[];
+}
+
+export interface PurchaseOrderItem {
+  id: string;
+  purchase_order_id: string;
+  product_id: string;
+  quantity_ordered: number;
+  quantity_received: number;
+  unit_cost: number;
+  created_at: string;
+  // Joined fields
+  product?: Product;
+}
+
 // ── Sales ────────────────────────────────────────────────────
 export type PaymentMethod = 'cash' | 'transfer' | 'pos_terminal' | 'split' | 'partial';
 export type SaleStatus = 'completed' | 'pending' | 'cancelled' | 'refunded';
