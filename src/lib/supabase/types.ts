@@ -282,6 +282,62 @@ export type Database = {
         Update: Partial<Database['public']['Tables']['warehouse_transfers']['Insert']>;
         Relationships: [];
       };
+      purchase_orders: {
+        Row: {
+          id: string;
+          organization_id: string;
+          supplier_id: string;
+          status: 'draft' | 'sent' | 'received' | 'cancelled';
+          expected_date: string | null;
+          total_value: number;
+          notes: string | null;
+          created_by: string;
+          sent_at: string | null;
+          received_by: string | null;
+          received_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          supplier_id: string;
+          status?: 'draft' | 'sent' | 'received' | 'cancelled';
+          expected_date?: string | null;
+          total_value?: number;
+          notes?: string | null;
+          created_by: string;
+          sent_at?: string | null;
+          received_by?: string | null;
+          received_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['purchase_orders']['Insert']>;
+        Relationships: [];
+      };
+      purchase_order_items: {
+        Row: {
+          id: string;
+          purchase_order_id: string;
+          product_id: string;
+          quantity_ordered: number;
+          quantity_received: number;
+          unit_cost: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          purchase_order_id: string;
+          product_id: string;
+          quantity_ordered: number;
+          quantity_received?: number;
+          unit_cost?: number;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['purchase_order_items']['Insert']>;
+        Relationships: [];
+      };
       customers: {
         Row: {
           id: string;

@@ -10,6 +10,7 @@ import {
   ShoppingCart,
   History,
   ArrowLeftRight,
+  ClipboardCheck,
   Users,
   BarChart3,
   ClipboardList,
@@ -97,6 +98,12 @@ const navItems: NavItem[] = [
     navKey: "transfers",
     href: "/transfers",
     icon: ArrowLeftRight,
+    roles: ["business_owner", "admin"],
+  },
+  {
+    navKey: "purchaseOrders",
+    href: "/purchase-orders",
+    icon: ClipboardCheck,
     roles: ["business_owner", "admin"],
   },
   {
