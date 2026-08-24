@@ -865,6 +865,9 @@ export const ha = {
     unlimited: "Ba Iyaka",
     talk_to_sales: "Tuntuɓi Sashen Tallace-tallace",
     yearly_savings_line: "Za ka ajiye {savings}, ana caji {yearly}/shekara",
+    rolling_out_soon: "Ana shirya fitowa nan ba da jimawa ba",
+    rolling_out_soon_tooltip:
+      "Ana aiki kan wannan fasalin a halin yanzu kuma har yanzu ba a samar da shi ba don amfani. Ba za a ƙara maka kuɗi ba saboda shi — zai buɗe kansa a shirinka da zarar an kammala shi.",
     unlimited_products: "Kaya ba iyaka",
     updated_success: "An sabunta rajista cikin nasara",
     update_failed: "An kasa sabunta rajista",

@@ -19,6 +19,7 @@
 import React from "react";
 import {
   CheckCircle,
+  Clock,
   Zap,
   Shield,
   Star,
@@ -36,8 +37,17 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { formatCurrency } from "@/lib/utils/format";
 import { useI18n } from "@/i18n";
+import {
+  isPendingFeature,
+  filterDisplayFeatures,
+} from "@/lib/subscriptions/plan-limits";
 
 // ── Types ─────────────────────────────────────────────────────
 export interface Plan {
@@ -227,19 +237,28 @@ export const PLAN_ICONS: Record<string, typeof Zap> = {
  *  tier — so the UI can render "+ Feature" checklists without repeating
  *  earlier tiers' inclusions. Falls back to the full feature list for
  *  tiers with no known predecessor (e.g. custom/legacy plan names) so
- *  nothing is silently hidden. */
+ *  nothing is silently hidden.
+ *
+ * Always runs the result through `filterDisplayFeatures()` so
+ * `HIDDEN_FEATURES` (flags with no scheduled implementation, e.g.
+ * `custom_role_permissions`) never reach customer-facing rendering,
+ * regardless of whether the plan data came from the live DB catalog
+ * (migration 010's `subscription_plans.features` still lists it) or
+ * `FALLBACK_PLANS`. */
 export function getExclusiveFeatures(plan: Plan, allPlans: Plan[]): string[] {
   const tierIndex = PLAN_TIER_ORDER.indexOf(plan.name);
-  if (tierIndex <= 0) return plan.features;
+  if (tierIndex <= 0) return filterDisplayFeatures(plan.features);
 
   const previousTierName = PLAN_TIER_ORDER[tierIndex - 1];
   const previousPlan = allPlans.find(
     (p) => p.name === previousTierName && p.billing_cycle === plan.billing_cycle,
   );
-  if (!previousPlan) return plan.features;
+  if (!previousPlan) return filterDisplayFeatures(plan.features);
 
   const previousFeatureSet = new Set(previousPlan.features);
-  return plan.features.filter((f) => !previousFeatureSet.has(f));
+  return filterDisplayFeatures(
+    plan.features.filter((f) => !previousFeatureSet.has(f)),
+  );
 }
 
 /** Annual price + savings for a monthly-priced plan, using an exact
@@ -403,15 +422,42 @@ export function PlanCard({
 
       <CardContent className="space-y-3 flex flex-col flex-1">
         <ul className="space-y-2 flex-1">
-          {exclusiveFeatures.map((feature) => (
-            <li key={feature} className="flex items-start gap-2 text-sm">
-              <CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-              <span>
-                <span className="text-muted-foreground mr-1">+</span>
-                {FEATURE_LABELS[feature] ?? feature}
-              </span>
-            </li>
-          ))}
+          {exclusiveFeatures.map((feature) => {
+            const pending = isPendingFeature(feature);
+            return (
+              <li key={feature} className="flex items-start gap-2 text-sm">
+                <CheckCircle
+                  className={`h-4 w-4 shrink-0 mt-0.5 ${
+                    pending ? "text-muted-foreground" : "text-green-500"
+                  }`}
+                />
+                <span
+                  className={
+                    pending ? "text-muted-foreground" : undefined
+                  }
+                >
+                  <span className="text-muted-foreground mr-1">+</span>
+                  {FEATURE_LABELS[feature] ?? feature}
+                  {pending && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge
+                          variant="warning"
+                          className="ml-2 align-middle text-[10px] py-0 px-1.5 cursor-help"
+                        >
+                          <Clock className="h-2.5 w-2.5 mr-1" />
+                          {t.subscriptions.rolling_out_soon}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {t.subscriptions.rolling_out_soon_tooltip}
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                </span>
+              </li>
+            );
+          })}
         </ul>
 
         {isEnterprise ? (

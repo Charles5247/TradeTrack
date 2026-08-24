@@ -7,16 +7,86 @@
  * can be unit tested directly and reused from both server routes and
  * client components.
  *
- * NOTE ON SCOPE: `purchase_orders`, `barcode_label_printing`,
- * `custom_role_permissions`, `api_access` and `webhooks` are feature
- * FLAGS on the plan catalog, but the underlying product surfaces for
- * them do not exist yet in TradeTrack (only barcode/QR codes on
- * receipts, and warehouse-to-warehouse stock transfers, exist today).
- * This module only builds the *gating* infrastructure (feature lookup,
- * minimum-tier resolution, upgrade-prompt copy) so that whenever those
- * surfaces are built, wiring a gate in is a one-line `hasFeature()`
- * check. It intentionally does NOT stub fake UI entry points for them.
+ * NOTE ON SCOPE (updated — see PENDING_FEATURES below):
+ * `purchase_orders` now has a real, minimal product surface (see
+ * `src/app/(dashboard)/purchase-orders/page.tsx`, gated via
+ * `hasFeature(plan, 'purchase_orders')`) and is therefore a normal,
+ * live Business-tier feature — it is NOT in `PENDING_FEATURES`.
+ *
+ * `barcode_label_printing` and `custom_role_permissions` still have no
+ * live UI entry point. `api_access` / `webhooks` (Enterprise-only) are
+ * intentionally out of scope for the customer-trust correction this
+ * module implements — Enterprise is a "Talk to Sales" custom
+ * negotiation, not a self-serve plan a customer can be misled by a
+ * checkout page into paying for sight-unseen.
  */
+
+/**
+ * Single shared source of truth for subscription feature flags that are
+ * catalogued (and priced into a plan) but do NOT yet have a live product
+ * surface a customer can actually use.
+ *
+ * WHY THIS EXISTS: TradeTrack is a financial/accountability app — a
+ * customer must never be led to believe they are paying for a feature
+ * that isn't actually usable yet. Every UI that renders a plan's feature
+ * list (the dashboard "Plans" tab's `PlanCard` and the public `/pricing`
+ * page, which both already render through the same shared `PlanCard`
+ * component) must consult this list and render an honest "Rolling out
+ * soon" treatment for anything in it, instead of presenting it as a
+ * normal, immediately-usable checkmark item.
+ *
+ * HOW TO "SHIP" A FEATURE: once a flag's real product surface is built
+ * and gated (see `hasFeature()` usage), remove its string from this
+ * array. Every consumer of `PENDING_FEATURES` re-derives its rendering
+ * from this single array, so removing the key is the ONLY change
+ * needed — no other component should hardcode its own copy of this
+ * list or its own "coming soon" logic.
+ *
+ * `custom_role_permissions` is deliberately NOT listed here — it has no
+ * scheduled implementation at all, so instead of implying a timeline it
+ * is removed entirely from the displayed Business-tier feature list
+ * (see `FALLBACK_PLANS` / `FEATURE_LABELS` in
+ * `src/components/subscriptions/plan-card.tsx`). This constant is only
+ * for features that ARE actively being built and are expected to ship —
+ * not a general-purpose "hide this feature" flag.
+ */
+export const PENDING_FEATURES: string[] = ["barcode_label_printing"];
+
+/** Whether `feature` is catalogued on a plan but not yet actually
+ *  usable in the product — i.e. it should render with a "Rolling out
+ *  soon" treatment rather than as a normal live checkmark item. */
+export function isPendingFeature(feature: string): boolean {
+  return PENDING_FEATURES.includes(feature);
+}
+
+/**
+ * Feature flags that must be hidden entirely from customer-facing plan
+ * benefit lists because they have NO scheduled implementation — unlike
+ * `PENDING_FEATURES`, these are not "coming soon", so showing any
+ * timeline-implying badge for them would itself be dishonest. The only
+ * correct customer-facing treatment is to not display them at all.
+ *
+ * This is a DISPLAY-ONLY concern. It intentionally does NOT touch:
+ *   - the `subscription_plans.features` JSONB column in the database
+ *     (migration 010's seeded catalog row still lists
+ *     `custom_role_permissions` for Business/Enterprise — left as-is,
+ *     since that's backend plan configuration, not customer-facing copy)
+ *   - `hasFeature()` / `FEATURE_MIN_TIER` / entitlement enforcement,
+ *     which continue to work exactly as before for any internal caller
+ *     that checks for this flag.
+ * Every UI that renders a plan's feature checklist (PlanCard's
+ * `getExclusiveFeatures()`, the Subscriptions page's Overview tab) must
+ * filter this list out before rendering — see `filterDisplayFeatures()`.
+ */
+export const HIDDEN_FEATURES: string[] = ["custom_role_permissions"];
+
+/** Removes any `HIDDEN_FEATURES` entries from `features` for
+ *  customer-facing display purposes only. Does not affect entitlement
+ *  checks (`hasFeature()`), which read the plan's raw `features` array
+ *  directly and are unaffected by this filter. */
+export function filterDisplayFeatures(features: string[]): string[] {
+  return features.filter((f) => !HIDDEN_FEATURES.includes(f));
+}
 
 export interface PlanLike {
   id: string;

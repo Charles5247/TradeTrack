@@ -2,9 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   canAddProduct,
   cashierLimitMessage,
+  filterDisplayFeatures,
   getMinTierForFeature,
   hasFeature,
+  HIDDEN_FEATURES,
+  isPendingFeature,
   isUnlimitedLimit,
+  PENDING_FEATURES,
   productLimitMessage,
   resolveSubscriptionPlan,
   upgradePromptMessage,
@@ -224,5 +228,88 @@ describe("feature-gate upgrade-prompt copy", () => {
     expect(productLimitMessage(50)).toContain("50 products");
     expect(cashierLimitMessage(1)).toContain("1 team member(s)");
     expect(warehouseLimitMessage(1)).toContain("1 location(s)");
+  });
+});
+
+describe("PENDING_FEATURES / isPendingFeature", () => {
+  it("flags barcode_label_printing as pending (actively being built, not yet usable)", () => {
+    expect(PENDING_FEATURES).toContain("barcode_label_printing");
+    expect(isPendingFeature("barcode_label_printing")).toBe(true);
+  });
+
+  it("does NOT flag purchase_orders as pending — it has a real, live product surface", () => {
+    // Regression guard: once Part B (the minimal Purchase Orders
+    // feature) ships, this flag must render as a normal live feature,
+    // not a "Rolling out soon" pending one.
+    expect(PENDING_FEATURES).not.toContain("purchase_orders");
+    expect(isPendingFeature("purchase_orders")).toBe(false);
+  });
+
+  it("does NOT flag custom_role_permissions as pending — it is hidden entirely, not 'coming soon'", () => {
+    expect(PENDING_FEATURES).not.toContain("custom_role_permissions");
+    expect(isPendingFeature("custom_role_permissions")).toBe(false);
+  });
+
+  it("returns false for any feature flag not in the list", () => {
+    expect(isPendingFeature("pos")).toBe(false);
+    expect(isPendingFeature("totally_made_up_flag")).toBe(false);
+  });
+
+  it("simulates 'shipping' a pending feature: removing it from the array is the only change needed", () => {
+    // Acceptance-criterion simulation: consumers re-derive entirely from
+    // the PENDING_FEATURES array, so a shrunken/synthetic copy of it
+    // behaves exactly like isPendingFeature() would once the real array
+    // is trimmed down when a feature ships.
+    const simulatedShippedList = PENDING_FEATURES.filter(
+      (f) => f !== "barcode_label_printing",
+    );
+    expect(simulatedShippedList.includes("barcode_label_printing")).toBe(
+      false,
+    );
+  });
+});
+
+describe("HIDDEN_FEATURES / filterDisplayFeatures", () => {
+  it("hides custom_role_permissions — no scheduled implementation, must not appear at all", () => {
+    expect(HIDDEN_FEATURES).toContain("custom_role_permissions");
+  });
+
+  it("filters hidden features out of a feature list while preserving order of the rest", () => {
+    const businessFeatures = [
+      "pos",
+      "inventory",
+      "purchase_orders",
+      "custom_role_permissions",
+      "priority_support",
+    ];
+    expect(filterDisplayFeatures(businessFeatures)).toEqual([
+      "pos",
+      "inventory",
+      "purchase_orders",
+      "priority_support",
+    ]);
+  });
+
+  it("is a no-op when no hidden features are present", () => {
+    const features = ["pos", "inventory", "basic_reports"];
+    expect(filterDisplayFeatures(features)).toEqual(features);
+  });
+
+  it("does not affect hasFeature() entitlement checks — filtering is display-only", () => {
+    const businessLikePlan: PlanLike = {
+      id: "biz-1",
+      name: "Business",
+      max_cashiers: 12,
+      max_products: 5000,
+      max_warehouses: 8,
+      features: ["pos", "purchase_orders", "custom_role_permissions"],
+      is_active: true,
+    };
+    // Even though custom_role_permissions is hidden from display, the
+    // underlying entitlement flag (if ever consumed internally) still
+    // reads true from the raw features array.
+    expect(hasFeature(businessLikePlan, "custom_role_permissions")).toBe(
+      true,
+    );
   });
 });

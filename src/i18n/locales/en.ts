@@ -863,6 +863,9 @@ export const en = {
     unlimited_products: "Unlimited products",
     talk_to_sales: "Talk to Sales",
     yearly_savings_line: "You'll save {savings}, billed at {yearly}/yr",
+    rolling_out_soon: "Rolling out soon",
+    rolling_out_soon_tooltip:
+      "This feature is actively being built and not yet available to use. You won't be charged extra for it — it will unlock automatically on your plan once it ships.",
     updated_success: "Subscription updated successfully",
     update_failed: "Failed to update subscription",
     add_plan: "Add Plan",
