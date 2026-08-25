@@ -9,6 +9,40 @@ first.
 
 ## [Unreleased]
 
+### Fixed
+- **Subscription plan data-consistency bug**: the public `/pricing` page
+  and the dashboard's Subscriptions ▸ Plans tab each wrote their own,
+  independent Supabase query for `subscription_plans`. `/pricing`
+  correctly filtered `is_active = true`; the dashboard's
+  `fetchSubscriptionData()` did not filter at all. This, combined with a
+  gap in migration `010`'s defensive legacy-plan deactivation (its
+  name-based fallback checked for `'Basic'`/`'Standard'` but omitted
+  `'Business'`), let a stray, non-canonical demo-seed row
+  (`supabase/seed/001_seed_data.sql`'s own independent "Business"
+  ₦20,000 row) stay `is_active = true` on any environment that had run
+  that seed file — producing a 6th, duplicate "Business" card on
+  `/pricing` and legacy "Basic"/"Standard" names on the dashboard.
+  Fixed by:
+  - extracting a single shared `getActiveSubscriptionPlans()` (plus a
+    separate, explicitly-named `getAllSubscriptionPlansForCatalogManagement()`
+    for `platform_owner`'s catalog-editing view) in the new
+    `src/lib/subscriptions/get-plans.ts`, imported by both `/pricing`
+    and the dashboard's Plans tab so the two surfaces can never diverge
+    again;
+  - migration `012_fix_stray_active_legacy_plans.sql`, closing the
+    `'Business'` gap in `010`'s deactivation fallback (never edits
+    already-applied migrations — see `010`'s own stated convention);
+  - `scripts/verify-subscription-plans.ts` (`npm run verify:plans`) — a
+    regression + consistency check asserting exactly 5 active plans
+    with exact names/prices, and that both surfaces' code path returns
+    identical data;
+  - unit tests in `src/lib/subscriptions/__tests__/get-plans.test.ts`;
+  - `docs/LOCAL_DEV_SETUP.md`, a new guide for getting a clean local
+    database (and a documented caveat about the demo seed file's
+    non-canonical plan rows).
+  No pricing figures or feature flags changed in this fix — purely a
+  data/query-consistency correction.
+
 ### Added
 - **Purchase Orders** (`purchase_orders` / `purchase_order_items` tables,
   migration `011_purchase_orders.sql`) — a minimal Business-tier feature:

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { FALLBACK_PLANS, type Plan } from "@/components/subscriptions/plan-card";
+import { getActiveSubscriptionPlans } from "@/lib/subscriptions/get-plans";
 import { PricingClient } from "./pricing-client";
 
 export const metadata: Metadata = {
@@ -26,26 +27,16 @@ export const revalidate = 0;
  * CTA: instead of an in-place upgrade mutation (which requires an
  * authenticated organization), each card links to
  * /signup?plan={planId} via PlanCard's `selectHref` prop.
+ *
+ * The actual query lives in `getActiveSubscriptionPlans()`
+ * (src/lib/subscriptions/get-plans.ts) — the SAME function the
+ * dashboard's Plans tab calls for `business_owner` — so this page
+ * cannot silently drift out of sync with the dashboard again.
  */
 async function getActivePlans(): Promise<Plan[]> {
-  try {
-    const supabase = await createClient();
-    if (!supabase) return FALLBACK_PLANS;
-
-    const { data, error } = await supabase
-      .from("subscription_plans")
-      .select("*")
-      .eq("is_active", true)
-      .order("price", { ascending: true });
-
-    if (error || !data || data.length === 0) {
-      return FALLBACK_PLANS;
-    }
-
-    return data as unknown as Plan[];
-  } catch {
-    return FALLBACK_PLANS;
-  }
+  const supabase = await createClient();
+  const plans = await getActiveSubscriptionPlans(supabase);
+  return plans ?? FALLBACK_PLANS;
 }
 
 export default async function PricingPage() {

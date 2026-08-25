@@ -50,7 +50,12 @@ yet — copy/paste each file's contents and run it):
 009_merchant_onboarding_virtual_accounts.sql    -- Zainpay virtual accounts + renewal fields
 010_five_tier_subscription_plans.sql            -- Free/Starter/Growth/Business/Enterprise
 011_purchase_orders.sql                         -- Purchase Orders (Business-tier feature)
+012_fix_stray_active_legacy_plans.sql           -- Closes a gap in 010's legacy-plan deactivation
 ```
+
+For local development (including a step-by-step "why your local
+`/pricing` page might show stale/duplicate plans" troubleshooting
+guide), see **[`docs/LOCAL_DEV_SETUP.md`](./LOCAL_DEV_SETUP.md)**.
 
 Optionally, run `supabase/seed/001_seed_data.sql` for demo data, then run
 `npm run setup:demo` (see below) to create matching Supabase Auth users —

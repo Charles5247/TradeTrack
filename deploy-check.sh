@@ -3,7 +3,7 @@
 # deploy-check.sh
 # ─────────────────────────────────────────────────────────────────────────────
 # Pre-deployment sanity gate for TradeTrack. Run this before deploying to
-# Vercel (or any other host) to catch environment, type, and build issues
+# Render (or any other host) to catch environment, type, and build issues
 # early.
 #
 # Usage:

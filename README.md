@@ -53,8 +53,9 @@ cp .env.example .env.local
 # Edit .env.local with your Supabase + Zainpay credentials
 
 # 3. Run Supabase migrations, in order (see docs/DEPLOYMENT.md §1 for the
-#    full list and Storage/Auth setup steps)
-#    supabase/migrations/001_initial_schema.sql ... 011_purchase_orders.sql
+#    full list and Storage/Auth setup steps, or docs/LOCAL_DEV_SETUP.md
+#    for the full local-dev walkthrough incl. `supabase db reset`)
+#    supabase/migrations/001_initial_schema.sql ... 012_fix_stray_active_legacy_plans.sql
 
 # 4. Create demo Supabase Auth users matching the seed data (required —
 #    the seed SQL only inserts profile rows, it does not create logins)
@@ -65,6 +66,11 @@ npm run dev
 ```
 
 Run `npm run verify:env` any time to confirm required env vars are set.
+Run `npm run verify:plans` any time to confirm your local
+`subscription_plans` table has exactly the 5 canonical active plans
+and that the public pricing page and dashboard Plans tab are reading
+from the exact same code path — see
+**[`docs/LOCAL_DEV_SETUP.md`](./docs/LOCAL_DEV_SETUP.md)** if it fails.
 
 ### Demo Credentials (development only, after `npm run setup:demo`)
 
@@ -142,6 +148,7 @@ Blueprint deploy, self-hosting alternative): **[`docs/DEPLOYMENT.md`](./docs/DEP
 | Doc | Covers |
 |---|---|
 | [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md) | Render deployment (current platform), Supabase setup, env vars, self-hosting |
+| [`docs/LOCAL_DEV_SETUP.md`](./docs/LOCAL_DEV_SETUP.md) | Local database setup, `supabase db reset`, `npm run verify:plans`, troubleshooting stale/duplicate plan data |
 | [`docs/DOWNLOAD_FLOW.md`](./docs/DOWNLOAD_FLOW.md) | `/download` page, Windows/Android shells, update-check API |
 | [`docs/SUBSCRIPTION_SYSTEM.md`](./docs/SUBSCRIPTION_SYSTEM.md) | 5-tier plans, feature-flag gating, legacy plans |
 | [`docs/CHANGELOG.md`](./docs/CHANGELOG.md) | What shipped, by feature milestone |
