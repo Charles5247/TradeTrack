@@ -11,6 +11,7 @@
     "seed:auth": "node scripts/seed-auth-users.mjs",
     "typecheck": "tsc --noEmit",
     "verify:env": "tsx scripts/verify-env.ts",
+    "verify:plans": "tsx scripts/verify-subscription-plans.ts",
     "deploy:check": "bash deploy-check.sh",
     "test": "vitest run",
     "test:watch": "vitest",

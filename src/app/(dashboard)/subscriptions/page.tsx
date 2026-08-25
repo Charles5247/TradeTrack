@@ -62,6 +62,10 @@ import {
   filterDisplayFeatures,
 } from "@/lib/subscriptions/plan-limits";
 import {
+  getActiveSubscriptionPlans,
+  getAllSubscriptionPlansForCatalogManagement,
+} from "@/lib/subscriptions/get-plans";
+import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -92,6 +96,15 @@ interface PaymentRecord {
 }
 
 // ── Data fetchers ─────────────────────────────────────────────
+// Plans query: the Plans tab has two different intents depending on
+// caller role (see get-plans.ts's module doc for the full rationale):
+//   - `business_owner` self-service plan selection must see ONLY the
+//     live, sellable catalog — the exact same
+//     `getActiveSubscriptionPlans()` the public /pricing page calls, so
+//     the two surfaces can never render different plan sets again.
+//   - `platform_owner` catalog management (add/edit/delete) must still
+//     see EVERY row, including inactive/legacy ones, via the explicitly
+//     named `getAllSubscriptionPlansForCatalogManagement()`.
 async function fetchSubscriptionData() {
   const supabase = createClient();
 
@@ -105,12 +118,13 @@ async function fetchSubscriptionData() {
 
     const { data: profile } = await supabase
       .from("users")
-      .select("organization_id")
+      .select("organization_id, role")
       .eq("id", user.id)
       .single();
 
     const orgId = profile?.organization_id;
-    if (!orgId) {
+    const role = (profile as { role?: string } | null)?.role;
+    if (!orgId && role !== "platform_owner") {
       return { subscription: null, plans: FALLBACK_PLANS, payments: [] };
     }
 
@@ -122,10 +136,10 @@ async function fetchSubscriptionData() {
       .limit(1)
       .maybeSingle();
 
-    const { data: plans } = await supabase
-      .from("subscription_plans")
-      .select("*")
-      .order("price", { ascending: true });
+    const plans =
+      role === "platform_owner"
+        ? await getAllSubscriptionPlansForCatalogManagement(supabase)
+        : await getActiveSubscriptionPlans(supabase);
 
     const { data: payments } = await supabase
       .from("payment_transactions")
@@ -136,7 +150,7 @@ async function fetchSubscriptionData() {
 
     return {
       subscription: subscription as any as Subscription | null,
-      plans: (plans as unknown as Plan[]) || FALLBACK_PLANS,
+      plans: plans || FALLBACK_PLANS,
       payments: (payments as any as PaymentRecord[]) || [],
       orgId: orgId ?? "",
     };
