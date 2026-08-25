@@ -19,8 +19,8 @@ type TranslationSet = typeof en;
 const translations: Record<Locale, TranslationSet> = {
   en,
   ha,
-  yo, // Currently mirrors English - see src/i18n/locales/yo.ts
-  ig, // Currently mirrors English - see src/i18n/locales/ig.ts
+  yo,
+  ig,
   pcm, // Currently mirrors English - see src/i18n/locales/pcm.ts
 };
 
