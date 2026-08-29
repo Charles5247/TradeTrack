@@ -312,19 +312,19 @@ export default function DashboardPage() {
                     >
                       <stop
                         offset="5%"
-                        stopColor="hsl(var(--primary))"
+                        stopColor="var(--primary)"
                         stopOpacity={0.2}
                       />
                       <stop
                         offset="95%"
-                        stopColor="hsl(var(--primary))"
+                        stopColor="var(--primary)"
                         stopOpacity={0}
                       />
                     </linearGradient>
                   </defs>
                   <CartesianGrid
                     strokeDasharray="3 3"
-                    stroke="hsl(var(--border))"
+                    stroke="var(--border)"
                   />
                   <XAxis
                     dataKey="date"
@@ -344,15 +344,15 @@ export default function DashboardPage() {
                       "Revenue",
                     ]}
                     contentStyle={{
-                      background: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
+                      background: "var(--card)",
+                      border: "1px solid var(--border)",
                       borderRadius: "8px",
                     }}
                   />
                   <Area
                     type="monotone"
                     dataKey="revenue"
-                    stroke="hsl(var(--primary))"
+                    stroke="var(--primary)"
                     strokeWidth={2}
                     fill="url(#revenueGrad)"
                   />

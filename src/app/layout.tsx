@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
@@ -11,7 +11,22 @@ import { I18nProvider } from "@/i18n";
 import { cookies } from "next/headers";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+// Retail design system typography (README §4.3): Space Grotesk for
+// headings/display, Inter for body, JetBrains Mono for numbers/SKUs/receipts.
+// Each is exposed as a CSS variable consumed by globals.css (--font-head,
+// --font-body, --font-mono) so the whole app can reference them via
+// `var(--font-head)` etc. without re-importing fonts per component.
+const inter = Inter({ subsets: ["latin"], variable: "--font-body" });
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-head",
+  weight: ["500", "600", "700"],
+});
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  weight: ["400", "500", "600"],
+});
 
 export const metadata: Metadata = {
   title: {
@@ -48,9 +63,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
+  // Matches Retail design tokens (README §4.1/4.2): --c-bg light / dark.
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0f172a" },
+    { media: "(prefers-color-scheme: light)", color: "#fafafa" },
+    { media: "(prefers-color-scheme: dark)", color: "#232529" },
   ],
 };
 
@@ -91,7 +107,10 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <body className={inter.className} suppressHydrationWarning>
+      <body
+        className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} ${inter.className}`}
+        suppressHydrationWarning
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
