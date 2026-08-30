@@ -12,9 +12,7 @@ import {
   CreditCard,
   Printer,
   Package,
-  AlertCircle,
   Check,
-  Barcode,
   Download,
   Usb,
   Bluetooth,
@@ -26,7 +24,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Kbd } from "@/components/ui/kbd";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Select,
   SelectContent,
@@ -34,7 +33,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { createClient } from "@/lib/supabase/client";
 import { formatCurrency } from "@/lib/utils/format";
@@ -422,25 +420,35 @@ function POSPageInner() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] gap-4 -m-4 lg:-m-6 p-4 lg:p-6">
+    <div
+      className="flex gap-5 p-5"
+      style={{ minHeight: "calc(100vh - var(--header-h))" }}
+    >
       {/* Left: Products */}
       <div className="flex-1 flex flex-col gap-4 min-w-0">
-        {/* Search & Warehouse */}
-        <div className="flex gap-3">
-          <div className="flex-1">
+        {/* Search & Warehouse — big-touch, README §9.2 */}
+        <div className="tt-stat flex flex-col gap-3.5 sm:flex-row sm:items-center">
+          <div className="relative flex-1">
+            <Search
+              className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 tt-muted"
+              strokeWidth={1.75}
+            />
             <Input
               ref={searchRef}
               placeholder={t.pos.search_product}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              leftIcon={<Search className="h-4 w-4" />}
+              className="h-[52px] pl-10 pr-14 text-base"
             />
+            <Kbd className="absolute right-3.5 top-1/2 -translate-y-1/2">
+              ⌘F2
+            </Kbd>
           </div>
           <Select
             value={isHydrated ? cart.warehouse_id : ""}
             onValueChange={cart.setWarehouse}
           >
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="h-[52px] w-full sm:w-56 text-sm">
               <SelectValue placeholder={t.pos.select_warehouse} />
             </SelectTrigger>
             <SelectContent>
@@ -458,18 +466,21 @@ function POSPageInner() {
           {productsLoading ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {[...Array(8)].map((_, i) => (
-                <Skeleton key={i} className="h-32 rounded-lg" />
+                <Skeleton key={i} className="h-40 rounded-[var(--radius-lg)]" />
               ))}
             </div>
           ) : products.length === 0 ? (
-            <div className="h-48 flex flex-col items-center justify-center text-muted-foreground gap-3">
-              <Package className="h-12 w-12 opacity-30" />
-              <p className="text-sm">
-                {searchQuery
-                  ? t.pos.no_products_found
-                  : t.pos.select_warehouse_prompt}
-              </p>
-            </div>
+            <EmptyState
+              icon={Package}
+              title={
+                searchQuery ? t.pos.no_products_found : t.pos.select_warehouse_prompt
+              }
+              body={
+                searchQuery
+                  ? "Try a different search term or scan a barcode."
+                  : "Pick a warehouse above to load its available stock."
+              }
+            />
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {products.map(
@@ -477,35 +488,48 @@ function POSPageInner() {
                   <button
                     key={product.id}
                     onClick={() => handleAddToCart(product)}
-                    className="text-left border border-border rounded-lg p-3 hover:bg-accent hover:border-primary/50 transition-all group bg-card"
+                    className="tt-stat text-left transition-shadow hover:shadow-md hover:border-primary/40"
                   >
-                    <div className="w-full aspect-square bg-muted rounded-md mb-2 flex items-center justify-center overflow-hidden">
+                    <div
+                      className="tt-placeholder mb-2.5 flex aspect-square w-full items-center justify-center overflow-hidden rounded-[var(--radius)]"
+                      style={{ background: "var(--c-surfaceAlt)" }}
+                    >
                       {product.image_url ? (
                         <Image
                           src={product.image_url}
                           alt={product.name}
                           width={80}
                           height={80}
-                          className="object-cover w-full h-full"
+                          className="h-full w-full object-cover"
                         />
                       ) : (
-                        <Package className="h-6 w-6 text-muted-foreground" />
+                        <Package className="h-6 w-6 tt-faint" strokeWidth={1.75} />
                       )}
                     </div>
-                    <p className="text-xs font-medium truncate">
+                    <p
+                      className="text-[13px] font-semibold leading-snug"
+                      style={{
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                        minHeight: 34,
+                      }}
+                    >
                       {product.name}
                     </p>
-                    <p className="text-sm font-bold text-primary mt-1">
-                      {formatCurrency(product.selling_price)}
-                    </p>
-                    <div className="flex items-center justify-between mt-1">
-                      <span
-                        className={`text-xs ${product.available_quantity <= 5 ? "text-amber-500" : "text-muted-foreground"}`}
-                      >
-                        {product.available_quantity} {t.pos.units_left}
+                    <div className="mt-1.5 flex items-center justify-between">
+                      <span className="tt-mono tt-tabular text-[15px] font-bold text-primary">
+                        {formatCurrency(product.selling_price)}
                       </span>
-                      {product.available_quantity <= 5 && (
-                        <AlertCircle className="h-3 w-3 text-amber-500" />
+                      {product.available_quantity <= 5 ? (
+                        <Badge variant="warning" className="text-[11px] py-0">
+                          {product.available_quantity} {t.pos.units_left}
+                        </Badge>
+                      ) : (
+                        <span className="text-[11px] tt-muted">
+                          {product.available_quantity} {t.pos.units_left}
+                        </span>
                       )}
                     </div>
                   </button>
@@ -516,13 +540,16 @@ function POSPageInner() {
         </div>
       </div>
 
-      {/* Right: Cart */}
-      <div className="w-80 xl:w-96 flex flex-col bg-card border border-border rounded-xl overflow-hidden shrink-0">
+      {/* Right: Cart — sticky, README §9.2 "sticky cart panel" */}
+      <div
+        className="tt-stat sticky top-0 flex w-80 shrink-0 flex-col overflow-hidden p-0 xl:w-96"
+        style={{ maxHeight: "calc(100vh - var(--header-h) - 40px)" }}
+      >
         {/* Cart Header */}
-        <div className="p-4 border-b border-border flex items-center justify-between">
+        <div className="flex items-center justify-between border-b border-border p-4">
           <div className="flex items-center gap-2">
-            <ShoppingCart className="h-4 w-4" />
-            <span className="font-semibold">{t.pos.cart}</span>
+            <ShoppingCart className="h-4 w-4" strokeWidth={1.75} />
+            <span className="tt-section-title text-base">{t.pos.cart}</span>
             {isHydrated && cart.items.length > 0 && (
               <Badge variant="secondary">{cart.items.length}</Badge>
             )}
@@ -534,7 +561,7 @@ function POSPageInner() {
               onClick={cart.clearCart}
               className="text-destructive hover:text-destructive"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-4 w-4" strokeWidth={1.75} />
             </Button>
           )}
         </div>
@@ -542,13 +569,13 @@ function POSPageInner() {
         {/* Cart Items */}
         <div className="flex-1 overflow-y-auto p-3 space-y-2">
           {!isHydrated ? (
-            <div className="h-32 flex flex-col items-center justify-center text-muted-foreground">
-              <Loader2 className="h-8 w-8 opacity-30 mb-2 animate-spin" />
+            <div className="flex h-32 flex-col items-center justify-center tt-muted">
+              <Loader2 className="mb-2 h-8 w-8 animate-spin opacity-30" />
               <p className="text-sm">Loading cart…</p>
             </div>
           ) : cart.items.length === 0 ? (
-            <div className="h-32 flex flex-col items-center justify-center text-muted-foreground">
-              <ShoppingCart className="h-8 w-8 opacity-30 mb-2" />
+            <div className="flex h-32 flex-col items-center justify-center tt-muted">
+              <ShoppingCart className="mb-2 h-8 w-8 opacity-30" strokeWidth={1.75} />
               <p className="text-sm">{t.pos.empty_cart}</p>
               <p className="text-xs">{t.pos.click_products_to_add}</p>
             </div>
@@ -556,13 +583,14 @@ function POSPageInner() {
             cart.items.map((item: CartItem) => (
               <div
                 key={item.product.id}
-                className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg"
+                className="flex items-center gap-2 rounded-[var(--radius)] p-2"
+                style={{ background: "var(--c-surfaceAlt)" }}
               >
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium truncate">
                     {item.product.name}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="tt-mono text-xs tt-muted">
                     {formatCurrency(item.unit_price)}
                   </p>
                 </div>
@@ -574,9 +602,9 @@ function POSPageInner() {
                       cart.updateQuantity(item.product.id, item.quantity - 1)
                     }
                   >
-                    <Minus className="h-3 w-3" />
+                    <Minus className="h-3 w-3" strokeWidth={1.75} />
                   </Button>
-                  <span className="w-7 text-center text-sm font-medium">
+                  <span className="tt-mono tt-tabular w-7 text-center text-sm font-medium">
                     {item.quantity}
                   </span>
                   <Button
@@ -586,19 +614,19 @@ function POSPageInner() {
                       cart.updateQuantity(item.product.id, item.quantity + 1)
                     }
                   >
-                    <Plus className="h-3 w-3" />
+                    <Plus className="h-3 w-3" strokeWidth={1.75} />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon-sm"
                     onClick={() => cart.removeItem(item.product.id)}
-                    className="text-destructive hover:text-destructive ml-1"
+                    className="ml-1 text-destructive hover:text-destructive"
                   >
-                    <X className="h-3 w-3" />
+                    <X className="h-3 w-3" strokeWidth={1.75} />
                   </Button>
                 </div>
-                <div className="text-right shrink-0 w-16">
-                  <p className="text-xs font-semibold">
+                <div className="w-16 shrink-0 text-right">
+                  <p className="tt-mono tt-tabular text-xs font-semibold">
                     {formatCurrency(item.unit_price * item.quantity)}
                   </p>
                 </div>
@@ -608,7 +636,7 @@ function POSPageInner() {
         </div>
 
         {/* Checkout Panel */}
-        <div className="p-4 border-t border-border space-y-3">
+        <div className="space-y-3 border-t border-border p-4">
           {/* Customer */}
           <div className="grid grid-cols-2 gap-2">
             <Input
@@ -649,8 +677,10 @@ function POSPageInner() {
           {/* Optional payment receipt upload */}
           <div className="space-y-1">
             {paymentReceiptUrl ? (
-              <div className="flex items-center justify-between rounded-md border border-border p-2 text-xs">
-                <span className="text-green-600">{t.pos.receipt_uploaded}</span>
+              <div className="flex items-center justify-between rounded-[var(--radius)] border border-border p-2 text-xs">
+                <span style={{ color: "var(--c-success)" }}>
+                  {t.pos.receipt_uploaded}
+                </span>
                 <Button
                   size="sm"
                   variant="ghost"
@@ -661,11 +691,11 @@ function POSPageInner() {
                 </Button>
               </div>
             ) : (
-              <label className="flex items-center gap-2 rounded-md border border-dashed border-border p-2 text-xs cursor-pointer hover:bg-muted/50">
+              <label className="flex cursor-pointer items-center gap-2 rounded-[var(--radius)] border border-dashed border-border p-2 text-xs hover:bg-accent">
                 {isUploadingReceipt ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <Upload className="h-4 w-4" />
+                  <Upload className="h-4 w-4" strokeWidth={1.75} />
                 )}
                 <span>{t.pos.upload_receipt}</span>
                 <input
@@ -712,29 +742,34 @@ function POSPageInner() {
 
           {/* Totals */}
           <div className="space-y-1 text-sm">
-            <div className="flex justify-between text-muted-foreground">
+            <div className="flex justify-between tt-muted">
               <span>{t.pos.subtotal}</span>
-              <span>{formatCurrency(subtotal)}</span>
+              <span className="tt-tabular">{formatCurrency(subtotal)}</span>
             </div>
             {cart.discount > 0 && (
-              <div className="flex justify-between text-green-600">
+              <div
+                className="flex justify-between"
+                style={{ color: "var(--c-success)" }}
+              >
                 <span>
                   {t.pos.discount} ({cart.discount}%)
                 </span>
-                <span>-{formatCurrency(discountAmount)}</span>
+                <span className="tt-tabular">-{formatCurrency(discountAmount)}</span>
               </div>
             )}
             {cart.tax_rate > 0 && (
-              <div className="flex justify-between text-muted-foreground">
+              <div className="flex justify-between tt-muted">
                 <span>
                   {t.pos.tax} ({cart.tax_rate}%)
                 </span>
-                <span>{formatCurrency(taxAmount)}</span>
+                <span className="tt-tabular">{formatCurrency(taxAmount)}</span>
               </div>
             )}
-            <div className="flex justify-between font-bold text-base border-t border-border pt-2">
+            <div className="flex justify-between border-t border-border pt-2 text-base font-bold">
               <span>{t.common.total}</span>
-              <span className="text-primary">{formatCurrency(total)}</span>
+              <span className="tt-tabular text-primary">
+                {formatCurrency(total)}
+              </span>
             </div>
           </div>
 
@@ -746,19 +781,22 @@ function POSPageInner() {
               value={amountPaid}
               onChange={(e) => setAmountPaid(e.target.value)}
               placeholder={total.toString()}
-              className="h-9"
+              className="h-9 tt-tabular"
             />
             {paid > 0 && paid >= total && (
-              <p className="text-xs text-green-600 flex items-center gap-1">
-                <Check className="h-3 w-3" />
+              <p
+                className="flex items-center gap-1 text-xs"
+                style={{ color: "var(--c-success)" }}
+              >
+                <Check className="h-3 w-3" strokeWidth={1.75} />
                 {t.pos.change}: {formatCurrency(change)}
               </p>
             )}
           </div>
 
-          {/* Complete Sale Button */}
+          {/* Complete Sale Button — README §9.2 big-touch primary CTA */}
           <Button
-            className="w-full h-10"
+            className="h-[var(--btn-h)] w-full text-base"
             onClick={handleCheckout}
             disabled={
               !isHydrated ||
@@ -771,7 +809,7 @@ function POSPageInner() {
               <>{t.pos.processing}</>
             ) : (
               <>
-                <CreditCard className="h-4 w-4 mr-2" />
+                <CreditCard className="h-4 w-4 mr-2" strokeWidth={1.75} />
                 {t.pos.complete_sale}
               </>
             )}
@@ -781,17 +819,26 @@ function POSPageInner() {
 
       {/* Receipt Modal */}
       {showReceipt && lastSale && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 no-print">
-          <div className="bg-card rounded-xl shadow-2xl w-full max-w-sm p-6">
-            <div className="text-center mb-6">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Check className="h-6 w-6 text-green-600" />
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 no-print"
+          style={{ background: "color-mix(in oklch, var(--c-text), transparent 50%)" }}
+        >
+          <div className="tt-shadow-2 w-full max-w-sm rounded-[var(--radius-lg)] bg-card p-6">
+            <div className="mb-6 text-center">
+              <div
+                className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full"
+                style={{
+                  background: "color-mix(in oklch, var(--c-success), transparent 85%)",
+                  color: "var(--c-success)",
+                }}
+              >
+                <Check className="h-6 w-6" strokeWidth={1.75} />
               </div>
-              <h3 className="font-bold text-lg">{t.pos.sale_complete}</h3>
-              <p className="text-sm text-muted-foreground">
+              <h3 className="tt-head text-lg">{t.pos.sale_complete}</h3>
+              <p className="text-sm tt-muted">
                 {t.pos.invoice_label}: {String(lastSale.invoice_number)}
               </p>
-              <p className="text-2xl font-bold text-primary mt-2">
+              <p className="tt-tabular mt-2 text-2xl font-bold text-primary">
                 {formatCurrency(Number(lastSale.total))}
               </p>
             </div>
@@ -822,14 +869,25 @@ function POSPageInner() {
                 supported (e.g. iPhone Safari), since there's nothing useful
                 to offer there beyond the browser print/PDF above. */}
             {(printer.usbSupported || printer.bluetoothSupported) && (
-              <div className="mb-3 border rounded-lg p-3 bg-muted/30">
+              <div
+                className="mb-3 rounded-[var(--radius)] border border-border p-3"
+                style={{ background: "var(--c-surfaceAlt)" }}
+              >
                 {printer.isConnected ? (
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 text-sm min-w-0">
                       {printer.transport === "usb" ? (
-                        <Usb className="h-4 w-4 shrink-0 text-green-600" />
+                        <Usb
+                          className="h-4 w-4 shrink-0"
+                          style={{ color: "var(--c-success)" }}
+                          strokeWidth={1.75}
+                        />
                       ) : (
-                        <Bluetooth className="h-4 w-4 shrink-0 text-green-600" />
+                        <Bluetooth
+                          className="h-4 w-4 shrink-0"
+                          style={{ color: "var(--c-success)" }}
+                          strokeWidth={1.75}
+                        />
                       )}
                       <span className="truncate">{printer.deviceName}</span>
                     </div>

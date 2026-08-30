@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useMemo, useState } from "react";
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
   ShoppingCart,
@@ -10,28 +11,18 @@ import {
   XCircle,
   Users,
   ArrowLeftRight,
-  DollarSign,
+  Download,
   RefreshCw,
+  BarChart3,
 } from "lucide-react";
 import { useRealtimeSync } from "@/hooks/use-realtime-sync";
 import { Button } from "@/components/ui/button";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-import { StatsCard } from "@/components/dashboard/stats-card";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { StatCard } from "@/components/ui/stat-card";
+import { SalesChart, type SalesChartPoint } from "@/components/ui/sales-chart";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/ui/error-state";
+import { Segmented } from "@/components/ui/segmented";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { createClient } from "@/lib/supabase/client";
@@ -39,6 +30,8 @@ import { formatCurrency, formatRelativeTime } from "@/lib/utils/format";
 import { useAuthStore } from "@/store";
 import { useI18n } from "@/i18n";
 import type { Sale } from "@/types";
+
+type RangeKey = "today" | "week" | "month";
 
 async function fetchDashboardData() {
   const supabase = createClient();
@@ -51,6 +44,9 @@ async function fetchDashboardData() {
   const weekStart = new Date(
     today.getTime() - 7 * 24 * 60 * 60 * 1000,
   ).toISOString();
+  const prevWeekStart = new Date(
+    today.getTime() - 14 * 24 * 60 * 60 * 1000,
+  ).toISOString();
   const monthStart = new Date(
     today.getFullYear(),
     today.getMonth(),
@@ -60,6 +56,7 @@ async function fetchDashboardData() {
   const [
     todaySales,
     weeklySales,
+    prevWeeklySales,
     monthlySales,
     products,
     allInventory,
@@ -67,6 +64,7 @@ async function fetchDashboardData() {
     pendingTransfers,
     recentSales,
     revenueData,
+    prevRevenueData,
   ] = await Promise.all([
     supabase
       .from("sales")
@@ -81,10 +79,15 @@ async function fetchDashboardData() {
     supabase
       .from("sales")
       .select("total")
+      .gte("created_at", prevWeekStart)
+      .lt("created_at", weekStart)
+      .eq("status", "completed"),
+    supabase
+      .from("sales")
+      .select("total")
       .gte("created_at", monthStart)
       .eq("status", "completed"),
     supabase.from("products").select("id").eq("status", "active"),
-    // Fixed: fetch all inventory rows with quantity + min_stock_level
     supabase.from("inventory").select("id, quantity, min_stock_level"),
     supabase
       .from("vendor_transactions")
@@ -97,58 +100,92 @@ async function fetchDashboardData() {
         "id,invoice_number,total,payment_method,status,created_at,cashier_id",
       )
       .order("created_at", { ascending: false })
-      .limit(8),
+      .limit(6),
     supabase
       .from("sales")
       .select("created_at,total")
       .gte("created_at", weekStart)
       .eq("status", "completed")
       .order("created_at", { ascending: true }),
+    supabase
+      .from("sales")
+      .select("created_at,total")
+      .gte("created_at", prevWeekStart)
+      .lt("created_at", weekStart)
+      .eq("status", "completed")
+      .order("created_at", { ascending: true }),
   ]);
 
-  const todayRevenue = (todaySales.data || []).reduce(
-    (s, r) => s + (r.total || 0),
-    0,
-  );
-  const weeklyRevenue = (weeklySales.data || []).reduce(
-    (s, r) => s + (r.total || 0),
-    0,
-  );
-  const monthlyRevenue = (monthlySales.data || []).reduce(
-    (s, r) => s + (r.total || 0),
-    0,
-  );
+  // Surface the first query error (if any) so the page can render a real
+  // ErrorState instead of silently showing zeros.
+  const firstError = [
+    todaySales,
+    weeklySales,
+    prevWeeklySales,
+    monthlySales,
+    products,
+    allInventory,
+    pendingVendors,
+    pendingTransfers,
+    recentSales,
+    revenueData,
+    prevRevenueData,
+  ].find((r) => r.error)?.error;
+  if (firstError) throw new Error(firstError.message);
+
+  const sum = (rows: { total: number }[] | null) =>
+    (rows || []).reduce((s, r) => s + (r.total || 0), 0);
+
+  const todayRevenue = sum(todaySales.data);
+  const weeklyRevenue = sum(weeklySales.data);
+  const prevWeeklyRevenue = sum(prevWeeklySales.data);
+  const monthlyRevenue = sum(monthlySales.data);
   const pendingDebt = (pendingVendors.data || []).reduce(
     (s, r) => s + ((r.total_value || 0) - (r.amount_paid || 0)),
     0,
   );
 
-  // Fixed low/out of stock calculation
   const inventoryRows = allInventory.data || [];
   const outOfStockCount = inventoryRows.filter((r) => r.quantity === 0).length;
   const lowStockCount = inventoryRows.filter(
     (r) => r.quantity > 0 && r.quantity <= (r.min_stock_level || 5),
   ).length;
 
-  // Process revenue chart data by day
-  const dayMap: Record<string, number> = {};
-  (revenueData.data || []).forEach((sale) => {
-    const day = new Date(sale.created_at).toLocaleDateString("en-NG", {
-      weekday: "short",
-    });
-    dayMap[day] = (dayMap[day] || 0) + sale.total;
-  });
+  // Build a day-by-day series for the current week and the previous week so
+  // <SalesChart> can render the dashed comparison line.
+  const dayLabel = (d: string) =>
+    new Date(d).toLocaleDateString("en-NG", { weekday: "short" });
 
-  const chartData = Object.entries(dayMap).map(([date, revenue]) => ({
-    date,
-    revenue,
-  }));
+  const currentMap: Record<string, number> = {};
+  (revenueData.data || []).forEach((sale) => {
+    const day = dayLabel(sale.created_at);
+    currentMap[day] = (currentMap[day] || 0) + sale.total;
+  });
+  const prevMap: Record<string, number> = {};
+  (prevRevenueData.data || []).forEach((sale) => {
+    const day = dayLabel(sale.created_at);
+    prevMap[day] = (prevMap[day] || 0) + sale.total;
+  });
+  const dayOrder = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const chartData: SalesChartPoint[] = dayOrder
+    .filter((d) => currentMap[d] !== undefined || prevMap[d] !== undefined)
+    .map((d) => ({
+      label: d,
+      value: currentMap[d] || 0,
+      previous: prevMap[d] || 0,
+    }));
+
+  const weeklyDelta =
+    prevWeeklyRevenue > 0
+      ? ((weeklyRevenue - prevWeeklyRevenue) / prevWeeklyRevenue) * 100
+      : null;
 
   return {
     stats: {
       today_sales: todaySales.data?.length || 0,
       today_revenue: todayRevenue,
       weekly_revenue: weeklyRevenue,
+      weekly_delta: weeklyDelta,
       monthly_revenue: monthlyRevenue,
       total_products: products.data?.length || 0,
       low_stock_count: lowStockCount,
@@ -164,7 +201,8 @@ async function fetchDashboardData() {
 export default function DashboardPage() {
   const { user } = useAuthStore();
   const { t } = useI18n();
-  const { data, isLoading, isFetching, refetch } = useQuery({
+  const [range, setRange] = useState<RangeKey>("week");
+  const { data, isLoading, isFetching, isError, error, refetch } = useQuery({
     queryKey: ["dashboard"],
     queryFn: fetchDashboardData,
     refetchInterval: 60000,
@@ -179,310 +217,290 @@ export default function DashboardPage() {
   const recentSales = data?.recentSales || [];
   const chartData = data?.chartData || [];
 
+  const revenueForRange = useMemo(() => {
+    if (!stats) return 0;
+    if (range === "today") return stats.today_revenue;
+    if (range === "month") return stats.monthly_revenue;
+    return stats.weekly_revenue;
+  }, [stats, range]);
+
+  const firstName = user?.full_name?.split(" ")[0] ?? "";
+  const greeting = t.dashboard.greeting
+    .replace("{time}", getGreeting(t))
+    .replace("{name}", firstName);
+
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            {t.dashboard.greeting
-              .replace("{time}", getGreeting(t))
-              .replace("{name}", user?.full_name?.split(" ")[0] ?? "")}{" "}
-            👋
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {t.dashboard.subtitle}
-          </p>
+          <h1 className="tt-page-title">{greeting}</h1>
+          <p className="tt-muted text-sm mt-1">{t.dashboard.subtitle}</p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => refetch()}
-          disabled={isFetching}
-          title="Pull the latest synced data now"
-        >
-          <RefreshCw
-            className={`h-4 w-4 mr-1.5 ${isFetching ? "animate-spin" : ""}`}
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm">
+            <Download className="h-4 w-4 mr-1.5" strokeWidth={1.75} />
+            Export
+          </Button>
+          <Button size="sm" asChild>
+            <Link href="/pos">
+              <ShoppingCart className="h-4 w-4 mr-1.5" strokeWidth={1.75} />
+              Open POS
+            </Link>
+          </Button>
+        </div>
+      </div>
+
+      {isError ? (
+        <ErrorState
+          body={
+            error instanceof Error
+              ? error.message
+              : "We couldn't load your dashboard data."
+          }
+          onRetry={() => refetch()}
+        />
+      ) : (
+        <>
+          {/* Range filter */}
+          <Segmented
+            value={range}
+            onChange={setRange}
+            options={[
+              { value: "today", label: "Today" },
+              { value: "week", label: "This week" },
+              { value: "month", label: "This month" },
+            ]}
           />
-          Refresh
-        </Button>
-      </div>
 
-      {/* Stats Grid */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title={t.dashboard.today_sales}
-          value={stats ? stats.today_sales : 0}
-          subtitle={formatCurrency(stats?.today_revenue || 0)}
-          icon={ShoppingCart}
-          iconColor="text-blue-600"
-          iconBg="bg-blue-100 dark:bg-blue-900/30"
-          loading={isLoading}
-        />
-        <StatsCard
-          title={t.dashboard.weekly_revenue}
-          value={formatCurrency(stats?.weekly_revenue || 0)}
-          icon={TrendingUp}
-          iconColor="text-green-600"
-          iconBg="bg-green-100 dark:bg-green-900/30"
-          loading={isLoading}
-        />
-        <StatsCard
-          title={t.dashboard.monthly_revenue}
-          value={formatCurrency(stats?.monthly_revenue || 0)}
-          icon={DollarSign}
-          iconColor="text-purple-600"
-          iconBg="bg-purple-100 dark:bg-purple-900/30"
-          loading={isLoading}
-        />
-        <StatsCard
-          title={t.dashboard.total_products}
-          value={stats?.total_products || 0}
-          icon={Package}
-          iconColor="text-indigo-600"
-          iconBg="bg-indigo-100 dark:bg-indigo-900/30"
-          loading={isLoading}
-        />
-      </div>
-
-      {/* Alert Row */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title={t.dashboard.low_stock}
-          value={stats?.low_stock_count || 0}
-          subtitle={t.dashboard.need_restocking}
-          icon={AlertTriangle}
-          iconColor="text-amber-600"
-          iconBg="bg-amber-100 dark:bg-amber-900/30"
-          variant={stats?.low_stock_count ? "warning" : "default"}
-          loading={isLoading}
-        />
-        <StatsCard
-          title={t.dashboard.out_of_stock}
-          value={stats?.out_of_stock_count || 0}
-          subtitle={t.dashboard.requires_attention}
-          icon={XCircle}
-          iconColor="text-red-600"
-          iconBg="bg-red-100 dark:bg-red-900/30"
-          variant={stats?.out_of_stock_count ? "danger" : "default"}
-          loading={isLoading}
-        />
-        <StatsCard
-          title={t.dashboard.pending_debts}
-          value={formatCurrency(stats?.pending_vendor_debts || 0)}
-          subtitle={t.dashboard.awaiting_payment}
-          icon={Users}
-          iconColor="text-orange-600"
-          iconBg="bg-orange-100 dark:bg-orange-900/30"
-          variant={stats?.pending_vendor_debts ? "warning" : "default"}
-          loading={isLoading}
-        />
-        <StatsCard
-          title={t.dashboard.pending_transfers}
-          value={stats?.pending_transfers || 0}
-          subtitle={t.dashboard.warehouse_transfers}
-          icon={ArrowLeftRight}
-          iconColor="text-cyan-600"
-          iconBg="bg-cyan-100 dark:bg-cyan-900/30"
-          loading={isLoading}
-        />
-      </div>
-
-      {/* Charts Row */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Revenue Chart */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>{t.dashboard.revenue_chart}</CardTitle>
-            <CardDescription>{t.dashboard.revenue_chart_desc}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-64 w-full" />
-            ) : (
-              <ResponsiveContainer width="100%" height={250}>
-                <AreaChart data={chartData}>
-                  <defs>
-                    <linearGradient
-                      id="revenueGrad"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop
-                        offset="5%"
-                        stopColor="var(--primary)"
-                        stopOpacity={0.2}
-                      />
-                      <stop
-                        offset="95%"
-                        stopColor="var(--primary)"
-                        stopOpacity={0}
-                      />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="var(--border)"
-                  />
-                  <XAxis
-                    dataKey="date"
-                    tick={{ fontSize: 12 }}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 12 }}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(v) => `₦${(v / 1000).toFixed(0)}k`}
-                  />
-                  <Tooltip
-                    formatter={(value) => [
-                      formatCurrency(Number(value)),
-                      "Revenue",
-                    ]}
-                    contentStyle={{
-                      background: "var(--card)",
-                      border: "1px solid var(--border)",
-                      borderRadius: "8px",
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="var(--primary)"
-                    strokeWidth={2}
-                    fill="url(#revenueGrad)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Recent Transactions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">
-              {t.dashboard.recent_transactions}
-            </CardTitle>
-            <CardDescription>
-              {t.dashboard.recent_transactions_desc}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            {isLoading ? (
-              <div className="space-y-3 p-4">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="flex gap-3">
-                    <Skeleton className="h-8 w-8 rounded-full" />
-                    <div className="flex-1 space-y-1">
-                      <Skeleton className="h-3 w-24" />
-                      <Skeleton className="h-3 w-16" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : recentSales.length === 0 ? (
-              <div className="p-6 text-center">
-                <ShoppingCart className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">
-                  {t.dashboard.no_sales_today}
-                </p>
-              </div>
-            ) : (
-              <div className="divide-y">
-                {recentSales.slice(0, 6).map((sale: Partial<Sale>) => (
-                  <div
-                    key={sale.id}
-                    className="flex items-center gap-3 px-4 py-3"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                      <ShoppingCart className="h-3 w-3 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
-                        {sale.invoice_number}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {sale.created_at
-                          ? formatRelativeTime(sale.created_at)
-                          : ""}
-                      </p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-sm font-semibold">
-                        {formatCurrency(sale.total || 0)}
-                      </p>
-                      <Badge
-                        variant={
-                          sale.status === "completed" ? "success" : "pending"
-                        }
-                        className="text-xs py-0"
-                      >
-                        {sale.status}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t.dashboard.quick_actions}</CardTitle>
-          <CardDescription>{t.dashboard.quick_actions_desc}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {[
-              {
-                href: "/pos",
-                icon: ShoppingCart,
-                label: t.dashboard.new_sale,
-                color: "blue",
-              },
-              {
-                href: "/inventory",
-                icon: Package,
-                label: t.dashboard.stock_in,
-                color: "green",
-              },
-              {
-                href: "/transfers",
-                icon: ArrowLeftRight,
-                label: t.nav.transfers,
-                color: "purple",
-              },
-              {
-                href: "/reports",
-                icon: TrendingUp,
-                label: t.nav.reports,
-                color: "amber",
-              },
-            ].map(({ href, icon: Icon, label, color }) => (
-              <a
-                key={href}
-                href={href}
-                className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:bg-accent transition-colors text-center group"
-              >
-                <div
-                  className={`w-10 h-10 rounded-lg bg-${color}-100 dark:bg-${color}-900/30 flex items-center justify-center group-hover:scale-105 transition-transform`}
-                >
-                  <Icon className={`h-5 w-5 text-${color}-600`} />
-                </div>
-                <span className="text-sm font-medium">{label}</span>
-              </a>
-            ))}
+          {/* Stats Grid */}
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard
+              label={
+                range === "today"
+                  ? t.dashboard.today_sales
+                  : range === "month"
+                    ? t.dashboard.monthly_revenue
+                    : t.dashboard.weekly_revenue
+              }
+              value={formatCurrency(revenueForRange)}
+              delta={
+                range === "week" && stats?.weekly_delta != null
+                  ? `${stats.weekly_delta >= 0 ? "+" : ""}${stats.weekly_delta.toFixed(1)}%`
+                  : undefined
+              }
+              deltaDir={
+                stats?.weekly_delta != null
+                  ? stats.weekly_delta >= 0
+                    ? "up"
+                    : "down"
+                  : undefined
+              }
+              sub={range === "week" ? "vs. last week" : undefined}
+              icon={TrendingUp}
+              loading={isLoading}
+            />
+            <StatCard
+              label={t.dashboard.today_sales}
+              value={stats ? stats.today_sales : 0}
+              sub={formatCurrency(stats?.today_revenue || 0)}
+              icon={ShoppingCart}
+              loading={isLoading}
+            />
+            <StatCard
+              label={t.dashboard.total_products}
+              value={stats?.total_products || 0}
+              icon={Package}
+              loading={isLoading}
+            />
+            <StatCard
+              label={t.dashboard.pending_debts}
+              value={formatCurrency(stats?.pending_vendor_debts || 0)}
+              sub={t.dashboard.awaiting_payment}
+              icon={Users}
+              loading={isLoading}
+            />
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Alert Row */}
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2">
+            <StatCard
+              label={t.dashboard.low_stock}
+              value={stats?.low_stock_count || 0}
+              sub={t.dashboard.need_restocking}
+              icon={AlertTriangle}
+              loading={isLoading}
+            />
+            <StatCard
+              label={t.dashboard.out_of_stock}
+              value={stats?.out_of_stock_count || 0}
+              sub={t.dashboard.requires_attention}
+              icon={XCircle}
+              loading={isLoading}
+            />
+          </div>
+
+          {/* Charts Row */}
+          <div className="grid gap-4 lg:grid-cols-3">
+            {/* Sales Chart */}
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <div className="tt-eyebrow mb-1">Sales overview</div>
+                <CardTitle className="tt-section-title">
+                  {t.dashboard.revenue_chart}
+                </CardTitle>
+                <CardDescription>{t.dashboard.revenue_chart_desc}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <Skeleton className="h-64 w-full" />
+                ) : chartData.length === 0 ? (
+                  <EmptyState
+                    icon={BarChart3}
+                    title="No sales yet this week"
+                    body="Once sales come in, your revenue trend will show up here."
+                  />
+                ) : (
+                  <SalesChart data={chartData} height={260} />
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Recent Transactions */}
+            <Card>
+              <CardHeader>
+                <div className="tt-eyebrow mb-1">Live activity</div>
+                <CardTitle className="tt-section-title text-base">
+                  {t.dashboard.recent_transactions}
+                </CardTitle>
+                <CardDescription>
+                  {t.dashboard.recent_transactions_desc}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                {isLoading ? (
+                  <div className="space-y-3 p-4">
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="flex gap-3">
+                        <Skeleton className="h-8 w-8 rounded-full" />
+                        <div className="flex-1 space-y-1">
+                          <Skeleton className="h-3 w-24" />
+                          <Skeleton className="h-3 w-16" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : recentSales.length === 0 ? (
+                  <EmptyState
+                    icon={ShoppingCart}
+                    title={t.dashboard.no_sales_today}
+                    body="Sales will appear here as soon as your team starts ringing them up."
+                  />
+                ) : (
+                  <div className="divide-y">
+                    {recentSales.slice(0, 6).map((sale: Partial<Sale>) => (
+                      <div
+                        key={sale.id}
+                        className="flex items-center gap-3 px-4 py-3"
+                      >
+                        <div
+                          className="tt-avatar h-8 w-8 text-xs"
+                          style={{
+                            background:
+                              "color-mix(in oklch, var(--c-primary), transparent 88%)",
+                            color: "var(--c-primary)",
+                          }}
+                        >
+                          <ShoppingCart className="h-3.5 w-3.5" strokeWidth={1.75} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            {sale.invoice_number}
+                          </p>
+                          <p className="text-xs tt-muted">
+                            {sale.created_at
+                              ? formatRelativeTime(sale.created_at)
+                              : ""}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-sm font-semibold tt-tabular">
+                            {formatCurrency(sale.total || 0)}
+                          </p>
+                          <Badge
+                            variant={
+                              sale.status === "completed" ? "success" : "pending"
+                            }
+                            className="text-xs py-0"
+                          >
+                            {sale.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="tt-section-title text-base">
+                {t.dashboard.quick_actions}
+              </CardTitle>
+              <CardDescription>{t.dashboard.quick_actions_desc}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { href: "/pos", icon: ShoppingCart, label: t.dashboard.new_sale },
+                  { href: "/inventory", icon: Package, label: t.dashboard.stock_in },
+                  { href: "/transfers", icon: ArrowLeftRight, label: t.nav.transfers },
+                  { href: "/reports", icon: TrendingUp, label: t.nav.reports },
+                ].map(({ href, icon: Icon, label }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    className="flex flex-col items-center gap-2 rounded-[var(--radius-lg)] border border-border p-4 text-center transition-colors hover:bg-accent group"
+                  >
+                    <div
+                      className="flex h-10 w-10 items-center justify-center rounded-[var(--radius)] transition-transform group-hover:scale-105"
+                      style={{
+                        background:
+                          "color-mix(in oklch, var(--c-primary), transparent 90%)",
+                        color: "var(--c-primary)",
+                      }}
+                    >
+                      <Icon className="h-5 w-5" strokeWidth={1.75} />
+                    </div>
+                    <span className="text-sm font-medium">{label}</span>
+                  </Link>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Manual refresh, kept out of the header row so it doesn't
+              compete visually with the primary "Open POS" action. */}
+          <div className="flex justify-end">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="tt-muted"
+            >
+              <RefreshCw
+                className={`h-3.5 w-3.5 mr-1.5 ${isFetching ? "animate-spin" : ""}`}
+                strokeWidth={1.75}
+              />
+              Refresh
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

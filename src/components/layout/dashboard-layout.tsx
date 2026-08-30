@@ -27,5 +27,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname() ?? '';
   const pos = isPosRoute(pathname);
   const dense = isDenseRoute(pathname);
-  return <AppScreen pos={pos} dense={dense}>{children}</AppScreen>;
+  // POS/KDS screens own their own edge-to-edge padding (README §9.2's
+  // full-screen mode) instead of the shared `p-4 lg:p-6` content inset —
+  // pass noPadding through so the POS page doesn't need a negative-margin
+  // hack to counteract it.
+  return (
+    <AppScreen pos={pos} dense={dense} noPadding={pos}>
+      {children}
+    </AppScreen>
+  );
 }
