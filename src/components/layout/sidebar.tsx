@@ -12,6 +12,7 @@ import { useI18n } from "@/i18n";
 import { useOrganization } from "@/components/shared/organization-provider";
 import { Logo } from "@/components/layout/logo";
 import { getNavGroupsForRole } from "@/components/layout/nav-config";
+import { isPosRoute } from "@/lib/utils/route-mode";
 import type { UserRole } from "@/types";
 
 /**
@@ -30,18 +31,31 @@ import type { UserRole } from "@/types";
  * active-item highlighting + collapsed-state tooltip, and the
  * organization name / user info footer.
  *
- * data-pos-mode="true" screens (see the POS layout, Step 5) collapse this
- * sidebar to 64px per README §9.2 — that's handled by the [data-pos-mode]
- * CSS override on --sidebar-w's *consuming* width (this component reads
- * --sidebar-w via Tailwind's arbitrary value, so it automatically shrinks
- * without any JS branching here).
+ * data-pos-mode="true" screens (see the POS layout, Step 5) force this
+ * sidebar to the same icon-only 64px rail as the manually-collapsed
+ * state, per README §9.2 ("Full-screen mode with sidebar collapsed to
+ * 64px"). This can't be done with a CSS variable alone: the width
+ * (`sidebarOpen ? w-[var(--sidebar-w)] : w-16`) AND every piece of
+ * content below it (org card, nav labels, notification badge, user
+ * footer) are gated on the same `sidebarOpen` boolean, so simply
+ * shrinking `--sidebar-w` to 64px while `sidebarOpen` stayed `true`
+ * would cram full-width content into a 64px rail instead of properly
+ * switching to icon-only rendering. Forcing a local `collapsed` flag
+ * (true on POS routes, otherwise the user's persisted `sidebarOpen`
+ * preference) reuses the existing, already-correct icon-only branches
+ * instead of adding a parallel narrow-but-not-collapsed layout. The
+ * user's `setSidebarOpen` preference itself is left untouched so it's
+ * restored as-is when they navigate away from a POS route.
  */
 export function Sidebar() {
   const pathname = usePathname();
-  const { sidebarOpen, setSidebarOpen } = useUIStore();
+  const { sidebarOpen: sidebarOpenPref, setSidebarOpen } = useUIStore();
   const { user } = useAuthStore();
   const { organization } = useOrganization();
   const { t } = useI18n();
+
+  const forceCollapsed = isPosRoute(pathname ?? "");
+  const sidebarOpen = forceCollapsed ? false : sidebarOpenPref;
 
   const orgLabel =
     organization?.name ??
@@ -88,7 +102,7 @@ export function Sidebar() {
             </button>
           )}
         </div>
-        {!sidebarOpen && (
+        {!sidebarOpen && !forceCollapsed && (
           <button
             onClick={() => setSidebarOpen(true)}
             className="mx-auto mt-1 p-1 rounded-md hover:bg-accent transition-colors tt-muted"

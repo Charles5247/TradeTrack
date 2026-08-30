@@ -313,6 +313,47 @@
   color: var(--c-textFaint);
 }
 
+/* Stat cards (README §6.2 <StatCard> / handoff's .tt-stat) — used by
+   Dashboard's KPI grid. Matches design_files/dashboard.jsx's StatCard
+   exactly: label + optional icon chip, large tt-head value, optional
+   up/down delta pill. */
+.tt-stat {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  padding: var(--card-pad);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.tt-stat-label {
+  font-size: calc(var(--base-font) - 2px);
+  color: var(--c-textMuted);
+  font-weight: 500;
+}
+.tt-stat-value {
+  font-family: var(--font-head);
+  font-size: 30px;
+  font-weight: var(--font-display-weight);
+  letter-spacing: var(--letter-tight);
+  line-height: 1.05;
+  color: var(--c-text);
+}
+.tt-stat-delta {
+  font-size: calc(var(--base-font) - 2px);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+}
+.tt-stat-delta[data-dir="up"] {
+  color: var(--c-success);
+}
+.tt-stat-delta[data-dir="down"] {
+  color: var(--c-danger);
+}
+
 /* ============================================================================
  * Density profiles (README §4.6) — POS/KDS always get Comfortable
  * regardless of user setting; Reports/Admin always get Dense. Everything
@@ -338,7 +379,13 @@
 }
 
 /* POS/KDS surfaces force Comfortable, always (cashier needs big touch
-   targets) — overrides any ancestor data-density setting. */
+   targets) — overrides any ancestor data-density setting. The 64px
+   collapsed-sidebar requirement (README §9.2) is handled in JS, not
+   here: Sidebar (src/components/layout/sidebar.tsx) forces its own
+   icon-only collapsed rendering on POS routes, because the sidebar's
+   width AND its content (labels, org card, user footer) are both
+   gated on the same boolean — a CSS variable alone can't switch
+   between the two content modes, only a pixel width. */
 [data-pos-mode="true"] {
   --row-h: 56px;
   --input-h: 48px;
