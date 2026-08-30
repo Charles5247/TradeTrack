@@ -1,62 +1,27 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Sidebar } from './sidebar';
-import { Header } from './header';
-import { OrganizationProvider } from '@/components/shared/organization-provider';
-import { SyncProvider } from '@/components/shared/sync-provider';
-import { useAuthStore } from '@/store';
-import { getOfflineAuthSession } from '@/lib/offline/auth-cache';
+import React from 'react';
+import { AppScreen } from '@/components/ui/app-screen';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
+/**
+ * Thin backward-compatible wrapper around `<AppScreen>` (README §6.2).
+ * `src/app/(dashboard)/layout.tsx` (the Next.js route-group layout used by
+ * all ~19 existing dashboard pages) renders this for every page beneath
+ * it, so the previous default chrome + auth-guard behavior is unchanged.
+ *
+ * All actual sidebar/header/auth-guard/density logic now lives in
+ * `AppScreen` (src/components/ui/app-screen.tsx) — this wrapper exists
+ * only so existing imports of `DashboardLayout` keep working without
+ * every call site needing to switch to `AppScreen` directly. New/rebuilt
+ * screens that need `data-pos-mode`/`data-dense-mode` (POS, Reports,
+ * Admin, and the Step 8 Production extension) should import and render
+ * `<AppScreen pos>` / `<AppScreen dense>` directly instead of this
+ * wrapper, since it can only apply one shared (Balanced) configuration.
+ */
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const router = useRouter();
-  const { user, isLoading } = useAuthStore();
-
-  // Forced first-login password-change gate: a business_owner created via
-  // /api/merchants/onboard has must_change_password=true until they set
-  // their own password. Block every dashboard screen until that happens
-  // (see src/app/change-password/page.tsx).
-  useEffect(() => {
-    if (isLoading) return;
-
-    if (user?.must_change_password) {
-      router.replace('/change-password');
-      return;
-    }
-
-    if (!user && !getOfflineAuthSession()) {
-      router.replace('/login');
-    }
-  }, [user, isLoading, router]);
-
-  if (isLoading) {
-    return null;
-  }
-
-  if (user?.must_change_password) {
-    return null;
-  }
-
-  return (
-    <OrganizationProvider>
-      <SyncProvider>
-        <div className="flex h-screen bg-background overflow-hidden">
-          <Sidebar />
-          <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-            <Header />
-            <main className="flex-1 overflow-y-auto">
-              <div className="p-4 lg:p-6">
-                {children}
-              </div>
-            </main>
-          </div>
-        </div>
-      </SyncProvider>
-    </OrganizationProvider>
-  );
+  return <AppScreen>{children}</AppScreen>;
 }

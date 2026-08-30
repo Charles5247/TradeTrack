@@ -176,14 +176,31 @@ export const useCartStore = create<CartState>()(
 );
 
 // ── UI Store ──────────────────────────────────────────────────
+// `density` is the Retail design system's user-facing density preference
+// (README §4.6 / §10): 'comfortable' | 'balanced' | 'dense'. It drives the
+// [data-density="..."] attribute applied near the app root (see AppScreen /
+// DashboardLayout), which in turn sets the --row-h/--input-h/--btn-h/
+// --card-pad CSS vars in globals.css. POS/KDS screens force Comfortable and
+// Reports/Admin screens force Dense regardless of this global setting, via
+// their own [data-pos-mode]/[data-dense-mode] attributes (higher CSS
+// specificity is not needed there since those attributes live on a
+// descendant element and simply redeclare the same custom properties).
 interface UIState {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
   toggleSidebar: () => void;
   theme: 'light' | 'dark' | 'system';
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
+  density: 'comfortable' | 'balanced' | 'dense';
+  setDensity: (density: 'comfortable' | 'balanced' | 'dense') => void;
   locale: string;
   setLocale: (locale: string) => void;
+  /** ⌘K command palette open state (README §9.1) — not persisted, so it
+   * always starts closed on load; shared here (rather than local
+   * component state) so both the Header's search field/kbd hint and the
+   * global ⌘K keyboard shortcut listener in CommandPalette can open it. */
+  commandPaletteOpen: boolean;
+  setCommandPaletteOpen: (open: boolean) => void;
 }
 
 export const useUIStore = create<UIState>()(
@@ -194,10 +211,25 @@ export const useUIStore = create<UIState>()(
       toggleSidebar: () => set({ sidebarOpen: !get().sidebarOpen }),
       theme: 'light',
       setTheme: (theme) => set({ theme }),
+      density: 'balanced',
+      setDensity: (density) => set({ density }),
       locale: 'en',
       setLocale: (locale) => set({ locale }),
+      commandPaletteOpen: false,
+      setCommandPaletteOpen: (commandPaletteOpen) => set({ commandPaletteOpen }),
     }),
-    { name: 'tradetrack-ui' }
+    {
+      name: 'tradetrack-ui',
+      // Never persist the transient command-palette open flag across
+      // reloads/tabs — only sidebarOpen/theme/density/locale are durable
+      // preferences.
+      partialize: (state) => ({
+        sidebarOpen: state.sidebarOpen,
+        theme: state.theme,
+        density: state.density,
+        locale: state.locale,
+      }),
+    }
   )
 );
 
