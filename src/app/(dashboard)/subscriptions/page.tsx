@@ -47,6 +47,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Segmented } from "@/components/ui/segmented";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/client";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
 import { useAuthStore } from "@/store";
@@ -393,20 +396,16 @@ function PlanFormDialog({
 
           <div className="flex items-center gap-6">
             <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={form.is_active}
-                onChange={(e) => update("is_active", e.target.checked)}
-                className="h-4 w-4 rounded border-input"
+                onCheckedChange={(v) => update("is_active", v === true)}
               />
               {t.subscriptions.plan_is_active}
             </label>
             <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={form.is_popular}
-                onChange={(e) => update("is_popular", e.target.checked)}
-                className="h-4 w-4 rounded border-input"
+                onCheckedChange={(v) => update("is_popular", v === true)}
               />
               {t.subscriptions.plan_is_popular}
             </label>
@@ -584,7 +583,9 @@ export default function SubscriptionsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{t.subscriptions.title}</h1>
+          <h1 className="tt-head text-2xl font-bold text-foreground">
+            {t.subscriptions.title}
+          </h1>
           <p className="text-muted-foreground text-sm">
             {t.subscriptions.subtitle}
           </p>
@@ -600,22 +601,18 @@ export default function SubscriptionsPage() {
         </Button>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 border-b">
-        {(["overview", "plans", "billing"] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 text-sm font-medium capitalize border-b-2 transition-colors ${
-              activeTab === tab
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
+      {/* Tabs — re-skinned to the shared underline-style <Tabs> primitive
+          (README §6.1 / .tt-tabs) instead of the old hand-rolled button
+          loop. `value`/`onValueChange` map 1:1 onto the pre-existing
+          `activeTab` state so none of the conditional panel-rendering
+          logic below needed to change. */}
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
+        <TabsList>
+          <TabsTrigger value="overview">{t.subscriptions.tab_overview}</TabsTrigger>
+          <TabsTrigger value="plans">{t.subscriptions.tab_plans}</TabsTrigger>
+          <TabsTrigger value="billing">{t.subscriptions.tab_billing}</TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       {/* Overview Tab */}
       {activeTab === "overview" && (
@@ -844,30 +841,14 @@ export default function SubscriptionsPage() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <div className="inline-flex items-center rounded-lg border bg-muted p-1">
-                <button
-                  type="button"
-                  onClick={() => setBillingCycle("monthly")}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                    billingCycle === "monthly"
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {t.subscriptions.monthly}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setBillingCycle("yearly")}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                    billingCycle === "yearly"
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {t.subscriptions.yearly}
-                </button>
-              </div>
+              <Segmented
+                value={billingCycle}
+                onChange={setBillingCycle}
+                options={[
+                  { value: "monthly", label: t.subscriptions.monthly },
+                  { value: "yearly", label: t.subscriptions.yearly },
+                ]}
+              />
               {canManagePlans && (
                 <Button
                   onClick={() => {

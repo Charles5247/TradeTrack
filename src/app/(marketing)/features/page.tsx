@@ -13,16 +13,11 @@ import {
   Smartphone,
   Sparkles,
   ArrowRight,
+  CheckCircle2,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Reveal } from "@/components/marketing/reveal";
+import { CTABand } from "@/components/marketing/cta-band";
 
 export const metadata: Metadata = {
   title: "Features",
@@ -33,7 +28,9 @@ export const metadata: Metadata = {
 /**
  * Public features page — resolves to /features. Deliberately lists
  * ONLY capabilities that are actually built and verified in this
- * codebase (no fabricated/aspirational claims):
+ * codebase (no fabricated/aspirational claims) — unchanged content
+ * policy from before this Step 4 re-skin, only the visual/animation
+ * treatment (Reveal stagger, Retail card tokens) is new:
  *  - POS:                  src/app/(dashboard)/pos/
  *  - Offline sync:         src/lib/offline/*, sync_queue tables
  *  - Receipt QR:           src/components/receipts/barcode-image.tsx
@@ -48,8 +45,7 @@ const FEATURE_SECTIONS = [
   {
     icon: ShoppingCart,
     title: "Point of Sale",
-    description:
-      "A fast checkout screen built for a busy counter, not a boardroom.",
+    description: "A fast checkout screen built for a busy counter, not a boardroom.",
     points: [
       "Search or scan products to build a sale in seconds",
       "Apply discounts and accept cash or other payment methods",
@@ -59,8 +55,7 @@ const FEATURE_SECTIONS = [
   {
     icon: WifiOff,
     title: "Offline-First Sync",
-    description:
-      "Nigerian networks aren't always reliable — TradeTrack doesn't stop working when yours drops.",
+    description: "Nigerian networks aren't always reliable — TradeTrack doesn't stop working when yours drops.",
     points: [
       "Sales and stock changes are saved locally the instant they happen",
       "A background sync queue pushes everything to the cloud once you're back online",
@@ -147,76 +142,106 @@ const FEATURE_SECTIONS = [
 
 export default function FeaturesPage() {
   return (
-    <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-24">
-      <div className="text-center mb-12 max-w-2xl mx-auto">
-        <h1 className="text-4xl font-bold">What TradeTrack actually does</h1>
-        <p className="mt-3 text-muted-foreground">
-          No exaggerated claims — this page lists exactly what's built and
-          working today, and is honest about what isn't finished yet.
-        </p>
-      </div>
-
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {FEATURE_SECTIONS.map((section) => (
-          <Card key={section.title} className="border-0 shadow-sm bg-card/60">
-            <CardHeader>
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-2">
-                <section.icon className="h-5 w-5 text-primary" />
-              </div>
-              <CardTitle className="text-lg">{section.title}</CardTitle>
-              <CardDescription>{section.description}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm">
-                {section.points.map((point) => (
-                  <li key={point} className="flex items-start gap-2">
-                    <span className="text-primary mt-1">•</span>
-                    <span className="text-muted-foreground">{point}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        ))}
-
-        {/* Coming Soon — explicitly NOT a real feature yet, kept honest */}
-        <Card className="border-dashed border-2 bg-muted/30">
-          <CardHeader>
-            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center mb-2">
-              <Sparkles className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <div className="flex items-center gap-2">
-              <CardTitle className="text-lg">AI Assistant</CardTitle>
-              <Badge variant="outline">Coming Soon</Badge>
-            </div>
-            <CardDescription>
-              We're exploring an AI assistant to help with things like
-              restock suggestions and sales insights.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              This feature does not exist in the app yet. We'd rather tell
-              you that plainly than promise something that isn't built.
+    <div>
+      <section style={{ padding: "100px 0 40px" }}>
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <Reveal><div className="tt-eyebrow mb-3">Features</div></Reveal>
+          <Reveal delay={100}>
+            <h1 className="tt-head" style={{ fontSize: "clamp(32px, 6vw, 64px)", margin: "0 0 20px", maxWidth: 900, lineHeight: 1.05 }}>
+              Every capability, honestly documented.
+            </h1>
+          </Reveal>
+          <Reveal delay={200}>
+            <p style={{ fontSize: 18, color: "var(--c-textMuted)", maxWidth: 620 }}>
+              We ship this list — not aspirational marketing. What&apos;s not
+              built yet is either coming soon, or hidden until it is.
             </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="text-center mt-16">
-        <h2 className="text-2xl font-bold mb-4">Ready to try it?</h2>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Button size="lg" asChild>
-            <Link href="/signup">
-              Start Free
-              <ArrowRight className="h-4 w-4 ml-1" />
-            </Link>
-          </Button>
-          <Button size="lg" variant="outline" asChild>
-            <Link href="/pricing">See Pricing</Link>
-          </Button>
+          </Reveal>
         </div>
-      </div>
+      </section>
+
+      <section style={{ padding: "0 0 100px" }}>
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {FEATURE_SECTIONS.map((section, i) => (
+              <Reveal key={section.title} delay={i * 60} className="h-full">
+                <div className="rounded-xl border border-border p-7 h-full" style={{ background: "var(--c-surface)" }}>
+                  <div
+                    className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
+                    style={{ background: "color-mix(in oklch, var(--c-primary), transparent 88%)", color: "var(--c-primary)" }}
+                  >
+                    <section.icon className="h-5 w-5" strokeWidth={1.75} />
+                  </div>
+                  <div className="tt-head text-lg mb-1.5">{section.title}</div>
+                  <div className="text-sm mb-4" style={{ color: "var(--c-textMuted)" }}>{section.description}</div>
+                  <ul className="space-y-2 text-sm">
+                    {section.points.map((point) => (
+                      <li key={point} className="flex items-start gap-2">
+                        <CheckCircle2
+                          className="h-3.5 w-3.5 mt-0.5 shrink-0"
+                          style={{ color: "var(--c-success)" }}
+                          strokeWidth={1.75}
+                        />
+                        <span style={{ color: "var(--c-textMuted)" }}>{point}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </Reveal>
+            ))}
+
+            {/* Coming Soon — explicitly NOT a real feature yet, kept honest */}
+            <Reveal delay={FEATURE_SECTIONS.length * 60} className="h-full">
+              <div
+                className="rounded-xl border-2 border-dashed p-7 h-full"
+                style={{ borderColor: "var(--c-border)", background: "var(--c-surfaceAlt)" }}
+              >
+                <div
+                  className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
+                  style={{ background: "var(--c-surfaceAlt)", color: "var(--c-textMuted)" }}
+                >
+                  <Sparkles className="h-5 w-5" strokeWidth={1.75} />
+                </div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className="tt-head text-lg">AI Assistant</div>
+                  <Badge variant="outline">Coming Soon</Badge>
+                </div>
+                <div className="text-sm mb-4" style={{ color: "var(--c-textMuted)" }}>
+                  We&apos;re exploring an AI assistant to help with things
+                  like restock suggestions and sales insights.
+                </div>
+                <p className="text-sm" style={{ color: "var(--c-textMuted)" }}>
+                  This feature does not exist in the app yet. We&apos;d
+                  rather tell you that plainly than promise something that
+                  isn&apos;t built.
+                </p>
+              </div>
+            </Reveal>
+          </div>
+
+          <div className="text-center mt-16">
+            <h2 className="tt-head text-2xl mb-4">Ready to try it?</h2>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link
+                href="/signup"
+                className="inline-flex items-center gap-2 rounded-lg h-11 px-6 text-sm font-medium"
+                style={{ background: "var(--c-primary)", color: "var(--c-primaryFg)" }}
+              >
+                Start Free <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
+              </Link>
+              <Link
+                href="/pricing"
+                className="inline-flex items-center gap-2 rounded-lg h-11 px-6 text-sm font-medium border"
+                style={{ borderColor: "var(--c-border)" }}
+              >
+                See Pricing
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <CTABand />
     </div>
   );
 }

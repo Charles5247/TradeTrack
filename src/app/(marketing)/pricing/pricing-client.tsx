@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { PlanCard, type Plan } from "@/components/subscriptions/plan-card";
+import { Segmented } from "@/components/ui/segmented";
+import { Reveal } from "@/components/marketing/reveal";
 
 /**
  * Client-side plan grid for the public Pricing page. Owns only the
@@ -9,6 +11,12 @@ import { PlanCard, type Plan } from "@/components/subscriptions/plan-card";
  * is fetched server-side in page.tsx and passed in as a prop, so the
  * live-DB fetch itself still happens on the server on every request
  * (see `dynamic = "force-dynamic"` in page.tsx).
+ *
+ * Re-skinned (Step 4) to use the `<Segmented>` pill control (README
+ * §6.x's `.tt-seg`) instead of a plain button pair, and to stagger the
+ * <PlanCard> grid in with <Reveal>. The pricing DATA itself is
+ * unchanged from before this re-skin — still the exact same
+ * `plans`/`PlanCard` props, still no hardcoded numbers.
  *
  * Note: this must be a client component (not a server component with
  * a render-prop) because passing a function as a prop from a Server
@@ -22,43 +30,30 @@ export function PricingClient({ plans }: { plans: Plan[] }) {
 
   return (
     <div>
-      <div className="flex items-center justify-center">
-        <div className="inline-flex items-center rounded-lg border bg-muted p-1">
-          <button
-            type="button"
-            onClick={() => setBillingCycle("monthly")}
-            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              billingCycle === "monthly"
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Monthly
-          </button>
-          <button
-            type="button"
-            onClick={() => setBillingCycle("yearly")}
-            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              billingCycle === "yearly"
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Yearly
-          </button>
+      <Reveal delay={300}>
+        <div className="flex items-center justify-center">
+          <Segmented
+            value={billingCycle}
+            onChange={setBillingCycle}
+            options={[
+              { value: "monthly", label: "Monthly" },
+              { value: "yearly", label: "Yearly · save 20%" },
+            ]}
+          />
         </div>
-      </div>
+      </Reveal>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 mt-12">
-        {plans.map((plan) => (
-          <PlanCard
-            key={plan.id}
-            plan={plan}
-            allPlans={plans}
-            billingCycle={billingCycle}
-            selectHref={`/signup?plan=${plan.id}`}
-            selectLabel={plan.price === 0 ? "Start Free" : "Get Started"}
-          />
+        {plans.map((plan, i) => (
+          <Reveal key={plan.id} delay={i * 80} className="h-full">
+            <PlanCard
+              plan={plan}
+              allPlans={plans}
+              billingCycle={billingCycle}
+              selectHref={`/signup?plan=${plan.id}`}
+              selectLabel={plan.price === 0 ? "Start Free" : "Get Started"}
+            />
+          </Reveal>
         ))}
       </div>
     </div>

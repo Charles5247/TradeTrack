@@ -4,6 +4,39 @@ import { formatCurrency } from "@/lib/utils/format";
 import { renderQRCodeDataUrl } from "@/lib/qr/render-qr";
 import { wrapReceiptText } from "@/lib/receipt/receipt-layout";
 
+/**
+ * Fetches an image URL and converts it to a base64 data: URL so jsPDF's
+ * `addImage` (which needs a data URL or HTMLImageElement it can read
+ * synchronously) can embed it. Used for the optional custom receipt
+ * template background. Returns null on any failure (missing/unreachable
+ * URL, CORS block, non-image response) so callers can fall back to a
+ * plain white receipt background instead of throwing.
+ *
+ * BUGFIX (this session): this function was called but never defined —
+ * `downloadReceiptPDF` had a dead second `if (receipt.receiptTemplateUrl)`
+ * block right below it that tried to load the same image via a raw
+ * `Image()` + `onload` callback, but never awaited it, so the callback
+ * would fire (if at all) after `doc.save()` had already run — the
+ * template image could never actually appear in the exported PDF. That
+ * block has been removed; this single awaited implementation replaces it.
+ */
+async function loadImageDataUrl(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    if (!blob.type.startsWith("image/")) return null;
+    return await new Promise<string | null>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : null);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
 /** Creates a compact 80mm-style PDF receipt entirely in the browser. */
 export async function downloadReceiptPDF(receipt: ReceiptData) {
   const widthPt = 80 * 2.8346;
@@ -30,19 +63,7 @@ export async function downloadReceiptPDF(receipt: ReceiptData) {
       const format = dataUrl.startsWith("data:image/png") ? "PNG" : "JPEG";
       doc.addImage(dataUrl, format, 0, 0, widthPt, Math.max(320, estimatedHeight));
     }
-  }
-
-  if (receipt.receiptTemplateUrl) {
-    try {
-      const image = new Image();
-      image.crossOrigin = 'anonymous';
-      image.src = receipt.receiptTemplateUrl;
-      image.onload = () => {
-        doc.addImage(image, 'JPEG', 0, 0, widthPt, Math.max(320, estimatedHeight));
-      };
-    } catch {
-      // Fallback to plain white background if the uploaded template fails.
-    }
+    // else: fall through to the plain white background below.
   }
 
   const center = (text: string, size = 9, bold = false, upper = false) => {

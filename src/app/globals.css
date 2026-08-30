@@ -386,6 +386,46 @@
   flex-shrink: 0;
 }
 
+/* Segmented control (README §6.x / handoff's .tt-seg) — pulled forward
+   from Step 6's planned <Segmented> component because the Pricing page
+   (Step 4) needs a Monthly/Yearly toggle immediately. Pill-shaped
+   track with a sliding active pill, matching .tt-btn's 140ms/panel
+   timing conventions. */
+.tt-seg {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--c-surfaceAlt);
+  border: 1px solid var(--c-border);
+}
+.tt-seg-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 550;
+  color: var(--c-textMuted);
+  cursor: pointer;
+  transition:
+    background var(--tt-dur-panel) var(--tt-ease-panel),
+    color var(--tt-dur-panel) var(--tt-ease-panel),
+    box-shadow var(--tt-dur-panel) var(--tt-ease-panel);
+  white-space: nowrap;
+  border: none;
+  background-color: transparent;
+}
+.tt-seg-item[data-active="true"] {
+  background: var(--c-surface);
+  color: var(--c-text);
+  box-shadow: 0 1px 3px color-mix(in oklch, var(--c-text), transparent 88%);
+}
+
 /* Placeholder photography utility (README §8 / §11) — flags any image
    slot still holding Creative-Commons placeholder art pending real
    commissioned photography. */
