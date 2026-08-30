@@ -369,6 +369,23 @@
   box-shadow: 0 40px 100px -20px color-mix(in oklch, var(--c-primary), transparent 75%);
 }
 
+/* Mini avatar (styles.css .tt-avatar) — used in Sidebar's user-info
+   footer and Header's user-menu trigger. */
+.tt-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--c-surfaceAlt);
+  color: var(--c-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 12px;
+  border: 1px solid var(--c-border);
+  flex-shrink: 0;
+}
+
 /* Placeholder photography utility (README §8 / §11) — flags any image
    slot still holding Creative-Commons placeholder art pending real
    commissioned photography. */
