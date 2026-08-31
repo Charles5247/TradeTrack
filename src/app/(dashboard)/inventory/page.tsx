@@ -2,24 +2,30 @@
 
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Package, AlertTriangle, XCircle, TrendingUp, TrendingDown, Plus, Filter } from 'lucide-react';
+import { Package, AlertTriangle, XCircle, TrendingUp, TrendingDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { EmptyState } from '@/components/ui/empty-state';
+import { LoadingState } from '@/components/ui/loading-state';
+import { StatCard } from '@/components/ui/stat-card';
 import { createClient } from '@/lib/supabase/client';
-import { formatCurrency, formatDateTime } from '@/lib/utils/format';
+import { formatDateTime } from '@/lib/utils/format';
+import { isOffline } from '@/lib/utils/network';
 import { useAuthStore } from '@/store';
 import type { Warehouse } from '@/types';
 import { AccessGuard } from '@/components/shared/access-guard';
 import { useI18n } from '@/i18n';
+import { generateId } from '@/lib/utils/id';
+import { saveToOfflineDB, addToSyncQueue, getAllFromOfflineDB } from '@/lib/offline/db';
+import type { InventoryRecord } from '@/lib/offline/db';
 
 async function fetchInventory(warehouseId: string, filter: string, search: string) {
   const supabase = createClient();
@@ -55,16 +61,99 @@ async function fetchInventory(warehouseId: string, filter: string, search: strin
   return items;
 }
 
+/**
+ * Adjust stock for a product/warehouse. Offline-aware following the exact
+ * "always commit locally first" pattern established in
+ * `src/lib/offline/sales.ts`'s `persistOfflineSale`: a stale
+ * `navigator.onLine` read must never block an admin who is genuinely
+ * offline from recording a stock movement. When offline, the quantity
+ * change is applied optimistically to the `inventory` IndexedDB store
+ * (read-modify-write against whatever local copy is cached, falling back
+ * to the value supplied by the caller from its already-loaded query data
+ * if nothing is cached yet) and queued via `addToSyncQueue('inventory',
+ * 'UPDATE', ...)` so the generic, table-agnostic push handler in
+ * `sync-engine.ts` replays it once connectivity returns. The
+ * `inventory_movements` audit trail and `audit_logs` row are business
+ * records with no offline-read UI depending on them yet, so — while
+ * online — they're written the same way as before; while offline, the
+ * inventory quantity change (the part that actually blocks the cashier's
+ * or admin's next action, e.g. seeing correct stock) is guaranteed to
+ * land locally, and the movement/audit intent is queued through the same
+ * generic INSERT sync-queue path so it still reaches the server once back
+ * online, rather than being silently dropped.
+ */
 async function adjustStock(payload: {
   organization_id: string;
   user_id: string;
   product_id: string;
   warehouse_id: string;
+  inventory_id?: string;
+  current_quantity?: number;
+  min_stock_level?: number;
   quantity_change: number;
   movement_type: 'in' | 'out' | 'adjustment';
   notes?: string;
   reason?: string;
 }) {
+  if (isOffline()) {
+    const nowIso = new Date().toISOString();
+
+    // Look for a locally cached inventory row for this product+warehouse
+    // first; fall back to whatever quantity/id the caller already had
+    // loaded from its React Query cache (populated while last online).
+    const cached = (await getAllFromOfflineDB<InventoryRecord>('inventory')).find(
+      (row) => row.product_id === payload.product_id && row.warehouse_id === payload.warehouse_id,
+    );
+
+    const inventoryId = cached?.id ?? payload.inventory_id ?? generateId();
+    const oldQty = cached?.quantity ?? payload.current_quantity ?? 0;
+    const newQty = Math.max(0, oldQty + payload.quantity_change);
+
+    const updatedRecord: InventoryRecord = {
+      id: inventoryId,
+      product_id: payload.product_id,
+      warehouse_id: payload.warehouse_id,
+      organization_id: payload.organization_id,
+      quantity: newQty,
+      min_stock_level: cached?.min_stock_level ?? payload.min_stock_level ?? 5,
+      updated_at: nowIso,
+    };
+
+    await saveToOfflineDB('inventory', [updatedRecord]);
+
+    const movementId = generateId();
+    const auditId = generateId();
+
+    await Promise.all([
+      addToSyncQueue('inventory', 'UPDATE', inventoryId, updatedRecord as unknown as Record<string, unknown>),
+      addToSyncQueue('inventory_movements', 'INSERT', movementId, {
+        id: movementId,
+        organization_id: payload.organization_id,
+        product_id: payload.product_id,
+        warehouse_id: payload.warehouse_id,
+        movement_type: payload.movement_type,
+        quantity: payload.quantity_change,
+        notes: payload.notes,
+        created_by: payload.user_id,
+        created_at: nowIso,
+      }),
+      addToSyncQueue('audit_logs', 'INSERT', auditId, {
+        id: auditId,
+        organization_id: payload.organization_id,
+        user_id: payload.user_id,
+        action: 'ADJUST_STOCK',
+        resource_type: 'inventory',
+        resource_id: payload.product_id,
+        old_values: { quantity: oldQty },
+        new_values: { quantity: newQty },
+        reason: payload.reason,
+        created_at: nowIso,
+      }),
+    ]);
+
+    return { offline: true, quantity: newQty };
+  }
+
   const supabase = createClient();
 
   const { data: inv } = await supabase
@@ -114,6 +203,8 @@ async function adjustStock(payload: {
     new_values: { quantity: newQty },
     reason: payload.reason,
   });
+
+  return { offline: false, quantity: newQty };
 }
 
 export default function InventoryPage() {
@@ -153,12 +244,18 @@ function InventoryPageInner() {
 
   const adjustMutation = useMutation({
     mutationFn: adjustStock,
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
       setAdjustDialog(null);
       setAdjustQty('');
       setAdjustNotes('');
-      toast.success(t.inventory.adjusted_success);
+      if (result?.offline) {
+        toast.success(t.inventory.adjusted_success, {
+          description: 'Saved offline — will sync automatically once you\u2019re back online.',
+        });
+      } else {
+        toast.success(t.inventory.adjusted_success);
+      }
     },
     onError: () => toast.error(t.inventory.adjust_failed),
   });
@@ -173,10 +270,13 @@ function InventoryPageInner() {
     const change = adjustType === 'out' ? -qty : qty;
     const product = adjustDialog.product as { id: string } | null;
     adjustMutation.mutate({
-      organization_id: (user as unknown as {organization_id: string}).organization_id,
+      organization_id: (user as unknown as { organization_id: string }).organization_id,
       user_id: user.id,
       product_id: String(product?.id),
       warehouse_id: String(adjustDialog.warehouse_id),
+      inventory_id: adjustDialog.id ? String(adjustDialog.id) : undefined,
+      current_quantity: Number(adjustDialog.quantity ?? 0),
+      min_stock_level: Number(adjustDialog.min_stock_level ?? 5),
       quantity_change: change,
       movement_type: adjustType,
       notes: adjustNotes,
@@ -192,58 +292,46 @@ function InventoryPageInner() {
 
   const stats = {
     total: inventory.length,
-    inStock: inventory.filter((i: {quantity: number}) => i.quantity > 0).length,
-    low: inventory.filter((i: {quantity: number; min_stock_level: number}) => i.quantity > 0 && i.quantity <= i.min_stock_level).length,
-    out: inventory.filter((i: {quantity: number}) => i.quantity === 0).length,
+    inStock: inventory.filter((i: { quantity: number }) => i.quantity > 0).length,
+    low: inventory.filter((i: { quantity: number; min_stock_level: number }) => i.quantity > 0 && i.quantity <= i.min_stock_level).length,
+    out: inventory.filter((i: { quantity: number }) => i.quantity === 0).length,
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{t.inventory.title}</h1>
-          <p className="text-muted-foreground text-sm">{t.inventory.subtitle}</p>
+          <h1 className="tt-page-title">{t.inventory.title}</h1>
+          <p className="tt-muted text-sm mt-1">{t.inventory.subtitle}</p>
         </div>
       </div>
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-4">
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <Package className="h-8 w-8 text-blue-600 bg-blue-100 dark:bg-blue-900/30 rounded-lg p-1.5" />
-            <div>
-              <p className="text-sm text-muted-foreground">{t.inventory.total_items}</p>
-              <p className="text-2xl font-bold">{stats.total}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <TrendingUp className="h-8 w-8 text-green-600 bg-green-100 dark:bg-green-900/30 rounded-lg p-1.5" />
-            <div>
-              <p className="text-sm text-muted-foreground">{t.inventory.in_stock}</p>
-              <p className="text-2xl font-bold text-green-600">{stats.inStock}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <AlertTriangle className="h-8 w-8 text-amber-600 bg-amber-100 dark:bg-amber-900/30 rounded-lg p-1.5" />
-            <div>
-              <p className="text-sm text-muted-foreground">{t.inventory.low_stock}</p>
-              <p className="text-2xl font-bold text-amber-600">{stats.low}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <XCircle className="h-8 w-8 text-red-600 bg-red-100 dark:bg-red-900/30 rounded-lg p-1.5" />
-            <div>
-              <p className="text-sm text-muted-foreground">{t.inventory.out_of_stock}</p>
-              <p className="text-2xl font-bold text-red-600">{stats.out}</p>
-            </div>
-          </CardContent>
-        </Card>
+        <StatCard
+          label={t.inventory.total_items}
+          value={stats.total}
+          icon={Package}
+          loading={isLoading}
+        />
+        <StatCard
+          label={t.inventory.in_stock}
+          value={stats.inStock}
+          icon={TrendingUp}
+          loading={isLoading}
+        />
+        <StatCard
+          label={t.inventory.low_stock}
+          value={stats.low}
+          icon={AlertTriangle}
+          loading={isLoading}
+        />
+        <StatCard
+          label={t.inventory.out_of_stock}
+          value={stats.out}
+          icon={XCircle}
+          loading={isLoading}
+        />
       </div>
 
       {/* Filters */}
@@ -278,85 +366,109 @@ function InventoryPageInner() {
       </div>
 
       {/* Table */}
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t.inventory.product}</TableHead>
-                <TableHead>{t.inventory.sku}</TableHead>
-                <TableHead>{t.inventory.warehouse}</TableHead>
-                <TableHead>{t.inventory.quantity}</TableHead>
-                <TableHead>{t.inventory.min_stock}</TableHead>
-                <TableHead>{t.common.status}</TableHead>
-                <TableHead>{t.inventory.last_updated}</TableHead>
-                <TableHead className="text-right">{t.common.actions}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                [...Array(6)].map((_, i) => (
-                  <TableRow key={i}>
-                    {[...Array(8)].map((_, j) => (
-                      <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : inventory.length === 0 ? (
+      {isLoading ? (
+        <LoadingState
+          rows={6}
+          columnLabels={[
+            t.inventory.product,
+            t.inventory.sku,
+            t.inventory.warehouse,
+            t.inventory.quantity,
+            t.inventory.min_stock,
+            t.common.status,
+            t.inventory.last_updated,
+            t.common.actions,
+          ]}
+        />
+      ) : inventory.length === 0 ? (
+        <Card>
+          <CardContent className="p-0">
+            <EmptyState icon={Package} title={t.inventory.no_inventory} />
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
-                    {t.inventory.no_inventory}
-                  </TableCell>
+                  <TableHead>{t.inventory.product}</TableHead>
+                  <TableHead>{t.inventory.sku}</TableHead>
+                  <TableHead>{t.inventory.warehouse}</TableHead>
+                  <TableHead>{t.inventory.quantity}</TableHead>
+                  <TableHead>{t.inventory.min_stock}</TableHead>
+                  <TableHead>{t.common.status}</TableHead>
+                  <TableHead>{t.inventory.last_updated}</TableHead>
+                  <TableHead className="text-right">{t.common.actions}</TableHead>
                 </TableRow>
-              ) : (
-                inventory.map((item: Record<string, unknown>) => {
+              </TableHeader>
+              <TableBody>
+                {inventory.map((item: Record<string, unknown>) => {
                   const product = item.product as { id: string; name: string; sku: string } | null;
                   const warehouse = item.warehouse as { name: string } | null;
                   const qty = Number(item.quantity);
                   const minStock = Number(item.min_stock_level);
+                  const rowTone =
+                    qty === 0
+                      ? 'var(--c-danger)'
+                      : qty <= minStock
+                        ? 'var(--c-warn)'
+                        : null;
                   return (
-                    <TableRow key={String(item.id)} className={qty === 0 ? 'bg-red-50 dark:bg-red-950/20' : qty <= minStock ? 'bg-amber-50 dark:bg-amber-950/20' : ''}>
+                    <TableRow
+                      key={String(item.id)}
+                      style={
+                        rowTone
+                          ? { background: `color-mix(in oklch, ${rowTone}, transparent 94%)` }
+                          : undefined
+                      }
+                    >
                       <TableCell className="font-medium">{product?.name}</TableCell>
-                      <TableCell><code className="text-xs bg-muted px-1.5 py-0.5 rounded">{product?.sku}</code></TableCell>
+                      <TableCell><code className="tt-mono text-xs bg-muted px-1.5 py-0.5 rounded">{product?.sku}</code></TableCell>
                       <TableCell>{warehouse?.name}</TableCell>
                       <TableCell>
-                        <span className={`font-bold ${qty === 0 ? 'text-red-600' : qty <= minStock ? 'text-amber-600' : 'text-green-600'}`}>
+                        <span
+                          className="font-bold tt-tabular"
+                          style={{ color: rowTone ?? 'var(--c-success)' }}
+                        >
                           {qty}
                         </span>
                       </TableCell>
-                      <TableCell>{minStock}</TableCell>
+                      <TableCell className="tt-tabular">{minStock}</TableCell>
                       <TableCell>{getStockBadge(qty, minStock)}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {item.updated_at ? formatDateTime(String(item.updated_at)) : '—'}
+                      <TableCell className="text-xs tt-muted">
+                        {item.updated_at ? formatDateTime(String(item.updated_at)) : '\u2014'}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-7 text-xs text-green-600 border-green-200"
+                            className="h-7 text-xs"
+                            style={{ color: 'var(--c-success)', borderColor: 'color-mix(in oklch, var(--c-success), transparent 60%)' }}
                             onClick={() => { setAdjustDialog(item); setAdjustType('in'); }}
                           >
-                            <TrendingUp className="h-3 w-3 mr-1" /> {t.inventory.stock_in}
+                            <TrendingUp className="h-3 w-3 mr-1" strokeWidth={1.75} /> {t.inventory.stock_in}
                           </Button>
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-7 text-xs text-red-600 border-red-200"
+                            className="h-7 text-xs"
+                            style={{ color: 'var(--c-danger)', borderColor: 'color-mix(in oklch, var(--c-danger), transparent 60%)' }}
                             onClick={() => { setAdjustDialog(item); setAdjustType('out'); }}
                           >
-                            <TrendingDown className="h-3 w-3 mr-1" /> {t.inventory.stock_out}
+                            <TrendingDown className="h-3 w-3 mr-1" strokeWidth={1.75} /> {t.inventory.stock_out}
                           </Button>
                         </div>
                       </TableCell>
                     </TableRow>
                   );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Adjust Dialog */}
       <Dialog open={!!adjustDialog} onOpenChange={() => setAdjustDialog(null)}>
@@ -368,13 +480,13 @@ function InventoryPageInner() {
           </DialogHeader>
           {adjustDialog && (
             <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm tt-muted">
                 {t.inventory.product_label} <span className="font-medium text-foreground">
-                  {(adjustDialog.product as {name: string} | null)?.name}
+                  {(adjustDialog.product as { name: string } | null)?.name}
                 </span>
               </p>
-              <p className="text-sm text-muted-foreground">
-                {t.inventory.current_stock_label} <span className="font-medium text-foreground">{String(adjustDialog.quantity)}</span>
+              <p className="text-sm tt-muted">
+                {t.inventory.current_stock_label} <span className="font-medium text-foreground tt-tabular">{String(adjustDialog.quantity)}</span>
               </p>
               <div className="space-y-2">
                 <Label>{t.inventory.movement_type}</Label>

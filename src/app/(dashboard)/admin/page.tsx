@@ -40,6 +40,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingState } from "@/components/ui/loading-state";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -76,12 +78,12 @@ function KPICard({
   color = "blue",
   loading,
 }: KPICardProps) {
-  const colorMap: Record<string, string> = {
-    blue: "bg-blue-50 text-blue-600",
-    green: "bg-green-50 text-green-600",
-    orange: "bg-orange-50 text-orange-600",
-    purple: "bg-purple-50 text-purple-600",
-    red: "bg-red-50 text-red-600",
+  const colorTokenMap: Record<string, string> = {
+    blue: "var(--c-info)",
+    green: "var(--c-success)",
+    orange: "var(--c-warn)",
+    purple: "var(--c-primary)",
+    red: "var(--c-danger)",
   };
 
   if (loading) {
@@ -96,23 +98,30 @@ function KPICard({
     );
   }
 
+  const tone = colorTokenMap[color];
   return (
     <Card>
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <div className={`p-2 rounded-lg ${colorMap[color]}`}>{icon}</div>
+          <p className="text-sm font-medium tt-muted">{title}</p>
+          <div
+            className="p-2 rounded-lg"
+            style={{ background: `color-mix(in oklch, ${tone}, transparent 88%)`, color: tone }}
+          >
+            {icon}
+          </div>
         </div>
         <div className="space-y-1">
-          <p className="text-2xl font-bold tracking-tight">{value}</p>
+          <p className="tt-stat-value tt-tabular">{value}</p>
           {subtitle && (
-            <p className="text-xs text-muted-foreground">{subtitle}</p>
+            <p className="text-xs tt-muted">{subtitle}</p>
           )}
           {trend !== undefined && (
             <p
-              className={`text-xs font-medium ${trend >= 0 ? "text-green-600" : "text-red-600"}`}
+              className="text-xs font-medium tt-tabular"
+              style={{ color: trend >= 0 ? "var(--c-success)" : "var(--c-danger)" }}
             >
-              {trend >= 0 ? "↑" : "↓"} {Math.abs(trend)}% from last month
+              {trend >= 0 ? "\u2191" : "\u2193"} {Math.abs(trend)}% from last month
             </p>
           )}
         </div>
@@ -317,11 +326,14 @@ export default function AdminPage() {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center space-y-4">
-          <div className="p-4 bg-red-50 rounded-full inline-block">
-            <ShieldCheck className="h-12 w-12 text-red-500" />
+          <div
+            className="p-4 rounded-full inline-block"
+            style={{ background: "color-mix(in oklch, var(--c-danger), transparent 90%)" }}
+          >
+            <ShieldCheck className="h-12 w-12" style={{ color: "var(--c-danger)" }} strokeWidth={1.75} />
           </div>
-          <h2 className="text-xl font-semibold">{t.admin.access_restricted}</h2>
-          <p className="text-muted-foreground max-w-sm">
+          <h2 className="tt-head text-xl">{t.admin.access_restricted}</h2>
+          <p className="tt-muted max-w-sm">
             {t.admin.access_restricted_desc}
           </p>
         </div>
@@ -331,14 +343,14 @@ export default function AdminPage() {
 
   return (
     <div className="space-y-6 p-6">
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      {/* -- Header -- */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <BarChart3 className="h-6 w-6 text-primary" />
+          <h1 className="tt-page-title flex items-center gap-2">
+            <BarChart3 className="h-6 w-6" style={{ color: "var(--c-primary)" }} strokeWidth={1.75} />
             {t.admin.title}
           </h1>
-          <p className="text-muted-foreground mt-1">{t.admin.subtitle}</p>
+          <p className="tt-muted mt-1">{t.admin.subtitle}</p>
         </div>
         <Button
           variant="outline"
@@ -346,18 +358,24 @@ export default function AdminPage() {
           onClick={() => setRefreshKey((k) => k + 1)}
           className="gap-2"
         >
-          <RefreshCw className="h-4 w-4" />
+          <RefreshCw className="h-4 w-4" strokeWidth={1.75} />
           {t.admin.refresh}
         </Button>
       </div>
 
-      {/* ── System Health Banner ───────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-        <CheckCircle className="h-4 w-4 text-green-600" />
-        <span className="text-sm text-green-800 font-medium">
+      {/* -- System Health Banner -- */}
+      <div
+        className="flex items-center gap-2 p-3 rounded-lg border"
+        style={{
+          background: "color-mix(in oklch, var(--c-success), transparent 92%)",
+          borderColor: "color-mix(in oklch, var(--c-success), transparent 70%)",
+        }}
+      >
+        <CheckCircle className="h-4 w-4" style={{ color: "var(--c-success)" }} strokeWidth={1.75} />
+        <span className="text-sm font-medium" style={{ color: "var(--c-success)" }}>
           {t.admin.systems_operational}
         </span>
-        <span className="text-xs text-green-600 ml-auto">
+        <span className="text-xs ml-auto tt-tabular" style={{ color: "var(--c-success)" }}>
           {t.admin.last_checked}: {new Date().toLocaleTimeString()}
         </span>
       </div>
@@ -533,28 +551,28 @@ export default function AdminPage() {
             <StatusSummaryCard
               label={t.admin.active}
               count={activeMerchants}
-              icon={<CheckCircle className="h-4 w-4 text-green-600" />}
-              bg="bg-green-50"
+              icon={CheckCircle}
+              tone="var(--c-success)"
             />
             <StatusSummaryCard
               label={t.admin.pending}
               count={pendingMerchants}
-              icon={<Clock className="h-4 w-4 text-yellow-600" />}
-              bg="bg-yellow-50"
+              icon={Clock}
+              tone="var(--c-warn)"
             />
             <StatusSummaryCard
               label={t.admin.suspended}
               count={suspendedMerchants}
-              icon={<Ban className="h-4 w-4 text-red-600" />}
-              bg="bg-red-50"
+              icon={Ban}
+              tone="var(--c-danger)"
             />
             <StatusSummaryCard
               label={t.admin.onboarded}
               count={
                 merchants?.filter((m) => m.onboarding_completed).length ?? 0
               }
-              icon={<Activity className="h-4 w-4 text-blue-600" />}
-              bg="bg-blue-50"
+              icon={Activity}
+              tone="var(--c-info)"
             />
           </div>
         </TabsContent>
@@ -568,13 +586,22 @@ export default function AdminPage() {
                 {t.admin.merchant_list_desc} ({totalMerchants} total)
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
               {merchantsLoading ? (
-                <div className="space-y-3">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Skeleton key={i} className="h-12 w-full" />
-                  ))}
-                </div>
+                <LoadingState
+                  rows={5}
+                  columnLabels={[
+                    t.admin.business,
+                    t.admin.email,
+                    t.admin.status,
+                    t.admin.verification,
+                    t.admin.onboarded,
+                    t.admin.joined,
+                    t.admin.actions,
+                  ]}
+                />
+              ) : (merchants ?? []).length === 0 ? (
+                <EmptyState icon={Building2} title={t.admin.no_merchants} />
               ) : (
                 <div className="overflow-x-auto">
                   <Table>
@@ -592,22 +619,12 @@ export default function AdminPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {(merchants ?? []).length === 0 ? (
-                        <TableRow>
-                          <TableCell
-                            colSpan={7}
-                            className="text-center py-12 text-muted-foreground"
-                          >
-                            {t.admin.no_merchants}
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        (merchants ?? []).map((merchant) => (
+                      {(merchants ?? []).map((merchant) => (
                           <TableRow key={merchant.id}>
                             <TableCell className="font-medium">
                               {merchant.business_name}
                             </TableCell>
-                            <TableCell className="text-sm text-muted-foreground">
+                            <TableCell className="text-sm tt-muted">
                               {merchant.contact_email}
                             </TableCell>
                             <TableCell>
@@ -620,16 +637,16 @@ export default function AdminPage() {
                             </TableCell>
                             <TableCell>
                               {merchant.onboarding_completed ? (
-                                <span className="text-green-600 text-sm">
+                                <span className="text-sm" style={{ color: "var(--c-success)" }}>
                                   ✓ {t.admin.complete}
                                 </span>
                               ) : (
-                                <span className="text-yellow-600 text-sm">
+                                <span className="text-sm" style={{ color: "var(--c-warn)" }}>
                                   {t.admin.in_progress}
                                 </span>
                               )}
                             </TableCell>
-                            <TableCell className="text-sm text-muted-foreground">
+                            <TableCell className="text-sm tt-muted">
                               {new Date(
                                 merchant.created_at,
                               ).toLocaleDateString()}
@@ -644,8 +661,7 @@ export default function AdminPage() {
                               </Button>
                             </TableCell>
                           </TableRow>
-                        ))
-                      )}
+                      ))}
                     </TableBody>
                   </Table>
                 </div>
@@ -659,30 +675,30 @@ export default function AdminPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card>
               <CardContent className="p-6 text-center">
-                <p className="text-sm text-muted-foreground mb-1">
+                <p className="text-sm tt-muted mb-1">
                   {t.admin.total_revenue}
                 </p>
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-2xl font-bold tt-tabular" style={{ color: "var(--c-success)" }}>
                   {formatCurrency(totalRevenue)}
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-6 text-center">
-                <p className="text-sm text-muted-foreground mb-1">
+                <p className="text-sm tt-muted mb-1">
                   {t.admin.current_mrr}
                 </p>
-                <p className="text-2xl font-bold text-purple-600">
+                <p className="text-2xl font-bold tt-tabular" style={{ color: "var(--c-primary)" }}>
                   {formatCurrency(mrr)}
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-6 text-center">
-                <p className="text-sm text-muted-foreground mb-1">
+                <p className="text-sm tt-muted mb-1">
                   {t.admin.arr_projection}
                 </p>
-                <p className="text-2xl font-bold text-blue-600">
+                <p className="text-2xl font-bold tt-tabular" style={{ color: "var(--c-info)" }}>
                   {formatCurrency(arr)}
                 </p>
               </CardContent>
@@ -771,10 +787,13 @@ export default function AdminPage() {
               </div>
               <div className="flex items-center gap-1">
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                  <span
+                    className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                    style={{ background: "var(--c-success)" }}
+                  ></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: "var(--c-success)" }}></span>
                 </span>
-                <span className="text-xs text-muted-foreground ml-1">
+                <span className="text-xs tt-muted ml-1">
                   {t.admin.live}
                 </span>
               </div>
@@ -789,7 +808,7 @@ export default function AdminPage() {
               ) : (
                 <div className="space-y-2">
                   {(auditLogs ?? []).length === 0 ? (
-                    <p className="text-center py-10 text-muted-foreground">
+                    <p className="text-center py-10 tt-muted">
                       {t.admin.no_audit_events}
                     </p>
                   ) : (
@@ -799,23 +818,23 @@ export default function AdminPage() {
                         className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/40 transition-colors border border-border/50"
                       >
                         <div className="p-1.5 bg-primary/10 rounded">
-                          <Activity className="h-3 w-3 text-primary" />
+                          <Activity className="h-3 w-3" style={{ color: "var(--c-primary)" }} strokeWidth={1.75} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">
-                            <span className="text-primary">{log.action}</span>
+                            <span style={{ color: "var(--c-primary)" }}>{log.action}</span>
                             {log.resource_type && (
-                              <span className="text-muted-foreground">
+                              <span className="tt-muted">
                                 {" "}
                                 · {log.resource_type}
                               </span>
                             )}
                           </p>
-                          <p className="text-xs text-muted-foreground truncate">
+                          <p className="text-xs tt-muted truncate">
                             User: {log.user_id?.slice(0, 8)}…
                           </p>
                         </div>
-                        <div className="text-xs text-muted-foreground whitespace-nowrap">
+                        <div className="text-xs tt-muted whitespace-nowrap">
                           {new Date(log.created_at).toLocaleTimeString()}
                         </div>
                       </div>
@@ -835,20 +854,25 @@ export default function AdminPage() {
 function StatusSummaryCard({
   label,
   count,
-  icon,
-  bg,
+  icon: Icon,
+  tone,
 }: {
   label: string;
   count: number;
-  icon: React.ReactNode;
-  bg: string;
+  icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>;
+  tone: string;
 }) {
   return (
     <Card>
       <CardContent className="p-4">
-        <div className={`inline-flex p-2 rounded-lg ${bg} mb-2`}>{icon}</div>
-        <p className="text-2xl font-bold">{count}</p>
-        <p className="text-sm text-muted-foreground">{label}</p>
+        <div
+          className="inline-flex p-2 rounded-lg mb-2"
+          style={{ background: `color-mix(in oklch, ${tone}, transparent 88%)`, color: tone }}
+        >
+          <Icon size={16} strokeWidth={1.75} />
+        </div>
+        <p className="tt-stat-value tt-tabular">{count}</p>
+        <p className="text-sm tt-muted">{label}</p>
       </CardContent>
     </Card>
   );
@@ -870,14 +894,14 @@ function EmptyChartState({
   return (
     <div className="flex flex-col items-center justify-center h-64 text-center px-6">
       <div className="p-3 bg-muted rounded-full mb-3">
-        <BarChart3 className="h-8 w-8 text-muted-foreground" />
+        <BarChart3 className="h-8 w-8 tt-muted" />
       </div>
       <p className="text-sm font-semibold">{title}</p>
-      <p className="text-xs text-muted-foreground mt-1 max-w-xs">
+      <p className="text-xs tt-muted mt-1 max-w-xs">
         {description}
       </p>
       {disclaimer && (
-        <p className="text-[10px] text-muted-foreground/70 mt-3 uppercase tracking-wide">
+        <p className="text-[10px] tt-faint mt-3 uppercase tracking-wide">
           {disclaimer}
         </p>
       )}
