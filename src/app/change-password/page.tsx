@@ -10,16 +10,20 @@
  * password here. Deliberately lives OUTSIDE the `(dashboard)` route
  * group so it renders without the sidebar/header chrome and without
  * re-triggering the dashboard layout's own redirect-to-login check.
+ *
+ * Re-skinned onto the shared <AuthShell> split-panel (design_files/
+ * auth.jsx's `ChangePassword`) — logic unchanged.
  */
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, ShieldCheck, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { AuthShell } from '@/components/layout/auth-shell';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store';
 import { useI18n } from '@/i18n';
@@ -88,62 +92,64 @@ export default function ChangePasswordPage() {
     }
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 p-4">
-      <div className="w-full max-w-md relative z-10">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl shadow-lg mb-4">
-            <ShieldCheck className="h-8 w-8 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-foreground">{t.forcedPasswordChange.title}</h1>
-        </div>
+  const strength = [newPassword.length >= 8, /[A-Z]/.test(newPassword) && /[a-z]/.test(newPassword), /\d/.test(newPassword), /[^A-Za-z0-9]/.test(newPassword)];
+  const strengthCount = strength.filter(Boolean).length;
 
-        <Card className="shadow-xl border-0 bg-card/80 backdrop-blur">
-          <CardHeader>
-            <CardTitle className="text-lg">{t.forcedPasswordChange.title}</CardTitle>
-            <CardDescription>{t.forcedPasswordChange.desc}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="new-password">{t.forcedPasswordChange.new_password}</Label>
-                <Input
-                  id="new-password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  disabled={isLoading}
-                  rightIcon={
-                    <button type="button" onClick={() => setShowPassword((s) => !s)} className="p-0">
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirm-password">{t.forcedPasswordChange.confirm_password}</Label>
-                <Input
-                  id="confirm-password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  disabled={isLoading}
-                />
-              </div>
-              <Button type="submit" className="w-full h-10" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    {t.forcedPasswordChange.submitting}
-                  </>
-                ) : (
-                  t.forcedPasswordChange.submit
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+  return (
+    <AuthShell variant="change">
+      <Badge variant="warning" className="mb-4">
+        <AlertTriangle className="h-3 w-3" strokeWidth={1.75} />
+        Required · First-time login
+      </Badge>
+      <h1 className="tt-head text-3xl mb-2">{t.forcedPasswordChange.title}</h1>
+      <p className="tt-muted text-sm mb-8">{t.forcedPasswordChange.desc}</p>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="new-password">{t.forcedPasswordChange.new_password}</Label>
+          <Input
+            id="new-password"
+            type={showPassword ? 'text' : 'password'}
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            disabled={isLoading}
+            rightIcon={
+              <button type="button" onClick={() => setShowPassword((s) => !s)} className="p-0">
+                {showPassword ? <EyeOff className="h-4 w-4" strokeWidth={1.75} /> : <Eye className="h-4 w-4" strokeWidth={1.75} />}
+              </button>
+            }
+          />
+          <div className="flex gap-1 mt-1.5">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="flex-1 h-[3px] rounded-full"
+                style={{ background: i <= strengthCount ? 'var(--c-success)' : 'var(--c-border)' }}
+              />
+            ))}
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="confirm-password">{t.forcedPasswordChange.confirm_password}</Label>
+          <Input
+            id="confirm-password"
+            type={showPassword ? 'text' : 'password'}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            disabled={isLoading}
+          />
+        </div>
+        <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              {t.forcedPasswordChange.submitting}
+            </>
+          ) : (
+            t.forcedPasswordChange.submit
+          )}
+        </Button>
+      </form>
+    </AuthShell>
   );
 }

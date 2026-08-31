@@ -2,13 +2,13 @@
 
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Edit, Trash2, Package, Filter, MoreHorizontal, Eye } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Package, MoreHorizontal, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -19,13 +19,13 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import { AccessGuard } from '@/components/shared/access-guard';
-import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
+import { LoadingState } from '@/components/ui/loading-state';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency, formatDate } from '@/lib/utils/format';
 import type { Product } from '@/types';
 import { ProductForm } from '@/components/products/product-form';
-import { createAuditEntry } from '@/lib/utils/client-audit';
 import { useI18n } from '@/i18n';
 
 async function fetchProducts(search?: string, categoryId?: string) {
@@ -108,7 +108,7 @@ function ProductsPageInner() {
       inactive: 'warning',
       discontinued: 'destructive',
     };
-    return <Badge variant={variants[status] || 'outline'}>{status}</Badge>;
+    return <Badge variant={variants[status] || 'outline'} className="capitalize">{status}</Badge>;
   };
 
   return (
@@ -116,13 +116,13 @@ function ProductsPageInner() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">{t.products.title}</h1>
-          <p className="text-muted-foreground text-sm">
+          <h1 className="tt-page-title">{t.products.title}</h1>
+          <p className="tt-muted text-sm mt-1">
             {t.products.subtitle.replace('{count}', String(products.length))}
           </p>
         </div>
         <Button onClick={() => { setEditProduct(null); setIsFormOpen(true); }}>
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-4 w-4" strokeWidth={1.75} />
           {t.products.add_product}
         </Button>
       </div>
@@ -136,7 +136,7 @@ function ProductsPageInner() {
                 placeholder={t.products.search_placeholder}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                leftIcon={<Search className="h-4 w-4" />}
+                leftIcon={<Search className="h-4 w-4" strokeWidth={1.75} />}
               />
             </div>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
@@ -155,47 +155,60 @@ function ProductsPageInner() {
       </Card>
 
       {/* Products Table */}
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-16">{t.products.image}</TableHead>
-                <TableHead>{t.products.product_name}</TableHead>
-                <TableHead>{t.products.sku}</TableHead>
-                <TableHead>{t.products.category}</TableHead>
-                <TableHead>{t.products.cost_price}</TableHead>
-                <TableHead>{t.products.selling_price}</TableHead>
-                <TableHead>{t.products.product_status}</TableHead>
-                <TableHead className="text-right">{t.common.actions}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                [...Array(6)].map((_, i) => (
-                  <TableRow key={i}>
-                    {[...Array(8)].map((_, j) => (
-                      <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : products.length === 0 ? (
+      {isLoading ? (
+        <LoadingState
+          rows={6}
+          columnLabels={[
+            t.products.image,
+            t.products.product_name,
+            t.products.sku,
+            t.products.category,
+            t.products.cost_price,
+            t.products.selling_price,
+            t.products.product_status,
+            t.common.actions,
+          ]}
+        />
+      ) : products.length === 0 ? (
+        <Card>
+          <CardContent className="p-0">
+            <EmptyState
+              icon={Package}
+              title={t.products.no_products}
+              body={t.products.add_first_product}
+              action={
+                <Button onClick={() => setIsFormOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" strokeWidth={1.75} />
+                  {t.products.add_product}
+                </Button>
+              }
+            />
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={8} className="h-32 text-center">
-                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                      <Package className="h-8 w-8" />
-                      <p>{t.products.no_products}</p>
-                      <Button variant="outline" size="sm" onClick={() => setIsFormOpen(true)}>
-                        {t.products.add_first_product}
-                      </Button>
-                    </div>
-                  </TableCell>
+                  <TableHead className="w-16">{t.products.image}</TableHead>
+                  <TableHead>{t.products.product_name}</TableHead>
+                  <TableHead>{t.products.sku}</TableHead>
+                  <TableHead>{t.products.category}</TableHead>
+                  <TableHead>{t.products.cost_price}</TableHead>
+                  <TableHead>{t.products.selling_price}</TableHead>
+                  <TableHead>{t.products.product_status}</TableHead>
+                  <TableHead className="text-right">{t.common.actions}</TableHead>
                 </TableRow>
-              ) : (
-                products.map((product) => (
+              </TableHeader>
+              <TableBody>
+                {products.map((product) => (
                   <TableRow key={product.id}>
                     <TableCell>
-                      <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center overflow-hidden">
+                      <div
+                        className="tt-placeholder w-10 h-10 rounded-md flex items-center justify-center overflow-hidden"
+                        style={{ background: 'var(--c-surfaceAlt)' }}
+                      >
                         {product.image_url ? (
                           <Image
                             src={product.image_url}
@@ -205,7 +218,7 @@ function ProductsPageInner() {
                             className="object-cover w-full h-full"
                           />
                         ) : (
-                          <Package className="h-4 w-4 text-muted-foreground" />
+                          <Package className="h-4 w-4 tt-muted" strokeWidth={1.75} />
                         )}
                       </div>
                     </TableCell>
@@ -213,12 +226,12 @@ function ProductsPageInner() {
                       <div>
                         <p className="font-medium">{product.name}</p>
                         {product.make && (
-                          <p className="text-xs text-muted-foreground">{product.make}</p>
+                          <p className="text-xs tt-muted">{product.make}</p>
                         )}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{product.sku}</code>
+                      <code className="tt-mono text-xs bg-muted px-1.5 py-0.5 rounded">{product.sku}</code>
                     </TableCell>
                     <TableCell>
                       {(product.category as { name?: string } | null)?.name ? (
@@ -226,48 +239,48 @@ function ProductsPageInner() {
                           {(product.category as { name: string }).name}
                         </Badge>
                       ) : (
-                        <span className="text-muted-foreground text-xs">—</span>
+                        <span className="tt-muted text-xs">—</span>
                       )}
                     </TableCell>
-                    <TableCell>{formatCurrency(product.cost_price)}</TableCell>
-                    <TableCell className="font-semibold">{formatCurrency(product.selling_price)}</TableCell>
+                    <TableCell className="tt-tabular">{formatCurrency(product.cost_price)}</TableCell>
+                    <TableCell className="tt-tabular font-semibold">{formatCurrency(product.selling_price)}</TableCell>
                     <TableCell>{getStatusBadge(product.status)}</TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon-sm">
-                            <MoreHorizontal className="h-4 w-4" />
+                            <MoreHorizontal className="h-4 w-4" strokeWidth={1.75} />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => setViewProduct(product)}>
-                            <Eye className="h-4 w-4 mr-2" /> {t.products.view_details}
+                            <Eye className="h-4 w-4 mr-2" strokeWidth={1.75} /> {t.products.view_details}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => { setEditProduct(product); setIsFormOpen(true); }}>
-                            <Edit className="h-4 w-4 mr-2" /> {t.products.edit}
+                            <Edit className="h-4 w-4 mr-2" strokeWidth={1.75} /> {t.products.edit}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-destructive focus:text-destructive"
                             onClick={() => handleDelete(product)}
                           >
-                            <Trash2 className="h-4 w-4 mr-2" /> {t.products.delete}
+                            <Trash2 className="h-4 w-4 mr-2" strokeWidth={1.75} /> {t.products.delete}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Product Form Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editProduct ? t.products.edit_product : t.products.add_product}</DialogTitle>
+            <DialogTitle className="tt-head">{editProduct ? t.products.edit_product : t.products.add_product}</DialogTitle>
           </DialogHeader>
           <ProductForm
             product={editProduct}
@@ -290,36 +303,39 @@ function ProductsPageInner() {
         <Dialog open={!!viewProduct} onOpenChange={() => setViewProduct(null)}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{t.products.product_details}</DialogTitle>
+              <DialogTitle className="tt-head">{t.products.product_details}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="flex gap-4">
-                <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
+                <div
+                  className="tt-placeholder w-20 h-20 rounded-lg flex items-center justify-center overflow-hidden"
+                  style={{ background: 'var(--c-surfaceAlt)' }}
+                >
                   {viewProduct.image_url ? (
                     <Image src={viewProduct.image_url} alt={viewProduct.name} width={80} height={80} className="object-cover" />
                   ) : (
-                    <Package className="h-8 w-8 text-muted-foreground" />
+                    <Package className="h-8 w-8 tt-muted" strokeWidth={1.75} />
                   )}
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg">{viewProduct.name}</h3>
-                  {viewProduct.make && <p className="text-sm text-muted-foreground">{viewProduct.make}</p>}
-                  {getStatusBadge(viewProduct.status)}
+                  <h3 className="tt-section-title text-lg">{viewProduct.name}</h3>
+                  {viewProduct.make && <p className="text-sm tt-muted">{viewProduct.make}</p>}
+                  <div className="mt-1">{getStatusBadge(viewProduct.status)}</div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <div><span className="text-muted-foreground">{t.products.sku}:</span> <span className="font-medium">{viewProduct.sku}</span></div>
-                <div><span className="text-muted-foreground">{t.products.barcode}:</span> <span className="font-medium">{viewProduct.barcode || '—'}</span></div>
-                <div><span className="text-muted-foreground">{t.products.cost_price}:</span> <span className="font-medium">{formatCurrency(viewProduct.cost_price)}</span></div>
-                <div><span className="text-muted-foreground">{t.products.selling_price}:</span> <span className="font-semibold text-green-600">{formatCurrency(viewProduct.selling_price)}</span></div>
-                <div><span className="text-muted-foreground">{t.products.margin}:</span> <span className="font-medium">
+                <div><span className="tt-muted">{t.products.sku}:</span> <span className="font-medium tt-mono">{viewProduct.sku}</span></div>
+                <div><span className="tt-muted">{t.products.barcode}:</span> <span className="font-medium tt-mono">{viewProduct.barcode || '—'}</span></div>
+                <div><span className="tt-muted">{t.products.cost_price}:</span> <span className="font-medium tt-tabular">{formatCurrency(viewProduct.cost_price)}</span></div>
+                <div><span className="tt-muted">{t.products.selling_price}:</span> <span className="font-semibold tt-tabular" style={{ color: 'var(--c-success)' }}>{formatCurrency(viewProduct.selling_price)}</span></div>
+                <div><span className="tt-muted">{t.products.margin}:</span> <span className="font-medium tt-tabular">
                   {viewProduct.selling_price > 0 ? Math.round(((viewProduct.selling_price - viewProduct.cost_price) / viewProduct.selling_price) * 100) : 0}%
                 </span></div>
-                <div><span className="text-muted-foreground">{t.products.added}:</span> <span className="font-medium">{formatDate(viewProduct.created_at)}</span></div>
+                <div><span className="tt-muted">{t.products.added}:</span> <span className="font-medium">{formatDate(viewProduct.created_at)}</span></div>
               </div>
               {viewProduct.description && (
                 <div>
-                  <p className="text-sm text-muted-foreground">{t.products.description}</p>
+                  <p className="text-sm tt-muted">{t.products.description}</p>
                   <p className="text-sm mt-1">{viewProduct.description}</p>
                 </div>
               )}
