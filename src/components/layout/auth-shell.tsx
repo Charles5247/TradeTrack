@@ -6,6 +6,7 @@ import { useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
+import { AuthCarousel } from "@/components/layout/auth-carousel";
 
 /**
  * Shared split-panel shell for every auth screen (Login / Signup /
@@ -19,6 +20,12 @@ import { Button } from "@/components/ui/button";
  * for the marketing testimonials section, and /features' "Coming
  * Soon" labeling), those are replaced here with a single honest,
  * unattributed product statement instead of invented customer proof.
+ *
+ * The right panel's background is an auto-advancing photo carousel
+ * (`<AuthCarousel>`) rather than a flat `var(--c-primary)` fill — see
+ * auth-carousel.tsx for the photography-sourcing note (real photos are
+ * not available this session; each slide uses the same flagged
+ * `.tt-placeholder` treatment as every other photo slot in the app).
  *
  * Renders nothing on the right panel below the `lg` breakpoint so
  * narrow/mobile viewports get the full-width form instead of a
@@ -94,31 +101,48 @@ function AuthBrandPanel({ variant }: { variant: AuthVariant }) {
       className="relative hidden lg:flex flex-col justify-between overflow-hidden p-14"
       style={{ background: "var(--c-primary)", color: "var(--c-primaryFg)" }}
     >
+      {/* Carousel fills the whole panel; the eyebrow/heading block and
+          the blobs below are layered on top with `relative` + a z-index
+          stack so they stay readable over whichever slide is active. */}
+      <div className="absolute inset-0">
+        <AuthCarousel />
+      </div>
+
       <div
         className="tt-blob-float-1 absolute rounded-full blur-3xl pointer-events-none"
-        style={{ top: -60, right: -60, width: 420, height: 420, background: "var(--c-accent)", opacity: 0.35 }}
-      />
-      <div
-        className="tt-blob-float-2 absolute rounded-full blur-3xl pointer-events-none"
-        style={{ bottom: -80, left: -60, width: 360, height: 360, background: "var(--c-primaryFg)", opacity: 0.06 }}
+        style={{ top: -60, right: -60, width: 420, height: 420, background: "var(--c-accent)", opacity: 0.25, zIndex: 1 }}
       />
 
-      <div className="relative">
+      <div className="relative z-[2]">
         <div
           className="tt-eyebrow"
-          style={{ color: "color-mix(in oklch, var(--c-primaryFg), transparent 30%)" }}
+          style={{
+            color: "#fff",
+            opacity: 0.75,
+            textShadow: "0 1px 8px rgba(0,0,0,0.35)",
+          }}
         >
           {panel.eyebrow}
         </div>
-        <div className="tt-head" style={{ fontSize: 40, marginTop: 12, maxWidth: 440, letterSpacing: "var(--letter-tight)" }}>
+        <div
+          className="tt-head"
+          style={{
+            fontSize: 40,
+            marginTop: 12,
+            maxWidth: 440,
+            letterSpacing: "var(--letter-tight)",
+            color: "#fff",
+            textShadow: "0 2px 16px rgba(0,0,0,0.4)",
+          }}
+        >
           {panel.heading}
         </div>
       </div>
 
-      <div className="relative text-sm" style={{ opacity: 0.85, maxWidth: 400, lineHeight: 1.6 }}>
-        Offline-first POS &amp; inventory built for Nigerian retail — sell, track
-        stock, and manage multiple locations, even without a connection.
-      </div>
+      {/* Spacer — the carousel itself renders the bottom caption + dot
+          nav (see auth-carousel.tsx), so this panel only needs to hold
+          the top eyebrow/heading block above. */}
+      <div className="relative z-[2]" style={{ height: 1 }} />
     </div>
   );
 }

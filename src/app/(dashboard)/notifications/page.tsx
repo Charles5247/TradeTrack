@@ -4,8 +4,8 @@ import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Bell, CheckCheck, AlertTriangle, Package, DollarSign, ArrowLeftRight, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
 import { createClient } from '@/lib/supabase/client';
 import { formatRelativeTime } from '@/lib/utils/format';
@@ -42,13 +42,17 @@ const iconMap: Record<string, React.ElementType> = {
   default: Bell,
 };
 
-const colorMap: Record<string, string> = {
-  low_stock: 'text-amber-600 bg-amber-100 dark:bg-amber-900/30',
-  out_of_stock: 'text-red-600 bg-red-100 dark:bg-red-900/30',
-  pending_payment: 'text-orange-600 bg-orange-100 dark:bg-orange-900/30',
-  pending_transfer: 'text-blue-600 bg-blue-100 dark:bg-blue-900/30',
-  subscription_expiry: 'text-purple-600 bg-purple-100 dark:bg-purple-900/30',
-  default: 'text-gray-600 bg-gray-100 dark:bg-gray-900/30',
+// Retail token colors instead of hardcoded Tailwind color classes — each
+// notification `type` maps to one of the semantic --c-* tokens so the
+// icon chip stays correct in both light and dark mode without a
+// dark:bg-*-900/30 override.
+const colorTokenMap: Record<string, string> = {
+  low_stock: 'var(--c-warn)',
+  out_of_stock: 'var(--c-danger)',
+  pending_payment: 'var(--c-warn)',
+  pending_transfer: 'var(--c-info)',
+  subscription_expiry: 'var(--c-primary)',
+  default: 'var(--c-textMuted)',
 };
 
 export default function NotificationsPage() {
@@ -79,8 +83,8 @@ export default function NotificationsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{t.notifications.title}</h1>
-          <p className="text-muted-foreground text-sm">
+          <h1 className="tt-page-title">{t.notifications.title}</h1>
+          <p className="tt-muted text-sm mt-1">
             {unreadCount > 0 ? t.notifications.unread_count.replace('{count}', String(unreadCount)) : t.notifications.all_caught_up}
           </p>
         </div>
@@ -90,7 +94,7 @@ export default function NotificationsPage() {
             onClick={() => markAllReadMutation.mutate()}
             disabled={markAllReadMutation.isPending}
           >
-            <CheckCheck className="h-4 w-4 mr-2" />
+            <CheckCheck className="h-4 w-4 mr-2" strokeWidth={1.75} />
             {t.notifications.mark_all_read}
           </Button>
         )}
@@ -110,16 +114,14 @@ export default function NotificationsPage() {
             </Card>
           ))
         ) : notifications.length === 0 ? (
-          <Card>
-            <CardContent className="py-16 text-center">
-              <Bell className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
-              <p className="text-muted-foreground">{t.notifications.empty_state}</p>
-            </CardContent>
-          </Card>
+          <EmptyState
+            icon={Bell}
+            title={t.notifications.empty_state}
+          />
         ) : (
           notifications.map((notification) => {
             const Icon = iconMap[notification.type] || iconMap.default;
-            const colorClass = colorMap[notification.type] || colorMap.default;
+            const colorToken = colorTokenMap[notification.type] || colorTokenMap.default;
 
             return (
               <Card
@@ -131,8 +133,14 @@ export default function NotificationsPage() {
                 onClick={() => !notification.is_read && markOneMutation.mutate(notification.id)}
               >
                 <CardContent className="p-4 flex gap-4 cursor-pointer">
-                  <div className={cn('p-2 rounded-lg h-fit shrink-0', colorClass)}>
-                    <Icon className="h-5 w-5" />
+                  <div
+                    className="p-2 rounded-lg h-fit shrink-0"
+                    style={{
+                      color: colorToken,
+                      background: `color-mix(in oklch, ${colorToken}, transparent 88%)`,
+                    }}
+                  >
+                    <Icon className="h-5 w-5" strokeWidth={1.75} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
@@ -140,13 +148,13 @@ export default function NotificationsPage() {
                         <p className={cn('font-medium text-sm', !notification.is_read && 'font-semibold')}>
                           {notification.title}
                         </p>
-                        <p className="text-sm text-muted-foreground mt-0.5">{notification.message}</p>
+                        <p className="text-sm tt-muted mt-0.5">{notification.message}</p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {!notification.is_read && (
                           <span className="w-2 h-2 bg-primary rounded-full" />
                         )}
-                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        <span className="text-xs tt-muted whitespace-nowrap">
                           {formatRelativeTime(notification.created_at)}
                         </span>
                       </div>
