@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "./types";
+import { withTimeout, AUTH_CHECK_TIMEOUT_MS } from "@/lib/utils/timeout";
 
 // Routes that require authentication
 const PROTECTED_PREFIXES = [
@@ -111,14 +112,33 @@ export async function updateSession(request: NextRequest) {
   // network/verification failure the same as "genuinely logged out" — that
   // was forcing traders to /login on every refresh whenever the network
   // blipped, which defeats the offline-first design.
+  //
+  // NOTE ON THE ~30s HANG: getUser() internally reloads the session and,
+  // whenever the cached access token is within ~90s of expiry (or already
+  // expired), unconditionally attempts an on-demand token refresh — this
+  // happens regardless of the `autoRefreshToken` client option, which only
+  // gates the *background* refresh timer, not this refresh-on-read path.
+  // When Supabase is unreachable, that refresh retries with exponential
+  // backoff for up to ~30s before finally throwing. Since this runs on
+  // EVERY navigation to a protected route, an unreachable Supabase turns
+  // into a many-second-to-30-second freeze on every single page load —
+  // which is exactly the "POS checkout froze" symptom, even though the
+  // checkout logic itself never touches this code path. Bound the wait so
+  // the existing session-cookie fallback below kicks in quickly instead.
   let user = null;
   let authCheckFailed = false;
 
   try {
-    const { data } = await supabase.auth.getUser();
+    const { data } = await withTimeout(
+      supabase.auth.getUser(),
+      AUTH_CHECK_TIMEOUT_MS,
+      "getUser timed out",
+    );
     user = data.user;
   } catch {
-    // Network unavailable or Supabase unreachable — do not assume logged out.
+    // Network unavailable, Supabase unreachable, or the call exceeded
+    // AUTH_CHECK_TIMEOUT_MS (e.g. stuck in a token-refresh retry loop) —
+    // do not assume logged out.
     authCheckFailed = true;
   }
 
