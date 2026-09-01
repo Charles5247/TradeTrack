@@ -188,7 +188,10 @@ async function completeSale(payload: {
   const invoiceNumber = `INV-${String(Date.now()).slice(-6)}`;
   // Always commit locally first. A stale `navigator.onLine` state must never
   // block checkout or prevent a receipt from being available.
-  const saleRecord = await persistOfflineSale({ ...payload, invoice_number: invoiceNumber });
+  const saleRecord = await persistOfflineSale({
+    ...payload,
+    invoice_number: invoiceNumber,
+  });
 
   return {
     id: saleRecord.id,
@@ -265,6 +268,11 @@ function POSPageInner() {
 
   const saleMutation = useMutation({
     mutationFn: completeSale,
+    // completeSale only writes to IndexedDB — it must run immediately even
+    // while offline. React Query's default networkMode: 'online' pauses
+    // mutations until the browser's 'online' event fires, which is exactly
+    // what was causing checkout to hang until connectivity returned.
+    networkMode: "always",
     onSuccess: (sale) => {
       setLastSale(sale);
       setShowReceipt(true);
@@ -473,7 +481,9 @@ function POSPageInner() {
             <EmptyState
               icon={Package}
               title={
-                searchQuery ? t.pos.no_products_found : t.pos.select_warehouse_prompt
+                searchQuery
+                  ? t.pos.no_products_found
+                  : t.pos.select_warehouse_prompt
               }
               body={
                 searchQuery
@@ -503,7 +513,10 @@ function POSPageInner() {
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        <Package className="h-6 w-6 tt-faint" strokeWidth={1.75} />
+                        <Package
+                          className="h-6 w-6 tt-faint"
+                          strokeWidth={1.75}
+                        />
                       )}
                     </div>
                     <p
@@ -575,7 +588,10 @@ function POSPageInner() {
             </div>
           ) : cart.items.length === 0 ? (
             <div className="flex h-32 flex-col items-center justify-center tt-muted">
-              <ShoppingCart className="mb-2 h-8 w-8 opacity-30" strokeWidth={1.75} />
+              <ShoppingCart
+                className="mb-2 h-8 w-8 opacity-30"
+                strokeWidth={1.75}
+              />
               <p className="text-sm">{t.pos.empty_cart}</p>
               <p className="text-xs">{t.pos.click_products_to_add}</p>
             </div>
@@ -754,7 +770,9 @@ function POSPageInner() {
                 <span>
                   {t.pos.discount} ({cart.discount}%)
                 </span>
-                <span className="tt-tabular">-{formatCurrency(discountAmount)}</span>
+                <span className="tt-tabular">
+                  -{formatCurrency(discountAmount)}
+                </span>
               </div>
             )}
             {cart.tax_rate > 0 && (
@@ -821,14 +839,17 @@ function POSPageInner() {
       {showReceipt && lastSale && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 no-print"
-          style={{ background: "color-mix(in oklch, var(--c-text), transparent 50%)" }}
+          style={{
+            background: "color-mix(in oklch, var(--c-text), transparent 50%)",
+          }}
         >
           <div className="tt-shadow-2 w-full max-w-sm rounded-[var(--radius-lg)] bg-card p-6">
             <div className="mb-6 text-center">
               <div
                 className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full"
                 style={{
-                  background: "color-mix(in oklch, var(--c-success), transparent 85%)",
+                  background:
+                    "color-mix(in oklch, var(--c-success), transparent 85%)",
                   color: "var(--c-success)",
                 }}
               >
