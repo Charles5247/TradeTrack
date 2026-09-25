@@ -1,5 +1,5 @@
 -- ============================================================
--- TradeTrack - Row Level Security Policies
+-- TracKasuwa - Row Level Security Policies
 -- Migration: 002_rls_policies.sql
 -- ============================================================
 

@@ -1,4 +1,4 @@
-package ng.tradetrack.app;
+package ng.TracKasuwa.app;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -11,7 +11,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 /**
- * TradeTrack Android shell.
+ * TracKasuwa Android shell.
  *
  * Mirrors the philosophy of the desktop Electron shell: this is a thin
  * native wrapper around the existing offline-first PWA (service worker +
@@ -28,7 +28,7 @@ public class MainActivity extends Activity {
     // android-app/app/build.gradle's defaultConfig.buildConfigField),
     // not a hardcoded literal — this lets the production domain be
     // overridden at build time via `-PappUrl=https://...` without
-    // touching this file. Defaults to https://tradetrack.ng/login when
+    // touching this file. Defaults to https://TracKasuwa.ng/login when
     // no -PappUrl is supplied. See android-app/README.md → "Rebuilding
     // with a different domain".
     private static final String APP_URL = BuildConfig.APP_URL;
@@ -60,7 +60,7 @@ public class MainActivity extends Activity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 // Keep in-app navigation inside the WebView as long as it is
-                // the TradeTrack origin; anything else, we still just load
+                // the TracKasuwa origin; anything else, we still just load
                 // in-place since there is no companion browser affordance
                 // for this minimal shell.
                 return false;

@@ -1,6 +1,6 @@
-import React from 'react';
-import type { TransferReceiptData } from '@/lib/receipt/build-transfer-receipt';
-import { BarcodeImage } from '@/components/receipts/barcode-image';
+import React from "react";
+import type { TransferReceiptData } from "@/lib/receipt/build-transfer-receipt";
+import { BarcodeImage } from "@/components/receipts/barcode-image";
 
 /**
  * Distinct receipt/slip template for warehouse stock transfers — visually
@@ -17,10 +17,14 @@ export function TransferReceipt({ data }: { data: TransferReceiptData }) {
           {data.orgName}
         </div>
         {data.orgAddress && (
-          <div className="receipt-center receipt-small">Address: {data.orgAddress}</div>
+          <div className="receipt-center receipt-small">
+            Address: {data.orgAddress}
+          </div>
         )}
         {data.orgPhone && (
-          <div className="receipt-center receipt-small">Telp. {data.orgPhone}</div>
+          <div className="receipt-center receipt-small">
+            Telp. {data.orgPhone}
+          </div>
         )}
 
         <div className="receipt-divider" />
@@ -60,7 +64,7 @@ export function TransferReceipt({ data }: { data: TransferReceiptData }) {
         <div className="receipt-item">
           <span>
             {data.productName}
-            {data.productSku ? ` (${data.productSku})` : ''}
+            {data.productSku ? ` (${data.productSku})` : ""}
           </span>
           <span>{data.quantity}</span>
         </div>
@@ -102,11 +106,17 @@ export function TransferReceipt({ data }: { data: TransferReceiptData }) {
           )}
         </div>
 
-        {data.notes && <div className="receipt-center receipt-notes">{data.notes}</div>}
+        {data.notes && (
+          <div className="receipt-center receipt-notes">{data.notes}</div>
+        )}
 
         <div className="receipt-divider" />
-        <div className="receipt-center receipt-bold receipt-uppercase">Thank you!</div>
-        <div className="receipt-center receipt-small">Powered by TradeTrack</div>
+        <div className="receipt-center receipt-bold receipt-uppercase">
+          Thank you!
+        </div>
+        <div className="receipt-center receipt-small">
+          Powered by TracKasuwa
+        </div>
 
         {data.barcodeValue && (
           <div className="receipt-barcode">

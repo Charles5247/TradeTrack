@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import type { User, CartItem, Cart, Warehouse, SyncStatus } from '@/types';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import type { User, CartItem, Cart, Warehouse, SyncStatus } from "@/types";
 
 // ── Auth Store ────────────────────────────────────────────────
 interface AuthState {
@@ -34,29 +34,30 @@ interface OrgState {
 export const useOrgStore = create<OrgState>()(
   persist(
     (set) => ({
-      currency: 'NGN',
-      organizationName: 'TradeTrack',
-      organizationAddress: '',
-      organizationPhone: '',
+      currency: "NGN",
+      organizationName: "TracKasuwa",
+      organizationAddress: "",
+      organizationPhone: "",
       setCurrency: (currency) => set({ currency }),
       setOrganizationName: (organizationName) => set({ organizationName }),
-      setOrganizationAddress: (organizationAddress) => set({ organizationAddress }),
+      setOrganizationAddress: (organizationAddress) =>
+        set({ organizationAddress }),
       setOrganizationPhone: (organizationPhone) => set({ organizationPhone }),
     }),
-    { name: 'tradetrack-org' }
-  )
+    { name: "TracKasuwa-org" },
+  ),
 );
 
 // ── Cart Store (POS) ──────────────────────────────────────────
 interface CartState extends Cart {
-  addItem: (item: Omit<CartItem, 'discount'> & { discount?: number }) => void;
+  addItem: (item: Omit<CartItem, "discount"> & { discount?: number }) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   updateDiscount: (productId: string, discount: number) => void;
   setCartDiscount: (discount: number) => void;
   setTaxRate: (rate: number) => void;
   setWarehouse: (warehouseId: string) => void;
-  setPaymentMethod: (method: Cart['payment_method']) => void;
+  setPaymentMethod: (method: Cart["payment_method"]) => void;
   setCustomer: (name?: string, phone?: string) => void;
   setNotes: (notes: string) => void;
   clearCart: () => void;
@@ -70,8 +71,8 @@ const defaultCart: Cart = {
   items: [],
   discount: 0,
   tax_rate: 0,
-  warehouse_id: '',
-  payment_method: 'cash',
+  warehouse_id: "",
+  payment_method: "cash",
   customer_name: undefined,
   customer_phone: undefined,
   notes: undefined,
@@ -85,7 +86,7 @@ export const useCartStore = create<CartState>()(
       addItem: (item) => {
         const { items } = get();
         const existingIndex = items.findIndex(
-          (i) => i.product.id === item.product.id
+          (i) => i.product.id === item.product.id,
         );
 
         if (existingIndex >= 0) {
@@ -111,7 +112,7 @@ export const useCartStore = create<CartState>()(
         }
         set({
           items: get().items.map((i) =>
-            i.product.id === productId ? { ...i, quantity } : i
+            i.product.id === productId ? { ...i, quantity } : i,
           ),
         });
       },
@@ -119,7 +120,7 @@ export const useCartStore = create<CartState>()(
       updateDiscount: (productId, discount) => {
         set({
           items: get().items.map((i) =>
-            i.product.id === productId ? { ...i, discount } : i
+            i.product.id === productId ? { ...i, discount } : i,
           ),
         });
       },
@@ -160,7 +161,7 @@ export const useCartStore = create<CartState>()(
       },
     }),
     {
-      name: 'tradetrack-cart',
+      name: "TracKasuwa-cart",
       partialize: (state) => ({
         items: state.items,
         discount: state.discount,
@@ -171,8 +172,8 @@ export const useCartStore = create<CartState>()(
         customer_phone: state.customer_phone,
         notes: state.notes,
       }),
-    }
-  )
+    },
+  ),
 );
 
 // ── UI Store ──────────────────────────────────────────────────
@@ -189,10 +190,10 @@ interface UIState {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
   toggleSidebar: () => void;
-  theme: 'light' | 'dark' | 'system';
-  setTheme: (theme: 'light' | 'dark' | 'system') => void;
-  density: 'comfortable' | 'balanced' | 'dense';
-  setDensity: (density: 'comfortable' | 'balanced' | 'dense') => void;
+  theme: "light" | "dark" | "system";
+  setTheme: (theme: "light" | "dark" | "system") => void;
+  density: "comfortable" | "balanced" | "dense";
+  setDensity: (density: "comfortable" | "balanced" | "dense") => void;
   locale: string;
   setLocale: (locale: string) => void;
   /** ⌘K command palette open state (README §9.1) — not persisted, so it
@@ -209,17 +210,18 @@ export const useUIStore = create<UIState>()(
       sidebarOpen: true,
       setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
       toggleSidebar: () => set({ sidebarOpen: !get().sidebarOpen }),
-      theme: 'light',
+      theme: "light",
       setTheme: (theme) => set({ theme }),
-      density: 'balanced',
+      density: "balanced",
       setDensity: (density) => set({ density }),
-      locale: 'en',
+      locale: "en",
       setLocale: (locale) => set({ locale }),
       commandPaletteOpen: false,
-      setCommandPaletteOpen: (commandPaletteOpen) => set({ commandPaletteOpen }),
+      setCommandPaletteOpen: (commandPaletteOpen) =>
+        set({ commandPaletteOpen }),
     }),
     {
-      name: 'tradetrack-ui',
+      name: "TracKasuwa-ui",
       // Never persist the transient command-palette open flag across
       // reloads/tabs — only sidebarOpen/theme/density/locale are durable
       // preferences.
@@ -229,8 +231,8 @@ export const useUIStore = create<UIState>()(
         density: state.density,
         locale: state.locale,
       }),
-    }
-  )
+    },
+  ),
 );
 
 // ── Sync Store ────────────────────────────────────────────────
@@ -244,7 +246,7 @@ interface SyncState {
 }
 
 export const useSyncStore = create<SyncState>()((set) => ({
-  syncStatus: 'pending',
+  syncStatus: "pending",
   lastSync: null,
   pendingCount: 0,
   setSyncStatus: (syncStatus) => set({ syncStatus }),

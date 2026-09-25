@@ -1,8 +1,8 @@
-# TradeTrack — Enterprise Offline-First POS & Inventory Management
+# TracKasuwa — Enterprise Offline-First POS & Inventory Management
 
 > Production-ready cloud-based POS and inventory management platform for Nigerian market traders.
 
-TradeTrack is a Next.js + Supabase SaaS application: multi-role POS,
+TracKasuwa is a Next.js + Supabase SaaS application: multi-role POS,
 multi-warehouse inventory, offline-first sync, Zainpay subscription
 billing, and native Windows/Android distribution shells around a single
 installable PWA.
@@ -29,7 +29,7 @@ This README is a concise entry point. Deeper documentation lives in
 ## 🛠 Technology Stack
 
 | Layer            | Technology                                     |
-| ---------------- | ----------------------------------------------- |
+| ---------------- | ---------------------------------------------- |
 | Frontend         | Next.js 16, React 19, TypeScript, Tailwind CSS |
 | UI Components    | Radix UI + ShadCN pattern                      |
 | State Management | Zustand                                        |
@@ -44,8 +44,8 @@ This README is a concise entry point. Deeper documentation lives in
 
 ```bash
 # 1. Clone and install
-git clone https://github.com/Charles5247/TradeTrack.git
-cd TradeTrack
+git clone https://github.com/Charles5247/TracKasuwa.git
+cd TracKasuwa
 npm install
 
 # 2. Configure environment
@@ -74,19 +74,19 @@ from the exact same code path — see
 
 ### Demo Credentials (development only, after `npm run setup:demo`)
 
-| Role | Email | Password |
-|---|---|---|
-| Platform Owner | `platformowner@tradetrack.ng` | `demo1234` |
-| Business Owner | `owner@demo.com` | `demo1234` |
-| Admin | `admin@demo.com` | `demo1234` |
-| Cashier | `cashier@demo.com` | `demo1234` |
+| Role           | Email                         | Password   |
+| -------------- | ----------------------------- | ---------- |
+| Platform Owner | `platformowner@TracKasuwa.ng` | `demo1234` |
+| Business Owner | `owner@demo.com`              | `demo1234` |
+| Admin          | `admin@demo.com`              | `demo1234` |
+| Cashier        | `cashier@demo.com`            | `demo1234` |
 
 Only ever shown in the app when `NODE_ENV !== 'production'`.
 
 ## 👥 User Roles
 
 4-tier hierarchy: `platform_owner > business_owner > admin > cashier`.
-`platform_owner` is TradeTrack-staff-only, cross-organization, and never
+`platform_owner` is TracKasuwa-staff-only, cross-organization, and never
 reads or writes a merchant's operational data — only merchant/subscription
 metadata. `business_owner` is auto-created per merchant at onboarding and
 fully isolated from every other organization. See
@@ -139,29 +139,29 @@ validation. Details: [`docs/SECURITY.md`](./docs/SECURITY.md).
 
 ## 🚀 Deployment
 
-TradeTrack is deployed on **Render** (see the checked-in `render.yaml`),
+TracKasuwa is deployed on **Render** (see the checked-in `render.yaml`),
 not Vercel. Full setup (Supabase, Storage, Auth, env vars, Render
 Blueprint deploy, self-hosting alternative): **[`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md)**.
 
 ## 📚 Documentation Index
 
-| Doc | Covers |
-|---|---|
-| [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md) | Render deployment (current platform), Supabase setup, env vars, self-hosting |
-| [`docs/LOCAL_DEV_SETUP.md`](./docs/LOCAL_DEV_SETUP.md) | Local database setup, `supabase db reset`, `npm run verify:plans`, troubleshooting stale/duplicate plan data |
-| [`docs/DOWNLOAD_FLOW.md`](./docs/DOWNLOAD_FLOW.md) | `/download` page, Windows/Android shells, update-check API |
-| [`docs/SUBSCRIPTION_SYSTEM.md`](./docs/SUBSCRIPTION_SYSTEM.md) | 5-tier plans, feature-flag gating, legacy plans |
-| [`docs/CHANGELOG.md`](./docs/CHANGELOG.md) | What shipped, by feature milestone |
-| [`docs/ROADMAP.md`](./docs/ROADMAP.md) | What's shipped, deferred, and not started |
-| [`docs/SYSTEM_ARCHITECTURE.md`](./docs/SYSTEM_ARCHITECTURE.md) | Roles, high-level architecture |
-| [`docs/DATABASE_SCHEMA.md`](./docs/DATABASE_SCHEMA.md) | Full table reference |
-| [`docs/OFFLINE_ARCHITECTURE.md`](./docs/OFFLINE_ARCHITECTURE.md) | IndexedDB cache + sync engine + conflict resolution |
-| [`docs/PAYMENT_ARCHITECTURE.md`](./docs/PAYMENT_ARCHITECTURE.md) | Zainpay integration, webhooks, virtual accounts |
-| [`docs/API_DOCUMENTATION.md`](./docs/API_DOCUMENTATION.md) | Route handler reference |
-| [`docs/MERCHANT_ONBOARDING.md`](./docs/MERCHANT_ONBOARDING.md) | Onboarding flow, forced password change |
-| [`docs/SECURITY.md`](./docs/SECURITY.md) | RLS, auth, validation |
-| [`desktop-app/README.md`](./desktop-app/README.md) | Electron Windows shell build/sign/rebrand |
-| [`android-app/README.md`](./android-app/README.md) | Android WebView shell build/sign/rebrand |
+| Doc                                                              | Covers                                                                                                       |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md)                     | Render deployment (current platform), Supabase setup, env vars, self-hosting                                 |
+| [`docs/LOCAL_DEV_SETUP.md`](./docs/LOCAL_DEV_SETUP.md)           | Local database setup, `supabase db reset`, `npm run verify:plans`, troubleshooting stale/duplicate plan data |
+| [`docs/DOWNLOAD_FLOW.md`](./docs/DOWNLOAD_FLOW.md)               | `/download` page, Windows/Android shells, update-check API                                                   |
+| [`docs/SUBSCRIPTION_SYSTEM.md`](./docs/SUBSCRIPTION_SYSTEM.md)   | 5-tier plans, feature-flag gating, legacy plans                                                              |
+| [`docs/CHANGELOG.md`](./docs/CHANGELOG.md)                       | What shipped, by feature milestone                                                                           |
+| [`docs/ROADMAP.md`](./docs/ROADMAP.md)                           | What's shipped, deferred, and not started                                                                    |
+| [`docs/SYSTEM_ARCHITECTURE.md`](./docs/SYSTEM_ARCHITECTURE.md)   | Roles, high-level architecture                                                                               |
+| [`docs/DATABASE_SCHEMA.md`](./docs/DATABASE_SCHEMA.md)           | Full table reference                                                                                         |
+| [`docs/OFFLINE_ARCHITECTURE.md`](./docs/OFFLINE_ARCHITECTURE.md) | IndexedDB cache + sync engine + conflict resolution                                                          |
+| [`docs/PAYMENT_ARCHITECTURE.md`](./docs/PAYMENT_ARCHITECTURE.md) | Zainpay integration, webhooks, virtual accounts                                                              |
+| [`docs/API_DOCUMENTATION.md`](./docs/API_DOCUMENTATION.md)       | Route handler reference                                                                                      |
+| [`docs/MERCHANT_ONBOARDING.md`](./docs/MERCHANT_ONBOARDING.md)   | Onboarding flow, forced password change                                                                      |
+| [`docs/SECURITY.md`](./docs/SECURITY.md)                         | RLS, auth, validation                                                                                        |
+| [`desktop-app/README.md`](./desktop-app/README.md)               | Electron Windows shell build/sign/rebrand                                                                    |
+| [`android-app/README.md`](./android-app/README.md)               | Android WebView shell build/sign/rebrand                                                                     |
 
 > **Note on `docs/README.md` and `docs/DEPLOYMENT_GUIDE.md`:** these are
 > older documents from an earlier project snapshot (they describe Next.js
@@ -172,4 +172,4 @@ Blueprint deploy, self-hosting alternative): **[`docs/DEPLOYMENT.md`](./docs/DEP
 
 ## 📝 License
 
-MIT © TradeTrack 2026
+MIT © TracKasuwa 2026

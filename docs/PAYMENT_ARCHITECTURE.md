@@ -1,8 +1,8 @@
-# TRADETRACK — Payment Architecture (Zainpay Integration)
+# TracKasuwa — Payment Architecture (Zainpay Integration)
 
 ## Overview
 
-TRADETRACK integrates with **Zainpay** — a Nigerian payment gateway — for subscription billing. The integration follows Zainpay's card payment flow with asynchronous webhook confirmation.
+TracKasuwa integrates with **Zainpay** — a Nigerian payment gateway — for subscription billing. The integration follows Zainpay's card payment flow with asynchronous webhook confirmation.
 
 ---
 
@@ -20,13 +20,14 @@ TRADETRACK integrates with **Zainpay** — a Nigerian payment gateway — for su
 
 ## API Endpoints Used
 
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| POST   | `/zainbox/card/initialize/payment` | Initialize card payment, get paymentUrl |
-| GET    | `/virtual-account/wallet/deposit/verify/:txnRef` | Verify payment status |
-| POST   | *(webhook)* → our `/api/webhooks/zainpay` | Async deposit notification |
+| Method | Endpoint                                         | Purpose                                 |
+| ------ | ------------------------------------------------ | --------------------------------------- |
+| POST   | `/zainbox/card/initialize/payment`               | Initialize card payment, get paymentUrl |
+| GET    | `/virtual-account/wallet/deposit/verify/:txnRef` | Verify payment status                   |
+| POST   | _(webhook)_ → our `/api/webhooks/zainpay`        | Async deposit notification              |
 
 **Base URLs:**
+
 - Sandbox: `https://sandbox.zainpay.ng`
 - Live: `https://api.zainpay.ng`
 
@@ -40,10 +41,14 @@ TRADETRACK integrates with **Zainpay** — a Nigerian payment gateway — for su
 
 ```typescript
 // ❌ WRONG — amount as number
-{ amount: 5000 }
+{
+  amount: 5000;
+}
 
 // ✅ CORRECT — amount must be String()
-{ amount: String(5000) }  // "5000"
+{
+  amount: String(5000);
+} // "5000"
 ```
 
 ### ✅ Rule 2: Check `code === "00"` — NOT `txnStatus`
@@ -226,11 +231,11 @@ INSERT INTO invoices (
 
 ## Error Handling
 
-| Scenario | Behavior |
-|----------|---------|
-| Zainpay API down | Return 502, show retry UI to user |
-| Invalid signature | Return 401, log security alert |
-| Duplicate webhook | Return 200 with `{ duplicate: true }` |
-| code !== "00" | Mark transaction failed, log details |
-| DB insert fails | Return 200 to prevent Zainpay retries, log error |
-| JWT expired | Return 401, redirect to login |
+| Scenario          | Behavior                                         |
+| ----------------- | ------------------------------------------------ |
+| Zainpay API down  | Return 502, show retry UI to user                |
+| Invalid signature | Return 401, log security alert                   |
+| Duplicate webhook | Return 200 with `{ duplicate: true }`            |
+| code !== "00"     | Mark transaction failed, log details             |
+| DB insert fails   | Return 200 to prevent Zainpay retries, log error |
+| JWT expired       | Return 401, redirect to login                    |

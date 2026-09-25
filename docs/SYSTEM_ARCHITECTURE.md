@@ -1,8 +1,8 @@
-# TRADETRACK — System Architecture
+# TracKasuwa — System Architecture
 
 ## Architecture Overview
 
-TRADETRACK follows a **multi-tenant SaaS architecture** with an offline-first PWA front end powered by Next.js 15 App Router, backed by Supabase (PostgreSQL + Auth + Storage).
+TracKasuwa follows a **multi-tenant SaaS architecture** with an offline-first PWA front end powered by Next.js 15 App Router, backed by Supabase (PostgreSQL + Auth + Storage).
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -125,12 +125,12 @@ app/
 
 ### Zustand Stores
 
-| Store                  | Purpose                                       |
-|------------------------|-----------------------------------------------|
-| `useAuthStore`         | User, profile, org, role, session             |
-| `useUIStore`           | Sidebar state, theme, language preference     |
-| `useSyncStore`         | Online/offline status, sync queue progress    |
-| `useNotificationStore` | In-app notification queue                     |
+| Store                  | Purpose                                    |
+| ---------------------- | ------------------------------------------ |
+| `useAuthStore`         | User, profile, org, role, session          |
+| `useUIStore`           | Sidebar state, theme, language preference  |
+| `useSyncStore`         | Online/offline status, sync queue progress |
+| `useNotificationStore` | In-app notification queue                  |
 
 ### TanStack Query (Server State)
 
@@ -139,10 +139,11 @@ All Supabase reads go through `useQuery` with appropriate cache keys:
 ```typescript
 // Pattern: always pass orgId as queryKey dependency
 useQuery({
-  queryKey: ['products', orgId, filters],
-  queryFn: () => supabase.from('products').select('*').eq('organization_id', orgId),
+  queryKey: ["products", orgId, filters],
+  queryFn: () =>
+    supabase.from("products").select("*").eq("organization_id", orgId),
   staleTime: 30_000, // 30 seconds
-})
+});
 ```
 
 ### IndexedDB Schema (idb v2)

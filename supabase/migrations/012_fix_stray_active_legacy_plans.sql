@@ -1,5 +1,5 @@
 -- ============================================================
--- TradeTrack — Migration 012: Fix stray/legacy subscription_plans
+-- TracKasuwa — Migration 012: Fix stray/legacy subscription_plans
 -- rows left incorrectly active after migration 010
 -- ============================================================
 --

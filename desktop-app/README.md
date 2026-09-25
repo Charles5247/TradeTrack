@@ -1,20 +1,20 @@
-# TradeTrack Desktop App (Windows)
+# TracKasuwa Desktop App (Windows)
 
-A thin Electron shell around the TradeTrack web app, packaged as a
+A thin Electron shell around the TracKasuwa web app, packaged as a
 standard NSIS `.exe` installer. See `../android-app/README.md` for the
 Android counterpart — both shells follow the same "wrap the existing
 offline-first PWA, don't reimplement it" philosophy.
 
 ## Why a thin wrapper (not a bundled Next.js server)?
 
-TradeTrack already ships a production-grade offline-first architecture:
+TracKasuwa already ships a production-grade offline-first architecture:
 a service worker (`public/sw.js`), an IndexedDB-backed local store
 (`idb`), and a `SyncEngine` that reconciles local writes with Supabase
 once connectivity returns. Bundling a second Next.js server inside
 Electron would duplicate that stack for no benefit — the app already
 works fully offline in a browser tab. So this shell is just a
 `BrowserWindow` pointed at the deployed app URL, with a **persistent
-partition** (`persist:tradetrack`) so the IndexedDB cache and service
+partition** (`persist:TracKasuwa`) so the IndexedDB cache and service
 worker survive app restarts, plus native affordances (menu, external
 link handling, update checks) layered on via a `contextBridge` preload
 script.
@@ -25,7 +25,7 @@ script.
   configured app URL, routes external links to the OS browser, polls
   `GET /api/version` for updates.
 - `preload.js` — `contextBridge` API (`contextIsolation: true`,
-  `nodeIntegration: false`) exposing `window.tradetrackDesktop`.
+  `nodeIntegration: false`) exposing `window.TracKasuwaDesktop`.
 - `config.js` — resolves the app URL (env var → config file → production
   fallback).
 - `menu.js` — native application menu.
@@ -40,7 +40,7 @@ npm install
 npx electron-builder --win --x64 --publish never
 ```
 
-Output: `dist/TradeTrack-Setup-1.0.0.exe` (NSIS installer).
+Output: `dist/TracKasuwa-Setup-1.0.0.exe` (NSIS installer).
 
 ### Sandbox-specific build notes
 
@@ -75,12 +75,12 @@ for signing/resource-editing).
 three ways to point the shell at a different domain — from least to
 most permanent:
 
-1. **Environment variable (no rebuild)** — set `TRADETRACK_APP_URL`
+1. **Environment variable (no rebuild)** — set `TracKasuwa_APP_URL`
    before launching the installed app, e.g. via a wrapper script or
    the OS environment. Takes effect immediately, no rebuild needed.
-2. **`tradetrack-config.json` (no rebuild)** — drop a JSON file next
+2. **`TracKasuwa-config.json` (no rebuild)** — drop a JSON file next
    to the installed executable (or in this directory during local
-   testing) containing `{ "appUrl": "https://tradetrack.com" }`. Lets
+   testing) containing `{ "appUrl": "https://TracKasuwa.com" }`. Lets
    a reseller/IT admin repoint an already-installed copy without
    rebuilding or redistributing anything.
 3. **Rebuild with the constant changed (permanent default)** — edit
@@ -90,8 +90,8 @@ most permanent:
    npx electron-builder --win --x64 --publish never
    ```
 
-**Do not assume `tradetrack.com` is secured yet.** `DEFAULT_APP_URL`
-remains `https://tradetrack.ng` until told otherwise — this mechanism
+**Do not assume `TracKasuwa.com` is secured yet.** `DEFAULT_APP_URL`
+remains `https://TracKasuwa.ng` until told otherwise — this mechanism
 only makes the domain swappable, it does not perform any actual
 domain change.
 

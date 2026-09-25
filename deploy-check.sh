@@ -2,7 +2,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # deploy-check.sh
 # ─────────────────────────────────────────────────────────────────────────────
-# Pre-deployment sanity gate for TradeTrack. Run this before deploying to
+# Pre-deployment sanity gate for TracKasuwa. Run this before deploying to
 # Render (or any other host) to catch environment, type, and build issues
 # early.
 #

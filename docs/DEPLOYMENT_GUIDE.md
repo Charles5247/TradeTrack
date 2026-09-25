@@ -1,4 +1,4 @@
-# TRADETRACK — Deployment Guide
+# TracKasuwa — Deployment Guide
 
 ## Prerequisites
 
@@ -147,7 +147,7 @@ npm run build
 npm install -g pm2
 
 # Start
-pm2 start npm --name "tradetrack" -- start
+pm2 start npm --name "TracKasuwa" -- start
 
 # Save PM2 state
 pm2 save

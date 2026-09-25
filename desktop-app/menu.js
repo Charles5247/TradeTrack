@@ -1,65 +1,67 @@
 /**
- * TradeTrack Desktop — native application menu.
+ * TracKasuwa Desktop — native application menu.
  */
 
-const { Menu, app, shell } = require('electron');
-const { getAppUrl } = require('./config');
+const { Menu, app, shell } = require("electron");
+const { getAppUrl } = require("./config");
 
 function buildMenu(mainWindow, checkForUpdates) {
   const template = [
     {
-      label: 'TradeTrack',
+      label: "TracKasuwa",
       submenu: [
         {
-          label: 'Reload',
-          accelerator: 'CmdOrCtrl+R',
+          label: "Reload",
+          accelerator: "CmdOrCtrl+R",
           click: () => mainWindow && mainWindow.reload(),
         },
         {
-          label: 'Go to Dashboard',
+          label: "Go to Dashboard",
           click: () => mainWindow && mainWindow.loadURL(getAppUrl()),
         },
-        { type: 'separator' },
+        { type: "separator" },
         {
-          label: 'Check for Updates…',
+          label: "Check for Updates…",
           click: () => checkForUpdates(true),
         },
-        { type: 'separator' },
+        { type: "separator" },
         {
-          label: 'Quit',
-          accelerator: 'CmdOrCtrl+Q',
+          label: "Quit",
+          accelerator: "CmdOrCtrl+Q",
           click: () => app.quit(),
         },
       ],
     },
     {
-      label: 'View',
+      label: "View",
       submenu: [
-        { role: 'zoomIn' },
-        { role: 'zoomOut' },
-        { role: 'resetZoom' },
-        { type: 'separator' },
-        { role: 'togglefullscreen' },
-        { type: 'separator' },
+        { role: "zoomIn" },
+        { role: "zoomOut" },
+        { role: "resetZoom" },
+        { type: "separator" },
+        { role: "togglefullscreen" },
+        { type: "separator" },
         {
-          label: 'Toggle Developer Tools',
-          accelerator: 'CmdOrCtrl+Shift+I',
+          label: "Toggle Developer Tools",
+          accelerator: "CmdOrCtrl+Shift+I",
           click: () => mainWindow && mainWindow.webContents.toggleDevTools(),
         },
       ],
     },
     {
-      label: 'Help',
+      label: "Help",
       submenu: [
         {
-          label: 'TradeTrack Website',
+          label: "TracKasuwa Website",
           click: () => shell.openExternal(getAppUrl()),
         },
         {
-          label: 'About TradeTrack',
-          click: () => mainWindow && mainWindow.webContents.executeJavaScript(
-            `alert('TradeTrack Desktop v${app.getVersion()}')`
-          ),
+          label: "About TracKasuwa",
+          click: () =>
+            mainWindow &&
+            mainWindow.webContents.executeJavaScript(
+              `alert('TracKasuwa Desktop v${app.getVersion()}')`,
+            ),
         },
       ],
     },

@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: tradetrack-web
+    name: TracKasuwa-web
     env: node
     plan: free
     rootDir: .
@@ -30,13 +30,13 @@ services:
         sync: false
       - key: ZAINPAY_WEBHOOK_SECRET
         sync: false
-      - key: TRADETRACK_WINDOWS_LATEST_VERSION
+      - key: TracKasuwa_WINDOWS_LATEST_VERSION
         value: 1.0.0
-      - key: TRADETRACK_WINDOWS_DOWNLOAD_URL
+      - key: TracKasuwa_WINDOWS_DOWNLOAD_URL
         value: ""
-      - key: TRADETRACK_ANDROID_LATEST_VERSION
+      - key: TracKasuwa_ANDROID_LATEST_VERSION
         value: 1.0.0
-      - key: TRADETRACK_ANDROID_DOWNLOAD_URL
+      - key: TracKasuwa_ANDROID_DOWNLOAD_URL
         value: ""
-      - key: TRADETRACK_ANDROID_UNKNOWN_SOURCES_HELP_URL
+      - key: TracKasuwa_ANDROID_UNKNOWN_SOURCES_HELP_URL
         value: ""

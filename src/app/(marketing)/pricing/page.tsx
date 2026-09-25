@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
-import { FALLBACK_PLANS, type Plan } from "@/components/subscriptions/plan-card";
+import {
+  FALLBACK_PLANS,
+  type Plan,
+} from "@/components/subscriptions/plan-card";
 import { getActiveSubscriptionPlans } from "@/lib/subscriptions/get-plans";
 import { PricingClient } from "./pricing-client";
 import { Reveal } from "@/components/marketing/reveal";
@@ -8,7 +11,7 @@ import { Reveal } from "@/components/marketing/reveal";
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Simple, transparent pricing for TradeTrack — Free, Starter, Growth, Business, and Enterprise plans. No card required to start.",
+    "Simple, transparent pricing for TracKasuwa — Free, Starter, Growth, Business, and Enterprise plans. No card required to start.",
 };
 
 // Always fetch live from the DB — pricing must reflect a plan change
@@ -64,12 +67,26 @@ export default async function PricingPage() {
             <div className="tt-eyebrow mb-3">Pricing</div>
           </Reveal>
           <Reveal delay={100}>
-            <h1 className="tt-head" style={{ fontSize: "clamp(36px, 6vw, 64px)", margin: "0 0 20px", lineHeight: 1.05 }}>
+            <h1
+              className="tt-head"
+              style={{
+                fontSize: "clamp(36px, 6vw, 64px)",
+                margin: "0 0 20px",
+                lineHeight: 1.05,
+              }}
+            >
               Pay in Naira. Grow when you grow.
             </h1>
           </Reveal>
           <Reveal delay={200}>
-            <p style={{ fontSize: 18, color: "var(--c-textMuted)", maxWidth: 620, margin: "0 auto" }}>
+            <p
+              style={{
+                fontSize: 18,
+                color: "var(--c-textMuted)",
+                maxWidth: 620,
+                margin: "0 auto",
+              }}
+            >
               Start free. Upgrade only when you need more cashiers, products, or
               warehouses. No hidden fees.
             </p>
@@ -85,10 +102,9 @@ export default async function PricingPage() {
             className="text-center text-xs mx-auto mt-10 max-w-2xl"
             style={{ color: "var(--c-textMuted)" }}
           >
-            All plans include offline-first functionality, multi-device
-            support, and automatic data sync. Prices are billed monthly in
-            Nigerian Naira (₦). Enterprise pricing is custom — talk to
-            sales.
+            All plans include offline-first functionality, multi-device support,
+            and automatic data sync. Prices are billed monthly in Nigerian Naira
+            (₦). Enterprise pricing is custom — talk to sales.
           </p>
         </div>
       </section>

@@ -5,7 +5,7 @@ import { Reveal } from "@/components/marketing/reveal";
 export const metadata: Metadata = {
   title: "Download",
   description:
-    "Download TradeTrack for Windows or Android, or install it as an app directly from your browser. iOS and macOS support is coming soon.",
+    "Download TracKasuwa for Windows or Android, or install it as an app directly from your browser. iOS and macOS support is coming soon.",
 };
 
 export const dynamic = "force-dynamic";
@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
  * client-side (see download-client.tsx) to surface the right install
  * path: Android + desktop Chromium get a `beforeinstallprompt`-driven
  * PWA install button PLUS a direct APK/EXE download link (URLs sourced
- * from env vars — see render.yaml's TRADETRACK_*_DOWNLOAD_URL, never
+ * from env vars — see render.yaml's TracKasuwa_*_DOWNLOAD_URL, never
  * committed binaries to git). iOS and macOS both show an explicit
  * "Coming soon" card — electron-builder only has a `win` target, so
  * there is no real Mac build to link to, and no misleading iOS
@@ -26,20 +26,20 @@ async function getVersionInfo() {
   try {
     // Server Component fetch of our own API route. Falls back to env
     // vars directly if the network round-trip fails for any reason —
-    // both paths ultimately read the same TRADETRACK_* env vars.
+    // both paths ultimately read the same TracKasuwa_* env vars.
     const apiVersion = process.env.NEXT_PUBLIC_APP_VERSION ?? "0.1.0";
     return {
       api_version: apiVersion,
       latest: {
         windows: {
-          version: process.env.TRADETRACK_WINDOWS_LATEST_VERSION || null,
-          download_url: process.env.TRADETRACK_WINDOWS_DOWNLOAD_URL || null,
+          version: process.env.TracKasuwa_WINDOWS_LATEST_VERSION || null,
+          download_url: process.env.TracKasuwa_WINDOWS_DOWNLOAD_URL || null,
         },
         android: {
-          version: process.env.TRADETRACK_ANDROID_LATEST_VERSION || null,
-          download_url: process.env.TRADETRACK_ANDROID_DOWNLOAD_URL || null,
+          version: process.env.TracKasuwa_ANDROID_LATEST_VERSION || null,
+          download_url: process.env.TracKasuwa_ANDROID_DOWNLOAD_URL || null,
           unknown_sources_help_url:
-            process.env.TRADETRACK_ANDROID_UNKNOWN_SOURCES_HELP_URL || null,
+            process.env.TracKasuwa_ANDROID_UNKNOWN_SOURCES_HELP_URL || null,
         },
       },
     };
@@ -55,17 +55,32 @@ export default async function DownloadPage() {
     <div>
       <section style={{ padding: "100px 0 40px", textAlign: "center" }}>
         <div className="mx-auto max-w-3xl px-4 sm:px-6">
-          <Reveal><div className="tt-eyebrow mb-3">Download</div></Reveal>
+          <Reveal>
+            <div className="tt-eyebrow mb-3">Download</div>
+          </Reveal>
           <Reveal delay={100}>
-            <h1 className="tt-head" style={{ fontSize: "clamp(32px, 6vw, 64px)", margin: "0 0 20px", lineHeight: 1.05 }}>
-              Get TradeTrack on every device you sell from.
+            <h1
+              className="tt-head"
+              style={{
+                fontSize: "clamp(32px, 6vw, 64px)",
+                margin: "0 0 20px",
+                lineHeight: 1.05,
+              }}
+            >
+              Get TracKasuwa on every device you sell from.
             </h1>
           </Reveal>
           <Reveal delay={200}>
-            <p style={{ fontSize: 18, color: "var(--c-textMuted)", maxWidth: 620, margin: "0 auto" }}>
-              Get TradeTrack on the devices you already use — as an
-              installed app on Windows and Android, or straight from
-              your browser.
+            <p
+              style={{
+                fontSize: 18,
+                color: "var(--c-textMuted)",
+                maxWidth: 620,
+                margin: "0 auto",
+              }}
+            >
+              Get TracKasuwa on the devices you already use — as an installed
+              app on Windows and Android, or straight from your browser.
             </p>
           </Reveal>
         </div>

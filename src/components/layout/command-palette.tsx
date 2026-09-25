@@ -1,15 +1,9 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { useRouter } from 'next/navigation';
-import {
-  LayoutDashboard,
-  Sun,
-  Moon,
-  Monitor,
-  LogOut,
-} from 'lucide-react';
-import { useTheme } from 'next-themes';
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import { LayoutDashboard, Sun, Moon, Monitor, LogOut } from "lucide-react";
+import { useTheme } from "next-themes";
 import {
   CommandDialog,
   CommandEmpty,
@@ -19,15 +13,15 @@ import {
   CommandList,
   CommandSeparator,
   CommandShortcut,
-} from '@/components/ui/command';
-import { getNavGroupsForRole } from '@/components/layout/nav-config';
-import { useAuthStore, useUIStore } from '@/store';
-import { useI18n } from '@/i18n';
-import type { UserRole } from '@/types';
+} from "@/components/ui/command";
+import { getNavGroupsForRole } from "@/components/layout/nav-config";
+import { useAuthStore, useUIStore } from "@/store";
+import { useI18n } from "@/i18n";
+import type { UserRole } from "@/types";
 
 /**
  * ⌘K command palette (README §9.1 / §6.3 Header). Wraps the shadcn-style
- * <CommandDialog> (cmdk) with TradeTrack's own nav groups so the same
+ * <CommandDialog> (cmdk) with TracKasuwa's own nav groups so the same
  * data source drives both the Sidebar and this palette. Global mount point
  * is DashboardLayout (see dashboard-layout.tsx) so ⌘K works from any
  * dashboard screen. Open state lives in useUIStore.commandPaletteOpen so
@@ -44,13 +38,13 @@ export function CommandPalette() {
 
   React.useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         setOpen(!open);
       }
     };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
   }, [open, setOpen]);
 
   const runCommand = React.useCallback(
@@ -58,7 +52,7 @@ export function CommandPalette() {
       setOpen(false);
       fn();
     },
-    [setOpen]
+    [setOpen],
   );
 
   const groups = getNavGroupsForRole(user?.role as UserRole | undefined);
@@ -72,7 +66,8 @@ export function CommandPalette() {
           <CommandGroup key={group.title} heading={group.title}>
             {group.items.map((item) => {
               const Icon = item.icon;
-              const label = t.nav[item.navKey as keyof typeof t.nav] ?? item.navKey;
+              const label =
+                t.nav[item.navKey as keyof typeof t.nav] ?? item.navKey;
               return (
                 <CommandItem
                   key={item.href}
@@ -88,29 +83,33 @@ export function CommandPalette() {
         ))}
         <CommandSeparator />
         <CommandGroup heading="Theme">
-          <CommandItem onSelect={() => runCommand(() => setTheme('light'))}>
+          <CommandItem onSelect={() => runCommand(() => setTheme("light"))}>
             <Sun className="h-4 w-4" />
             <span>Light</span>
-            {theme === 'light' && <CommandShortcut>Active</CommandShortcut>}
+            {theme === "light" && <CommandShortcut>Active</CommandShortcut>}
           </CommandItem>
-          <CommandItem onSelect={() => runCommand(() => setTheme('dark'))}>
+          <CommandItem onSelect={() => runCommand(() => setTheme("dark"))}>
             <Moon className="h-4 w-4" />
             <span>Dark</span>
-            {theme === 'dark' && <CommandShortcut>Active</CommandShortcut>}
+            {theme === "dark" && <CommandShortcut>Active</CommandShortcut>}
           </CommandItem>
-          <CommandItem onSelect={() => runCommand(() => setTheme('system'))}>
+          <CommandItem onSelect={() => runCommand(() => setTheme("system"))}>
             <Monitor className="h-4 w-4" />
             <span>System</span>
-            {theme === 'system' && <CommandShortcut>Active</CommandShortcut>}
+            {theme === "system" && <CommandShortcut>Active</CommandShortcut>}
           </CommandItem>
         </CommandGroup>
         <CommandSeparator />
         <CommandGroup heading="Go to">
-          <CommandItem onSelect={() => runCommand(() => router.push('/dashboard'))}>
+          <CommandItem
+            onSelect={() => runCommand(() => router.push("/dashboard"))}
+          >
             <LayoutDashboard className="h-4 w-4" />
             <span>Dashboard</span>
           </CommandItem>
-          <CommandItem onSelect={() => runCommand(() => router.push('/settings'))}>
+          <CommandItem
+            onSelect={() => runCommand(() => router.push("/settings"))}
+          >
             <LogOut className="h-4 w-4" />
             <span>Settings</span>
           </CommandItem>

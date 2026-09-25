@@ -59,7 +59,9 @@ function isChromiumBased(): boolean {
   const ua = navigator.userAgent;
   // Chrome, Edge, Brave, Opera, etc. all carry "Chrome"/"Chromium" in UA;
   // exclude Safari specifically (Safari's UA also lacks "Chrome").
-  return /Chrome|Chromium|Edg\//i.test(ua) && !/OPR\/|Firefox/i.test(ua) === true;
+  return (
+    /Chrome|Chromium|Edg\//i.test(ua) && !/OPR\/|Firefox/i.test(ua) === true
+  );
 }
 
 export function DownloadClient({
@@ -113,14 +115,12 @@ export function DownloadClient({
   return (
     <div className="space-y-8">
       {/* Recommended card, based on detected OS */}
-      {os === "android" && (
-        <RecommendedBanner label="We detected Android" />
-      )}
-      {os === "windows" && (
-        <RecommendedBanner label="We detected Windows" />
-      )}
+      {os === "android" && <RecommendedBanner label="We detected Android" />}
+      {os === "windows" && <RecommendedBanner label="We detected Windows" />}
       {(os === "ios" || os === "macos") && (
-        <RecommendedBanner label={`We detected ${os === "ios" ? "iOS" : "macOS"}`} />
+        <RecommendedBanner
+          label={`We detected ${os === "ios" ? "iOS" : "macOS"}`}
+        />
       )}
 
       <div className="grid gap-6 sm:grid-cols-2">
@@ -167,14 +167,14 @@ export function DownloadClient({
                 to continue.
               </li>
               <li>Follow the setup wizard to finish installing.</li>
-              <li>Launch TradeTrack from your Start Menu.</li>
+              <li>Launch TracKasuwa from your Start Menu.</li>
             </ol>
             <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">
               <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5" />
               <span>
-                This warning appears because the installer isn't yet
-                signed with a commercial code-signing certificate — it
-                does not mean the app is unsafe.
+                This warning appears because the installer isn't yet signed with
+                a commercial code-signing certificate — it does not mean the app
+                is unsafe.
               </span>
             </div>
           </CardContent>
@@ -219,8 +219,7 @@ export function DownloadClient({
               </Button>
             ) : (
               <p className="text-sm text-muted-foreground">
-                APK download link not configured yet. Please check back
-                soon.
+                APK download link not configured yet. Please check back soon.
               </p>
             )}
 
@@ -231,13 +230,13 @@ export function DownloadClient({
                 <span className="font-medium text-foreground">
                   "Install blocked" / "unknown sources"
                 </span>{" "}
-                — this is expected since the app isn't distributed via
-                the Play Store yet. Tap{" "}
+                — this is expected since the app isn't distributed via the Play
+                Store yet. Tap{" "}
                 <span className="font-medium text-foreground">Settings</span>{" "}
                 and allow installs from this source.
               </li>
               <li>Return to the download and tap Install.</li>
-              <li>Open TradeTrack from your app drawer.</li>
+              <li>Open TracKasuwa from your app drawer.</li>
             </ol>
             {unknownSourcesUrl && (
               <a
@@ -260,7 +259,7 @@ export function DownloadClient({
               <CardTitle>Desktop Browser (Chrome/Edge)</CardTitle>
             </div>
             <CardDescription>
-              Install TradeTrack as an app directly from your browser
+              Install TracKasuwa as an app directly from your browser
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -276,9 +275,9 @@ export function DownloadClient({
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">
-                Open this page in Chrome or Edge, then look for the
-                install icon in your browser's address bar (or this
-                button will appear automatically).
+                Open this page in Chrome or Edge, then look for the install icon
+                in your browser's address bar (or this button will appear
+                automatically).
               </p>
             )}
           </CardContent>
@@ -304,10 +303,10 @@ export function DownloadClient({
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              We don't have an iOS or macOS build to offer right now —
-              we'd rather say that plainly than give you a link that
-              doesn't work. In the meantime, you can use TradeTrack
-              directly in Safari at your usual web address.
+              We don't have an iOS or macOS build to offer right now — we'd
+              rather say that plainly than give you a link that doesn't work. In
+              the meantime, you can use TracKasuwa directly in Safari at your
+              usual web address.
             </p>
           </CardContent>
         </Card>

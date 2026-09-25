@@ -533,7 +533,11 @@ export default function SubscriptionsPage() {
           action: "SUBSCRIPTION_CHANGE",
           resource_type: "subscription",
           resource_id: planId,
-          new_values: { plan_id: planId, status: "active", billing_cycle: cycle },
+          new_values: {
+            plan_id: planId,
+            status: "active",
+            billing_cycle: cycle,
+          },
         })
         .then(() => {}); // Non-blocking, ignore RLS errors
     },
@@ -547,7 +551,7 @@ export default function SubscriptionsPage() {
       ),
   });
 
-  // platform_owner (TradeTrack) manages the global plan catalog (add/edit
+  // platform_owner (TracKasuwa) manages the global plan catalog (add/edit
   // price/delete packages). A merchant's business_owner can VIEW plans and
   // self-service select/upgrade their own org's plan, but cannot edit the
   // catalog itself (see migration 008's plans_manage_platform_owner policy).
@@ -606,11 +610,18 @@ export default function SubscriptionsPage() {
           loop. `value`/`onValueChange` map 1:1 onto the pre-existing
           `activeTab` state so none of the conditional panel-rendering
           logic below needed to change. */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as typeof activeTab)}
+      >
         <TabsList>
-          <TabsTrigger value="overview">{t.subscriptions.tab_overview}</TabsTrigger>
+          <TabsTrigger value="overview">
+            {t.subscriptions.tab_overview}
+          </TabsTrigger>
           <TabsTrigger value="plans">{t.subscriptions.tab_plans}</TabsTrigger>
-          <TabsTrigger value="billing">{t.subscriptions.tab_billing}</TabsTrigger>
+          <TabsTrigger value="billing">
+            {t.subscriptions.tab_billing}
+          </TabsTrigger>
         </TabsList>
       </Tabs>
 

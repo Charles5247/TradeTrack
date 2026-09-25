@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ============================================================================
- * TradeTrack — "Retail" design system (README §4)
+ * TracKasuwa — "Retail" design system (README §4)
  * Bold POS, cashier-friendly, electric-blue primary. Light + dark required.
  *
  * Architecture: the canonical palette lives in the --c-* namespace (colors),
@@ -407,13 +407,16 @@
  * never flat gray.
  * ========================================================================= */
 .tt-shadow-1 {
-  box-shadow: 0 20px 40px -12px color-mix(in oklch, var(--c-primary), transparent 82%);
+  box-shadow: 0 20px 40px -12px
+    color-mix(in oklch, var(--c-primary), transparent 82%);
 }
 .tt-shadow-2 {
-  box-shadow: 0 30px 60px -15px color-mix(in oklch, var(--c-primary), transparent 78%);
+  box-shadow: 0 30px 60px -15px
+    color-mix(in oklch, var(--c-primary), transparent 78%);
 }
 .tt-shadow-3 {
-  box-shadow: 0 40px 100px -20px color-mix(in oklch, var(--c-primary), transparent 75%);
+  box-shadow: 0 40px 100px -20px
+    color-mix(in oklch, var(--c-primary), transparent 75%);
 }
 
 /* Mini avatar (styles.css .tt-avatar) — used in Sidebar's user-info
@@ -702,7 +705,8 @@
 }
 .tt-feature-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 20px 40px -12px color-mix(in oklch, var(--c-primary), transparent 82%);
+  box-shadow: 0 20px 40px -12px
+    color-mix(in oklch, var(--c-primary), transparent 82%);
 }
 
 .tt-industry-card {
@@ -712,7 +716,8 @@
 }
 .tt-industry-card:hover {
   transform: translateY(-6px) scale(1.005);
-  box-shadow: 0 30px 60px -18px color-mix(in oklch, var(--c-primary), transparent 78%);
+  box-shadow: 0 30px 60px -18px
+    color-mix(in oklch, var(--c-primary), transparent 78%);
 }
 
 /* Receipt template, shared by every generated receipt (POS sale, vendor

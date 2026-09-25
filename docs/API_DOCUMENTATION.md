@@ -1,4 +1,4 @@
-# TRADETRACK — API Documentation
+# TracKasuwa — API Documentation
 
 All API routes are located in `src/app/api/`. Authentication is required unless noted otherwise.
 
@@ -13,8 +13,11 @@ Authorization: Bearer <supabase-user-jwt>
 ```
 
 Get the JWT from:
+
 ```typescript
-const { data: { session } } = await supabase.auth.getSession();
+const {
+  data: { session },
+} = await supabase.auth.getSession();
 const token = session?.access_token;
 ```
 
@@ -27,6 +30,7 @@ const token = session?.access_token;
 Write an audit log entry. Uses the service role key to bypass RLS.
 
 **Request:**
+
 ```json
 {
   "user_id": "uuid",
@@ -38,11 +42,13 @@ Write an audit log entry. Uses the service role key to bypass RLS.
 ```
 
 **Response (201):**
+
 ```json
 { "success": true }
 ```
 
 **Errors:**
+
 - `400` — Missing required fields
 - `500` — Database error
 
@@ -53,6 +59,7 @@ Write an audit log entry. Uses the service role key to bypass RLS.
 List all users in the system. Requires admin/owner role.
 
 **Response (200):**
+
 ```json
 {
   "users": [
@@ -75,6 +82,7 @@ List all users in the system. Requires admin/owner role.
 Create a new user via Supabase Auth Admin API.
 
 **Request:**
+
 ```json
 {
   "email": "newuser@example.com",
@@ -86,6 +94,7 @@ Create a new user via Supabase Auth Admin API.
 ```
 
 **Response (201):**
+
 ```json
 {
   "success": true,
@@ -94,6 +103,7 @@ Create a new user via Supabase Auth Admin API.
 ```
 
 **Errors:**
+
 - `400` — Email already exists or invalid password
 - `403` — Caller is not admin/owner
 - `500` — Internal error
@@ -105,6 +115,7 @@ Create a new user via Supabase Auth Admin API.
 Update a user's profile or reset their password.
 
 **Request:**
+
 ```json
 {
   "full_name": "Updated Name",
@@ -114,11 +125,13 @@ Update a user's profile or reset their password.
 ```
 
 **Response (200):**
+
 ```json
 { "success": true }
 ```
 
 **Errors:**
+
 - `403` — Cannot modify owner accounts (unless super_admin)
 - `404` — User not found
 
@@ -129,11 +142,13 @@ Update a user's profile or reset their password.
 Delete a user account. Cannot delete yourself.
 
 **Response (200):**
+
 ```json
 { "success": true }
 ```
 
 **Errors:**
+
 - `400` — Cannot delete your own account
 - `404` — User not found
 
@@ -144,6 +159,7 @@ Delete a user account. Cannot delete yourself.
 Initialize a Zainpay card payment for a subscription purchase.
 
 **Request:**
+
 ```json
 {
   "amount": 500000,
@@ -159,6 +175,7 @@ Initialize a Zainpay card payment for a subscription purchase.
 > Note: `amount` is in kobo (NGN × 100). Server converts to `String()` per Zainpay spec.
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -169,6 +186,7 @@ Initialize a Zainpay card payment for a subscription purchase.
 ```
 
 **Errors:**
+
 - `400` — Invalid amount or missing required fields
 - `401` — Unauthorized
 - `502` — Zainpay API error
@@ -188,6 +206,7 @@ Verify a Zainpay payment after callback redirect.
 | `userId` | No | User ID for audit log |
 
 **Response (200 — success):**
+
 ```json
 {
   "success": true,
@@ -201,6 +220,7 @@ Verify a Zainpay payment after callback redirect.
 ```
 
 **Response (200 — failed):**
+
 ```json
 {
   "success": false,
@@ -217,6 +237,7 @@ Verify a Zainpay payment after callback redirect.
 Alternative POST version of verify (same logic).
 
 **Request:**
+
 ```json
 {
   "txnRef": "TT-xxx",
@@ -232,11 +253,13 @@ Alternative POST version of verify (same logic).
 Zainpay asynchronous payment notification. Called by Zainpay servers.
 
 **Headers:**
+
 ```
 x-zainpay-signature: <hmac-sha512-of-body>
 ```
 
 **Request Body (Zainpay deposit.successful):**
+
 ```json
 {
   "txnRef": "TT-xxx",
@@ -248,6 +271,7 @@ x-zainpay-signature: <hmac-sha512-of-body>
 ```
 
 **Response (200 — always, even on error):**
+
 ```json
 { "received": true, "processed": true, "txnRef": "TT-xxx" }
 ```
@@ -256,7 +280,7 @@ x-zainpay-signature: <hmac-sha512-of-body>
 
 ---
 
-### `GET /api/payments/initialize` *(health probe)*
+### `GET /api/payments/initialize` _(health probe)_
 
 Returns gateway configuration status. No auth required.
 
@@ -284,14 +308,14 @@ All errors follow this format:
 
 ## HTTP Status Codes
 
-| Code | Meaning |
-|------|---------|
-| 200 | Success |
-| 201 | Created |
-| 400 | Bad request (validation error) |
-| 401 | Authentication required |
-| 403 | Forbidden (insufficient permissions) |
-| 404 | Resource not found |
-| 500 | Internal server error |
-| 502 | Upstream gateway error |
-| 503 | Service unavailable (not configured) |
+| Code | Meaning                              |
+| ---- | ------------------------------------ |
+| 200  | Success                              |
+| 201  | Created                              |
+| 400  | Bad request (validation error)       |
+| 401  | Authentication required              |
+| 403  | Forbidden (insufficient permissions) |
+| 404  | Resource not found                   |
+| 500  | Internal server error                |
+| 502  | Upstream gateway error               |
+| 503  | Service unavailable (not configured) |

@@ -1,9 +1,9 @@
-# TradeTrack — Local Dev Database Setup
+# TracKasuwa — Local Dev Database Setup
 
 > **Why this doc exists**: a real bug was found where the local dev
 > Supabase database had accumulated 11 `subscription_plans` rows across
 > 3 different seeding sources (migration `003`'s legacy 3-tier seed,
-> `supabase/seed/001_seed_data.sql`'s *independent* legacy 3-tier seed,
+> `supabase/seed/001_seed_data.sql`'s _independent_ legacy 3-tier seed,
 > and migration `010`'s canonical 5-tier seed) instead of the 5 rows a
 > clean setup should have. A gap in migration `010`'s defensive
 > deactivation logic (fixed in migration `012`, see
@@ -57,7 +57,7 @@ psql "$(supabase status -o env | grep DB_URL | cut -d= -f2)" \
 > reconciled with it. As of migration `012`, these 3 rows are
 > immediately deactivated by name (`is_active = false`) the moment the
 > migration that includes that defensive UPDATE has already run — but
-> since the seed file runs *after* all migrations in this flow, that
+> since the seed file runs _after_ all migrations in this flow, that
 > UPDATE won't re-run automatically. **If you run the seed file, always
 > immediately verify the catalog afterward** (see "Verify your setup"
 > below) and, if needed, re-run migration `012`'s UPDATE statement by
@@ -103,6 +103,7 @@ npm run verify:plans
 ```
 
 This asserts, against your actual database:
+
 - exactly **5** active `subscription_plans` rows exist
 - they are named exactly `Free`, `Starter`, `Growth`, `Business`,
   `Enterprise`, at exactly ₦0 / ₦5,000 / ₦15,000 / ₦30,000 / ₦0
@@ -122,6 +123,7 @@ the migrations above from a clean database (Option A is the fastest
 way to guarantee a clean slate).
 
 You can also spot-check visually once `npm run dev` is running:
+
 - **Public pricing page**: `http://localhost:3000/pricing` should show
   exactly 5 cards (Free, Starter, Growth [Most Popular], Business,
   Enterprise), with "Barcode Label Printing" showing a "Rolling out
@@ -130,7 +132,7 @@ You can also spot-check visually once `npm run dev` is running:
 - **Dashboard**: sign in as `owner@demo.com` (see the demo credentials
   table in the root `README.md`) → Subscriptions ▸ Plans tab. It must
   render the exact same 5 plans, same names, same prices, as `/pricing`.
-  (Signing in as `platformowner@tradetrack.ng` instead will show the
+  (Signing in as `platformowner@TracKasuwa.ng` instead will show the
   same 5 active plans PLUS the deactivated legacy rows, each with an
   "Inactive" badge and Edit/Delete controls — that is the
   platform-owner-only catalog-management view, by design; see

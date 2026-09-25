@@ -1,5 +1,5 @@
 /**
- * TradeTrack - Demo Users Setup Script
+ * TracKasuwa - Demo Users Setup Script
  * ============================================================
  * Creates real Supabase Auth users (with confirmed emails and
  * working passwords) for the demo accounts that already have
@@ -81,7 +81,7 @@ interface DemoUser {
 const DEMO_USERS: DemoUser[] = [
   {
     id: "22222222-2222-2222-2222-222222222222",
-    email: "platformowner@tradetrack.ng",
+    email: "platformowner@TracKasuwa.ng",
     full_name: "Platform Owner",
     role: "platform_owner",
     organization_id: null,
@@ -279,7 +279,7 @@ async function setupDemoUser(demoUser: DemoUser) {
 
 async function main() {
   console.log("============================================================");
-  console.log("TradeTrack - Demo Users Setup");
+  console.log("TracKasuwa - Demo Users Setup");
   console.log("============================================================");
   console.log(`Target Supabase project: ${SUPABASE_URL}`);
 

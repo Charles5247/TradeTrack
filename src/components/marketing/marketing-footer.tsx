@@ -34,17 +34,16 @@ const FOOTER_COLUMNS: {
   },
   {
     title: "Legal",
-    links: [
-      { label: "Privacy" },
-      { label: "Terms" },
-      { label: "Security" },
-    ],
+    links: [{ label: "Privacy" }, { label: "Terms" }, { label: "Security" }],
   },
 ];
 
 export function MarketingFooter() {
   return (
-    <footer className="border-t border-border" style={{ padding: "60px 0 32px" }}>
+    <footer
+      className="border-t border-border"
+      style={{ padding: "60px 0 32px" }}
+    >
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-4 mb-12">
           <div>
@@ -53,8 +52,8 @@ export function MarketingFooter() {
               className="mt-4 max-w-[320px] text-[13px] leading-[1.6]"
               style={{ color: "var(--c-textMuted)" }}
             >
-              Offline-first POS &amp; inventory management for Nigerian
-              market traders. Made in Nigeria, deployed everywhere.
+              Offline-first POS &amp; inventory management for Nigerian market
+              traders. Made in Nigeria, deployed everywhere.
             </p>
           </div>
 
@@ -89,7 +88,7 @@ export function MarketingFooter() {
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-6">
           <div className="text-xs" style={{ color: "var(--c-textFaint)" }}>
-            © {new Date().getFullYear()} TradeTrack Nigeria Ltd | Powered by
+            © {new Date().getFullYear()} TracKasuwa Nigeria Ltd | Powered by
             CAXiE Technologies Ltd
           </div>
           <div className="text-xs" style={{ color: "var(--c-textFaint)" }}>

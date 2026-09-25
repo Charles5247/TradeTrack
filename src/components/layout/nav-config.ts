@@ -240,10 +240,7 @@ export function getBreadcrumbForPath(
         pathname === item.href ||
         (item.href !== "/dashboard" && pathname.startsWith(item.href));
       if (isMatch) {
-        if (
-          !bestMatch ||
-          item.href.length > bestMatch.item.href.length
-        ) {
+        if (!bestMatch || item.href.length > bestMatch.item.href.length) {
           bestMatch = { group, item };
         }
       }
@@ -260,5 +257,5 @@ export function getBreadcrumbForPath(
     .split("-")
     .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
     .join(" ");
-  return { breadcrumb: [], title: humanized || "TradeTrack" };
+  return { breadcrumb: [], title: humanized || "TracKasuwa" };
 }

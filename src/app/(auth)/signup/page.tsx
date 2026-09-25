@@ -13,7 +13,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AuthShell } from "@/components/layout/auth-shell";
 import { signupSchema, type SignupFormData } from "@/lib/validations";
 import { createClient } from "@/lib/supabase/client";
-import { saveOfflineAuthSession, saveRememberedLogin } from "@/lib/offline/auth-cache";
+import {
+  saveOfflineAuthSession,
+  saveRememberedLogin,
+} from "@/lib/offline/auth-cache";
 
 /**
  * Public self-serve signup page — reachable logged-out, no existing
@@ -106,8 +109,8 @@ function SignupForm() {
 
       toast.success(
         result.plan?.name
-          ? `Welcome to TradeTrack! You're on the ${result.plan.name} plan.`
-          : "Welcome to TradeTrack!"
+          ? `Welcome to TracKasuwa! You're on the ${result.plan.name} plan.`
+          : "Welcome to TracKasuwa!",
       );
       router.push("/dashboard");
       router.refresh();
@@ -241,7 +244,11 @@ function SignupForm() {
 
       <p className="tt-muted text-center text-sm mt-6">
         Already have an account?{" "}
-        <a href="/login" className="font-semibold" style={{ color: "var(--c-primary)" }}>
+        <a
+          href="/login"
+          className="font-semibold"
+          style={{ color: "var(--c-primary)" }}
+        >
           Sign in
         </a>
       </p>

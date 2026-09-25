@@ -55,7 +55,7 @@ export default async function DashboardGroupLayout({
       .getAll()
       .some((c) => c.name.startsWith("sb-") && c.name.includes("auth-token"));
     const hasOfflineSessionCookie = cookieStore.has(
-      "tradetrack-offline-session",
+      "TracKasuwa-offline-session",
     );
 
     // When the network is down, a null user result from Supabase is not proof

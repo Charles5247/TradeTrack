@@ -1,11 +1,16 @@
 "use client";
 
 /**
- * TradeTrack - Offline Sync Engine
+ * TracKasuwa - Offline Sync Engine
  * Handles bidirectional sync between IndexedDB and Supabase
  */
 
 import { createClient } from "@/lib/supabase/client";
+import {
+  isAuthRetryableFetchError,
+  isAuthSessionMissingError,
+} from "@supabase/supabase-js";
+import { AUTH_CHECK_TIMEOUT_MS, withTimeout } from "@/lib/utils/timeout";
 import {
   getDB,
   getPendingSyncItems,
@@ -16,6 +21,7 @@ import {
 } from "./db";
 
 type SyncStatus = "idle" | "syncing" | "error" | "offline";
+const SYNC_AUTH_TIMEOUT = "Sync authentication timed out";
 
 interface SyncState {
   status: SyncStatus;
@@ -111,7 +117,13 @@ class SyncEngine {
       const supabase = createClient();
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+        error: authError,
+      } = await withTimeout(
+        supabase.auth.getUser(),
+        AUTH_CHECK_TIMEOUT_MS,
+        SYNC_AUTH_TIMEOUT,
+      );
+      if (authError && !isAuthSessionMissingError(authError)) throw authError;
       if (!user) {
         this.setState({ status: "idle" });
         return;
@@ -165,9 +177,13 @@ class SyncEngine {
       // self-healing automatically once connectivity actually returns
       // (no permanent flag flip that could get stuck).
       const isNetworkFailure =
-        err instanceof TypeError && /fetch/i.test(err.message);
+        isAuthRetryableFetchError(err) ||
+        (err instanceof TypeError &&
+          /fetch|network|load failed/i.test(err.message)) ||
+        (err instanceof Error && err.message === SYNC_AUTH_TIMEOUT);
       if (isNetworkFailure) {
-        this.isOnline = false;
+        // Keep automatic retries enabled: an unreachable endpoint does not
+        // necessarily produce a browser offline/online event when it recovers.
         this.retryCooldownUntil = Date.now() + this.RETRY_COOLDOWN_MS;
         this.setState({ status: "offline", error: null });
         return;
@@ -181,18 +197,61 @@ class SyncEngine {
     const pendingItems = await getPendingSyncItems();
     // IndexedDB returns UUID key order, not insertion/dependency order.
     // Preserve the relative order of existing operations; send PO parents first.
-    pendingItems.sort((a, b) =>
-      Number(b.table_name === "purchase_orders") - Number(a.table_name === "purchase_orders"));
+    pendingItems.sort(
+      (a, b) =>
+        Number(b.table_name === "purchase_orders") -
+        Number(a.table_name === "purchase_orders"),
+    );
+    // Vendor parents precede their items and mirrored sales as well.
+    pendingItems.sort(
+      (a, b) =>
+        Number(b.table_name === "vendor_transactions") -
+        Number(a.table_name === "vendor_transactions"),
+    );
     if (pendingItems.length === 0) return;
 
     const supabase = createClient();
     const db = await getDB();
 
-    for (const item of pendingItems) {
+    for (const queuedItem of pendingItems) {
+      let item = queuedItem;
+      if (item.table_name === "inventory" && item.operation === "UPDATE") {
+        // A vendor may refresh a pending payload after this flush took its
+        // snapshot. Read and claim it atomically before sending that payload.
+        const tx = db.transaction("sync_queue", "readwrite");
+        const current = (await tx.store.get(item.id)) as
+          | SyncQueueRecord
+          | undefined;
+        if (!current || current.status !== "pending") {
+          await tx.done;
+          continue;
+        }
+        item = current;
+        await tx.store.put({ ...current, status: "syncing" });
+        await tx.done;
+      }
+      const vendorId =
+        item.table_name === "vendor_transaction_items"
+          ? item.payload.vendor_transaction_id
+          : item.table_name === "sales" &&
+              String(item.payload.invoice_number).startsWith("VENDOR-") &&
+              String(item.payload.notes).startsWith("Vendor transaction ")
+            ? String(item.payload.notes).slice("Vendor transaction ".length)
+            : null;
+      if (vendorId) {
+        const parents = (await db.getAllFromIndex(
+          "sync_queue",
+          "by-queue-key",
+          ["vendor_transactions", vendorId, "INSERT"],
+        )) as SyncQueueRecord[];
+        if (parents.some((parent) => parent.status !== "synced")) continue;
+      }
       if (item.table_name === "purchase_order_items") {
-        const parents = (await db.getAllFromIndex("sync_queue", "by-queue-key", [
-          "purchase_orders", item.payload.purchase_order_id, "INSERT",
-        ])) as SyncQueueRecord[];
+        const parents = (await db.getAllFromIndex(
+          "sync_queue",
+          "by-queue-key",
+          ["purchase_orders", item.payload.purchase_order_id, "INSERT"],
+        )) as SyncQueueRecord[];
         if (parents.some((parent) => parent.status !== "synced")) continue;
       }
       try {
@@ -260,15 +319,37 @@ class SyncEngine {
     const { synced: _localSynced, ...serverPayload } = item.payload;
 
     const isAppendOnly =
-      item.table_name === "sales" || item.table_name === "sale_items" ||
-      item.table_name === "purchase_orders" || item.table_name === "purchase_order_items";
+      item.table_name === "sales" ||
+      item.table_name === "sale_items" ||
+      item.table_name === "purchase_orders" ||
+      item.table_name === "purchase_order_items" ||
+      item.table_name === "vendor_transactions" ||
+      item.table_name === "vendor_transaction_items";
+    const isVendorInsert =
+      item.table_name === "vendor_transactions" ||
+      item.table_name === "vendor_transaction_items" ||
+      (item.table_name === "sales" &&
+        String(item.payload.invoice_number).startsWith("VENDOR-") &&
+        String(item.payload.notes).startsWith("Vendor transaction "));
 
     switch (item.operation) {
       case "INSERT":
+        if (isVendorInsert) {
+          return client
+            .from(item.table_name)
+            .upsert(serverPayload, {
+              onConflict: "id",
+              ignoreDuplicates: true,
+            });
+        }
         // A retried draft must never reset an order already sent/received online.
-        if (item.table_name === "purchase_orders" || item.table_name === "purchase_order_items") {
+        if (
+          item.table_name === "purchase_orders" ||
+          item.table_name === "purchase_order_items"
+        ) {
           return client.from(item.table_name).upsert(serverPayload, {
-            onConflict: "id", ignoreDuplicates: true,
+            onConflict: "id",
+            ignoreDuplicates: true,
           });
         }
         // Append-only tables and fresh inserts both upsert-by-id, which is
@@ -374,6 +455,7 @@ class SyncEngine {
       await saveToOfflineDB("categories", categories);
     }
     await this.pullPurchaseOrders(orgId, supabase);
+    await this.pullVendorTransactions(orgId, supabase);
   }
 
   // Full paginated snapshots: items have no updated_at column. Never replace
@@ -381,25 +463,88 @@ class SyncEngine {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async pullPurchaseOrders(orgId: string, supabase: any = createClient()) {
     const db = await getDB();
-    for (const table of ["suppliers", "purchase_orders", "purchase_order_items"] as const) {
+    for (const table of [
+      "suppliers",
+      "purchase_orders",
+      "purchase_order_items",
+    ] as const) {
       for (let offset = 0; ; offset += 500) {
-        let query = supabase.from(table).select(table === "purchase_order_items"
-          ? "*, purchase_orders!inner(organization_id)"
-          : table === "purchase_orders"
-            ? "*, creator:users!purchase_orders_created_by_fkey(full_name), receiver:users!purchase_orders_received_by_fkey(full_name)"
-            : "*");
-        query = query.eq(table === "purchase_order_items"
-          ? "purchase_orders.organization_id" : "organization_id", orgId);
-        const { data, error } = await query.order("id").range(offset, offset + 499);
+        let query = supabase
+          .from(table)
+          .select(
+            table === "purchase_order_items"
+              ? "*, purchase_orders!inner(organization_id)"
+              : table === "purchase_orders"
+                ? "*, creator:users!purchase_orders_created_by_fkey(full_name), receiver:users!purchase_orders_received_by_fkey(full_name)"
+                : "*",
+          );
+        query = query.eq(
+          table === "purchase_order_items"
+            ? "purchase_orders.organization_id"
+            : "organization_id",
+          orgId,
+        );
+        const { data, error } = await query
+          .order("id")
+          .range(offset, offset + 499);
         if (error) throw error;
         const tx = db.transaction([table, "sync_queue"], "readwrite");
         const queue = tx.objectStore("sync_queue");
         for (const row of data ?? []) {
-          const pending = (await queue.index("by-queue-key").getAll([
-            table, row.id, "INSERT",
-          ])) as SyncQueueRecord[];
+          const pending = (await queue
+            .index("by-queue-key")
+            .getAll([table, row.id, "INSERT"])) as SyncQueueRecord[];
           if (pending.some((entry) => entry.status !== "synced")) continue;
           const { purchase_orders: _join, ...record } = row;
+          await tx.objectStore(table).put({ ...record, synced: true });
+        }
+        await tx.done;
+        if (!data || data.length < 500) break;
+      }
+    }
+  }
+
+  // Vendor-only snapshots keep POS sales and PO cache behavior unchanged.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async pullVendorTransactions(orgId: string, supabase: any = createClient()) {
+    const db = await getDB();
+    for (const table of [
+      "vendor_transactions",
+      "vendor_transaction_items",
+      "sales",
+    ] as const) {
+      for (let offset = 0; ; offset += 500) {
+        let query = supabase
+          .from(table)
+          .select(
+            table === "vendor_transaction_items"
+              ? "*, vendor_transactions!inner(organization_id)"
+              : table === "vendor_transactions"
+                ? "*, creator:users(full_name)"
+                : "*",
+          );
+        query = query.eq(
+          table === "vendor_transaction_items"
+            ? "vendor_transactions.organization_id"
+            : "organization_id",
+          orgId,
+        );
+        if (table === "sales")
+          query = query
+            .like("notes", "Vendor transaction %")
+            .is("deleted_at", null);
+        const { data, error } = await query
+          .order("id")
+          .range(offset, offset + 499);
+        if (error) throw error;
+        const tx = db.transaction([table, "sync_queue"], "readwrite");
+        for (const row of data ?? []) {
+          const pending = (await tx
+            .objectStore("sync_queue")
+            .index("by-queue-key")
+            .getAll([table, row.id, "INSERT"])) as SyncQueueRecord[];
+          if (pending.some((entry) => entry.status !== "synced")) continue;
+          const { vendor_transactions: _join, ...record } = row;
           await tx.objectStore(table).put({ ...record, synced: true });
         }
         await tx.done;

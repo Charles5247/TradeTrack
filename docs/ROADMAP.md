@@ -1,4 +1,4 @@
-# TradeTrack — Roadmap
+# TracKasuwa — Roadmap
 
 What's shipped, what's explicitly deferred on features that already exist,
 and what's not started yet. This is a living document — update it whenever
@@ -25,7 +25,7 @@ a feature's status changes, especially when something moves out of
 - **Purchase Orders** (minimal): create → send → receive workflow at
   `/purchase-orders`, gated to the Business tier, updating inventory on
   receipt. See "Explicitly deferred" below for what this intentionally
-  does *not* cover yet.
+  does _not_ cover yet.
 
 ## Explicitly deferred (on features that already exist)
 

@@ -1,5 +1,5 @@
 /**
- * TradeTrack - User Management API Routes
+ * TracKasuwa - User Management API Routes
  * POST   /api/users   - Create a new user.
  *                        - platform_owner: may create any role (cross-org).
  *                        - business_owner: may only create admin/cashier
@@ -203,7 +203,7 @@ export async function GET() {
     }
 
     // Only a merchant's business_owner lists users through this endpoint.
-    // platform_owner (TradeTrack staff, cross-org) has no Users screen and
+    // platform_owner (TracKasuwa staff, cross-org) has no Users screen and
     // no organization_id — the org-scoped query below would otherwise fail
     // with a 500 for them (organization_id = '' matches nothing and the
     // service-role query errors on the empty filter).

@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace 'ng.tradetrack.app'
+    namespace 'ng.TracKasuwa.app'
     compileSdk 34
 
     defaultConfig {
-        applicationId "ng.tradetrack.app"
+        applicationId "ng.TracKasuwa.app"
         minSdk 24
         targetSdk 34
         versionCode 1
@@ -15,11 +15,11 @@ android {
 
         // ─────────────────────────────────────────────────────────
         // Production domain — the ONLY hardcoded copy of it in this
-        // module. Do NOT assume tradetrack.com is secured yet; keep
-        // tradetrack.ng as the fallback until told otherwise.
+        // module. Do NOT assume TracKasuwa.com is secured yet; keep
+        // TracKasuwa.ng as the fallback until told otherwise.
         //
         // Override at build time without touching any source file:
-        //   ./gradlew assembleRelease -PappUrl=https://tradetrack.com
+        //   ./gradlew assembleRelease -PappUrl=https://TracKasuwa.com
         //
         // MainActivity.java reads this via BuildConfig.APP_URL instead
         // of a literal string constant. The path is "/login" (not the
@@ -29,7 +29,7 @@ android {
         // so returning users see no extra step.
         // ─────────────────────────────────────────────────────────
         buildConfigField "String", "APP_URL",
-            "\"${project.findProperty('appUrl') ?: 'https://tradetrack.ng'}/login\""
+            "\"${project.findProperty('appUrl') ?: 'https://TracKasuwa.ng'}/login\""
     }
 
     buildTypes {

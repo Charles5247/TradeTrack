@@ -1,6 +1,6 @@
 -- ============================================================
 -- Migration 004: Merchants, Webhook Logs, Invoices
--- TRADETRACK — Owner Payment & Merchant Management Tables
+-- TracKasuwa — Owner Payment & Merchant Management Tables
 -- ============================================================
 
 -- ─────────────────────────────────────────

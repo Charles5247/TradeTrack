@@ -1,5 +1,5 @@
 /**
- * TradeTrack - Subscription Plan Limits & Feature-Gate Enforcement
+ * TracKasuwa - Subscription Plan Limits & Feature-Gate Enforcement
  *
  * Pure, framework-free helpers backing the 5-tier subscription ladder
  * introduced in migration 010 (Free -> Starter -> Growth -> Business ->
@@ -26,7 +26,7 @@
  * catalogued (and priced into a plan) but do NOT yet have a live product
  * surface a customer can actually use.
  *
- * WHY THIS EXISTS: TradeTrack is a financial/accountability app — a
+ * WHY THIS EXISTS: TracKasuwa is a financial/accountability app — a
  * customer must never be led to believe they are paying for a feature
  * that isn't actually usable yet. Every UI that renders a plan's feature
  * list (the dashboard "Plans" tab's `PlanCard` and the public `/pricing`
@@ -145,7 +145,7 @@ export function isUnlimitedLimit(limit: number | null | undefined): boolean {
  *
  * Fails OPEN (returns true) when `plan` is unavailable -- a transient
  * failure to load subscription data must never block a merchant from
- * using the app, per TradeTrack's offline-first philosophy.
+ * using the app, per TracKasuwa's offline-first philosophy.
  */
 export function canAddProduct(
   currentProductCount: number,

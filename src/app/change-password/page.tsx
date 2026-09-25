@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
 /**
- * TradeTrack — Forced Password Change Gate
+ * TracKasuwa — Forced Password Change Gate
  *
  * Shown when the signed-in user's `must_change_password` flag is true
  * (set at merchant onboarding when a business_owner is created with a
@@ -15,25 +15,25 @@
  * auth.jsx's `ChangePassword`) — logic unchanged.
  */
 
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Loader2, AlertTriangle } from 'lucide-react';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { AuthShell } from '@/components/layout/auth-shell';
-import { createClient } from '@/lib/supabase/client';
-import { useAuthStore } from '@/store';
-import { useI18n } from '@/i18n';
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Eye, EyeOff, Loader2, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { AuthShell } from "@/components/layout/auth-shell";
+import { createClient } from "@/lib/supabase/client";
+import { useAuthStore } from "@/store";
+import { useI18n } from "@/i18n";
 
 export default function ChangePasswordPage() {
   const router = useRouter();
   const { t } = useI18n();
   const { user, setUser } = useAuthStore();
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -41,9 +41,9 @@ export default function ChangePasswordPage() {
     // If the user isn't signed in, or doesn't actually need to change
     // their password, there's nothing to gate — send them on their way.
     if (user && !user.must_change_password) {
-      router.replace('/dashboard');
+      router.replace("/dashboard");
     } else if (!user) {
-      router.replace('/login');
+      router.replace("/login");
     }
   }, [user, router]);
 
@@ -67,32 +67,42 @@ export default function ChangePasswordPage() {
       const supabase = createClient();
 
       // 1. Set the new password via Supabase Auth.
-      const { error: pwdErr } = await supabase.auth.updateUser({ password: newPassword });
+      const { error: pwdErr } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
       if (pwdErr) throw pwdErr;
 
       // 2. Clear must_change_password on the profile row.
       if (user) {
         const { error: profileErr } = await supabase
-          .from('users')
+          .from("users")
           .update({ must_change_password: false } as any)
-          .eq('id', user.id);
+          .eq("id", user.id);
         if (profileErr) throw profileErr;
 
         setUser({ ...user, must_change_password: false });
       }
 
       toast.success(t.forcedPasswordChange.success);
-      router.push('/dashboard');
+      router.push("/dashboard");
       router.refresh();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : t.forcedPasswordChange.update_failed;
+      const msg =
+        err instanceof Error
+          ? err.message
+          : t.forcedPasswordChange.update_failed;
       toast.error(msg);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const strength = [newPassword.length >= 8, /[A-Z]/.test(newPassword) && /[a-z]/.test(newPassword), /\d/.test(newPassword), /[^A-Za-z0-9]/.test(newPassword)];
+  const strength = [
+    newPassword.length >= 8,
+    /[A-Z]/.test(newPassword) && /[a-z]/.test(newPassword),
+    /\d/.test(newPassword),
+    /[^A-Za-z0-9]/.test(newPassword),
+  ];
   const strengthCount = strength.filter(Boolean).length;
 
   return (
@@ -106,16 +116,26 @@ export default function ChangePasswordPage() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="new-password">{t.forcedPasswordChange.new_password}</Label>
+          <Label htmlFor="new-password">
+            {t.forcedPasswordChange.new_password}
+          </Label>
           <Input
             id="new-password"
-            type={showPassword ? 'text' : 'password'}
+            type={showPassword ? "text" : "password"}
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             disabled={isLoading}
             rightIcon={
-              <button type="button" onClick={() => setShowPassword((s) => !s)} className="p-0">
-                {showPassword ? <EyeOff className="h-4 w-4" strokeWidth={1.75} /> : <Eye className="h-4 w-4" strokeWidth={1.75} />}
+              <button
+                type="button"
+                onClick={() => setShowPassword((s) => !s)}
+                className="p-0"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" strokeWidth={1.75} />
+                ) : (
+                  <Eye className="h-4 w-4" strokeWidth={1.75} />
+                )}
               </button>
             }
           />
@@ -124,16 +144,21 @@ export default function ChangePasswordPage() {
               <div
                 key={i}
                 className="flex-1 h-[3px] rounded-full"
-                style={{ background: i <= strengthCount ? 'var(--c-success)' : 'var(--c-border)' }}
+                style={{
+                  background:
+                    i <= strengthCount ? "var(--c-success)" : "var(--c-border)",
+                }}
               />
             ))}
           </div>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="confirm-password">{t.forcedPasswordChange.confirm_password}</Label>
+          <Label htmlFor="confirm-password">
+            {t.forcedPasswordChange.confirm_password}
+          </Label>
           <Input
             id="confirm-password"
-            type={showPassword ? 'text' : 'password'}
+            type={showPassword ? "text" : "password"}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             disabled={isLoading}

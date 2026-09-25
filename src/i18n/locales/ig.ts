@@ -62,7 +62,7 @@ export const ig: typeof en = {
     remember_me: "Chefuo m",
     sign_in: "Banye",
     welcome_back: "Nnọọ",
-    sign_in_subtitle: "Banye akaụntụ TradeTrack gị",
+    sign_in_subtitle: "Banye akaụntụ TracKasuwa gị",
     reset_sent: "Ezigara email maka tugharia okwuntughe",
     password_updated: "Emelitere okwuntughe",
     tagline: "POS na Njikwa Ngwaahịa",
@@ -72,7 +72,7 @@ export const ig: typeof en = {
     sign_in_success: "Abanyela nke ọma",
     unexpected_error: "Ihe ndọgbu mere",
     demo_credentials_label: "Nzere ọhụ as:",
-    copyright: "TradeTrack ni hakere kwiziri.",
+    copyright: "TracKasuwa ni hakere kwiziri.",
     role_platform_owner: "Onye Nwe Platform",
     role_business_owner: "Onye Nwe Azụmahịa",
     role_admin: "Onye Nchịkwa",
@@ -104,7 +104,7 @@ export const ig: typeof en = {
   // ── App ──────────────────────────────────────────────────
   app: {
     ...en.app,
-    name: "TradeTrack",
+    name: "TracKasuwa",
     tagline: "POS & Ngwongwo",
     search_placeholder: "Chọọ ngwaahịa, irere, mortgage...",
     demo_credentials: "Nzere Demo",

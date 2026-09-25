@@ -1,5 +1,5 @@
 /**
- * TradeTrack — Single Source of Truth for "which subscription_plans rows
+ * TracKasuwa — Single Source of Truth for "which subscription_plans rows
  * are the live, sellable catalog"
  * ============================================================
  *

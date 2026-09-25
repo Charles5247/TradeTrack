@@ -24,7 +24,7 @@ const translations: Record<Locale, TranslationSet> = {
   pcm, // Currently mirrors English - see src/i18n/locales/pcm.ts
 };
 
-const LOCALE_STORAGE_KEY = "tradetrack-locale";
+const LOCALE_STORAGE_KEY = "TracKasuwa-locale";
 
 function getInitialLocale(): Locale {
   if (typeof window === "undefined") return "en";

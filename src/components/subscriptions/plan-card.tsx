@@ -221,7 +221,7 @@ export const PLAN_TAGLINES: Record<string, string> = {
   Enterprise: "Best for custom multi-branch operations",
 };
 
-/** Icon per tier (kept as TradeTrack's existing accent color via the
+/** Icon per tier (kept as TracKasuwa's existing accent color via the
  *  card's className, not per-icon color, matching the pre-existing
  *  design system rather than introducing new brand colors). */
 export const PLAN_ICONS: Record<string, typeof Zap> = {
@@ -251,7 +251,8 @@ export function getExclusiveFeatures(plan: Plan, allPlans: Plan[]): string[] {
 
   const previousTierName = PLAN_TIER_ORDER[tierIndex - 1];
   const previousPlan = allPlans.find(
-    (p) => p.name === previousTierName && p.billing_cycle === plan.billing_cycle,
+    (p) =>
+      p.name === previousTierName && p.billing_cycle === plan.billing_cycle,
   );
   if (!previousPlan) return filterDisplayFeatures(plan.features);
 
@@ -284,7 +285,7 @@ export function isEnterprisePlan(plan: Plan): boolean {
   return plan.name === "Enterprise";
 }
 
-export const SALES_CONTACT_EMAIL = "sales@tradetrack.ng";
+export const SALES_CONTACT_EMAIL = "sales@TracKasuwa.ng";
 
 // ── PlanCard ──────────────────────────────────────────────────
 export function PlanCard({
@@ -431,11 +432,7 @@ export function PlanCard({
                     pending ? "text-muted-foreground" : "text-green-500"
                   }`}
                 />
-                <span
-                  className={
-                    pending ? "text-muted-foreground" : undefined
-                  }
-                >
+                <span className={pending ? "text-muted-foreground" : undefined}>
                   <span className="text-muted-foreground mr-1">+</span>
                   {FEATURE_LABELS[feature] ?? feature}
                   {pending && (
@@ -464,7 +461,7 @@ export function PlanCard({
           <Button className="w-full mt-4" variant="outline" asChild>
             <a
               href={`mailto:${SALES_CONTACT_EMAIL}?subject=${encodeURIComponent(
-                "TradeTrack Enterprise Plan Inquiry",
+                "TracKasuwa Enterprise Plan Inquiry",
               )}`}
             >
               <Mail className="h-4 w-4 mr-2" />
@@ -477,7 +474,9 @@ export function PlanCard({
             variant={plan.is_popular ? "default" : "outline"}
             asChild
           >
-            <a href={selectHref}>{selectLabel ?? t.subscriptions.select_plan}</a>
+            <a href={selectHref}>
+              {selectLabel ?? t.subscriptions.select_plan}
+            </a>
           </Button>
         ) : (
           <Button

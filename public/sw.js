@@ -1,5 +1,5 @@
 /**
- * TradeTrack Service Worker
+ * TracKasuwa Service Worker
  * ─────────────────────────────────────────────────────────────────────────────
  * Hand-rolled, dependency-free service worker (no Workbox/next-pwa — those
  * packages pin webpack 4 / workbox 4 and are not compatible with this
@@ -13,7 +13,7 @@
  *    the device is online, offline, or on a flaky connection — it never
  *    blocks the UI waiting on a network round-trip. A fresh copy is fetched
  *    in the background (when a network is available) to update the cache
- *    for next time. This is deliberate: TradeTrack is offline-first, so a
+ *    for next time. This is deliberate: TracKasuwa is offline-first, so a
  *    trader with no signal should be able to open the app and use the POS
  *    immediately, not stare at a spinner.
  *  - Data (sales, inventory, etc.) is never cached here — that's the job of
@@ -26,8 +26,8 @@
  */
 
 const CACHE_VERSION = "v1";
-const STATIC_CACHE = `tradetrack-static-${CACHE_VERSION}`;
-const PAGES_CACHE = `tradetrack-pages-${CACHE_VERSION}`;
+const STATIC_CACHE = `TracKasuwa-static-${CACHE_VERSION}`;
+const PAGES_CACHE = `TracKasuwa-pages-${CACHE_VERSION}`;
 const OFFLINE_URL = "/offline.html";
 
 const PRECACHE_URLS = [

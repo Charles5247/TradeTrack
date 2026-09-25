@@ -1,5 +1,5 @@
 /**
- * TradeTrack — Version / Update-Check API
+ * TracKasuwa — Version / Update-Check API
  * GET /api/version
  *
  * Lightweight, public, always-on endpoint that the future Electron
@@ -17,29 +17,29 @@
  * been built in this pass.
  */
 
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   return NextResponse.json({
     // The web app's own package version — Electron/RN clients should
     // compare their own bundled app version against `latest.*` below,
     // not against this field (this just reflects the backend/web build).
-    api_version: process.env.NEXT_PUBLIC_APP_VERSION ?? '0.1.0',
+    api_version: process.env.NEXT_PUBLIC_APP_VERSION ?? "0.1.0",
     latest: {
       windows: {
-        version: process.env.TRADETRACK_WINDOWS_LATEST_VERSION ?? null,
-        download_url: process.env.TRADETRACK_WINDOWS_DOWNLOAD_URL ?? null,
+        version: process.env.TracKasuwa_WINDOWS_LATEST_VERSION ?? null,
+        download_url: process.env.TracKasuwa_WINDOWS_DOWNLOAD_URL ?? null,
       },
       android: {
-        version: process.env.TRADETRACK_ANDROID_LATEST_VERSION ?? null,
-        download_url: process.env.TRADETRACK_ANDROID_DOWNLOAD_URL ?? null,
+        version: process.env.TracKasuwa_ANDROID_LATEST_VERSION ?? null,
+        download_url: process.env.TracKasuwa_ANDROID_DOWNLOAD_URL ?? null,
         // Android side-loaded APKs require "Install from unknown sources"
         // to be enabled — clients should surface this doc link on first
         // install / update prompt.
         unknown_sources_help_url:
-          process.env.TRADETRACK_ANDROID_UNKNOWN_SOURCES_HELP_URL ?? null,
+          process.env.TracKasuwa_ANDROID_UNKNOWN_SOURCES_HELP_URL ?? null,
       },
     },
     checked_at: new Date().toISOString(),

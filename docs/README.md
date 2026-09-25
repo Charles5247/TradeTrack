@@ -1,4 +1,4 @@
-# TRADETRACK — Enterprise POS & Inventory Management SaaS
+# TracKasuwa — Enterprise POS & Inventory Management SaaS
 
 > **Production-ready, offline-first Point-of-Sale and inventory management platform built for African SMBs.**
 
@@ -6,7 +6,7 @@
 
 ## Overview
 
-TRADETRACK is a Next.js 15 + Supabase SaaS application that provides:
+TracKasuwa is a Next.js 15 + Supabase SaaS application that provides:
 
 - **Multi-location POS** — process sales at the counter with cash, card, transfer, or split payments
 - **Inventory management** — track stock across warehouses with real-time low-stock alerts
@@ -51,7 +51,7 @@ TRADETRACK is a Next.js 15 + Supabase SaaS application that provides:
 ```bash
 # Clone the repository
 git clone <your-repo-url>
-cd tradetrack
+cd TracKasuwa
 
 # Install dependencies
 npm install
@@ -91,7 +91,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3008
 ## Project Structure
 
 ```
-tradetrack/
+TracKasuwa/
 ├── src/
 │   ├── app/
 │   │   ├── (auth)/           # Login, forgot-password pages

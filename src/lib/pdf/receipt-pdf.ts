@@ -28,7 +28,8 @@ async function loadImageDataUrl(url: string): Promise<string | null> {
     if (!blob.type.startsWith("image/")) return null;
     return await new Promise<string | null>((resolve) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : null);
+      reader.onload = () =>
+        resolve(typeof reader.result === "string" ? reader.result : null);
       reader.onerror = () => resolve(null);
       reader.readAsDataURL(blob);
     });
@@ -48,20 +49,38 @@ export async function downloadReceiptPDF(receipt: ReceiptData) {
     175 +
     receipt.items.reduce(
       (total, item) =>
-        total + Math.max(1, wrapReceiptText(`${item.name} @ ${formatCurrency(item.unitPrice)}`, 24).length) * lineHeight,
+        total +
+        Math.max(
+          1,
+          wrapReceiptText(
+            `${item.name} @ ${formatCurrency(item.unitPrice)}`,
+            24,
+          ).length,
+        ) *
+          lineHeight,
       0,
     ) +
     (hasPaymentDetails ? 30 : 0) +
     (receipt.notes ? 24 : 0) +
     90;
-  const doc = new jsPDF({ unit: "pt", format: [widthPt, Math.max(360, estimatedHeight)] });
+  const doc = new jsPDF({
+    unit: "pt",
+    format: [widthPt, Math.max(360, estimatedHeight)],
+  });
   let y = 16;
 
   if (receipt.receiptTemplateUrl) {
     const dataUrl = await loadImageDataUrl(receipt.receiptTemplateUrl);
     if (dataUrl) {
       const format = dataUrl.startsWith("data:image/png") ? "PNG" : "JPEG";
-      doc.addImage(dataUrl, format, 0, 0, widthPt, Math.max(320, estimatedHeight));
+      doc.addImage(
+        dataUrl,
+        format,
+        0,
+        0,
+        widthPt,
+        Math.max(320, estimatedHeight),
+      );
     }
     // else: fall through to the plain white background below.
   }
@@ -69,7 +88,9 @@ export async function downloadReceiptPDF(receipt: ReceiptData) {
   const center = (text: string, size = 9, bold = false, upper = false) => {
     doc.setFontSize(size);
     doc.setFont("helvetica", bold ? "bold" : "normal");
-    doc.text(upper ? text.toUpperCase() : text, widthPt / 2, y, { align: "center" });
+    doc.text(upper ? text.toUpperCase() : text, widthPt / 2, y, {
+      align: "center",
+    });
     y += lineHeight + 0.5;
   };
   const divider = () => {
@@ -109,21 +130,31 @@ export async function downloadReceiptPDF(receipt: ReceiptData) {
   doc.text("AMOUNT", widthPt - marginX, y, { align: "right" });
   y += lineHeight * 0.9;
   receipt.items.forEach((item) => {
-    const description = wrapReceiptText(`${item.name} @ ${formatCurrency(item.unitPrice)}`, 24);
+    const description = wrapReceiptText(
+      `${item.name} @ ${formatCurrency(item.unitPrice)}`,
+      24,
+    );
     doc.setFont("helvetica", "normal");
     doc.text(String(item.quantity), marginX, y);
     doc.text(description, marginX + 22, y, { maxWidth: width * 0.52 });
-    doc.text(formatCurrency(item.total), widthPt - marginX, y, { align: "right" });
+    doc.text(formatCurrency(item.total), widthPt - marginX, y, {
+      align: "right",
+    });
     y += Math.max(1, description.length) * lineHeight * 0.9;
   });
 
   divider();
   row("Subtotal:", formatCurrency(receipt.subtotal));
-  if (receipt.discount > 0) row("Discount:", `-${formatCurrency(receipt.discount)}`);
+  if (receipt.discount > 0)
+    row("Discount:", `-${formatCurrency(receipt.discount)}`);
   if (receipt.tax > 0) row("Tax:", formatCurrency(receipt.tax));
   row("TOTAL:", formatCurrency(receipt.total), 10, true);
-  row(receipt.paymentMethod === "cash" ? "Cash:" : "Paid:", formatCurrency(receipt.amountPaid));
-  if (receipt.changeAmount > 0) row("Change:", formatCurrency(receipt.changeAmount));
+  row(
+    receipt.paymentMethod === "cash" ? "Cash:" : "Paid:",
+    formatCurrency(receipt.amountPaid),
+  );
+  if (receipt.changeAmount > 0)
+    row("Change:", formatCurrency(receipt.changeAmount));
   if (!hasPaymentDetails) row("Payment:", receipt.paymentMethod);
   if (hasPaymentDetails) {
     divider();
@@ -138,13 +169,20 @@ export async function downloadReceiptPDF(receipt: ReceiptData) {
   }
   divider();
   center("Thank you!", 9.5, true, true);
-  center("Powered by TradeTrack", 7.5);
+  center("Powered by TracKasuwa", 7.5);
 
   if (receipt.barcodeValue) {
     const qrDataUrl = await renderQRCodeDataUrl(receipt.barcodeValue);
     if (qrDataUrl) {
       const qrSize = 78;
-      doc.addImage(qrDataUrl, "PNG", (widthPt - qrSize) / 2, y + 4, qrSize, qrSize);
+      doc.addImage(
+        qrDataUrl,
+        "PNG",
+        (widthPt - qrSize) / 2,
+        y + 4,
+        qrSize,
+        qrSize,
+      );
     }
   }
   doc.save(`receipt-${receipt.invoiceNumber}.pdf`);

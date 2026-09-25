@@ -1,5 +1,5 @@
 -- ============================================================
--- TradeTrack - Initial Database Schema
+-- TracKasuwa - Initial Database Schema
 -- Migration: 001_initial_schema.sql
 -- ============================================================
 

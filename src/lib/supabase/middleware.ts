@@ -29,7 +29,7 @@ const PROTECTED_PREFIXES = [
 // bookmarked /signup?plan=... link) is bounced straight to /dashboard
 // instead of being shown an account-creation form they don't need.
 const AUTH_ROUTES = ["/login", "/forgot-password", "/signup"];
-const OFFLINE_AUTH_COOKIE_NAME = "tradetrack-offline-session";
+const OFFLINE_AUTH_COOKIE_NAME = "TracKasuwa-offline-session";
 
 // Public marketing route group (src/app/(marketing)/) — explicitly
 // enumerated rather than relying on "not in PROTECTED_PREFIXES" so

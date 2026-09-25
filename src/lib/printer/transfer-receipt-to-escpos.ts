@@ -1,5 +1,5 @@
-import type { TransferReceiptData } from '@/lib/receipt/build-transfer-receipt';
-import { wrapReceiptText } from '@/lib/receipt/receipt-layout';
+import type { TransferReceiptData } from "@/lib/receipt/build-transfer-receipt";
+import { wrapReceiptText } from "@/lib/receipt/receipt-layout";
 
 /**
  * ESC/POS bytes for the distinct "Stock Transfer Note" thermal-print
@@ -20,7 +20,7 @@ function textToBytes(text: string): number[] {
   return bytes;
 }
 
-function line(text = ''): number[] {
+function line(text = ""): number[] {
   return [...textToBytes(text), 0x0a];
 }
 
@@ -32,8 +32,8 @@ class EscPosBuilder {
     return this;
   }
 
-  align(mode: 'left' | 'center' | 'right') {
-    const n = mode === 'left' ? 0 : mode === 'center' ? 1 : 2;
+  align(mode: "left" | "center" | "right") {
+    const n = mode === "left" ? 0 : mode === "center" ? 1 : 2;
     this.bytes.push(ESC, 0x61, n);
     return this;
   }
@@ -59,7 +59,7 @@ class EscPosBuilder {
   }
 
   divider(width = 32) {
-    this.bytes.push(...line('*'.repeat(width)));
+    this.bytes.push(...line("*".repeat(width)));
     return this;
   }
 
@@ -79,7 +79,17 @@ class EscPosBuilder {
     this.bytes.push(GS, 0x28, 0x6b, 4, 0, 49, 65, 50, 0);
     this.bytes.push(GS, 0x28, 0x6b, 3, 0, 49, 67, 5);
     this.bytes.push(GS, 0x28, 0x6b, 3, 0, 49, 69, 49);
-    this.bytes.push(GS, 0x28, 0x6b, length & 0xff, length >> 8, 49, 80, 48, ...data);
+    this.bytes.push(
+      GS,
+      0x28,
+      0x6b,
+      length & 0xff,
+      length >> 8,
+      49,
+      80,
+      48,
+      ...data,
+    );
     this.bytes.push(GS, 0x28, 0x6b, 3, 0, 49, 81, 48);
     return this;
   }
@@ -94,13 +104,16 @@ class EscPosBuilder {
   }
 }
 
-export function transferReceiptToEscPos(data: TransferReceiptData, charWidth = 32): Uint8Array {
+export function transferReceiptToEscPos(
+  data: TransferReceiptData,
+  charWidth = 32,
+): Uint8Array {
   const b = new EscPosBuilder();
   b.init();
 
   const row = (label: string, value: string) => {
     const pad = Math.max(1, charWidth - label.length - value.length);
-    b.text(label + ' '.repeat(pad) + value);
+    b.text(label + " ".repeat(pad) + value);
   };
 
   const wrappedText = (text: string, width = charWidth) => {
@@ -110,7 +123,7 @@ export function transferReceiptToEscPos(data: TransferReceiptData, charWidth = 3
     }
   };
 
-  b.align('center');
+  b.align("center");
   b.doubleSize(true);
   b.bold(true);
   b.text(data.orgName.toUpperCase());
@@ -121,11 +134,11 @@ export function transferReceiptToEscPos(data: TransferReceiptData, charWidth = 3
   b.feed(1);
   b.divider(charWidth);
   b.bold(true);
-  b.text('STOCK TRANSFER NOTE');
+  b.text("STOCK TRANSFER NOTE");
   b.bold(false);
   b.divider(charWidth);
 
-  b.align('left');
+  b.align("left");
   b.text(`Ref: ${data.transferRef}`);
   b.text(`Date: ${new Date(data.dateISO).toLocaleString()}`);
   b.text(`Status: ${data.status.toUpperCase()}`);
@@ -134,7 +147,9 @@ export function transferReceiptToEscPos(data: TransferReceiptData, charWidth = 3
   b.text(`To:   ${data.toWarehouse}`);
   b.divider(charWidth);
 
-  const productLabel = data.productSku ? `${data.productName} (${data.productSku})` : data.productName;
+  const productLabel = data.productSku
+    ? `${data.productName} (${data.productSku})`
+    : data.productName;
   wrappedText(productLabel, Math.max(12, charWidth - 6));
   b.text(`Qty: ${data.quantity}`);
   b.divider(charWidth);
@@ -146,16 +161,16 @@ export function transferReceiptToEscPos(data: TransferReceiptData, charWidth = 3
   if (data.receivedBy) b.text(`Received by: ${data.receivedBy}`);
 
   if (data.notes) {
-    b.align('center');
+    b.align("center");
     wrappedText(data.notes, Math.max(16, charWidth));
   }
 
   b.divider(charWidth);
-  b.align('center');
+  b.align("center");
   b.bold(true);
-  b.text('THANK YOU!');
+  b.text("THANK YOU!");
   b.bold(false);
-  b.text('Powered by TradeTrack');
+  b.text("Powered by TracKasuwa");
 
   if (data.barcodeValue) {
     b.feed(1);

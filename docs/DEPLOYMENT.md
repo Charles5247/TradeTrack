@@ -1,7 +1,7 @@
-# TradeTrack — Deployment Guide
+# TracKasuwa — Deployment Guide
 
 > **This replaces the older `docs/DEPLOYMENT_GUIDE.md`**, which described a
-> Vercel deployment. TradeTrack is actually deployed on **Render** — see
+> Vercel deployment. TracKasuwa is actually deployed on **Render** — see
 > `render.yaml` at the repo root, which is the live, checked-in source of
 > truth for the production build/start commands and required env vars.
 > `DEPLOYMENT_GUIDE.md` is kept only for its still-accurate Supabase/Storage/
@@ -125,11 +125,11 @@ ZAINPAY_ZAINBOX_CODE=your-zainbox-code
 
 # Update-check / download page metadata (see docs/DOWNLOAD_FLOW.md) —
 # optional; leave *_DOWNLOAD_URL blank until real installers are hosted
-TRADETRACK_WINDOWS_LATEST_VERSION=1.0.0
-TRADETRACK_WINDOWS_DOWNLOAD_URL=
-TRADETRACK_ANDROID_LATEST_VERSION=1.0.0
-TRADETRACK_ANDROID_DOWNLOAD_URL=
-TRADETRACK_ANDROID_UNKNOWN_SOURCES_HELP_URL=
+TracKasuwa_WINDOWS_LATEST_VERSION=1.0.0
+TracKasuwa_WINDOWS_DOWNLOAD_URL=
+TracKasuwa_ANDROID_LATEST_VERSION=1.0.0
+TracKasuwa_ANDROID_DOWNLOAD_URL=
+TracKasuwa_ANDROID_UNKNOWN_SOURCES_HELP_URL=
 ```
 
 > **Security note:** never commit `.env.local`. `SUPABASE_SERVICE_ROLE_KEY`
@@ -150,7 +150,7 @@ Code" / Blueprint format) that fully describes the web service:
 ```yaml
 services:
   - type: web
-    name: tradetrack-web
+    name: TracKasuwa-web
     env: node
     plan: free
     rootDir: .
@@ -167,7 +167,7 @@ services:
 
 ### Initial setup
 
-1. Push this repository to GitHub (already done — `Charles5247/TradeTrack`).
+1. Push this repository to GitHub (already done — `Charles5247/TracKasuwa`).
 2. In the [Render Dashboard](https://dashboard.render.com), click
    **New → Blueprint**, connect the GitHub repo, and Render will detect
    `render.yaml` automatically.
@@ -208,7 +208,7 @@ npm start   # listens on $PORT (or 3000 if unset)
 ```bash
 npm run build
 npm install -g pm2
-pm2 start npm --name "tradetrack" -- start
+pm2 start npm --name "TracKasuwa" -- start
 pm2 save
 pm2 startup
 ```

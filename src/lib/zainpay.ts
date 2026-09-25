@@ -1,5 +1,5 @@
 /**
- * TradeTrack — Zainpay integration helpers (server-side only).
+ * TracKasuwa — Zainpay integration helpers (server-side only).
  *
  * This module must NEVER be imported from a client component / anything
  * that ends up in the browser bundle — it uses the Zainpay secret key and
@@ -10,7 +10,7 @@
  *
  * Zainpay concepts used here:
  *   - Zainbox: a collection "box" that groups virtual accounts under one
- *     of TradeTrack's own Zainpay merchant accounts. We use a single
+ *     of TracKasuwa's own Zainpay merchant accounts. We use a single
  *     Zainbox (`ZAINPAY_ZAINBOX_CODE`) for all subscription collections.
  *   - Virtual account (NUBAN): a dedicated bank account number issued per
  *     merchant organization. Any transfer into that NUBAN is reconciled by
@@ -18,26 +18,27 @@
  *     instead of parsing free-text transfer narrations.
  */
 
-const ZAINPAY_BASE_URL     = process.env.ZAINPAY_BASE_URL     ?? 'https://sandbox.zainpay.ng';
-const ZAINPAY_SECRET_KEY   = process.env.ZAINPAY_SECRET_KEY   ?? '';
-const ZAINPAY_ZAINBOX_CODE = process.env.ZAINPAY_ZAINBOX_CODE ?? '';
+const ZAINPAY_BASE_URL =
+  process.env.ZAINPAY_BASE_URL ?? "https://sandbox.zainpay.ng";
+const ZAINPAY_SECRET_KEY = process.env.ZAINPAY_SECRET_KEY ?? "";
+const ZAINPAY_ZAINBOX_CODE = process.env.ZAINPAY_ZAINBOX_CODE ?? "";
 
 export interface ZainpayVirtualAccount {
   accountNumber: string;
-  bankName:      string;
-  accountName:   string;
-  customerRef:   string;
+  bankName: string;
+  accountName: string;
+  customerRef: string;
 }
 
 export class ZainpayNotConfiguredError extends Error {
   constructor() {
     super(
-      'Zainpay is not configured (ZAINPAY_SECRET_KEY / ZAINPAY_ZAINBOX_CODE ' +
-      'missing). Merchant onboarding will proceed WITHOUT a dedicated ' +
-      'virtual account — it can be created later once Zainpay credentials ' +
-      'are added.'
+      "Zainpay is not configured (ZAINPAY_SECRET_KEY / ZAINPAY_ZAINBOX_CODE " +
+        "missing). Merchant onboarding will proceed WITHOUT a dedicated " +
+        "virtual account — it can be created later once Zainpay credentials " +
+        "are added.",
     );
-    this.name = 'ZainpayNotConfiguredError';
+    this.name = "ZainpayNotConfiguredError";
   }
 }
 
@@ -55,9 +56,9 @@ export function isZainpayConfigured(): boolean {
  */
 export async function createMerchantVirtualAccount(params: {
   organizationId: string;
-  businessName:   string;
-  contactEmail:   string;
-  contactPhone?:  string | null;
+  businessName: string;
+  contactEmail: string;
+  contactPhone?: string | null;
 }): Promise<ZainpayVirtualAccount> {
   if (!isZainpayConfigured()) {
     throw new ZainpayNotConfiguredError();
@@ -68,44 +69,48 @@ export async function createMerchantVirtualAccount(params: {
   const customerRef = `tt-org-${params.organizationId}`;
 
   const res = await fetch(`${ZAINPAY_BASE_URL}/virtual-account/customer`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type':  'application/json',
-      'Authorization': `Bearer ${ZAINPAY_SECRET_KEY}`,
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${ZAINPAY_SECRET_KEY}`,
     },
     body: JSON.stringify({
-      firstName:    params.businessName,
-      lastName:     'Merchant',
-      email:        params.contactEmail,
-      mobileNumber: params.contactPhone ?? '',
-      zainboxCode:  ZAINPAY_ZAINBOX_CODE,
+      firstName: params.businessName,
+      lastName: "Merchant",
+      email: params.contactEmail,
+      mobileNumber: params.contactPhone ?? "",
+      zainboxCode: ZAINPAY_ZAINBOX_CODE,
       customerRef,
-      title:        params.businessName,
+      title: params.businessName,
     }),
   });
 
   if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    throw new Error(`Zainpay virtual account creation failed (${res.status}): ${body}`);
+    const body = await res.text().catch(() => "");
+    throw new Error(
+      `Zainpay virtual account creation failed (${res.status}): ${body}`,
+    );
   }
 
-  const json = await res.json() as {
+  const json = (await res.json()) as {
     code?: string;
     data?: {
       accountNumber?: string;
-      bankName?:      string;
-      accountName?:   string;
+      bankName?: string;
+      accountName?: string;
     };
   };
 
-  if (json.code !== '00' || !json.data?.accountNumber) {
-    throw new Error(`Zainpay virtual account creation returned unexpected response: ${JSON.stringify(json)}`);
+  if (json.code !== "00" || !json.data?.accountNumber) {
+    throw new Error(
+      `Zainpay virtual account creation returned unexpected response: ${JSON.stringify(json)}`,
+    );
   }
 
   return {
     accountNumber: json.data.accountNumber,
-    bankName:      json.data.bankName ?? 'Zainpay',
-    accountName:   json.data.accountName ?? params.businessName,
+    bankName: json.data.bankName ?? "Zainpay",
+    accountName: json.data.accountName ?? params.businessName,
     customerRef,
   };
 }

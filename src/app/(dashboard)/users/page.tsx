@@ -170,7 +170,7 @@ export default function UsersPage() {
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["users"],
     queryFn: fetchUsers,
-    // platform_owner (TradeTrack staff) no longer manages per-org users
+    // platform_owner (TracKasuwa staff) no longer manages per-org users
     // through this screen — only a merchant's business_owner does. Scoping
     // the query to business_owner also prevents the repeated
     // `GET /api/users 500` calls that fired for platform_owner sessions

@@ -1,9 +1,9 @@
 /**
- * TradeTrack - Receipt Barcode Lookup API
+ * TracKasuwa - Receipt Barcode Lookup API
  *
  * GET /api/receipts/lookup?code=<barcodeValue>
  *
- * Every receipt TradeTrack prints (sales/vendor "Cash Receipt" and
+ * Every receipt TracKasuwa prints (sales/vendor "Cash Receipt" and
  * warehouse "Stock Transfer Note") carries a scannable CODE128 barcode
  * encoding either the sale's invoice number or a synthesized transfer
  * reference (`TRF-XXXXXXXX`). This endpoint resolves that scanned value
@@ -17,10 +17,10 @@
  * service-role client.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-import type { Database } from '@/lib/supabase/types';
+import { NextRequest, NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import type { Database } from "@/lib/supabase/types";
 
 async function getSupabase() {
   const cookieStore = await cookies();
@@ -32,21 +32,26 @@ async function getSupabase() {
         getAll: () => cookieStore.getAll(),
         setAll: () => {},
       },
-    }
+    },
   );
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const code = request.nextUrl.searchParams.get('code')?.trim();
+    const code = request.nextUrl.searchParams.get("code")?.trim();
     if (!code) {
-      return NextResponse.json({ error: 'Missing "code" query parameter' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Missing "code" query parameter' },
+        { status: 400 },
+      );
     }
 
     const supabase = await getSupabase();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // A transfer reference always looks like TRF-XXXXXXXX (8 hex chars of
@@ -57,18 +62,19 @@ export async function GET(request: NextRequest) {
     }
     return await lookupSale(supabase, code);
   } catch (err) {
-    console.error('[GET /api/receipts/lookup]', err);
-    const message = err instanceof Error ? err.message : 'Internal server error';
+    console.error("[GET /api/receipts/lookup]", err);
+    const message =
+      err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
 async function lookupSale(
   supabase: Awaited<ReturnType<typeof getSupabase>>,
-  invoiceNumber: string
+  invoiceNumber: string,
 ) {
   const { data: sale, error } = await supabase
-    .from('sales')
+    .from("sales")
     .select(
       `
       *,
@@ -77,21 +83,24 @@ async function lookupSale(
         id, quantity, unit_price, discount, total,
         product:products(name, sku)
       )
-    `
+    `,
     )
-    .eq('invoice_number', invoiceNumber)
-    .is('deleted_at', null)
+    .eq("invoice_number", invoiceNumber)
+    .is("deleted_at", null)
     .maybeSingle();
 
   if (error) throw error;
   if (!sale) {
-    return NextResponse.json({ error: 'No receipt found for this barcode' }, { status: 404 });
+    return NextResponse.json(
+      { error: "No receipt found for this barcode" },
+      { status: 404 },
+    );
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const s = sale as any;
   return NextResponse.json({
-    kind: 'sale',
+    kind: "sale",
     receipt: {
       invoiceNumber: s.invoice_number,
       dateISO: s.created_at,
@@ -108,32 +117,37 @@ async function lookupSale(
       amountPaid: s.amount_paid,
       changeAmount: s.change_amount,
       notes: s.notes,
-      items: (s.items || []).map((item: {
-        quantity: number; unit_price: number; discount: number; total: number;
-        product: { name?: string; sku?: string } | null;
-      }) => ({
-        name: item.product?.name || 'Item',
-        sku: item.product?.sku,
-        quantity: item.quantity,
-        unitPrice: item.unit_price,
-        discount: item.discount,
-        total: item.total,
-      })),
+      items: (s.items || []).map(
+        (item: {
+          quantity: number;
+          unit_price: number;
+          discount: number;
+          total: number;
+          product: { name?: string; sku?: string } | null;
+        }) => ({
+          name: item.product?.name || "Item",
+          sku: item.product?.sku,
+          quantity: item.quantity,
+          unitPrice: item.unit_price,
+          discount: item.discount,
+          total: item.total,
+        }),
+      ),
     },
   });
 }
 
 async function lookupTransfer(
   supabase: Awaited<ReturnType<typeof getSupabase>>,
-  transferRef: string
+  transferRef: string,
 ) {
   // The barcode encodes only the first 8 chars of the transfer UUID
   // (uppercased), so we match all transfers whose id starts with that
   // prefix (case-insensitive) rather than an exact id lookup.
-  const idPrefix = transferRef.replace(/^TRF-/i, '').toLowerCase();
+  const idPrefix = transferRef.replace(/^TRF-/i, "").toLowerCase();
 
   const { data: transfers, error } = await supabase
-    .from('warehouse_transfers')
+    .from("warehouse_transfers")
     .select(
       `
       *,
@@ -142,23 +156,26 @@ async function lookupTransfer(
       to_warehouse:warehouses!warehouse_transfers_to_warehouse_id_fkey(name),
       sender:users!warehouse_transfers_sent_by_fkey(full_name),
       receiver:users!warehouse_transfers_received_by_fkey(full_name)
-    `
+    `,
     )
-    .ilike('id', `${idPrefix}%`);
+    .ilike("id", `${idPrefix}%`);
 
   if (error) throw error;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const match = (transfers as any[] | null)?.find((t) =>
-    t.id.replace(/-/g, '').toLowerCase().startsWith(idPrefix)
+    t.id.replace(/-/g, "").toLowerCase().startsWith(idPrefix),
   );
 
   if (!match) {
-    return NextResponse.json({ error: 'No transfer found for this barcode' }, { status: 404 });
+    return NextResponse.json(
+      { error: "No transfer found for this barcode" },
+      { status: 404 },
+    );
   }
 
   return NextResponse.json({
-    kind: 'transfer',
+    kind: "transfer",
     receipt: {
       transferRef: `TRF-${match.id.slice(0, 8).toUpperCase()}`,
       dateISO: match.date_sent,
@@ -173,7 +190,7 @@ async function lookupTransfer(
       notes: match.notes,
       items: [
         {
-          name: match.product?.name || 'Item',
+          name: match.product?.name || "Item",
           sku: match.product?.sku,
           quantity: match.quantity,
         },

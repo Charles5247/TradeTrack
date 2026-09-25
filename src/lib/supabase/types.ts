@@ -1,7 +1,12 @@
-// TradeTrack – Supabase Database Types
+// TracKasuwa – Supabase Database Types
 // Generated from migrations/001_initial_schema.sql + 003_payment_and_improvements.sql
 
-export type PaymentMethod = 'cash' | 'transfer' | 'pos_terminal' | 'split' | 'partial';
+export type PaymentMethod =
+  | "cash"
+  | "transfer"
+  | "pos_terminal"
+  | "split"
+  | "partial";
 
 type NoRel = { Relationships: [] };
 
@@ -43,7 +48,9 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['organizations']['Insert']>;
+        Update: Partial<
+          Database["public"]["Tables"]["organizations"]["Insert"]
+        >;
         Relationships: [];
       };
       users: {
@@ -51,8 +58,8 @@ export type Database = {
           id: string;
           email: string;
           full_name: string;
-          role: 'platform_owner' | 'business_owner' | 'admin' | 'cashier';
-          status: 'active' | 'suspended' | 'inactive';
+          role: "platform_owner" | "business_owner" | "admin" | "cashier";
+          status: "active" | "suspended" | "inactive";
           organization_id: string | null;
           avatar_url: string | null;
           phone: string | null;
@@ -66,8 +73,8 @@ export type Database = {
           id?: string;
           email: string;
           full_name: string;
-          role: 'platform_owner' | 'business_owner' | 'admin' | 'cashier';
-          status?: 'active' | 'suspended' | 'inactive';
+          role: "platform_owner" | "business_owner" | "admin" | "cashier";
+          status?: "active" | "suspended" | "inactive";
           organization_id?: string | null;
           avatar_url?: string | null;
           phone?: string | null;
@@ -77,7 +84,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['users']['Insert']>;
+        Update: Partial<Database["public"]["Tables"]["users"]["Insert"]>;
         Relationships: [];
       };
       categories: {
@@ -97,7 +104,7 @@ export type Database = {
           color?: string | null;
           created_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['categories']['Insert']>;
+        Update: Partial<Database["public"]["Tables"]["categories"]["Insert"]>;
         Relationships: [];
       };
       suppliers: {
@@ -119,7 +126,7 @@ export type Database = {
           address?: string | null;
           created_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['suppliers']['Insert']>;
+        Update: Partial<Database["public"]["Tables"]["suppliers"]["Insert"]>;
         Relationships: [];
       };
       products: {
@@ -136,7 +143,7 @@ export type Database = {
           cost_price: number;
           category_id: string | null;
           supplier_id: string | null;
-          status: 'active' | 'inactive' | 'discontinued';
+          status: "active" | "inactive" | "discontinued";
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -154,12 +161,12 @@ export type Database = {
           cost_price: number;
           category_id?: string | null;
           supplier_id?: string | null;
-          status?: 'active' | 'inactive' | 'discontinued';
+          status?: "active" | "inactive" | "discontinued";
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['products']['Insert']>;
+        Update: Partial<Database["public"]["Tables"]["products"]["Insert"]>;
         Relationships: [];
       };
       warehouses: {
@@ -183,7 +190,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['warehouses']['Insert']>;
+        Update: Partial<Database["public"]["Tables"]["warehouses"]["Insert"]>;
         Relationships: [];
       };
       inventory: {
@@ -207,7 +214,7 @@ export type Database = {
           max_stock_level?: number | null;
           updated_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['inventory']['Insert']>;
+        Update: Partial<Database["public"]["Tables"]["inventory"]["Insert"]>;
         Relationships: [];
       };
       inventory_movements: {
@@ -216,7 +223,13 @@ export type Database = {
           organization_id: string;
           product_id: string;
           warehouse_id: string;
-          movement_type: 'in' | 'out' | 'transfer' | 'adjustment' | 'sale' | 'return';
+          movement_type:
+            | "in"
+            | "out"
+            | "transfer"
+            | "adjustment"
+            | "sale"
+            | "return";
           quantity: number;
           reference_id: string | null;
           reference_type: string | null;
@@ -229,7 +242,13 @@ export type Database = {
           organization_id: string;
           product_id: string;
           warehouse_id: string;
-          movement_type: 'in' | 'out' | 'transfer' | 'adjustment' | 'sale' | 'return';
+          movement_type:
+            | "in"
+            | "out"
+            | "transfer"
+            | "adjustment"
+            | "sale"
+            | "return";
           quantity: number;
           reference_id?: string | null;
           reference_type?: string | null;
@@ -237,7 +256,9 @@ export type Database = {
           created_by?: string | null;
           created_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['inventory_movements']['Insert']>;
+        Update: Partial<
+          Database["public"]["Tables"]["inventory_movements"]["Insert"]
+        >;
         Relationships: [];
       };
       warehouse_transfers: {
@@ -248,7 +269,7 @@ export type Database = {
           to_warehouse_id: string;
           product_id: string;
           quantity: number;
-          status: 'pending' | 'received' | 'cancelled';
+          status: "pending" | "received" | "cancelled";
           notes: string | null;
           sent_by: string;
           received_by: string | null;
@@ -267,7 +288,7 @@ export type Database = {
           to_warehouse_id: string;
           product_id: string;
           quantity: number;
-          status?: 'pending' | 'received' | 'cancelled';
+          status?: "pending" | "received" | "cancelled";
           notes?: string | null;
           sent_by: string;
           received_by?: string | null;
@@ -279,7 +300,9 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['warehouse_transfers']['Insert']>;
+        Update: Partial<
+          Database["public"]["Tables"]["warehouse_transfers"]["Insert"]
+        >;
         Relationships: [];
       };
       purchase_orders: {
@@ -287,7 +310,7 @@ export type Database = {
           id: string;
           organization_id: string;
           supplier_id: string;
-          status: 'draft' | 'sent' | 'received' | 'cancelled';
+          status: "draft" | "sent" | "received" | "cancelled";
           expected_date: string | null;
           total_value: number;
           notes: string | null;
@@ -302,7 +325,7 @@ export type Database = {
           id?: string;
           organization_id: string;
           supplier_id: string;
-          status?: 'draft' | 'sent' | 'received' | 'cancelled';
+          status?: "draft" | "sent" | "received" | "cancelled";
           expected_date?: string | null;
           total_value?: number;
           notes?: string | null;
@@ -313,7 +336,9 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['purchase_orders']['Insert']>;
+        Update: Partial<
+          Database["public"]["Tables"]["purchase_orders"]["Insert"]
+        >;
         Relationships: [];
       };
       purchase_order_items: {
@@ -335,7 +360,9 @@ export type Database = {
           unit_cost?: number;
           created_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['purchase_order_items']['Insert']>;
+        Update: Partial<
+          Database["public"]["Tables"]["purchase_order_items"]["Insert"]
+        >;
         Relationships: [];
       };
       customers: {
@@ -359,7 +386,7 @@ export type Database = {
           notes?: string | null;
           created_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['customers']['Insert']>;
+        Update: Partial<Database["public"]["Tables"]["customers"]["Insert"]>;
         Relationships: [];
       };
       sales: {
@@ -379,8 +406,8 @@ export type Database = {
           amount_paid: number;
           change_amount: number;
           payment_method: PaymentMethod;
-          payment_status: 'paid' | 'partial' | 'unpaid';
-          status: 'completed' | 'pending' | 'cancelled' | 'refunded';
+          payment_status: "paid" | "partial" | "unpaid";
+          status: "completed" | "pending" | "cancelled" | "refunded";
           notes: string | null;
           receipt_url: string | null;
           created_at: string;
@@ -402,14 +429,14 @@ export type Database = {
           amount_paid: number;
           change_amount?: number;
           payment_method: PaymentMethod;
-          payment_status?: 'paid' | 'partial' | 'unpaid';
-          status?: 'completed' | 'pending' | 'cancelled' | 'refunded';
+          payment_status?: "paid" | "partial" | "unpaid";
+          status?: "completed" | "pending" | "cancelled" | "refunded";
           notes?: string | null;
           receipt_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['sales']['Insert']>;
+        Update: Partial<Database["public"]["Tables"]["sales"]["Insert"]>;
         Relationships: [];
       };
       sale_items: {
@@ -437,7 +464,7 @@ export type Database = {
           total: number;
           created_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['sale_items']['Insert']>;
+        Update: Partial<Database["public"]["Tables"]["sale_items"]["Insert"]>;
         Relationships: [];
       };
       vendor_transactions: {
@@ -449,10 +476,10 @@ export type Database = {
           vendor_email: string | null;
           date_issued: string;
           expected_payment_date: string | null;
-          status: 'pending' | 'completed' | 'cancelled' | 'partial';
+          status: "pending" | "completed" | "cancelled" | "partial";
           total_value: number;
           amount_paid: number;
-          payment_method: 'cash' | 'transfer' | 'pos' | null;
+          payment_method: "cash" | "transfer" | "pos" | null;
           receipt_url: string | null;
           notes: string | null;
           created_by: string;
@@ -467,17 +494,19 @@ export type Database = {
           vendor_email?: string | null;
           date_issued?: string;
           expected_payment_date?: string | null;
-          status?: 'pending' | 'completed' | 'cancelled' | 'partial';
+          status?: "pending" | "completed" | "cancelled" | "partial";
           total_value?: number;
           amount_paid?: number;
-          payment_method?: 'cash' | 'transfer' | 'pos' | null;
+          payment_method?: "cash" | "transfer" | "pos" | null;
           receipt_url?: string | null;
           notes?: string | null;
           created_by: string;
           created_at?: string;
           updated_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['vendor_transactions']['Insert']>;
+        Update: Partial<
+          Database["public"]["Tables"]["vendor_transactions"]["Insert"]
+        >;
         Relationships: [];
       };
       vendor_transaction_items: {
@@ -499,7 +528,9 @@ export type Database = {
           total: number;
           created_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['vendor_transaction_items']['Insert']>;
+        Update: Partial<
+          Database["public"]["Tables"]["vendor_transaction_items"]["Insert"]
+        >;
         Relationships: [];
       };
       audit_logs: {
@@ -531,7 +562,7 @@ export type Database = {
           reason?: string | null;
           created_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['audit_logs']['Insert']>;
+        Update: Partial<Database["public"]["Tables"]["audit_logs"]["Insert"]>;
         Relationships: [];
       };
       notifications: {
@@ -557,7 +588,9 @@ export type Database = {
           is_read?: boolean;
           created_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['notifications']['Insert']>;
+        Update: Partial<
+          Database["public"]["Tables"]["notifications"]["Insert"]
+        >;
         Relationships: [];
       };
       settings: {
@@ -577,7 +610,7 @@ export type Database = {
           updated_by?: string | null;
           updated_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['settings']['Insert']>;
+        Update: Partial<Database["public"]["Tables"]["settings"]["Insert"]>;
         Relationships: [];
       };
       offline_sync_queue: {
@@ -586,10 +619,10 @@ export type Database = {
           organization_id: string;
           user_id: string;
           table_name: string;
-          operation: 'INSERT' | 'UPDATE' | 'DELETE';
+          operation: "INSERT" | "UPDATE" | "DELETE";
           record_id: string;
           payload: Record<string, unknown>;
-          status: 'pending' | 'syncing' | 'synced' | 'failed';
+          status: "pending" | "syncing" | "synced" | "failed";
           retry_count: number;
           error: string | null;
           created_at: string;
@@ -600,16 +633,18 @@ export type Database = {
           organization_id: string;
           user_id: string;
           table_name: string;
-          operation: 'INSERT' | 'UPDATE' | 'DELETE';
+          operation: "INSERT" | "UPDATE" | "DELETE";
           record_id: string;
           payload: Record<string, unknown>;
-          status?: 'pending' | 'syncing' | 'synced' | 'failed';
+          status?: "pending" | "syncing" | "synced" | "failed";
           retry_count?: number;
           error?: string | null;
           created_at?: string;
           synced_at?: string | null;
         };
-        Update: Partial<Database['public']['Tables']['offline_sync_queue']['Insert']>;
+        Update: Partial<
+          Database["public"]["Tables"]["offline_sync_queue"]["Insert"]
+        >;
         Relationships: [];
       };
       activity_logs: {
@@ -631,7 +666,9 @@ export type Database = {
           metadata?: Record<string, unknown>;
           created_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['activity_logs']['Insert']>;
+        Update: Partial<
+          Database["public"]["Tables"]["activity_logs"]["Insert"]
+        >;
         Relationships: [];
       };
       subscription_plans: {
@@ -663,7 +700,9 @@ export type Database = {
           is_popular?: boolean | null;
           created_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['subscription_plans']['Insert']>;
+        Update: Partial<
+          Database["public"]["Tables"]["subscription_plans"]["Insert"]
+        >;
         Relationships: [];
       };
       subscriptions: {
@@ -671,7 +710,7 @@ export type Database = {
           id: string;
           organization_id: string;
           plan_id: string;
-          status: 'active' | 'expired' | 'cancelled' | 'trial';
+          status: "active" | "expired" | "cancelled" | "trial";
           starts_at: string;
           expires_at: string;
           created_by: string | null;
@@ -684,7 +723,7 @@ export type Database = {
           id?: string;
           organization_id: string;
           plan_id: string;
-          status?: 'active' | 'expired' | 'cancelled' | 'trial';
+          status?: "active" | "expired" | "cancelled" | "trial";
           starts_at: string;
           expires_at: string;
           created_by?: string | null;
@@ -693,7 +732,9 @@ export type Database = {
           payment_reference?: string | null;
           billing_cycle?: string | null;
         };
-        Update: Partial<Database['public']['Tables']['subscriptions']['Insert']>;
+        Update: Partial<
+          Database["public"]["Tables"]["subscriptions"]["Insert"]
+        >;
         Relationships: [];
       };
       payment_transactions: {
@@ -703,7 +744,7 @@ export type Database = {
           subscription_id: string | null;
           amount: number;
           currency: string;
-          status: 'pending' | 'success' | 'failed' | 'refunded';
+          status: "pending" | "success" | "failed" | "refunded";
           payment_method: string;
           provider: string;
           provider_reference: string | null;
@@ -720,7 +761,7 @@ export type Database = {
           subscription_id?: string | null;
           amount: number;
           currency?: string;
-          status?: 'pending' | 'success' | 'failed' | 'refunded';
+          status?: "pending" | "success" | "failed" | "refunded";
           payment_method?: string;
           provider?: string;
           provider_reference?: string | null;
@@ -731,7 +772,9 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['payment_transactions']['Insert']>;
+        Update: Partial<
+          Database["public"]["Tables"]["payment_transactions"]["Insert"]
+        >;
         Relationships: [];
       };
       webhook_logs: {
@@ -755,7 +798,7 @@ export type Database = {
           idempotency_key?: string | null;
           created_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['webhook_logs']['Insert']>;
+        Update: Partial<Database["public"]["Tables"]["webhook_logs"]["Insert"]>;
         Relationships: [];
       };
       invoices: {
@@ -767,7 +810,7 @@ export type Database = {
           invoice_number: string;
           amount: number;
           currency: string;
-          status: 'paid' | 'unpaid' | 'cancelled';
+          status: "paid" | "unpaid" | "cancelled";
           due_date: string | null;
           paid_at: string | null;
           pdf_url: string | null;
@@ -781,13 +824,13 @@ export type Database = {
           invoice_number?: string;
           amount: number;
           currency?: string;
-          status?: 'paid' | 'unpaid' | 'cancelled';
+          status?: "paid" | "unpaid" | "cancelled";
           due_date?: string | null;
           paid_at?: string | null;
           pdf_url?: string | null;
           created_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['invoices']['Insert']>;
+        Update: Partial<Database["public"]["Tables"]["invoices"]["Insert"]>;
         Relationships: [];
       };
       merchants: {
@@ -798,8 +841,12 @@ export type Database = {
           business_type: string | null;
           registration_number: string | null;
           tax_id: string | null;
-          status: 'pending' | 'active' | 'suspended' | 'deactivated';
-          verification_status: 'unverified' | 'pending' | 'verified' | 'rejected';
+          status: "pending" | "active" | "suspended" | "deactivated";
+          verification_status:
+            | "unverified"
+            | "pending"
+            | "verified"
+            | "rejected";
           contact_name: string;
           contact_email: string;
           contact_phone: string | null;
@@ -822,8 +869,12 @@ export type Database = {
           business_type?: string | null;
           registration_number?: string | null;
           tax_id?: string | null;
-          status?: 'pending' | 'active' | 'suspended' | 'deactivated';
-          verification_status?: 'unverified' | 'pending' | 'verified' | 'rejected';
+          status?: "pending" | "active" | "suspended" | "deactivated";
+          verification_status?:
+            | "unverified"
+            | "pending"
+            | "verified"
+            | "rejected";
           contact_name: string;
           contact_email: string;
           contact_phone?: string | null;
@@ -839,7 +890,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['merchants']['Insert']>;
+        Update: Partial<Database["public"]["Tables"]["merchants"]["Insert"]>;
         Relationships: [];
       };
     };

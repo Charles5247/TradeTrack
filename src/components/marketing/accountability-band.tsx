@@ -38,14 +38,28 @@ export function AccountabilityBand() {
         <div className="grid gap-14 md:grid-cols-2 items-center">
           <Reveal>
             <div className="tt-eyebrow mb-3">Built for accountability</div>
-            <h2 className="tt-head" style={{ fontSize: "clamp(28px, 4vw, 44px)", margin: "0 0 16px", lineHeight: 1.08 }}>
+            <h2
+              className="tt-head"
+              style={{
+                fontSize: "clamp(28px, 4vw, 44px)",
+                margin: "0 0 16px",
+                lineHeight: 1.08,
+              }}
+            >
               Know exactly what happened in your shop.
             </h2>
-            <p style={{ fontSize: 16, color: "var(--c-textMuted)", lineHeight: 1.6, maxWidth: 480 }}>
-              Cash businesses lose money to more than theft — unrecorded
-              sales, unexplained stock loss, and &quot;I forgot&quot; add up
-              fast. TradeTrack builds accountability into every action, so
-              you can trust your numbers.
+            <p
+              style={{
+                fontSize: 16,
+                color: "var(--c-textMuted)",
+                lineHeight: 1.6,
+                maxWidth: 480,
+              }}
+            >
+              Cash businesses lose money to more than theft — unrecorded sales,
+              unexplained stock loss, and &quot;I forgot&quot; add up fast.
+              TracKasuwa builds accountability into every action, so you can
+              trust your numbers.
             </p>
           </Reveal>
           <Reveal delay={100}>
@@ -57,7 +71,9 @@ export function AccountabilityBand() {
                     style={{ color: "var(--c-success)" }}
                     strokeWidth={1.75}
                   />
-                  <span className="text-sm" style={{ lineHeight: 1.6 }}>{point}</span>
+                  <span className="text-sm" style={{ lineHeight: 1.6 }}>
+                    {point}
+                  </span>
                 </li>
               ))}
             </ul>

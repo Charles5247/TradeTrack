@@ -44,7 +44,7 @@ export function MarketingNav() {
       }}
     >
       <div className="mx-auto flex h-[72px] max-w-6xl items-center gap-6 px-4 sm:px-6">
-        <Link href="/" aria-label="TradeTrack home">
+        <Link href="/" aria-label="TracKasuwa home">
           <Logo size={30} />
         </Link>
 
@@ -75,10 +75,21 @@ export function MarketingNav() {
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           aria-label="Toggle theme"
         >
-          <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" strokeWidth={1.75} />
-          <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" strokeWidth={1.75} />
+          <Sun
+            className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
+            strokeWidth={1.75}
+          />
+          <Moon
+            className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100"
+            strokeWidth={1.75}
+          />
         </Button>
-        <Button variant="outline" size="sm" className="hidden sm:inline-flex" asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className="hidden sm:inline-flex"
+          asChild
+        >
           <Link href="/login">Sign in</Link>
         </Button>
         <Button size="sm" asChild>
@@ -94,7 +105,11 @@ export function MarketingNav() {
           onClick={() => setMobileOpen((v) => !v)}
           aria-label="Toggle menu"
         >
-          {mobileOpen ? <X className="h-5 w-5" strokeWidth={1.75} /> : <Menu className="h-5 w-5" strokeWidth={1.75} />}
+          {mobileOpen ? (
+            <X className="h-5 w-5" strokeWidth={1.75} />
+          ) : (
+            <Menu className="h-5 w-5" strokeWidth={1.75} />
+          )}
         </Button>
       </div>
 

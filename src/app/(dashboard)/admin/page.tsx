@@ -106,22 +106,26 @@ function KPICard({
           <p className="text-sm font-medium tt-muted">{title}</p>
           <div
             className="p-2 rounded-lg"
-            style={{ background: `color-mix(in oklch, ${tone}, transparent 88%)`, color: tone }}
+            style={{
+              background: `color-mix(in oklch, ${tone}, transparent 88%)`,
+              color: tone,
+            }}
           >
             {icon}
           </div>
         </div>
         <div className="space-y-1">
           <p className="tt-stat-value tt-tabular">{value}</p>
-          {subtitle && (
-            <p className="text-xs tt-muted">{subtitle}</p>
-          )}
+          {subtitle && <p className="text-xs tt-muted">{subtitle}</p>}
           {trend !== undefined && (
             <p
               className="text-xs font-medium tt-tabular"
-              style={{ color: trend >= 0 ? "var(--c-success)" : "var(--c-danger)" }}
+              style={{
+                color: trend >= 0 ? "var(--c-success)" : "var(--c-danger)",
+              }}
             >
-              {trend >= 0 ? "\u2191" : "\u2193"} {Math.abs(trend)}% from last month
+              {trend >= 0 ? "\u2191" : "\u2193"} {Math.abs(trend)}% from last
+              month
             </p>
           )}
         </div>
@@ -191,7 +195,7 @@ export default function AdminPage() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   // ── Access guard ─────────────────────────────────────────────────────────
-  // Platform Owner dashboard: TradeTrack's own cross-org staff only.
+  // Platform Owner dashboard: TracKasuwa's own cross-org staff only.
   // A merchant's business_owner account never sees this screen (it has no
   // write access into any individual merchant's operational data).
   const isOwnerOrAdmin = user?.role === "platform_owner";
@@ -328,14 +332,19 @@ export default function AdminPage() {
         <div className="text-center space-y-4">
           <div
             className="p-4 rounded-full inline-block"
-            style={{ background: "color-mix(in oklch, var(--c-danger), transparent 90%)" }}
+            style={{
+              background:
+                "color-mix(in oklch, var(--c-danger), transparent 90%)",
+            }}
           >
-            <ShieldCheck className="h-12 w-12" style={{ color: "var(--c-danger)" }} strokeWidth={1.75} />
+            <ShieldCheck
+              className="h-12 w-12"
+              style={{ color: "var(--c-danger)" }}
+              strokeWidth={1.75}
+            />
           </div>
           <h2 className="tt-head text-xl">{t.admin.access_restricted}</h2>
-          <p className="tt-muted max-w-sm">
-            {t.admin.access_restricted_desc}
-          </p>
+          <p className="tt-muted max-w-sm">{t.admin.access_restricted_desc}</p>
         </div>
       </div>
     );
@@ -347,7 +356,11 @@ export default function AdminPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="tt-page-title flex items-center gap-2">
-            <BarChart3 className="h-6 w-6" style={{ color: "var(--c-primary)" }} strokeWidth={1.75} />
+            <BarChart3
+              className="h-6 w-6"
+              style={{ color: "var(--c-primary)" }}
+              strokeWidth={1.75}
+            />
             {t.admin.title}
           </h1>
           <p className="tt-muted mt-1">{t.admin.subtitle}</p>
@@ -371,11 +384,21 @@ export default function AdminPage() {
           borderColor: "color-mix(in oklch, var(--c-success), transparent 70%)",
         }}
       >
-        <CheckCircle className="h-4 w-4" style={{ color: "var(--c-success)" }} strokeWidth={1.75} />
-        <span className="text-sm font-medium" style={{ color: "var(--c-success)" }}>
+        <CheckCircle
+          className="h-4 w-4"
+          style={{ color: "var(--c-success)" }}
+          strokeWidth={1.75}
+        />
+        <span
+          className="text-sm font-medium"
+          style={{ color: "var(--c-success)" }}
+        >
           {t.admin.systems_operational}
         </span>
-        <span className="text-xs ml-auto tt-tabular" style={{ color: "var(--c-success)" }}>
+        <span
+          className="text-xs ml-auto tt-tabular"
+          style={{ color: "var(--c-success)" }}
+        >
           {t.admin.last_checked}: {new Date().toLocaleTimeString()}
         </span>
       </div>
@@ -620,47 +643,51 @@ export default function AdminPage() {
                     </TableHeader>
                     <TableBody>
                       {(merchants ?? []).map((merchant) => (
-                          <TableRow key={merchant.id}>
-                            <TableCell className="font-medium">
-                              {merchant.business_name}
-                            </TableCell>
-                            <TableCell className="text-sm tt-muted">
-                              {merchant.contact_email}
-                            </TableCell>
-                            <TableCell>
-                              <StatusBadge status={merchant.status} />
-                            </TableCell>
-                            <TableCell>
-                              <StatusBadge
-                                status={merchant.verification_status}
-                              />
-                            </TableCell>
-                            <TableCell>
-                              {merchant.onboarding_completed ? (
-                                <span className="text-sm" style={{ color: "var(--c-success)" }}>
-                                  ✓ {t.admin.complete}
-                                </span>
-                              ) : (
-                                <span className="text-sm" style={{ color: "var(--c-warn)" }}>
-                                  {t.admin.in_progress}
-                                </span>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-sm tt-muted">
-                              {new Date(
-                                merchant.created_at,
-                              ).toLocaleDateString()}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0"
+                        <TableRow key={merchant.id}>
+                          <TableCell className="font-medium">
+                            {merchant.business_name}
+                          </TableCell>
+                          <TableCell className="text-sm tt-muted">
+                            {merchant.contact_email}
+                          </TableCell>
+                          <TableCell>
+                            <StatusBadge status={merchant.status} />
+                          </TableCell>
+                          <TableCell>
+                            <StatusBadge
+                              status={merchant.verification_status}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            {merchant.onboarding_completed ? (
+                              <span
+                                className="text-sm"
+                                style={{ color: "var(--c-success)" }}
                               >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
+                                ✓ {t.admin.complete}
+                              </span>
+                            ) : (
+                              <span
+                                className="text-sm"
+                                style={{ color: "var(--c-warn)" }}
+                              >
+                                {t.admin.in_progress}
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-sm tt-muted">
+                            {new Date(merchant.created_at).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
                       ))}
                     </TableBody>
                   </Table>
@@ -675,20 +702,22 @@ export default function AdminPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card>
               <CardContent className="p-6 text-center">
-                <p className="text-sm tt-muted mb-1">
-                  {t.admin.total_revenue}
-                </p>
-                <p className="text-2xl font-bold tt-tabular" style={{ color: "var(--c-success)" }}>
+                <p className="text-sm tt-muted mb-1">{t.admin.total_revenue}</p>
+                <p
+                  className="text-2xl font-bold tt-tabular"
+                  style={{ color: "var(--c-success)" }}
+                >
                   {formatCurrency(totalRevenue)}
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-6 text-center">
-                <p className="text-sm tt-muted mb-1">
-                  {t.admin.current_mrr}
-                </p>
-                <p className="text-2xl font-bold tt-tabular" style={{ color: "var(--c-primary)" }}>
+                <p className="text-sm tt-muted mb-1">{t.admin.current_mrr}</p>
+                <p
+                  className="text-2xl font-bold tt-tabular"
+                  style={{ color: "var(--c-primary)" }}
+                >
                   {formatCurrency(mrr)}
                 </p>
               </CardContent>
@@ -698,7 +727,10 @@ export default function AdminPage() {
                 <p className="text-sm tt-muted mb-1">
                   {t.admin.arr_projection}
                 </p>
-                <p className="text-2xl font-bold tt-tabular" style={{ color: "var(--c-info)" }}>
+                <p
+                  className="text-2xl font-bold tt-tabular"
+                  style={{ color: "var(--c-info)" }}
+                >
                   {formatCurrency(arr)}
                 </p>
               </CardContent>
@@ -791,11 +823,12 @@ export default function AdminPage() {
                     className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
                     style={{ background: "var(--c-success)" }}
                   ></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: "var(--c-success)" }}></span>
+                  <span
+                    className="relative inline-flex rounded-full h-2 w-2"
+                    style={{ background: "var(--c-success)" }}
+                  ></span>
                 </span>
-                <span className="text-xs tt-muted ml-1">
-                  {t.admin.live}
-                </span>
+                <span className="text-xs tt-muted ml-1">{t.admin.live}</span>
               </div>
             </CardHeader>
             <CardContent>
@@ -818,11 +851,17 @@ export default function AdminPage() {
                         className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/40 transition-colors border border-border/50"
                       >
                         <div className="p-1.5 bg-primary/10 rounded">
-                          <Activity className="h-3 w-3" style={{ color: "var(--c-primary)" }} strokeWidth={1.75} />
+                          <Activity
+                            className="h-3 w-3"
+                            style={{ color: "var(--c-primary)" }}
+                            strokeWidth={1.75}
+                          />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">
-                            <span style={{ color: "var(--c-primary)" }}>{log.action}</span>
+                            <span style={{ color: "var(--c-primary)" }}>
+                              {log.action}
+                            </span>
                             {log.resource_type && (
                               <span className="tt-muted">
                                 {" "}
@@ -859,7 +898,11 @@ function StatusSummaryCard({
 }: {
   label: string;
   count: number;
-  icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>;
+  icon: React.ComponentType<{
+    size?: number;
+    className?: string;
+    strokeWidth?: number;
+  }>;
   tone: string;
 }) {
   return (
@@ -867,7 +910,10 @@ function StatusSummaryCard({
       <CardContent className="p-4">
         <div
           className="inline-flex p-2 rounded-lg mb-2"
-          style={{ background: `color-mix(in oklch, ${tone}, transparent 88%)`, color: tone }}
+          style={{
+            background: `color-mix(in oklch, ${tone}, transparent 88%)`,
+            color: tone,
+          }}
         >
           <Icon size={16} strokeWidth={1.75} />
         </div>
@@ -897,9 +943,7 @@ function EmptyChartState({
         <BarChart3 className="h-8 w-8 tt-muted" />
       </div>
       <p className="text-sm font-semibold">{title}</p>
-      <p className="text-xs tt-muted mt-1 max-w-xs">
-        {description}
-      </p>
+      <p className="text-xs tt-muted mt-1 max-w-xs">{description}</p>
       {disclaimer && (
         <p className="text-[10px] tt-faint mt-3 uppercase tracking-wide">
           {disclaimer}

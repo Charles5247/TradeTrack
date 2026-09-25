@@ -7,28 +7,33 @@
  *   3. node scripts/seed-auth-users.mjs
  */
 
-import { createClient } from '@supabase/supabase-js';
-import { readFileSync, existsSync } from 'fs';
-import { resolve, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { createClient } from "@supabase/supabase-js";
+import { readFileSync, existsSync } from "fs";
+import { resolve, dirname } from "path";
+import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const root = resolve(__dirname, '..');
+const root = resolve(__dirname, "..");
 
 function loadEnv() {
-  const envPath = resolve(root, '.env.local');
+  const envPath = resolve(root, ".env.local");
   if (!existsSync(envPath)) {
-    console.error('Missing .env.local — copy .env.example and set SUPABASE vars.');
+    console.error(
+      "Missing .env.local — copy .env.example and set SUPABASE vars.",
+    );
     process.exit(1);
   }
-  const lines = readFileSync(envPath, 'utf8').split('\n');
+  const lines = readFileSync(envPath, "utf8").split("\n");
   for (const line of lines) {
     const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) continue;
-    const eq = trimmed.indexOf('=');
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eq = trimmed.indexOf("=");
     if (eq === -1) continue;
     const key = trimmed.slice(0, eq).trim();
-    const val = trimmed.slice(eq + 1).trim().replace(/^["']|["']$/g, '');
+    const val = trimmed
+      .slice(eq + 1)
+      .trim()
+      .replace(/^["']|["']$/g, "");
     if (!process.env[key]) process.env[key] = val;
   }
 }
@@ -39,7 +44,9 @@ const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!url || !serviceKey) {
-  console.error('NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required.');
+  console.error(
+    "NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required.",
+  );
   process.exit(1);
 }
 
@@ -53,34 +60,34 @@ const supabase = createClient(url, serviceKey, {
  */
 const DEMO_USERS = [
   {
-    id: '22222222-2222-2222-2222-222222222222',
-    email: 'superadmin@tradetrack.ng',
-    password: 'demo1234',
-    user_metadata: { full_name: 'Super Admin' },
+    id: "22222222-2222-2222-2222-222222222222",
+    email: "superadmin@TracKasuwa.ng",
+    password: "demo1234",
+    user_metadata: { full_name: "Super Admin" },
   },
   {
-    id: 'a6000000-0000-0000-0000-000000000001',
-    email: 'owner@demo.com',
-    password: 'demo1234',
-    user_metadata: { full_name: 'Demo Owner' },
+    id: "a6000000-0000-0000-0000-000000000001",
+    email: "owner@demo.com",
+    password: "demo1234",
+    user_metadata: { full_name: "Demo Owner" },
   },
   {
-    id: '33333333-3333-3333-3333-333333333333',
-    email: 'admin@demo.com',
-    password: 'demo1234',
-    user_metadata: { full_name: 'Demo Admin' },
+    id: "33333333-3333-3333-3333-333333333333",
+    email: "admin@demo.com",
+    password: "demo1234",
+    user_metadata: { full_name: "Demo Admin" },
   },
   {
-    id: 'a5000000-0000-0000-0000-000000000001',
-    email: 'manager@demo.com',
-    password: 'demo1234',
-    user_metadata: { full_name: 'Demo Manager' },
+    id: "a5000000-0000-0000-0000-000000000001",
+    email: "manager@demo.com",
+    password: "demo1234",
+    user_metadata: { full_name: "Demo Manager" },
   },
   {
-    id: '44444444-4444-4444-4444-444444444444',
-    email: 'cashier@demo.com',
-    password: 'demo1234',
-    user_metadata: { full_name: 'Demo Cashier' },
+    id: "44444444-4444-4444-4444-444444444444",
+    email: "cashier@demo.com",
+    password: "demo1234",
+    user_metadata: { full_name: "Demo Cashier" },
   },
 ];
 
@@ -111,7 +118,7 @@ async function upsertAuthUser(user) {
 }
 
 async function main() {
-  console.log('Seeding Supabase Auth users for TradeTrack demo accounts...\n');
+  console.log("Seeding Supabase Auth users for TracKasuwa demo accounts...\n");
   for (const user of DEMO_USERS) {
     try {
       await upsertAuthUser(user);
@@ -120,12 +127,14 @@ async function main() {
       process.exit(1);
     }
   }
-  console.log('\nDone. Demo logins:');
-  console.log('  superadmin@tradetrack.ng / demo1234  (platform super admin → /admin)');
-  console.log('  owner@demo.com / demo1234            (org owner → /admin)');
-  console.log('  admin@demo.com / demo1234            (org admin)');
-  console.log('  manager@demo.com / demo1234          (org manager)');
-  console.log('  cashier@demo.com / demo1234          (cashier)');
+  console.log("\nDone. Demo logins:");
+  console.log(
+    "  superadmin@TracKasuwa.ng / demo1234  (platform super admin → /admin)",
+  );
+  console.log("  owner@demo.com / demo1234            (org owner → /admin)");
+  console.log("  admin@demo.com / demo1234            (org admin)");
+  console.log("  manager@demo.com / demo1234          (org manager)");
+  console.log("  cashier@demo.com / demo1234          (cashier)");
 }
 
 main();

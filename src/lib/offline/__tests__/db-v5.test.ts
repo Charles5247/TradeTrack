@@ -2,12 +2,12 @@
 import { expect, it, vi } from "vitest";
 import { openDB } from "idb";
 vi.mock("../auth-cache", () => ({
-  getOfflineAccountNamespace: () => "v4-upgrade-test",
+  getOfflineAccountNamespace: () => "v5-upgrade-test",
 }));
 import { getDB } from "../db";
 
-it("upgrades a populated v3 database without losing POS rows or queue indexes", async () => {
-  const old = await openDB("TracKasuwa-offline-v4-upgrade-test", 3, {
+it("upgrades v4 while preserving PO, POS and queued records", async () => {
+  const old = await openDB("TracKasuwa-offline-v5-upgrade-test", 4, {
     upgrade(db) {
       for (const name of [
         "products",
@@ -18,9 +18,11 @@ it("upgrades a populated v3 database without losing POS rows or queue indexes", 
         "categories",
         "pending_receipts",
         "user_sessions",
-      ]) {
+        "suppliers",
+        "purchase_orders",
+        "purchase_order_items",
+      ])
         db.createObjectStore(name, { keyPath: "id" });
-      }
       const queue = db.createObjectStore("sync_queue", { keyPath: "id" });
       queue.createIndex("by-queue-key", [
         "table_name",
@@ -31,34 +33,31 @@ it("upgrades a populated v3 database without losing POS rows or queue indexes", 
       queue.createIndex("by-table", "table_name");
     },
   });
-  await old.put("sales", { id: "existing-sale", total: 100 });
-  await old.put("sale_items", {
-    id: "existing-item",
-    sale_id: "existing-sale",
-  });
+  await old.put("purchase_orders", { id: "po", total_value: 200 });
+  await old.put("sales", { id: "sale", total: 100 });
   await old.put("sync_queue", {
-    id: "existing-queue",
+    id: "queue",
     table_name: "sales",
-    record_id: "existing-sale",
+    record_id: "sale",
     operation: "INSERT",
     status: "pending",
   });
   old.close();
   const db = await getDB();
   expect(db.version).toBe(5);
-  expect(await db.get("sales", "existing-sale")).toEqual({
-    id: "existing-sale",
-    total: 100,
+  expect(await db.get("purchase_orders", "po")).toEqual({
+    id: "po",
+    total_value: 200,
   });
-  expect(await db.count("sale_items")).toBe(1);
+  expect(await db.get("sales", "sale")).toEqual({ id: "sale", total: 100 });
   expect(
     await db.getAllFromIndex("sync_queue", "by-queue-key", [
       "sales",
-      "existing-sale",
+      "sale",
       "INSERT",
     ]),
   ).toHaveLength(1);
-  for (const name of ["suppliers", "purchase_orders", "purchase_order_items"])
-    expect(db.objectStoreNames.contains(name)).toBe(true);
+  expect(db.objectStoreNames.contains("vendor_transactions")).toBe(true);
+  expect(db.objectStoreNames.contains("vendor_transaction_items")).toBe(true);
   db.close();
 });

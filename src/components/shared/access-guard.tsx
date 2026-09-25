@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { ShieldAlert } from 'lucide-react';
-import { useAuthStore } from '@/store';
-import { useI18n } from '@/i18n';
-import type { UserRole } from '@/types';
+import React from "react";
+import { ShieldAlert } from "lucide-react";
+import { useAuthStore } from "@/store";
+import { useI18n } from "@/i18n";
+import type { UserRole } from "@/types";
 
 /**
  * Renders `children` only if the current user's role is included in
  * `allow`. Otherwise renders a standard "Access Denied" placeholder.
  *
- * Used to enforce that platform_owner (TradeTrack's own cross-org role)
+ * Used to enforce that platform_owner (TracKasuwa's own cross-org role)
  * cannot view a merchant's operational pages such as Products, Inventory,
  * POS, Sales History, Warehouses, Transfers, Vendor Sales, Reports and
  * Audit Trail — even via direct URL navigation (the sidebar already hides
@@ -32,7 +32,9 @@ export function AccessGuard({
         <ShieldAlert className="h-12 w-12 text-muted-foreground" />
         <div className="text-center">
           <p className="font-medium">{t.common.access_denied}</p>
-          <p className="text-sm text-muted-foreground">{t.common.access_denied_desc}</p>
+          <p className="text-sm text-muted-foreground">
+            {t.common.access_denied_desc}
+          </p>
         </div>
       </div>
     );

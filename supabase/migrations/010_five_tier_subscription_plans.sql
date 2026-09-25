@@ -1,5 +1,5 @@
 -- ============================================================
--- TradeTrack — Migration 010: 5-Tier Subscription Plan Restructure
+-- TracKasuwa — Migration 010: 5-Tier Subscription Plan Restructure
 -- ============================================================
 --
 -- Replaces the old 3-tier catalog (Basic/Standard/Business, seeded in

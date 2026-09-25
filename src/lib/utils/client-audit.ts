@@ -1,5 +1,5 @@
 /**
- * TradeTrack - Client-Side Audit Logging
+ * TracKasuwa - Client-Side Audit Logging
  *
  * Writes audit entries via an API route (not directly to Supabase)
  * to avoid RLS 403 errors from the browser client.
@@ -25,13 +25,13 @@ export interface AuditEntry {
  */
 export async function createAuditEntry(entry: AuditEntry): Promise<void> {
   try {
-    await fetch('/api/audit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    await fetch("/api/audit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(entry),
     });
   } catch (err) {
     // Audit logging should never break the main flow
-    console.warn('[audit] Failed to write audit entry:', err);
+    console.warn("[audit] Failed to write audit entry:", err);
   }
 }

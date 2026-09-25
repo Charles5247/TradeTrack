@@ -1,5 +1,5 @@
 /**
- * TradeTrack - Promise timeout helper
+ * TracKasuwa - Promise timeout helper
  *
  * Supabase's own client retries certain failure classes (a fully
  * unreachable network, or an access token that happens to be near/past

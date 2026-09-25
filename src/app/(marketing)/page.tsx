@@ -7,7 +7,7 @@ import { AccountabilityBand } from "@/components/marketing/accountability-band";
 import { CTABand } from "@/components/marketing/cta-band";
 
 export const metadata: Metadata = {
-  title: "TradeTrack — POS & Inventory Built for Accountability",
+  title: "TracKasuwa — POS & Inventory Built for Accountability",
   description:
     "Offline-first point-of-sale and inventory management for Nigerian market traders. Every sale recorded, every stock movement tracked, even without internet.",
 };

@@ -1,6 +1,6 @@
 {
-  "name": "TradeTrack - POS & Inventory",
-  "short_name": "TradeTrack",
+  "name": "TracKasuwa - POS & Inventory",
+  "short_name": "TracKasuwa",
   "description": "Enterprise offline-first POS and inventory management system",
   "start_url": "/dashboard",
   "display": "standalone",

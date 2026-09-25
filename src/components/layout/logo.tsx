@@ -1,7 +1,7 @@
-import * as React from 'react';
+import * as React from "react";
 
 /**
- * TradeTrack "Retail" logomark — bold TT monogram with an accent dot.
+ * TracKasuwa "Retail" logomark — bold TT monogram with an accent dot.
  * Ported from the handoff's `logo.jsx` → `LogoRetail` (README §11 Logo).
  * All colors reference the Retail token set (--c-primary/--c-primaryFg/
  * --c-accent/--c-text) so it automatically adapts across light/dark.
@@ -16,7 +16,7 @@ export function Logo({
   className?: string;
 }) {
   return (
-    <div className={`inline-flex items-center gap-2.5 ${className ?? ''}`}>
+    <div className={`inline-flex items-center gap-2.5 ${className ?? ""}`}>
       <svg
         width={size}
         height={size}
@@ -24,7 +24,14 @@ export function Logo({
         aria-hidden="true"
         className="shrink-0"
       >
-        <rect x="4" y="4" width="32" height="32" rx="9" fill="var(--c-primary)" />
+        <rect
+          x="4"
+          y="4"
+          width="32"
+          height="32"
+          rx="9"
+          fill="var(--c-primary)"
+        />
         <path
           d="M10 14 H22 M16 14 V28"
           stroke="var(--c-primaryFg)"
@@ -43,9 +50,9 @@ export function Logo({
       {showLabel && (
         <span
           className="tt-head shrink-0"
-          style={{ fontSize: size * 0.5, color: 'var(--c-text)' }}
+          style={{ fontSize: size * 0.5, color: "var(--c-text)" }}
         >
-          TradeTrack
+          TracKasuwa
         </span>
       )}
     </div>

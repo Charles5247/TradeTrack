@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to TradeTrack are recorded here. This project does not
+All notable changes to TracKasuwa are recorded here. This project does not
 yet publish tagged releases or follow strict semantic versioning (see the
 [Assumptions & Inconsistencies](#assumptions--inconsistencies) note at the
 bottom) — entries are grouped by feature milestone, reconstructed from the
@@ -10,6 +10,7 @@ first.
 ## [Unreleased]
 
 ### Fixed
+
 - **Subscription plan data-consistency bug**: the public `/pricing` page
   and the dashboard's Subscriptions ▸ Plans tab each wrote their own,
   independent Supabase query for `subscription_plans`. `/pricing`
@@ -40,10 +41,11 @@ first.
   - `docs/LOCAL_DEV_SETUP.md`, a new guide for getting a clean local
     database (and a documented caveat about the demo seed file's
     non-canonical plan rows).
-  No pricing figures or feature flags changed in this fix — purely a
-  data/query-consistency correction.
+    No pricing figures or feature flags changed in this fix — purely a
+    data/query-consistency correction.
 
 ### Added
+
 - **Purchase Orders** (`purchase_orders` / `purchase_order_items` tables,
   migration `011_purchase_orders.sql`) — a minimal Business-tier feature:
   create a PO (supplier, line items, expected date) → send it → receive it,
@@ -67,6 +69,7 @@ first.
 ## Five-Tier Subscription Restructure
 
 ### Changed
+
 - Restructured the subscription ladder from the original 3 tiers
   (Basic ₦3,000 / Standard ₦5,000 / Business ₦8,000) to 5 tiers — Free,
   Starter, Growth, Business, Enterprise — modeled on a Sortly-style
@@ -82,6 +85,7 @@ first.
   domain without a source-code change (see `docs/DOWNLOAD_FLOW.md`).
 
 ### Added
+
 - Public marketing site (`(marketing)` route group): landing page,
   `/features`, `/pricing`, and self-serve signup, separate from the
   authenticated `(dashboard)` route group.
@@ -89,10 +93,11 @@ first.
 ## Merchant Onboarding, Roles & Payments Rework
 
 ### Changed
+
 - Reworked the role model from `super_admin > owner > admin > manager >
-  cashier` to `platform_owner > business_owner > admin > cashier`
+cashier` to `platform_owner > business_owner > admin > cashier`
   (migration `008_role_model_rework.sql`) — `platform_owner` merges the old
-  `super_admin`/`owner` cross-org roles into one TradeTrack-staff-only
+  `super_admin`/`owner` cross-org roles into one TracKasuwa-staff-only
   role; `business_owner` is a new, single-org role auto-created for every
   merchant at onboarding.
 - Merchant onboarding (`POST /api/merchants/onboard`) now always creates a
@@ -101,6 +106,7 @@ first.
   from the first row written for that merchant.
 
 ### Added
+
 - Forced password change on first login for newly onboarded
   `business_owner` accounts (`users.must_change_password`,
   `/change-password` gate).
@@ -118,6 +124,7 @@ first.
 ## Native Distribution Shells
 
 ### Added
+
 - Electron-based Windows desktop shell (`desktop-app/`) — thin
   `BrowserWindow` wrapper around the deployed PWA, packaged as an NSIS
   `.exe` installer via `electron-builder`.
@@ -133,6 +140,7 @@ first.
 ## Offline-First Foundation
 
 ### Added
+
 - IndexedDB-backed local store (`idb`) caching products/inventory for
   offline reads, and a `SyncEngine` that queues writes made while offline
   and pushes them once connectivity returns.
@@ -144,6 +152,7 @@ first.
   barcodes/QR codes on receipts.
 
 ### Fixed
+
 - Stopped a checkout freeze caused by an unbounded `sync_queue` table scan
   on devices with a large offline backlog.
 - Multiple rounds of receipt-layout, offline-sync, and role/permission
@@ -153,6 +162,7 @@ first.
 ## Initial Build
 
 ### Added
+
 - Core POS & inventory management platform: products, categories,
   suppliers, multi-warehouse inventory with movement history, point of
   sale with barcode scanning/cart/discounts/tax/split payments, warehouse

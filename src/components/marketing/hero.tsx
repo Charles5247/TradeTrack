@@ -8,13 +8,13 @@ import { useScrollY } from "@/hooks/use-scroll-y";
 
 /**
  * Hero copy — ported from the design handoff's `HERO_COPY` (4 brand-
- * direction variants: ledger/market/operator/retail). TradeTrack uses
+ * direction variants: ledger/market/operator/retail). TracKasuwa uses
  * the "retail" direction, matching a POS/checkout-first product.
  */
 const HERO_COPY = {
   eyebrow: "Point of Sale · Nigeria",
   title: "Sell faster. Restock smarter. Never lose a sale.",
-  sub: "Barcode-scan checkout, split payments, offline-ready — plus a dedicated Naira account for every merchant. TradeTrack is retail, unlocked.",
+  sub: "Barcode-scan checkout, split payments, offline-ready — plus a dedicated Naira account for every merchant. TracKasuwa is retail, unlocked.",
 };
 
 const TRUST_LOGOS = [
@@ -87,13 +87,28 @@ function HeroCompositePhoto() {
       >
         <div
           className="flex items-center gap-1.5 px-3 py-2 border-b"
-          style={{ background: "var(--c-surfaceAlt)", borderColor: "var(--c-border)" }}
+          style={{
+            background: "var(--c-surfaceAlt)",
+            borderColor: "var(--c-border)",
+          }}
         >
-          <span className="w-[7px] h-[7px] rounded-full" style={{ background: "#ff5f56" }} />
-          <span className="w-[7px] h-[7px] rounded-full" style={{ background: "#ffbd2e" }} />
-          <span className="w-[7px] h-[7px] rounded-full" style={{ background: "#27c93f" }} />
-          <span className="tt-mono ml-1.5 text-[9px]" style={{ color: "var(--c-textMuted)" }}>
-            tradetrack.ng
+          <span
+            className="w-[7px] h-[7px] rounded-full"
+            style={{ background: "#ff5f56" }}
+          />
+          <span
+            className="w-[7px] h-[7px] rounded-full"
+            style={{ background: "#ffbd2e" }}
+          />
+          <span
+            className="w-[7px] h-[7px] rounded-full"
+            style={{ background: "#27c93f" }}
+          />
+          <span
+            className="tt-mono ml-1.5 text-[9px]"
+            style={{ color: "var(--c-textMuted)" }}
+          >
+            TracKasuwa.ng
           </span>
         </div>
         <div className="p-3.5" style={{ background: "var(--c-surface)" }}>
@@ -107,7 +122,8 @@ function HeroCompositePhoto() {
             className="flex items-center gap-1 mt-0.5 text-[10px]"
             style={{ color: "var(--c-success)" }}
           >
-            <ArrowUp className="h-2.5 w-2.5" strokeWidth={1.75} /> +18% vs yesterday
+            <ArrowUp className="h-2.5 w-2.5" strokeWidth={1.75} /> +18% vs
+            yesterday
           </div>
           <MiniBars />
         </div>
@@ -116,17 +132,30 @@ function HeroCompositePhoto() {
       {/* Floating live-sale toast */}
       <div
         className="tt-hero-toast absolute right-[-20px] top-10 flex items-center gap-2.5 rounded-xl px-3.5 py-2.5"
-        style={{ background: "var(--c-surface)", boxShadow: "0 20px 40px -10px rgba(0,0,0,0.15)" }}
+        style={{
+          background: "var(--c-surface)",
+          boxShadow: "0 20px 40px -10px rgba(0,0,0,0.15)",
+        }}
       >
         <div
           className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
-          style={{ background: "color-mix(in oklch, var(--c-success), transparent 82%)" }}
+          style={{
+            background:
+              "color-mix(in oklch, var(--c-success), transparent 82%)",
+          }}
         >
-          <Check className="h-4 w-4" style={{ color: "var(--c-success)" }} strokeWidth={1.75} />
+          <Check
+            className="h-4 w-4"
+            style={{ color: "var(--c-success)" }}
+            strokeWidth={1.75}
+          />
         </div>
         <div>
           <div className="text-xs font-semibold">Sale complete</div>
-          <div className="tt-mono text-[10px]" style={{ color: "var(--c-textMuted)" }}>
+          <div
+            className="tt-mono text-[10px]"
+            style={{ color: "var(--c-textMuted)" }}
+          >
             ₦14,500 · Cash · #A00248
           </div>
         </div>
@@ -135,9 +164,15 @@ function HeroCompositePhoto() {
       {/* Floating stat pill */}
       <div
         className="tt-hero-pill absolute left-[30px] top-[-20px] flex items-center gap-2 rounded-xl px-3.5 py-2"
-        style={{ background: "var(--c-surface)", boxShadow: "0 20px 40px -10px rgba(0,0,0,0.15)" }}
+        style={{
+          background: "var(--c-surface)",
+          boxShadow: "0 20px 40px -10px rgba(0,0,0,0.15)",
+        }}
       >
-        <span className="tt-dot-pulse w-2 h-2 rounded-full" style={{ background: "var(--c-success)" }} />
+        <span
+          className="tt-dot-pulse w-2 h-2 rounded-full"
+          style={{ background: "var(--c-success)" }}
+        />
         <span className="text-xs font-semibold">147 sales today</span>
       </div>
     </div>
@@ -149,15 +184,32 @@ export function Hero() {
   const py = Math.min(scrollY * 0.15, 60);
 
   return (
-    <section className="relative overflow-hidden" style={{ paddingTop: 60, paddingBottom: 100 }}>
+    <section
+      className="relative overflow-hidden"
+      style={{ paddingTop: 60, paddingBottom: 100 }}
+    >
       {/* Animated blobs */}
       <div
         className="tt-blob-float-1 absolute rounded-full blur-3xl pointer-events-none"
-        style={{ top: -100, right: -80, width: 500, height: 500, background: "var(--c-primary)", opacity: 0.12 }}
+        style={{
+          top: -100,
+          right: -80,
+          width: 500,
+          height: 500,
+          background: "var(--c-primary)",
+          opacity: 0.12,
+        }}
       />
       <div
         className="tt-blob-float-2 absolute rounded-full blur-3xl pointer-events-none"
-        style={{ top: 200, left: -80, width: 400, height: 400, background: "var(--c-accent)", opacity: 0.12 }}
+        style={{
+          top: 200,
+          left: -80,
+          width: 400,
+          height: 400,
+          background: "var(--c-accent)",
+          opacity: 0.12,
+        }}
       />
 
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
@@ -166,9 +218,15 @@ export function Hero() {
             <Reveal delay={100}>
               <div
                 className="tt-eyebrow inline-flex items-center gap-2 rounded-full px-3 py-1.5 mb-5 border"
-                style={{ background: "var(--c-surfaceAlt)", borderColor: "var(--c-border)" }}
+                style={{
+                  background: "var(--c-surfaceAlt)",
+                  borderColor: "var(--c-border)",
+                }}
               >
-                <span className="tt-dot-pulse w-1.5 h-1.5 rounded-full" style={{ background: "var(--c-success)" }} />
+                <span
+                  className="tt-dot-pulse w-1.5 h-1.5 rounded-full"
+                  style={{ background: "var(--c-success)" }}
+                />
                 {HERO_COPY.eyebrow}
               </div>
             </Reveal>
@@ -176,7 +234,12 @@ export function Hero() {
             <Reveal delay={200}>
               <h1
                 className="tt-head"
-                style={{ fontSize: "clamp(40px, 6vw, 68px)", margin: "0 0 20px", maxWidth: 640, lineHeight: 1.02 }}
+                style={{
+                  fontSize: "clamp(40px, 6vw, 68px)",
+                  margin: "0 0 20px",
+                  maxWidth: 640,
+                  lineHeight: 1.02,
+                }}
               >
                 {HERO_COPY.title}
               </h1>
@@ -185,7 +248,12 @@ export function Hero() {
             <Reveal delay={350}>
               <p
                 className="mb-8"
-                style={{ fontSize: 18, lineHeight: 1.55, color: "var(--c-textMuted)", maxWidth: 540 }}
+                style={{
+                  fontSize: 18,
+                  lineHeight: 1.55,
+                  color: "var(--c-textMuted)",
+                  maxWidth: 540,
+                }}
               >
                 {HERO_COPY.sub}
               </p>
@@ -196,40 +264,69 @@ export function Hero() {
                 <Link
                   href="/signup"
                   className="inline-flex items-center gap-2 rounded-lg h-[52px] px-6 text-base font-medium"
-                  style={{ background: "var(--c-primary)", color: "var(--c-primaryFg)" }}
+                  style={{
+                    background: "var(--c-primary)",
+                    color: "var(--c-primaryFg)",
+                  }}
                 >
-                  Start free — no card <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
+                  Start free — no card{" "}
+                  <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
                 </Link>
                 <Link
                   href="/download"
                   className="inline-flex items-center gap-2 rounded-lg h-[52px] px-6 text-base font-medium border"
-                  style={{ borderColor: "var(--c-border)", color: "var(--c-text)" }}
+                  style={{
+                    borderColor: "var(--c-border)",
+                    color: "var(--c-text)",
+                  }}
                 >
-                  <Download className="h-4 w-4" strokeWidth={1.75} /> Download for Windows
+                  <Download className="h-4 w-4" strokeWidth={1.75} /> Download
+                  for Windows
                 </Link>
               </div>
             </Reveal>
 
             <Reveal delay={650}>
               <div className="flex flex-wrap items-center gap-6 mt-8">
-                {["Free plan forever", "Offline-ready", "Works on any phone"].map((c) => (
+                {[
+                  "Free plan forever",
+                  "Offline-ready",
+                  "Works on any phone",
+                ].map((c) => (
                   <div key={c} className="flex items-center gap-1.5">
-                    <Check className="h-3.5 w-3.5" style={{ color: "var(--c-success)" }} strokeWidth={1.75} />
-                    <span className="text-[13px]" style={{ color: "var(--c-textMuted)" }}>{c}</span>
+                    <Check
+                      className="h-3.5 w-3.5"
+                      style={{ color: "var(--c-success)" }}
+                      strokeWidth={1.75}
+                    />
+                    <span
+                      className="text-[13px]"
+                      style={{ color: "var(--c-textMuted)" }}
+                    >
+                      {c}
+                    </span>
                   </div>
                 ))}
               </div>
             </Reveal>
           </div>
 
-          <div style={{ transform: `translateY(${-py * 0.3}px)`, position: "relative" }}>
+          <div
+            style={{
+              transform: `translateY(${-py * 0.3}px)`,
+              position: "relative",
+            }}
+          >
             <HeroCompositePhoto />
           </div>
         </div>
       </div>
 
       <Reveal delay={800}>
-        <div className="mx-auto max-w-6xl px-4 sm:px-6" style={{ marginTop: 100 }}>
+        <div
+          className="mx-auto max-w-6xl px-4 sm:px-6"
+          style={{ marginTop: 100 }}
+        >
           <div
             className="tt-eyebrow text-center mb-6"
             style={{ color: "var(--c-textFaint)" }}

@@ -1,11 +1,11 @@
-# TradeTrack Android App
+# TracKasuwa Android App
 
-A minimal native Android **WebView shell** around the TradeTrack web app —
+A minimal native Android **WebView shell** around the TracKasuwa web app —
 the mobile counterpart to the Electron desktop shell in `../desktop-app`.
 
 ## Why a WebView wrapper (not React Native)?
 
-TradeTrack is already an offline-first PWA: it ships a service worker
+TracKasuwa is already an offline-first PWA: it ships a service worker
 (`public/sw.js`), an IndexedDB-backed local store, and a `SyncEngine` that
 reconciles local writes with Supabase once connectivity returns. A WebView
 shell gets all of that for free — the same way Chrome for Android does —
@@ -31,7 +31,7 @@ android-app/
 │   ├── proguard-rules.pro
 │   └── src/main/
 │       ├── AndroidManifest.xml      # INTERNET permission, single launcher Activity
-│       ├── java/ng/tradetrack/app/
+│       ├── java/ng/TracKasuwa/app/
 │       │   └── MainActivity.java    # WebView shell (JS/DOM storage/DB enabled)
 │       └── res/
 │           ├── mipmap-*/            # App icon at all densities
@@ -68,7 +68,7 @@ source control). To produce an installable APK:
 #    losing it means you can never publish an update under the same
 #    signature again):
 keytool -genkeypair -v \
-  -keystore tradetrack-release.keystore -alias tradetrack \
+  -keystore TracKasuwa-release.keystore -alias TracKasuwa \
   -keyalg RSA -keysize 2048 -validity 10000
 
 # 2. Align + sign (from Android SDK build-tools):
@@ -77,11 +77,11 @@ zipalign -v -p 4 \
   app-release-aligned.apk
 
 apksigner sign \
-  --ks tradetrack-release.keystore --ks-key-alias tradetrack \
-  --out TradeTrack-1.0.0.apk \
+  --ks TracKasuwa-release.keystore --ks-key-alias TracKasuwa \
+  --out TracKasuwa-1.0.0.apk \
   app-release-aligned.apk
 
-apksigner verify --verbose TradeTrack-1.0.0.apk
+apksigner verify --verbose TracKasuwa-1.0.0.apk
 ```
 
 The APK distributed alongside this project was signed with a
@@ -99,13 +99,13 @@ accept as coming from the same app.
 production domain can be changed without touching any Java source file:
 
 ```bash
-# Default build — uses the fallback domain (tradetrack.ng) baked into
+# Default build — uses the fallback domain (TracKasuwa.ng) baked into
 # build.gradle:
 gradle assembleRelease --no-daemon
 
-# Point a specific build at a different domain, e.g. once tradetrack.com
+# Point a specific build at a different domain, e.g. once TracKasuwa.com
 # is secured and ready to go live, WITHOUT editing any source file:
-gradle assembleRelease --no-daemon -PappUrl=https://tradetrack.com
+gradle assembleRelease --no-daemon -PappUrl=https://TracKasuwa.com
 ```
 
 Both commands produce `app/build/outputs/apk/release/app-release-unsigned.apk`
@@ -118,13 +118,13 @@ public marketing site — sending the shell straight to `/login` means
 an already-authenticated trader is forwarded on to `/dashboard`
 automatically by the web app's own auth middleware, with no extra step.
 
-**Do not assume `tradetrack.com` is secured yet.** The default
+**Do not assume `TracKasuwa.com` is secured yet.** The default
 fallback baked into `build.gradle` (when `-PappUrl` is not passed)
-remains `https://tradetrack.ng` until told otherwise — this
+remains `https://TracKasuwa.ng` until told otherwise — this
 mechanism only makes the domain swappable at build time, it does not
 perform any actual domain change.
 
-To make a permanent change to the *default* (i.e. change what happens
+To make a permanent change to the _default_ (i.e. change what happens
 when nobody passes `-PappUrl` at all), edit the fallback string inside
 the `buildConfigField` line in `android-app/app/build.gradle`'s
 `defaultConfig` block and rebuild.

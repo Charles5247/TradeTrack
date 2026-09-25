@@ -1,6 +1,6 @@
-import type { ReceiptData } from '@/lib/receipt/build-receipt';
-import { formatCurrency } from '@/lib/utils/format';
-import { wrapReceiptText } from '@/lib/receipt/receipt-layout';
+import type { ReceiptData } from "@/lib/receipt/build-receipt";
+import { formatCurrency } from "@/lib/utils/format";
+import { wrapReceiptText } from "@/lib/receipt/receipt-layout";
 
 /**
  * Builds raw ESC/POS command bytes for a receipt. ESC/POS is the de-facto
@@ -43,7 +43,7 @@ function textToBytes(text: string): number[] {
   return bytes;
 }
 
-function line(text = ''): number[] {
+function line(text = ""): number[] {
   return [...textToBytes(text), 0x0a]; // \n
 }
 
@@ -55,8 +55,8 @@ class EscPosBuilder {
     return this;
   }
 
-  align(mode: 'left' | 'center' | 'right') {
-    const n = mode === 'left' ? 0 : mode === 'center' ? 1 : 2;
+  align(mode: "left" | "center" | "right") {
+    const n = mode === "left" ? 0 : mode === "center" ? 1 : 2;
     this.bytes.push(ESC, 0x61, n); // ESC a n
     return this;
   }
@@ -82,7 +82,7 @@ class EscPosBuilder {
   }
 
   divider(width = 32) {
-    this.bytes.push(...line('*'.repeat(width)));
+    this.bytes.push(...line("*".repeat(width)));
     return this;
   }
 
@@ -116,7 +116,17 @@ class EscPosBuilder {
     this.bytes.push(GS, 0x28, 0x6b, 4, 0, 49, 65, 50, 0);
     this.bytes.push(GS, 0x28, 0x6b, 3, 0, 49, 67, 5);
     this.bytes.push(GS, 0x28, 0x6b, 3, 0, 49, 69, 49);
-    this.bytes.push(GS, 0x28, 0x6b, length & 0xff, length >> 8, 49, 80, 48, ...data);
+    this.bytes.push(
+      GS,
+      0x28,
+      0x6b,
+      length & 0xff,
+      length >> 8,
+      49,
+      80,
+      48,
+      ...data,
+    );
     this.bytes.push(GS, 0x28, 0x6b, 3, 0, 49, 81, 48);
     return this;
   }
@@ -136,13 +146,16 @@ class EscPosBuilder {
  * thermal printer. `charWidth` is the printer's character width per line
  * (32 for most 58mm printers, 48 for 80mm) — used to size the divider line.
  */
-export function receiptToEscPos(receipt: ReceiptData, charWidth = 32): Uint8Array {
+export function receiptToEscPos(
+  receipt: ReceiptData,
+  charWidth = 32,
+): Uint8Array {
   const b = new EscPosBuilder();
   b.init();
 
   const money = (label: string, amount: string) => {
     const pad = Math.max(1, charWidth - label.length - amount.length);
-    b.text(label + ' '.repeat(pad) + amount);
+    b.text(label + " ".repeat(pad) + amount);
   };
 
   const wrappedText = (text: string, width = charWidth) => {
@@ -155,7 +168,7 @@ export function receiptToEscPos(receipt: ReceiptData, charWidth = 32): Uint8Arra
   const hasPaymentDetails = Boolean(receipt.cardMasked || receipt.approvalCode);
 
   // ── Header ──────────────────────────────────────────────────
-  b.align('center');
+  b.align("center");
   b.doubleSize(true);
   b.bold(true);
   b.text(receipt.orgName.toUpperCase());
@@ -166,13 +179,13 @@ export function receiptToEscPos(receipt: ReceiptData, charWidth = 32): Uint8Arra
   b.feed(1);
   b.divider(charWidth);
   b.bold(true);
-  b.text('INVOICE');
+  b.text("INVOICE");
   b.bold(false);
-  b.text('Current Bill');
+  b.text("Current Bill");
   b.divider(charWidth);
 
   // ── Meta ────────────────────────────────────────────────────
-  b.align('left');
+  b.align("left");
   b.text(`Invoice: ${receipt.invoiceNumber}`);
   b.text(`Date: ${new Date(receipt.dateISO).toLocaleString()}`);
   if (receipt.cashierName) b.text(`Cashier: ${receipt.cashierName}`);
@@ -180,46 +193,55 @@ export function receiptToEscPos(receipt: ReceiptData, charWidth = 32): Uint8Arra
   b.divider(charWidth);
 
   // ── Item table ──────────────────────────────────────────────
-  b.text('QTY DESCRIPTION                 AMT');
+  b.text("QTY DESCRIPTION                 AMT");
   receipt.items.forEach((item) => {
     const description = `${item.name} @ ${formatCurrency(item.unitPrice)}`;
-    money(`${item.quantity} ${description}`.slice(0, charWidth - 1), formatCurrency(item.total));
+    money(
+      `${item.quantity} ${description}`.slice(0, charWidth - 1),
+      formatCurrency(item.total),
+    );
   });
 
   b.divider(charWidth);
-  money('Subtotal', formatCurrency(receipt.subtotal));
-  if (receipt.discount > 0) money('Discount', `-${formatCurrency(receipt.discount)}`);
-  if (receipt.tax > 0) money('Tax', formatCurrency(receipt.tax));
+  money("Subtotal", formatCurrency(receipt.subtotal));
+  if (receipt.discount > 0)
+    money("Discount", `-${formatCurrency(receipt.discount)}`);
+  if (receipt.tax > 0) money("Tax", formatCurrency(receipt.tax));
 
   b.doubleSize(true);
   b.bold(true);
-  money('TOTAL', formatCurrency(receipt.total));
+  money("TOTAL", formatCurrency(receipt.total));
   b.doubleSize(false);
   b.bold(false);
-  money(receipt.paymentMethod === 'cash' ? 'Cash' : 'Paid', formatCurrency(receipt.amountPaid));
-  if (receipt.changeAmount > 0) money('Change', formatCurrency(receipt.changeAmount));
+  money(
+    receipt.paymentMethod === "cash" ? "Cash" : "Paid",
+    formatCurrency(receipt.amountPaid),
+  );
+  if (receipt.changeAmount > 0)
+    money("Change", formatCurrency(receipt.changeAmount));
   if (!hasPaymentDetails) b.text(`Payment: ${receipt.paymentMethod}`);
   b.feed(1);
 
   // ── Payment details (Bank card / Approval Code) ────────────
   if (hasPaymentDetails) {
     b.divider(charWidth);
-    if (receipt.cardMasked) money('Bank card', receipt.cardMasked);
-    if (receipt.approvalCode) money('Approval Code', `#${receipt.approvalCode}`);
+    if (receipt.cardMasked) money("Bank card", receipt.cardMasked);
+    if (receipt.approvalCode)
+      money("Approval Code", `#${receipt.approvalCode}`);
     b.feed(1);
   }
 
   if (receipt.notes) {
-    b.align('center');
+    b.align("center");
     wrappedText(receipt.notes, Math.max(16, charWidth));
   }
 
   b.divider(charWidth);
-  b.align('center');
+  b.align("center");
   b.bold(true);
-  b.text('THANK YOU!');
+  b.text("THANK YOU!");
   b.bold(false);
-  b.text('Powered by TradeTrack');
+  b.text("Powered by TracKasuwa");
 
   // ── Scannable barcode ───────────────────────────────────────
   if (receipt.barcodeValue) {

@@ -1,5 +1,5 @@
 -- ============================================================
--- TradeTrack - Migration 003: Payment Transactions & Improvements
+-- TracKasuwa - Migration 003: Payment Transactions & Improvements
 -- ============================================================
 
 -- ── Payment Transactions ──────────────────────────────────────

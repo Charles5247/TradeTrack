@@ -5,7 +5,7 @@
 -- BACKGROUND
 -- The previous model conflated two very different concepts under
 -- one word, "owner":
---   - 'super_admin' = TradeTrack's own cross-organization god-mode
+--   - 'super_admin' = TracKasuwa's own cross-organization god-mode
 --   - 'owner'       = a *platform-level* role (merchant/subscription
 --                      dashboard) that was ALSO effectively cross-org
 --                      (its RLS checks always included 'super_admin'
@@ -16,10 +16,10 @@
 -- own organization, with no dedicated login of their own.
 --
 -- NEW MODEL
---   platform_owner  — cross-organization (TradeTrack staff only).
+--   platform_owner  — cross-organization (TracKasuwa staff only).
 --                      Replaces BOTH 'super_admin' and 'owner'.
 --                      Never auto-granted; only ever created manually
---                      for TradeTrack's own internal accounts.
+--                      for TracKasuwa's own internal accounts.
 --   business_owner  — NEW role. Single-organization. Full control
 --                      within their own org only. Auto-created when
 --                      a merchant is onboarded (see 009_merchant_onboarding.sql
@@ -169,7 +169,7 @@ CREATE POLICY "plans_manage_platform_owner" ON subscription_plans
 -- description) could edit the global plan catalog — that was itself a
 -- cross-tenant privilege leak once 'owner' is properly understood as
 -- "the merchant's account". Plan catalog management belongs to
--- TradeTrack (platform_owner) alone; business_owner may only SELECT
+-- TracKasuwa (platform_owner) alone; business_owner may only SELECT
 -- plans and choose one for their own org (see subscriptions policy
 -- below), not edit the catalog.
 
@@ -234,7 +234,7 @@ CREATE POLICY "merchants_delete_platform_owner" ON public.merchants
 DROP POLICY IF EXISTS "webhook_logs_select_admin" ON public.webhook_logs;
 CREATE POLICY "webhook_logs_select_platform_owner" ON public.webhook_logs
   FOR SELECT USING (is_platform_owner());
--- Webhook logs are TradeTrack's own payment-gateway plumbing — no
+-- Webhook logs are TracKasuwa's own payment-gateway plumbing — no
 -- merchant-side role (business_owner/admin) should read these.
 
 DROP POLICY IF EXISTS "invoices_select_own_org" ON public.invoices;
@@ -264,6 +264,6 @@ CREATE POLICY "device_limits_own_org_or_platform" ON public.merchant_device_limi
 
 -- ── 7. Sanity re-affirmation comment ────────────────────────────
 COMMENT ON FUNCTION is_platform_owner() IS
-  'TRUE only for TradeTrack''s own cross-organization staff accounts (role=platform_owner). Never true for a merchant''s business_owner/admin/cashier accounts.';
+  'TRUE only for TracKasuwa''s own cross-organization staff accounts (role=platform_owner). Never true for a merchant''s business_owner/admin/cashier accounts.';
 COMMENT ON FUNCTION is_business_owner() IS
   'TRUE only for a merchant''s top-level business_owner account, scoped to their own organization_id. Use alongside get_user_org_id() comparisons in policies, not on its own, when the check needs to also confirm same-org.';

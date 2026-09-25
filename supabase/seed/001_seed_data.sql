@@ -1,5 +1,5 @@
 -- ============================================================
--- TradeTrack - Seed Data
+-- TracKasuwa - Seed Data
 -- ============================================================
 
 -- Subscription Plans
@@ -18,12 +18,12 @@ INSERT INTO organizations (id, name, slug, currency, timezone, subscription_stat
 -- migrations to create working Auth logins for every role below.
 --
 -- Role model (as of migration 008): platform_owner/business_owner/admin/
--- cashier. platform_owner is TradeTrack's own cross-org staff (organization_id
+-- cashier. platform_owner is TracKasuwa's own cross-org staff (organization_id
 -- NULL); business_owner is the merchant's single-org owner account (normally
 -- created via /api/merchants/onboard, seeded directly here only for demo
 -- convenience).
 INSERT INTO users (id, email, full_name, role, status, organization_id) VALUES
-  ('22222222-2222-2222-2222-222222222222', 'platformowner@tradetrack.ng', 'Platform Owner', 'platform_owner', 'active', NULL),
+  ('22222222-2222-2222-2222-222222222222', 'platformowner@TracKasuwa.ng', 'Platform Owner', 'platform_owner', 'active', NULL),
   ('a6000000-0000-0000-0000-000000000001', 'owner@demo.com', 'Demo Business Owner', 'business_owner', 'active', '11111111-1111-1111-1111-111111111111'),
   ('33333333-3333-3333-3333-333333333333', 'admin@demo.com', 'Demo Admin', 'admin', 'active', '11111111-1111-1111-1111-111111111111'),
   ('44444444-4444-4444-4444-444444444444', 'cashier@demo.com', 'Demo Cashier', 'cashier', 'active', '11111111-1111-1111-1111-111111111111');

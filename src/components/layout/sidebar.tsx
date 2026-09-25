@@ -7,7 +7,11 @@ import { ChevronLeft, ChevronRight, Store, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useUIStore, useAuthStore, useNotificationStore } from "@/store";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 import { useI18n } from "@/i18n";
 import { useOrganization } from "@/components/shared/organization-provider";
 import { Logo } from "@/components/layout/logo";
@@ -59,7 +63,7 @@ export function Sidebar() {
 
   const orgLabel =
     organization?.name ??
-    (user?.role === "platform_owner" ? "TradeTrack Platform" : t.app.name);
+    (user?.role === "platform_owner" ? "TracKasuwa Platform" : t.app.name);
 
   const groups = getNavGroupsForRole(user?.role as UserRole | undefined);
 
@@ -119,7 +123,9 @@ export function Sidebar() {
               <Store className="h-4 w-4 tt-muted shrink-0" strokeWidth={1.75} />
               <div className="min-w-0 flex-1">
                 <div className="text-[11px] tt-muted leading-none">
-                  {user?.role === "platform_owner" ? "Platform" : "Organization"}
+                  {user?.role === "platform_owner"
+                    ? "Platform"
+                    : "Organization"}
                 </div>
                 <div className="text-[13px] font-semibold text-foreground truncate">
                   {orgLabel}
@@ -142,7 +148,8 @@ export function Sidebar() {
                 {group.items.map((item) => {
                   const isActive =
                     pathname === item.href ||
-                    (item.href !== "/dashboard" && pathname.startsWith(item.href));
+                    (item.href !== "/dashboard" &&
+                      pathname.startsWith(item.href));
                   const Icon = item.icon;
                   const label =
                     t.nav[item.navKey as keyof typeof t.nav] ?? item.navKey;
@@ -198,7 +205,13 @@ export function Sidebar() {
         {sidebarOpen && user && (
           <div className="p-3 border-t border-border">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="tt-avatar" style={{ background: "var(--c-primary)", color: "var(--c-primaryFg)" }}>
+              <div
+                className="tt-avatar"
+                style={{
+                  background: "var(--c-primary)",
+                  color: "var(--c-primaryFg)",
+                }}
+              >
                 {user.full_name?.charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
@@ -209,7 +222,10 @@ export function Sidebar() {
                   {user.role.replace("_", " ")}
                 </p>
               </div>
-              <LogOut className="h-3.5 w-3.5 tt-faint shrink-0" strokeWidth={1.75} />
+              <LogOut
+                className="h-3.5 w-3.5 tt-faint shrink-0"
+                strokeWidth={1.75}
+              />
             </div>
           </div>
         )}

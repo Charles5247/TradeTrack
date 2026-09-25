@@ -244,25 +244,37 @@ export default function LoginPage() {
             </p>
             <div className="space-y-1 text-xs tt-muted">
               <p>
-                <span className="font-medium" style={{ color: "var(--c-text)" }}>
+                <span
+                  className="font-medium"
+                  style={{ color: "var(--c-text)" }}
+                >
                   {t.auth.role_platform_owner}:
                 </span>{" "}
-                platformowner@tradetrack.ng / demo1234
+                platformowner@TracKasuwa.ng / demo1234
               </p>
               <p>
-                <span className="font-medium" style={{ color: "var(--c-text)" }}>
+                <span
+                  className="font-medium"
+                  style={{ color: "var(--c-text)" }}
+                >
                   {t.auth.role_business_owner}:
                 </span>{" "}
                 owner@demo.com / demo1234
               </p>
               <p>
-                <span className="font-medium" style={{ color: "var(--c-text)" }}>
+                <span
+                  className="font-medium"
+                  style={{ color: "var(--c-text)" }}
+                >
                   {t.auth.role_admin}:
                 </span>{" "}
                 admin@demo.com / demo1234
               </p>
               <p>
-                <span className="font-medium" style={{ color: "var(--c-text)" }}>
+                <span
+                  className="font-medium"
+                  style={{ color: "var(--c-text)" }}
+                >
                   {t.auth.role_cashier}:
                 </span>{" "}
                 cashier@demo.com / demo1234
@@ -273,8 +285,12 @@ export default function LoginPage() {
       )}
 
       <p className="tt-muted text-center text-sm mt-6">
-        New to TradeTrack?{" "}
-        <a href="/signup" className="font-semibold" style={{ color: "var(--c-primary)" }}>
+        New to TracKasuwa?{" "}
+        <a
+          href="/signup"
+          className="font-semibold"
+          style={{ color: "var(--c-primary)" }}
+        >
           Create your merchant account
         </a>
       </p>

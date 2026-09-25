@@ -1,19 +1,26 @@
 /**
- * TradeTrack Desktop — Electron main process.
+ * TracKasuwa Desktop — Electron main process.
  *
- * Thin native wrapper around the TradeTrack web app (see config.js for
+ * Thin native wrapper around the TracKasuwa web app (see config.js for
  * why: the app is already offline-first via service worker + IndexedDB,
  * so there's no need to bundle a second Node/Next.js server inside the
  * installer). This process only owns window/menu/lifecycle management and
  * a lightweight "check for update" call against GET /api/version.
  */
 
-const { app, BrowserWindow, Menu, ipcMain, shell, dialog } = require('electron');
-const path = require('path');
-const https = require('https');
-const http = require('http');
-const { getAppUrl, getLaunchUrl, getVersionCheckUrl } = require('./config');
-const { buildMenu } = require('./menu');
+const {
+  app,
+  BrowserWindow,
+  Menu,
+  ipcMain,
+  shell,
+  dialog,
+} = require("electron");
+const path = require("path");
+const https = require("https");
+const http = require("http");
+const { getAppUrl, getLaunchUrl, getVersionCheckUrl } = require("./config");
+const { buildMenu } = require("./menu");
 
 const APP_VERSION = app.getVersion();
 let mainWindow = null;
@@ -24,23 +31,23 @@ function createWindow() {
     height: 860,
     minWidth: 1024,
     minHeight: 640,
-    title: 'TradeTrack',
-    icon: path.join(__dirname, 'assets', 'icon.png'),
-    backgroundColor: '#0f172a',
+    title: "TracKasuwa",
+    icon: path.join(__dirname, "assets", "icon.png"),
+    backgroundColor: "#0f172a",
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
       // Persist the offline IndexedDB / service-worker cache across app
-      // restarts — critical for TradeTrack's offline-first design.
-      partition: 'persist:tradetrack',
+      // restarts — critical for TracKasuwa's offline-first design.
+      partition: "persist:TracKasuwa",
     },
   });
 
   Menu.setApplicationMenu(buildMenu(mainWindow, checkForUpdates));
 
-  // targetOrigin (e.g. "https://tradetrack.ng") is used ONLY to decide
+  // targetOrigin (e.g. "https://TracKasuwa.ng") is used ONLY to decide
   // whether a link is "in-app" vs. "external" below. launchUrl (the
   // same origin + "/login") is what actually loads first — the app's
   // "/" now serves the public marketing site, so returning traders are
@@ -53,13 +60,17 @@ function createWindow() {
   const targetOrigin = getAppUrl();
   const launchUrl = getLaunchUrl();
   mainWindow.loadURL(launchUrl).catch((err) => {
-    console.error('[TradeTrack Desktop] Failed to load app URL:', launchUrl, err);
+    console.error(
+      "[TracKasuwa Desktop] Failed to load app URL:",
+      launchUrl,
+      err,
+    );
     dialog.showErrorBox(
-      'Unable to connect',
-      `TradeTrack could not reach ${launchUrl}.\n\n` +
-        'Check your internet connection and try again. Once TradeTrack has ' +
-        'loaded successfully at least once, it will keep working offline ' +
-        'for cached data and queued sales.'
+      "Unable to connect",
+      `TracKasuwa could not reach ${launchUrl}.\n\n` +
+        "Check your internet connection and try again. Once TracKasuwa has " +
+        "loaded successfully at least once, it will keep working offline " +
+        "for cached data and queued sales.",
     );
   });
 
@@ -68,12 +79,12 @@ function createWindow() {
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (!url.startsWith(targetOrigin)) {
       shell.openExternal(url);
-      return { action: 'deny' };
+      return { action: "deny" };
     }
-    return { action: 'allow' };
+    return { action: "allow" };
   });
 
-  mainWindow.on('closed', () => {
+  mainWindow.on("closed", () => {
     mainWindow = null;
   });
 }
@@ -87,12 +98,12 @@ function createWindow() {
  */
 function checkForUpdates(showUpToDateDialog = false) {
   const url = getVersionCheckUrl();
-  const client = url.startsWith('https') ? https : http;
+  const client = url.startsWith("https") ? https : http;
 
   const req = client.get(url, { timeout: 8000 }, (res) => {
-    let body = '';
-    res.on('data', (chunk) => (body += chunk));
-    res.on('end', () => {
+    let body = "";
+    res.on("data", (chunk) => (body += chunk));
+    res.on("end", () => {
       try {
         const payload = JSON.parse(body);
         const latest = payload?.latest?.windows?.version;
@@ -100,10 +111,10 @@ function checkForUpdates(showUpToDateDialog = false) {
         if (latest && isNewerVersion(latest, APP_VERSION)) {
           dialog
             .showMessageBox(mainWindow, {
-              type: 'info',
-              title: 'Update available',
-              message: `TradeTrack ${latest} is available (you have ${APP_VERSION}).`,
-              buttons: downloadUrl ? ['Download', 'Later'] : ['OK'],
+              type: "info",
+              title: "Update available",
+              message: `TracKasuwa ${latest} is available (you have ${APP_VERSION}).`,
+              buttons: downloadUrl ? ["Download", "Later"] : ["OK"],
             })
             .then((result) => {
               if (downloadUrl && result.response === 0) {
@@ -112,31 +123,37 @@ function checkForUpdates(showUpToDateDialog = false) {
             });
         } else if (showUpToDateDialog) {
           dialog.showMessageBox(mainWindow, {
-            type: 'info',
-            title: 'TradeTrack',
+            type: "info",
+            title: "TracKasuwa",
             message: `You're up to date (v${APP_VERSION}).`,
           });
         }
       } catch (err) {
-        console.warn('[TradeTrack Desktop] Update check parse failed:', err);
+        console.warn("[TracKasuwa Desktop] Update check parse failed:", err);
         if (showUpToDateDialog) {
-          dialog.showErrorBox('Update check failed', 'Could not check for updates right now.');
+          dialog.showErrorBox(
+            "Update check failed",
+            "Could not check for updates right now.",
+          );
         }
       }
     });
   });
 
-  req.on('error', (err) => {
-    console.warn('[TradeTrack Desktop] Update check failed:', err.message);
+  req.on("error", (err) => {
+    console.warn("[TracKasuwa Desktop] Update check failed:", err.message);
     if (showUpToDateDialog) {
-      dialog.showErrorBox('Update check failed', 'Could not reach the update server.');
+      dialog.showErrorBox(
+        "Update check failed",
+        "Could not reach the update server.",
+      );
     }
   });
 }
 
 function isNewerVersion(remote, local) {
-  const r = remote.split('.').map(Number);
-  const l = local.split('.').map(Number);
+  const r = remote.split(".").map(Number);
+  const l = local.split(".").map(Number);
   for (let i = 0; i < Math.max(r.length, l.length); i++) {
     const rv = r[i] || 0;
     const lv = l[i] || 0;
@@ -146,8 +163,8 @@ function isNewerVersion(remote, local) {
   return false;
 }
 
-ipcMain.handle('app:get-version', () => APP_VERSION);
-ipcMain.handle('app:check-for-updates', () => checkForUpdates(true));
+ipcMain.handle("app:get-version", () => APP_VERSION);
+ipcMain.handle("app:check-for-updates", () => checkForUpdates(true));
 
 app.whenReady().then(() => {
   createWindow();
@@ -156,10 +173,10 @@ app.whenReady().then(() => {
   setTimeout(() => checkForUpdates(false), 4000);
 });
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") app.quit();
 });
 
-app.on('activate', () => {
+app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });

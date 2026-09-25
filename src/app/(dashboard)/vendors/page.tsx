@@ -23,23 +23,31 @@ import { buildReceiptData, type ReceiptData } from '@/lib/receipt/build-receipt'
 import { AccessGuard } from '@/components/shared/access-guard';
 import { downloadReceiptPDF } from '@/lib/pdf/receipt-pdf';
 import { generateId } from '@/lib/utils/id';
+import { getAllFromOfflineDB, saveToOfflineDB } from '@/lib/offline/db';
+import { getOfflineVendorTransactions, persistOfflineVendorTransaction, requireSyncedVendorTransaction } from '@/lib/offline/vendor-transactions';
+import { syncEngine } from '@/lib/offline/sync-engine';
+import { isOffline } from '@/lib/utils/network';
+import { useOnlineStatus } from '@/hooks/use-online-status';
 
-async function fetchVendors() {
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from('vendor_transactions')
-    .select(`
-      *,
-      items:vendor_transaction_items(
-        id, quantity, unit_price, total,
-        product:products(name, sku)
-      ),
-      creator:users(full_name)
-    `)
-    .order('created_at', { ascending: false });
-  if (error) throw error;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (data as any) as VendorTransaction[];
+async function fetchVendors(organizationId: string) {
+  if (!isOffline()) {
+    try { await syncEngine?.pullVendorTransactions(organizationId); }
+    catch { /* Fall back to cached transactions on network failure. */ }
+  }
+  return getOfflineVendorTransactions(organizationId);
+}
+
+async function fetchVendorProducts(organizationId: string) {
+  if (!isOffline()) {
+    try {
+      const { data, error } = await createClient().from('products').select('*').eq('organization_id', organizationId);
+      if (error) throw error;
+      await saveToOfflineDB('products', data || []);
+    } catch { /* Browser connectivity does not guarantee server reachability. */ }
+  }
+  return (await getAllFromOfflineDB<Product>('products'))
+    .filter((product) => product.organization_id === organizationId && product.status === 'active')
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export default function VendorsPage() {
@@ -54,6 +62,11 @@ function VendorsPageInner() {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
+  const orgId = user?.organization_id;
+  const isOnline = useOnlineStatus();
+  React.useEffect(() => syncEngine?.subscribe((state) => {
+    if (state.status === 'idle' && state.lastSync) queryClient.invalidateQueries({ queryKey: ['vendors'] });
+  }), [queryClient]);
   const { organizationName, organizationAddress, organizationPhone } = useOrgStore();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [viewVendor, setViewVendor] = useState<VendorTransaction | null>(null);
@@ -72,110 +85,34 @@ function VendorsPageInner() {
     items: [{ product_id: '', quantity: '', unit_price: '' }],
   });
 
-  const [products, setProducts] = useState<Product[]>([]);
-
-  React.useEffect(() => {
-    const load = async () => {
-      const supabase = createClient();
-      const { data } = await supabase.from('products').select('id,name,sku,selling_price').eq('status','active').order('name');
-      setProducts(data as Product[] || []);
-    };
-    load();
-  }, []);
-
-  const { data: vendors = [], isLoading } = useQuery({
-    queryKey: ['vendors'],
-    queryFn: fetchVendors,
+  const { data: products = [] } = useQuery({
+    queryKey: ['vendor-products', orgId], queryFn: () => fetchVendorProducts(orgId!),
+    networkMode: 'always', enabled: !!orgId,
   });
+  const { data: vendors = [], isLoading } = useQuery({
+    queryKey: ['vendors', orgId], queryFn: () => fetchVendors(orgId!),
+    networkMode: 'always', enabled: !!orgId,
+  });
+  const paymentReady = !!vendors.find((vendor) => vendor.id === paymentDialog.vendor?.id)?.paymentReady;
 
   const createMutation = useMutation({
-    mutationFn: async (data: typeof formData) => {
-      const supabase = createClient();
-      const orgId = (user as unknown as { organization_id: string })?.organization_id;
-      const items = data.items.filter((i) => i.product_id && i.quantity && i.unit_price);
-      const totalValue = items.reduce((s, i) => s + parseFloat(i.unit_price) * parseInt(i.quantity), 0);
-
-      const { data: vt, error } = await supabase.from('vendor_transactions').insert({
-        organization_id: orgId,
-        vendor_name: data.vendor_name,
-        vendor_phone: data.vendor_phone || null,
-        vendor_email: data.vendor_email || null,
-        date_issued: data.date_issued,
-        expected_payment_date: data.expected_payment_date || null,
-        notes: data.notes || null,
-        status: 'pending',
-        total_value: totalValue,
-        amount_paid: 0,
-        created_by: user!.id,
-      }).select().single();
-      if (error) throw error;
-
-      await supabase.from('vendor_transaction_items').insert(
-        items.map((i) => ({
-          vendor_transaction_id: vt.id,
-          product_id: i.product_id,
-          quantity: parseInt(i.quantity),
-          unit_price: parseFloat(i.unit_price),
-          total: parseInt(i.quantity) * parseFloat(i.unit_price),
-        }))
-      );
-
-      const warehouse = await supabase
-        .from('warehouses')
-        .select('id')
-        .eq('organization_id', orgId)
-        .order('name')
-        .limit(1)
-        .maybeSingle();
-
-      await supabase.from('sales').insert({
-        organization_id: orgId,
-        invoice_number: `VENDOR-${String(Date.now()).slice(-6)}`,
-        cashier_id: user!.id,
-        warehouse_id: warehouse?.data?.id || '',
-        customer_name: data.vendor_name,
-        customer_phone: data.vendor_phone || null,
-        subtotal: totalValue,
-        discount: 0,
-        tax: 0,
-        total: totalValue,
-        amount_paid: 0,
-        change_amount: 0,
-        payment_method: 'transfer',
-        payment_status: 'unpaid',
-        status: 'pending',
-        notes: `Vendor transaction ${vt.id}`,
-      });
-
-      // Deduct inventory
-      for (const item of items) {
-        const supabase2 = createClient();
-        const { data: inv } = await supabase2
-          .from('inventory')
-          .select('quantity, warehouse_id')
-          .eq('product_id', item.product_id)
-          .order('quantity', { ascending: false })
-          .limit(1)
-          .single();
-        if (inv && inv.quantity >= parseInt(item.quantity)) {
-          await supabase2.from('inventory')
-            .update({ quantity: inv.quantity - parseInt(item.quantity) })
-            .eq('product_id', item.product_id)
-            .eq('warehouse_id', inv.warehouse_id);
-        }
-      }
-
-      return vt;
-    },
+    networkMode: 'always',
+    mutationFn: (data: typeof formData) => persistOfflineVendorTransaction({
+      ...data, organization_id: orgId!, created_by: user!.id,
+      items: data.items.filter((item) => item.product_id && item.quantity && item.unit_price),
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vendors'] });
       setIsFormOpen(false);
       toast.success(t.vendors.new_transaction);
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      void syncEngine?.sync();
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : t.vendors.no_transactions),
   });
 
   const markPaidMutation = useMutation({
+    networkMode: 'always',
     mutationFn: async ({
       id,
       amount,
@@ -183,7 +120,9 @@ function VendorsPageInner() {
       receipt_url,
     }: { id: string; amount: number; payment_method?: string; receipt_url?: string }) => {
       const supabase = createClient();
-      const { data: vt } = await supabase.from('vendor_transactions').select('total_value').eq('id', id).single();
+      await requireSyncedVendorTransaction(id, orgId!);
+      const { data: vt, error: readError } = await supabase.from('vendor_transactions').select('total_value').eq('id', id).single();
+      if (readError) throw readError;
       const status = amount >= (vt?.total_value || 0) ? 'completed' : 'partial';
       const { error } = await supabase
         .from('vendor_transactions')
@@ -198,7 +137,7 @@ function VendorsPageInner() {
 
       const paymentStatus = amount >= (vt?.total_value || 0) ? 'paid' : 'partial';
       const saleStatus = amount >= (vt?.total_value || 0) ? 'completed' : 'pending';
-      await supabase
+      const { error: saleError } = await supabase
         .from('sales')
         .update({
           amount_paid: amount,
@@ -208,11 +147,13 @@ function VendorsPageInner() {
         })
         .eq('notes', `Vendor transaction ${id}`)
         .is('deleted_at', null);
+      if (saleError) throw saleError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vendors'] });
       toast.success(t.vendors.mark_paid);
     },
+    onError: (error) => toast.error(error instanceof Error ? error.message : 'Unable to record payment'),
   });
 
   const statusBadge = (status: string, expectedDate?: string) => {
@@ -347,6 +288,11 @@ function VendorsPageInner() {
                       </TableCell>
                       <TableCell>{statusBadge(v.status, v.expected_payment_date)}</TableCell>
                       <TableCell className="text-right">
+                        {(v.status === 'pending' || v.status === 'partial') && (!isOnline || !v.paymentReady) && (
+                          <p className="text-xs text-muted-foreground mb-1" role="status">
+                            {!isOnline ? 'Reconnect to record payment.' : 'Waiting for this transaction, its items and linked sale to sync.'}
+                          </p>
+                        )}
                         <div className="flex items-center justify-end gap-1">
                           <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setViewVendor(v)}>
                             {t.vendors.view}
@@ -356,6 +302,7 @@ function VendorsPageInner() {
                               size="sm"
                               variant="outline"
                               className="h-7 text-xs text-green-600 border-green-200"
+                              disabled={!isOnline || !v.paymentReady || markPaidMutation.isPending}
                               onClick={() => {
                                 setPaymentAmount(String(Math.max(0, balance)));
                                 setPaymentDialog({ open: true, vendor: v });
@@ -471,6 +418,9 @@ function VendorsPageInner() {
           <DialogHeader>
             <DialogTitle>Record payment</DialogTitle>
           </DialogHeader>
+          {(!isOnline || !paymentReady) && <p role="status" className="text-sm text-muted-foreground">
+            {!isOnline ? 'Reconnect to record payment.' : 'Waiting for this transaction, its items and linked sale to sync.'}
+          </p>}
           <div className="space-y-4">
             <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm">
               <p className="font-medium">{paymentDialog.vendor?.vendor_name}</p>
@@ -512,7 +462,7 @@ function VendorsPageInner() {
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
                     className="hidden"
-                    disabled={isUploadingReceipt}
+                    disabled={!isOnline || !paymentReady || isUploadingReceipt}
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
                       e.target.value = '';
@@ -560,7 +510,7 @@ function VendorsPageInner() {
                   setPaymentMethod('cash');
                   setPaymentReceiptUrl('');
                 }}
-                disabled={markPaidMutation.isPending || isUploadingReceipt}
+                disabled={!isOnline || !paymentReady || markPaidMutation.isPending || isUploadingReceipt}
               >
                 Save payment
               </Button>

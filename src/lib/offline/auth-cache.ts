@@ -1,7 +1,7 @@
-const OFFLINE_AUTH_STORAGE_KEY = "tradetrack-offline-auth";
-const REMEMBERED_LOGIN_STORAGE_KEY = "tradetrack-remembered-login";
-const OFFLINE_NAMESPACE_STORAGE_KEY = "tradetrack-offline-namespace";
-const OFFLINE_SESSION_COOKIE_NAME = "tradetrack-offline-session";
+const OFFLINE_AUTH_STORAGE_KEY = "TracKasuwa-offline-auth";
+const REMEMBERED_LOGIN_STORAGE_KEY = "TracKasuwa-remembered-login";
+const OFFLINE_NAMESPACE_STORAGE_KEY = "TracKasuwa-offline-namespace";
+const OFFLINE_SESSION_COOKIE_NAME = "TracKasuwa-offline-session";
 const REMEMBER_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
 
 export interface OfflineAuthSession {

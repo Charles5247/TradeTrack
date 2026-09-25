@@ -1,8 +1,8 @@
-# TRADETRACK — Subscription System
+# TracKasuwa — Subscription System
 
 ## Overview
 
-TRADETRACK uses a subscription-based SaaS model. Each organization subscribes to a plan that determines their feature access and device limits. Payments are processed via Zainpay.
+TracKasuwa uses a subscription-based SaaS model. Each organization subscribes to a plan that determines their feature access and device limits. Payments are processed via Zainpay.
 
 ---
 
@@ -12,18 +12,18 @@ TRADETRACK uses a subscription-based SaaS model. Each organization subscribes to
 > (Basic ₦3,000 / Standard ₦5,000 / Business ₦8,000, actually seeded by
 > migration 003 — see "Legacy Plans" below for a note on a since-fixed
 > naming inconsistency in this doc) to a 5-tier ladder modeled on
-> Sortly's pricing-page pattern, adapted to TradeTrack's actual features
+> Sortly's pricing-page pattern, adapted to TracKasuwa's actual features
 > and priced in Naira. The 3 old rows were **deactivated** (`is_active =
-> false`), never deleted, so organizations still subscribed to one of
+false`), never deleted, so organizations still subscribed to one of
 > them keep working unaffected.
 
-| Plan | Price (Monthly) | Price (Yearly) | Cashiers | Products | Locations | "Best for..." |
-|------|------------------|-----------------|----------|----------|-----------|----------------|
-| **Free** | ₦0 | — | 1 | 50 | 1 | Getting started |
-| **Starter** | ₦5,000 | ₦48,000 (save ₦12,000) | 2 | 300 | 1 | A single shop finding its rhythm |
-| **Growth** ⭐ Most Popular | ₦15,000 | ₦144,000 (save ₦36,000) | 5 | 1,500 | 3 | Multi-cashier shops that need real oversight |
-| **Business** | ₦30,000 | ₦288,000 (save ₦72,000) | 12 | 5,000 | 8 | Growing operations with multiple staff roles |
-| **Enterprise** | Talk to Sales | Talk to Sales | Unlimited | Unlimited | Unlimited | Custom multi-branch operations |
+| Plan                       | Price (Monthly) | Price (Yearly)          | Cashiers  | Products  | Locations | "Best for..."                                |
+| -------------------------- | --------------- | ----------------------- | --------- | --------- | --------- | -------------------------------------------- |
+| **Free**                   | ₦0              | —                       | 1         | 50        | 1         | Getting started                              |
+| **Starter**                | ₦5,000          | ₦48,000 (save ₦12,000)  | 2         | 300       | 1         | A single shop finding its rhythm             |
+| **Growth** ⭐ Most Popular | ₦15,000         | ₦144,000 (save ₦36,000) | 5         | 1,500     | 3         | Multi-cashier shops that need real oversight |
+| **Business**               | ₦30,000         | ₦288,000 (save ₦72,000) | 12        | 5,000     | 8         | Growing operations with multiple staff roles |
+| **Enterprise**             | Talk to Sales   | Talk to Sales           | Unlimited | Unlimited | Unlimited | Custom multi-branch operations               |
 
 Yearly pricing is **not** stored as separate catalog rows — it is
 computed client-side as `monthly × 12 × 0.8` (an exact 20% discount),
@@ -35,13 +35,13 @@ Enterprise has no self-serve price; its "Talk to Sales" CTA links to a
 
 Each tier includes everything in the tier below it, plus:
 
-| Plan | Newly unlocked features |
-|------|--------------------------|
-| **Free** | `pos`, `inventory`, `basic_reports` |
-| **Starter** | + `receipt_printing`, `daily_summaries` |
-| **Growth** | + `advanced_reports`, `warehouses`, `vendors`, `barcode_label_printing`, `low_stock_alerts` |
-| **Business** | + `purchase_orders`, `custom_role_permissions`, `priority_support` |
-| **Enterprise** | + `api_access`, `webhooks`, `dedicated_account_manager` |
+| Plan           | Newly unlocked features                                                                     |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| **Free**       | `pos`, `inventory`, `basic_reports`                                                         |
+| **Starter**    | + `receipt_printing`, `daily_summaries`                                                     |
+| **Growth**     | + `advanced_reports`, `warehouses`, `vendors`, `barcode_label_printing`, `low_stock_alerts` |
+| **Business**   | + `purchase_orders`, `custom_role_permissions`, `priority_support`                          |
+| **Enterprise** | + `api_access`, `webhooks`, `dedicated_account_manager`                                     |
 
 > **Not yet built in the product:** `barcode_label_printing` (only
 > barcode/QR codes on receipts exist today — no dedicated label-printing
@@ -52,7 +52,7 @@ Each tier includes everything in the tier below it, plus:
 >
 > `purchase_orders` **is now live** (minimal draft → sent → received
 > workflow at `/purchase-orders`, gated with `hasFeature(plan,
-> 'purchase_orders')` — see "Plan Feature Enforcement" below). It exists
+'purchase_orders')` — see "Plan Feature Enforcement" below). It exists
 > alongside, and is distinct from, the warehouse-to-warehouse stock
 > **transfers** feature: transfers move existing stock between an
 > org's own warehouses, while purchase orders bring new stock in from a
@@ -187,11 +187,11 @@ Feature-gate and plan-limit logic lives in
 Supabase/React imports) so it is directly unit-testable and reusable
 from both server routes and client components. Key exports:
 
-| Function | Purpose |
-|---|---|
-| `resolveSubscriptionPlan(subscription, allPlans)` | Looks up a subscription's plan by `plan_id` against the **full** plan list (active + inactive) — the mechanism that keeps legacy/deactivated-plan subscribers working correctly. |
-| `canAddProduct(currentCount, plan)` | Returns `false` once `currentCount >= plan.max_products` (unless `-1`/unlimited). Fails open (`true`) if `plan` is unavailable. |
-| `hasFeature(plan, featureFlag)` | Whether a plan includes a given feature flag. Fails closed (`false`) if `plan` is unavailable. |
+| Function                                                    | Purpose                                                                                                                                                                                                                                                                                                                                           |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `resolveSubscriptionPlan(subscription, allPlans)`           | Looks up a subscription's plan by `plan_id` against the **full** plan list (active + inactive) — the mechanism that keeps legacy/deactivated-plan subscribers working correctly.                                                                                                                                                                  |
+| `canAddProduct(currentCount, plan)`                         | Returns `false` once `currentCount >= plan.max_products` (unless `-1`/unlimited). Fails open (`true`) if `plan` is unavailable.                                                                                                                                                                                                                   |
+| `hasFeature(plan, featureFlag)`                             | Whether a plan includes a given feature flag. Fails closed (`false`) if `plan` is unavailable.                                                                                                                                                                                                                                                    |
 | `getMinTierForFeature(flag)` / `upgradePromptMessage(flag)` | Minimum tier + ready-to-render copy for gated flags: `receipt_printing`/`daily_summaries` → Starter; `advanced_reports`/`warehouses`/`vendors`/`barcode_label_printing`/`low_stock_alerts` → Growth; `purchase_orders`/`custom_role_permissions`/`priority_support` → Business; `api_access`/`webhooks`/`dedicated_account_manager` → Enterprise. |
 
 Currently wired in:
@@ -228,7 +228,7 @@ if (featureLocked) {
 
 **Not yet wired in (ticketed as future work):** `barcode_label_printing`,
 `custom_role_permissions`, `api_access`, and `webhooks` have no real UI
-entry point in TradeTrack yet (see "Feature Matrix" above). Once those
+entry point in TracKasuwa yet (see "Feature Matrix" above). Once those
 product surfaces are built, gating them follows the same one-line
 `hasFeature(plan, flag)` + `upgradePromptMessage(flag)` pattern shown
 above for `purchase_orders`.
@@ -240,12 +240,14 @@ above for `purchase_orders`.
 The subscriptions page has 3 tabs:
 
 ### Overview Tab
+
 - Current plan details
 - Feature list with checkmarks
 - Usage stats (products, users, locations)
 - "Upgrade" and "Manage Billing" buttons
 
 ### Plans Tab
+
 - 5 plan cards in a row (Free/Starter/Growth/Business/Enterprise),
   responsive: stacks to 1 column on mobile, 2-3 on tablet, 5 on desktop
 - Monthly/Yearly toggle above the cards, recomputes price + "You'll
@@ -254,7 +256,7 @@ The subscriptions page has 3 tabs:
   with "/mo" or "/yr" suffix, feature checklist with "+"-prefixed items
   **exclusive** to that tier (earlier tiers' features are implied, not
   re-listed)
-- Growth card carries the "Most Popular" ribbon in TradeTrack's
+- Growth card carries the "Most Popular" ribbon in TracKasuwa's
   existing primary accent color
 - "Current Plan" badge on the organization's active plan
 - Upgrade buttons trigger the self-serve subscription flow (Zainpay for
@@ -262,6 +264,7 @@ The subscriptions page has 3 tabs:
   "Talk to Sales", a `mailto:` link, not a Zainpay checkout trigger
 
 ### Billing Tab
+
 - Invoice history table
 - Download invoice button (PDF URL)
 - Payment method on file
@@ -274,9 +277,8 @@ The subscriptions page has 3 tabs:
 - Default: **Monthly**
 - Yearly option available at an exact 20% discount on every priced tier
   (Starter/Growth/Business), computed client-side as `monthly × 12 ×
-  0.8` — not stored as separate catalog rows
-- `billing_cycle` stored on both `subscription_plans` (since migration
-  003) and `subscriptions` (added in migration 010, alongside the
+0.8` — not stored as separate catalog rows
+- `billing_cycle` stored on both `subscription_plans` (since migration 003) and `subscriptions` (added in migration 010, alongside the
   5-tier restructure — the per-org `subscriptions` row previously had
   no way to record which cycle a customer actually chose at checkout)
 - Free (₦0) and Enterprise (custom quote) plans never show a yearly
@@ -305,11 +307,11 @@ The subscriptions page has 3 tabs:
 
 The owner super-dashboard (`/admin`) shows:
 
-| Metric | Calculation |
-|--------|-------------|
-| MRR | Sum of active subscription prices per month |
-| ARR | MRR × 12 |
-| Churn Rate | (Cancelled this month / Total active last month) × 100% |
-| LTV | Average MRR per customer × Average subscription duration |
+| Metric     | Calculation                                              |
+| ---------- | -------------------------------------------------------- |
+| MRR        | Sum of active subscription prices per month              |
+| ARR        | MRR × 12                                                 |
+| Churn Rate | (Cancelled this month / Total active last month) × 100%  |
+| LTV        | Average MRR per customer × Average subscription duration |
 
 Revenue data is aggregated from `invoices` table grouped by month.

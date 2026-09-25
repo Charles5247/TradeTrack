@@ -34,24 +34,25 @@ import { AuthCarousel } from "@/components/layout/auth-carousel";
 
 type AuthVariant = "login" | "signup" | "forgot" | "change";
 
-const PANEL_CONTENT: Record<AuthVariant, { eyebrow: string; heading: string }> = {
-  login: {
-    eyebrow: "Nigerian retail, unlocked",
-    heading: "Your entire shop. In every pocket. Even offline.",
-  },
-  signup: {
-    eyebrow: "Get started",
-    heading: "Set up your shop in minutes — no card required.",
-  },
-  forgot: {
-    eyebrow: "Account recovery",
-    heading: "Let's get you back in, safely.",
-  },
-  change: {
-    eyebrow: "Account security",
-    heading: "One quick step before you continue.",
-  },
-};
+const PANEL_CONTENT: Record<AuthVariant, { eyebrow: string; heading: string }> =
+  {
+    login: {
+      eyebrow: "Nigerian retail, unlocked",
+      heading: "Your entire shop. In every pocket. Even offline.",
+    },
+    signup: {
+      eyebrow: "Get started",
+      heading: "Set up your shop in minutes — no card required.",
+    },
+    forgot: {
+      eyebrow: "Account recovery",
+      heading: "Let's get you back in, safely.",
+    },
+    change: {
+      eyebrow: "Account security",
+      heading: "One quick step before you continue.",
+    },
+  };
 
 export function AuthShell({
   children,
@@ -63,10 +64,13 @@ export function AuthShell({
   const { theme, setTheme } = useTheme();
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2" style={{ background: "var(--c-bg)" }}>
+    <div
+      className="min-h-screen grid lg:grid-cols-2"
+      style={{ background: "var(--c-bg)" }}
+    >
       <div className="flex flex-col p-6 sm:p-10">
         <div className="flex items-center justify-between">
-          <Link href="/" aria-label="TradeTrack home">
+          <Link href="/" aria-label="TracKasuwa home">
             <Logo size={30} />
           </Link>
           <Button
@@ -75,8 +79,14 @@ export function AuthShell({
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             aria-label="Toggle theme"
           >
-            <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" strokeWidth={1.75} />
-            <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" strokeWidth={1.75} />
+            <Sun
+              className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
+              strokeWidth={1.75}
+            />
+            <Moon
+              className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100"
+              strokeWidth={1.75}
+            />
           </Button>
         </div>
 
@@ -85,7 +95,8 @@ export function AuthShell({
         </div>
 
         <p className="tt-muted text-center text-xs">
-          © {new Date().getFullYear()} TradeTrack Nigeria · Powered by CAXiE Technologies Ltd
+          © {new Date().getFullYear()} TracKasuwa Nigeria · Powered by CAXiE
+          Technologies Ltd
         </p>
       </div>
 
@@ -110,7 +121,15 @@ function AuthBrandPanel({ variant }: { variant: AuthVariant }) {
 
       <div
         className="tt-blob-float-1 absolute rounded-full blur-3xl pointer-events-none"
-        style={{ top: -60, right: -60, width: 420, height: 420, background: "var(--c-accent)", opacity: 0.25, zIndex: 1 }}
+        style={{
+          top: -60,
+          right: -60,
+          width: 420,
+          height: 420,
+          background: "var(--c-accent)",
+          opacity: 0.25,
+          zIndex: 1,
+        }}
       />
 
       <div className="relative z-[2]">

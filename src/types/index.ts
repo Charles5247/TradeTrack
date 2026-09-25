@@ -1,10 +1,10 @@
 // ============================================================
-// TradeTrack - Core TypeScript Types
+// TracKasuwa - Core TypeScript Types
 // ============================================================
 
 // ── User & Auth ──────────────────────────────────────────────
 // Role model (migration 008_role_model_rework.sql):
-//   platform_owner  — cross-organization (TradeTrack staff only). Replaces
+//   platform_owner  — cross-organization (TracKasuwa staff only). Replaces
 //                      the old 'super_admin' AND 'owner' roles. Never
 //                      auto-granted during merchant onboarding.
 //   business_owner  — NEW. Single-organization. Full control within their
@@ -12,9 +12,13 @@
 //                      onboarded via /api/merchants/onboard.
 //   admin           — single-organization caretaker/branch-manager role.
 //   cashier         — single-organization, POS/sales only.
-export type UserRole = 'platform_owner' | 'business_owner' | 'admin' | 'cashier';
+export type UserRole =
+  | "platform_owner"
+  | "business_owner"
+  | "admin"
+  | "cashier";
 
-export type UserStatus = 'active' | 'suspended' | 'inactive';
+export type UserStatus = "active" | "suspended" | "inactive";
 
 export interface User {
   id: string;
@@ -42,14 +46,14 @@ export interface Organization {
   currency: string;
   timezone: string;
   subscription_plan_id?: string;
-  subscription_status: 'active' | 'expired' | 'trial' | 'suspended';
+  subscription_status: "active" | "expired" | "trial" | "suspended";
   subscription_expires_at?: string;
   created_at: string;
   updated_at: string;
 }
 
 // ── Products ─────────────────────────────────────────────────
-export type ProductStatus = 'active' | 'inactive' | 'discontinued';
+export type ProductStatus = "active" | "inactive" | "discontinued";
 
 export interface Product {
   id: string;
@@ -119,7 +123,13 @@ export interface Inventory {
   warehouse?: Warehouse;
 }
 
-export type InventoryMovementType = 'in' | 'out' | 'transfer' | 'adjustment' | 'sale' | 'return';
+export type InventoryMovementType =
+  | "in"
+  | "out"
+  | "transfer"
+  | "adjustment"
+  | "sale"
+  | "return";
 
 export interface InventoryMovement {
   id: string;
@@ -140,7 +150,7 @@ export interface InventoryMovement {
 }
 
 // ── Warehouse Transfers ──────────────────────────────────────
-export type TransferStatus = 'pending' | 'received' | 'cancelled';
+export type TransferStatus = "pending" | "received" | "cancelled";
 
 export interface WarehouseTransfer {
   id: string;
@@ -173,7 +183,7 @@ export interface WarehouseTransfer {
 // Business-tier "purchase_orders" subscription flag. Workflow:
 // draft -> sent -> received|cancelled. Partial receiving, approval
 // workflows, PDF export and purchasing analytics are out of scope.
-export type PurchaseOrderStatus = 'draft' | 'sent' | 'received' | 'cancelled';
+export type PurchaseOrderStatus = "draft" | "sent" | "received" | "cancelled";
 
 export interface PurchaseOrder {
   id: string;
@@ -209,9 +219,14 @@ export interface PurchaseOrderItem {
 }
 
 // ── Sales ────────────────────────────────────────────────────
-export type PaymentMethod = 'cash' | 'transfer' | 'pos_terminal' | 'split' | 'partial';
-export type SaleStatus = 'completed' | 'pending' | 'cancelled' | 'refunded';
-export type PaymentStatus = 'paid' | 'partial' | 'unpaid';
+export type PaymentMethod =
+  | "cash"
+  | "transfer"
+  | "pos_terminal"
+  | "split"
+  | "partial";
+export type SaleStatus = "completed" | "pending" | "cancelled" | "refunded";
+export type PaymentStatus = "paid" | "partial" | "unpaid";
 
 export interface Sale {
   id: string;
@@ -256,8 +271,12 @@ export interface SaleItem {
 }
 
 // ── Vendor Consignment ───────────────────────────────────────
-export type VendorTransactionStatus = 'pending' | 'completed' | 'cancelled' | 'partial';
-export type VendorPaymentMethod = 'cash' | 'transfer' | 'pos';
+export type VendorTransactionStatus =
+  | "pending"
+  | "completed"
+  | "cancelled"
+  | "partial";
+export type VendorPaymentMethod = "cash" | "transfer" | "pos";
 
 export interface VendorTransaction {
   id: string;
@@ -312,14 +331,14 @@ export interface AuditLog {
 
 // ── Notifications ────────────────────────────────────────────
 export type NotificationType =
-  | 'low_stock'
-  | 'out_of_stock'
-  | 'pending_payment'
-  | 'pending_transfer'
-  | 'subscription_expiry'
-  | 'sync_completed'
-  | 'sync_failed'
-  | 'general';
+  | "low_stock"
+  | "out_of_stock"
+  | "pending_payment"
+  | "pending_transfer"
+  | "subscription_expiry"
+  | "sync_completed"
+  | "sync_failed"
+  | "general";
 
 export interface Notification {
   id: string;
@@ -353,7 +372,7 @@ export interface Subscription {
   id: string;
   organization_id: string;
   plan_id: string;
-  status: 'active' | 'expired' | 'cancelled' | 'trial';
+  status: "active" | "expired" | "cancelled" | "trial";
   starts_at: string;
   expires_at: string;
   created_by: string;
@@ -363,12 +382,12 @@ export interface Subscription {
 }
 
 // ── Offline Sync ─────────────────────────────────────────────
-export type SyncStatus = 'pending' | 'syncing' | 'synced' | 'failed';
+export type SyncStatus = "pending" | "syncing" | "synced" | "failed";
 
 export interface SyncQueueItem {
   id: string;
   table_name: string;
-  operation: 'INSERT' | 'UPDATE' | 'DELETE';
+  operation: "INSERT" | "UPDATE" | "DELETE";
   record_id: string;
   payload: Record<string, unknown>;
   status: SyncStatus;
@@ -430,7 +449,7 @@ export interface PaginationParams {
   limit: number;
   search?: string;
   sort_by?: string;
-  sort_order?: 'asc' | 'desc';
+  sort_order?: "asc" | "desc";
 }
 
 export interface PaginatedResponse<T> {
@@ -463,12 +482,12 @@ export interface SalesFilter {
 export interface InventoryFilter {
   warehouse_id?: string;
   category_id?: string;
-  status?: 'all' | 'low' | 'out';
+  status?: "all" | "low" | "out";
   search?: string;
 }
 
 // ── i18n ─────────────────────────────────────────────────────
-export type Locale = 'en' | 'ha' | 'yo' | 'ig' | 'pcm';
+export type Locale = "en" | "ha" | "yo" | "ig" | "pcm";
 
 export interface Translation {
   [key: string]: string | Translation;

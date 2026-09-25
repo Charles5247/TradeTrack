@@ -30,19 +30,19 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "TradeTrack - POS & Inventory Management",
-    template: "%s | TradeTrack",
+    default: "TracKasuwa - POS & Inventory Management",
+    template: "%s | TracKasuwa",
   },
   description:
     "Enterprise offline-first POS and inventory management system for Nigerian market traders",
   keywords: ["POS", "inventory", "Nigeria", "trade", "business", "offline"],
-  authors: [{ name: "TradeTrack" }],
+  authors: [{ name: "TracKasuwa" }],
   creator: "CAXiE Technologies Limited",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "TradeTrack",
+    title: "TracKasuwa",
   },
   formatDetection: {
     telephone: false,
@@ -50,11 +50,11 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_NG",
-    url: "https://tradetrack.ng",
-    title: "TradeTrack - POS & Inventory Management",
+    url: "https://TracKasuwa.ng",
+    title: "TracKasuwa - POS & Inventory Management",
     description:
       "Enterprise offline-first POS and inventory management for Nigerian businesses",
-    siteName: "TradeTrack",
+    siteName: "TracKasuwa",
   },
   icons: {
     icon: "/icons/icon-192x192.png",

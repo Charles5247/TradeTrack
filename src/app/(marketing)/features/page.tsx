@@ -22,7 +22,7 @@ import { CTABand } from "@/components/marketing/cta-band";
 export const metadata: Metadata = {
   title: "Features",
   description:
-    "An honest look at what TradeTrack can do today — POS, offline sync, receipt printing with QR codes, multi-warehouse inventory, low-stock alerts, and reports.",
+    "An honest look at what TracKasuwa can do today — POS, offline sync, receipt printing with QR codes, multi-warehouse inventory, low-stock alerts, and reports.",
 };
 
 /**
@@ -45,7 +45,8 @@ const FEATURE_SECTIONS = [
   {
     icon: ShoppingCart,
     title: "Point of Sale",
-    description: "A fast checkout screen built for a busy counter, not a boardroom.",
+    description:
+      "A fast checkout screen built for a busy counter, not a boardroom.",
     points: [
       "Search or scan products to build a sale in seconds",
       "Apply discounts and accept cash or other payment methods",
@@ -55,7 +56,8 @@ const FEATURE_SECTIONS = [
   {
     icon: WifiOff,
     title: "Offline-First Sync",
-    description: "Nigerian networks aren't always reliable — TradeTrack doesn't stop working when yours drops.",
+    description:
+      "Nigerian networks aren't always reliable — TracKasuwa doesn't stop working when yours drops.",
     points: [
       "Sales and stock changes are saved locally the instant they happen",
       "A background sync queue pushes everything to the cloud once you're back online",
@@ -132,7 +134,8 @@ const FEATURE_SECTIONS = [
   {
     icon: Smartphone,
     title: "Install as an App",
-    description: "Use TradeTrack like a native app, on the devices you already have.",
+    description:
+      "Use TracKasuwa like a native app, on the devices you already have.",
     points: [
       "Installable as a Progressive Web App on Android and desktop Chromium browsers",
       "Dedicated Windows desktop and Android builds available — see /download",
@@ -145,14 +148,30 @@ export default function FeaturesPage() {
     <div>
       <section style={{ padding: "100px 0 40px" }}>
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <Reveal><div className="tt-eyebrow mb-3">Features</div></Reveal>
+          <Reveal>
+            <div className="tt-eyebrow mb-3">Features</div>
+          </Reveal>
           <Reveal delay={100}>
-            <h1 className="tt-head" style={{ fontSize: "clamp(32px, 6vw, 64px)", margin: "0 0 20px", maxWidth: 900, lineHeight: 1.05 }}>
+            <h1
+              className="tt-head"
+              style={{
+                fontSize: "clamp(32px, 6vw, 64px)",
+                margin: "0 0 20px",
+                maxWidth: 900,
+                lineHeight: 1.05,
+              }}
+            >
               Every capability, honestly documented.
             </h1>
           </Reveal>
           <Reveal delay={200}>
-            <p style={{ fontSize: 18, color: "var(--c-textMuted)", maxWidth: 620 }}>
+            <p
+              style={{
+                fontSize: 18,
+                color: "var(--c-textMuted)",
+                maxWidth: 620,
+              }}
+            >
               We ship this list — not aspirational marketing. What&apos;s not
               built yet is either coming soon, or hidden until it is.
             </p>
@@ -165,15 +184,27 @@ export default function FeaturesPage() {
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURE_SECTIONS.map((section, i) => (
               <Reveal key={section.title} delay={i * 60} className="h-full">
-                <div className="rounded-xl border border-border p-7 h-full" style={{ background: "var(--c-surface)" }}>
+                <div
+                  className="rounded-xl border border-border p-7 h-full"
+                  style={{ background: "var(--c-surface)" }}
+                >
                   <div
                     className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
-                    style={{ background: "color-mix(in oklch, var(--c-primary), transparent 88%)", color: "var(--c-primary)" }}
+                    style={{
+                      background:
+                        "color-mix(in oklch, var(--c-primary), transparent 88%)",
+                      color: "var(--c-primary)",
+                    }}
                   >
                     <section.icon className="h-5 w-5" strokeWidth={1.75} />
                   </div>
                   <div className="tt-head text-lg mb-1.5">{section.title}</div>
-                  <div className="text-sm mb-4" style={{ color: "var(--c-textMuted)" }}>{section.description}</div>
+                  <div
+                    className="text-sm mb-4"
+                    style={{ color: "var(--c-textMuted)" }}
+                  >
+                    {section.description}
+                  </div>
                   <ul className="space-y-2 text-sm">
                     {section.points.map((point) => (
                       <li key={point} className="flex items-start gap-2">
@@ -182,7 +213,9 @@ export default function FeaturesPage() {
                           style={{ color: "var(--c-success)" }}
                           strokeWidth={1.75}
                         />
-                        <span style={{ color: "var(--c-textMuted)" }}>{point}</span>
+                        <span style={{ color: "var(--c-textMuted)" }}>
+                          {point}
+                        </span>
                       </li>
                     ))}
                   </ul>
@@ -194,11 +227,17 @@ export default function FeaturesPage() {
             <Reveal delay={FEATURE_SECTIONS.length * 60} className="h-full">
               <div
                 className="rounded-xl border-2 border-dashed p-7 h-full"
-                style={{ borderColor: "var(--c-border)", background: "var(--c-surfaceAlt)" }}
+                style={{
+                  borderColor: "var(--c-border)",
+                  background: "var(--c-surfaceAlt)",
+                }}
               >
                 <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
-                  style={{ background: "var(--c-surfaceAlt)", color: "var(--c-textMuted)" }}
+                  style={{
+                    background: "var(--c-surfaceAlt)",
+                    color: "var(--c-textMuted)",
+                  }}
                 >
                   <Sparkles className="h-5 w-5" strokeWidth={1.75} />
                 </div>
@@ -206,14 +245,17 @@ export default function FeaturesPage() {
                   <div className="tt-head text-lg">AI Assistant</div>
                   <Badge variant="outline">Coming Soon</Badge>
                 </div>
-                <div className="text-sm mb-4" style={{ color: "var(--c-textMuted)" }}>
-                  We&apos;re exploring an AI assistant to help with things
-                  like restock suggestions and sales insights.
+                <div
+                  className="text-sm mb-4"
+                  style={{ color: "var(--c-textMuted)" }}
+                >
+                  We&apos;re exploring an AI assistant to help with things like
+                  restock suggestions and sales insights.
                 </div>
                 <p className="text-sm" style={{ color: "var(--c-textMuted)" }}>
-                  This feature does not exist in the app yet. We&apos;d
-                  rather tell you that plainly than promise something that
-                  isn&apos;t built.
+                  This feature does not exist in the app yet. We&apos;d rather
+                  tell you that plainly than promise something that isn&apos;t
+                  built.
                 </p>
               </div>
             </Reveal>
@@ -225,7 +267,10 @@ export default function FeaturesPage() {
               <Link
                 href="/signup"
                 className="inline-flex items-center gap-2 rounded-lg h-11 px-6 text-sm font-medium"
-                style={{ background: "var(--c-primary)", color: "var(--c-primaryFg)" }}
+                style={{
+                  background: "var(--c-primary)",
+                  color: "var(--c-primaryFg)",
+                }}
               >
                 Start Free <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
               </Link>
