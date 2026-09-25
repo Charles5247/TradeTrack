@@ -2,9 +2,8 @@
  * TracKasuwa - Receipt Barcode Lookup API
  *
  * GET /api/receipts/lookup?code=<barcodeValue>
- *
- * Every receipt TracKasuwa prints (sales/vendor "Cash Receipt" and
- * warehouse "Stock Transfer Note") carries a scannable CODE128 barcode
+  .eq("invoice_number", invoiceNumber)
+  .maybeSingle();
  * encoding either the sale's invoice number or a synthesized transfer
  * reference (`TRF-XXXXXXXX`). This endpoint resolves that scanned value
  * back to the full record + item list so a barcode scanner (or the
@@ -86,7 +85,6 @@ async function lookupSale(
     `,
     )
     .eq("invoice_number", invoiceNumber)
-    .is("deleted_at", null)
     .maybeSingle();
 
   if (error) throw error;

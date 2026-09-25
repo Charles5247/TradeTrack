@@ -335,12 +335,10 @@ class SyncEngine {
     switch (item.operation) {
       case "INSERT":
         if (isVendorInsert) {
-          return client
-            .from(item.table_name)
-            .upsert(serverPayload, {
-              onConflict: "id",
-              ignoreDuplicates: true,
-            });
+          return client.from(item.table_name).upsert(serverPayload, {
+            onConflict: "id",
+            ignoreDuplicates: true,
+          });
         }
         // A retried draft must never reset an order already sent/received online.
         if (
@@ -530,9 +528,7 @@ class SyncEngine {
           orgId,
         );
         if (table === "sales")
-          query = query
-            .like("notes", "Vendor transaction %")
-            .is("deleted_at", null);
+          query = query.like("notes", "Vendor transaction %");
         const { data, error } = await query
           .order("id")
           .range(offset, offset + 499);
