@@ -23,7 +23,7 @@
  * product-form.tsx's canAddProduct() usage).
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
@@ -65,6 +65,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { createClient } from '@/lib/supabase/client';
+import { getAllFromOfflineDB, saveToOfflineDB } from '@/lib/offline/db';
+import { getOfflinePurchaseOrders, persistOfflinePurchaseOrder, requireSyncedPurchaseOrder } from '@/lib/offline/purchase-orders';
+import { syncEngine } from '@/lib/offline/sync-engine';
+import { isOffline } from '@/lib/utils/network';
+import { useOnlineStatus } from '@/hooks/use-online-status';
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/utils/format';
 import { useAuthStore } from '@/store';
 import type { PurchaseOrder, Supplier, Product, Warehouse } from '@/types';
@@ -80,43 +85,40 @@ import {
 
 // ── Data fetching ────────────────────────────────────────────
 
-async function fetchPurchaseOrders() {
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from('purchase_orders')
-    .select(
-      `
-      *,
-      supplier:suppliers(name, phone, email),
-      creator:users!purchase_orders_created_by_fkey(full_name),
-      receiver:users!purchase_orders_received_by_fkey(full_name),
-      items:purchase_order_items(
-        id, quantity_ordered, quantity_received, unit_cost,
-        product:products(id, name, sku)
-      )
-    `,
-    )
-    .order('created_at', { ascending: false });
-  if (error) throw error;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (data as any) as PurchaseOrder[];
+async function fetchPurchaseOrders(organizationId: string) {
+  if (!isOffline()) {
+    try { await syncEngine?.pullPurchaseOrders(organizationId); }
+    catch { /* Fall back when the browser reports online but requests fail. */ }
+  }
+  return getOfflinePurchaseOrders(organizationId);
 }
 
-async function fetchSuppliersAndProducts() {
-  const supabase = createClient();
-  const [s, p, w] = await Promise.all([
-    supabase.from('suppliers').select('*').order('name'),
-    supabase
-      .from('products')
-      .select('id, name, sku, cost_price')
-      .eq('status', 'active')
-      .order('name'),
-    supabase.from('warehouses').select('*').order('is_main', { ascending: false }),
+async function fetchSuppliersAndProducts(organizationId: string) {
+  if (!isOffline()) {
+    try {
+      const supabase = createClient();
+      const [s, p, w] = await Promise.all([
+        supabase.from('suppliers').select('*').eq('organization_id', organizationId),
+        supabase.from('products').select('*').eq('organization_id', organizationId),
+        supabase.from('warehouses').select('*').eq('organization_id', organizationId),
+      ]);
+      if (s.error || p.error || w.error) throw s.error || p.error || w.error;
+      await Promise.all([
+        saveToOfflineDB('suppliers', s.data || []),
+        saveToOfflineDB('products', p.data || []),
+        saveToOfflineDB('warehouses', w.data || []),
+      ]);
+    } catch { /* Preserve cached choices when requests fail. */ }
+  }
+  const [suppliers, products, warehouses] = await Promise.all([
+    getAllFromOfflineDB<Supplier>('suppliers'),
+    getAllFromOfflineDB<Product>('products'),
+    getAllFromOfflineDB<Warehouse>('warehouses'),
   ]);
   return {
-    suppliers: (s.data || []) as Supplier[],
-    products: (p.data || []) as Product[],
-    warehouses: (w.data || []) as Warehouse[],
+    suppliers: suppliers.filter((s) => s.organization_id === organizationId).sort((a, b) => a.name.localeCompare(b.name)),
+    products: products.filter((p) => p.organization_id === organizationId && p.status === 'active').sort((a, b) => a.name.localeCompare(b.name)),
+    warehouses: warehouses.filter((w) => w.organization_id === organizationId).sort((a, b) => Number(b.is_main) - Number(a.is_main)),
   };
 }
 
@@ -146,50 +148,6 @@ async function fetchSubscriptionPlan(organizationId: string) {
 }
 
 type POItemForm = { product_id: string; quantity: string; unit_cost: string };
-
-async function createPurchaseOrder(payload: {
-  organization_id: string;
-  supplier_id: string;
-  expected_date: string | null;
-  notes: string;
-  created_by: string;
-  items: POItemForm[];
-}) {
-  const supabase = createClient();
-  const items = payload.items.filter((i) => i.product_id && i.quantity && i.unit_cost);
-  const totalValue = items.reduce(
-    (sum, i) => sum + parseFloat(i.unit_cost) * parseInt(i.quantity, 10),
-    0,
-  );
-
-  const { data: po, error } = await supabase
-    .from('purchase_orders')
-    .insert({
-      organization_id: payload.organization_id,
-      supplier_id: payload.supplier_id,
-      status: 'draft',
-      expected_date: payload.expected_date,
-      total_value: totalValue,
-      notes: payload.notes || null,
-      created_by: payload.created_by,
-    })
-    .select()
-    .single();
-  if (error) throw error;
-
-  const { error: itemsError } = await supabase.from('purchase_order_items').insert(
-    items.map((i) => ({
-      purchase_order_id: po.id,
-      product_id: i.product_id,
-      quantity_ordered: parseInt(i.quantity, 10),
-      quantity_received: 0,
-      unit_cost: parseFloat(i.unit_cost),
-    })),
-  );
-  if (itemsError) throw itemsError;
-
-  return po;
-}
 
 async function sendPurchaseOrder(id: string) {
   const supabase = createClient();
@@ -296,8 +254,15 @@ export default function PurchaseOrdersPage() {
 function PurchaseOrdersPageInner() {
   const { t } = useI18n();
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
   const { user } = useAuthStore();
   const orgId = (user as unknown as { organization_id: string } | null)?.organization_id;
+
+  useEffect(() => syncEngine?.subscribe((state) => {
+    if (state.status === 'idle' && state.lastSync) {
+      queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+    }
+  }), [queryClient]);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [viewPO, setViewPO] = useState<PurchaseOrder | null>(null);
@@ -320,15 +285,17 @@ function PurchaseOrdersPageInner() {
   const featureLocked = !!plan && !hasFeature(plan, 'purchase_orders');
 
   const { data: purchaseOrders = [], isLoading } = useQuery({
-    queryKey: ['purchase-orders'],
-    queryFn: fetchPurchaseOrders,
-    enabled: !featureLocked,
+    queryKey: ['purchase-orders', orgId],
+    queryFn: () => fetchPurchaseOrders(orgId!),
+    networkMode: 'always',
+    enabled: !featureLocked && !!orgId,
   });
 
   const { data: { suppliers = [], products = [], warehouses = [] } = {} } = useQuery({
-    queryKey: ['po-suppliers-products-warehouses'],
-    queryFn: fetchSuppliersAndProducts,
-    enabled: !featureLocked,
+    queryKey: ['po-suppliers-products-warehouses', orgId],
+    queryFn: () => fetchSuppliersAndProducts(orgId!),
+    networkMode: 'always',
+    enabled: !featureLocked && !!orgId,
   });
 
   const resetForm = () =>
@@ -340,44 +307,56 @@ function PurchaseOrdersPageInner() {
     });
 
   const createMutation = useMutation({
+    networkMode: 'always',
     mutationFn: (data: typeof formData) =>
-      createPurchaseOrder({
+      persistOfflinePurchaseOrder({
         organization_id: orgId as string,
         supplier_id: data.supplier_id,
         expected_date: data.expected_date || null,
         notes: data.notes,
         created_by: user!.id,
-        items: data.items,
+        items: data.items.filter((item) => item.product_id && item.quantity && item.unit_cost),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
       setIsFormOpen(false);
       resetForm();
       toast.success(t.purchaseOrders.created_success);
+      void syncEngine?.sync();
     },
     onError: () => toast.error(t.purchaseOrders.create_failed),
   });
 
   const sendMutation = useMutation({
-    mutationFn: sendPurchaseOrder,
+    networkMode: 'always',
+    mutationFn: async (id: string) => {
+      await requireSyncedPurchaseOrder(id, orgId!);
+      return sendPurchaseOrder(id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
       toast.success(t.purchaseOrders.sent_success);
     },
-    onError: () => toast.error(t.purchaseOrders.update_failed),
+    onError: (e) => toast.error(e instanceof Error ? e.message : t.purchaseOrders.update_failed),
   });
 
   const cancelMutation = useMutation({
-    mutationFn: cancelPurchaseOrder,
+    networkMode: 'always',
+    mutationFn: async (id: string) => {
+      await requireSyncedPurchaseOrder(id, orgId!);
+      return cancelPurchaseOrder(id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
       toast.success(t.purchaseOrders.cancelled_success);
     },
-    onError: () => toast.error(t.purchaseOrders.update_failed),
+    onError: (e) => toast.error(e instanceof Error ? e.message : t.purchaseOrders.update_failed),
   });
 
   const receiveMutation = useMutation({
-    mutationFn: (poId: string) => {
+    networkMode: 'always',
+    mutationFn: async (poId: string) => {
+      await requireSyncedPurchaseOrder(poId, orgId!);
       const destination = warehouses.find((w) => w.is_main) || warehouses[0];
       if (!destination) throw new Error(t.purchaseOrders.no_warehouse);
       return receivePurchaseOrder({
@@ -528,6 +507,11 @@ function PurchaseOrdersPageInner() {
                     </TableCell>
                     <TableCell>{statusBadge(po.status)}</TableCell>
                     <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                      {(po.status === 'draft' || po.status === 'sent') && (!isOnline || !po.lifecycleReady) && (
+                        <p className="text-xs text-muted-foreground mb-1" role="status">
+                          {!isOnline ? 'Reconnect to send, cancel or receive.' : 'Waiting for this order and all items to sync.'}
+                        </p>
+                      )}
                       <div className="flex items-center justify-end gap-1">
                         {po.status === 'draft' && (
                           <>
@@ -536,6 +520,7 @@ function PurchaseOrdersPageInner() {
                               variant="outline"
                               className="h-7 text-xs"
                               onClick={() => sendMutation.mutate(po.id)}
+                              disabled={!isOnline || !po.lifecycleReady || sendMutation.isPending || cancelMutation.isPending || receiveMutation.isPending}
                             >
                               <Send className="h-3 w-3 mr-1" /> {t.purchaseOrders.send}
                             </Button>
@@ -544,6 +529,7 @@ function PurchaseOrdersPageInner() {
                               variant="outline"
                               className="h-7 text-xs text-red-600 border-red-200"
                               onClick={() => cancelMutation.mutate(po.id)}
+                              disabled={!isOnline || !po.lifecycleReady || sendMutation.isPending || cancelMutation.isPending || receiveMutation.isPending}
                             >
                               <Trash2 className="h-3 w-3 mr-1" /> {t.purchaseOrders.cancel_action}
                             </Button>
@@ -556,7 +542,7 @@ function PurchaseOrdersPageInner() {
                               variant="outline"
                               className="h-7 text-xs text-green-600 border-green-200"
                               onClick={() => receiveMutation.mutate(po.id)}
-                              disabled={receiveMutation.isPending}
+                              disabled={!isOnline || !po.lifecycleReady || receiveMutation.isPending || cancelMutation.isPending}
                             >
                               <PackageCheck className="h-3 w-3 mr-1" /> {t.purchaseOrders.receive}
                             </Button>
@@ -565,6 +551,7 @@ function PurchaseOrdersPageInner() {
                               variant="outline"
                               className="h-7 text-xs text-red-600 border-red-200"
                               onClick={() => cancelMutation.mutate(po.id)}
+                              disabled={!isOnline || !po.lifecycleReady || sendMutation.isPending || cancelMutation.isPending || receiveMutation.isPending}
                             >
                               {t.purchaseOrders.cancel_action}
                             </Button>

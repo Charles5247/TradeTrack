@@ -179,12 +179,22 @@ class SyncEngine {
 
   private async pushChanges() {
     const pendingItems = await getPendingSyncItems();
+    // IndexedDB returns UUID key order, not insertion/dependency order.
+    // Preserve the relative order of existing operations; send PO parents first.
+    pendingItems.sort((a, b) =>
+      Number(b.table_name === "purchase_orders") - Number(a.table_name === "purchase_orders"));
     if (pendingItems.length === 0) return;
 
     const supabase = createClient();
     const db = await getDB();
 
     for (const item of pendingItems) {
+      if (item.table_name === "purchase_order_items") {
+        const parents = (await db.getAllFromIndex("sync_queue", "by-queue-key", [
+          "purchase_orders", item.payload.purchase_order_id, "INSERT",
+        ])) as SyncQueueRecord[];
+        if (parents.some((parent) => parent.status !== "synced")) continue;
+      }
       try {
         await db.put("sync_queue", { ...item, status: "syncing" });
 
@@ -250,10 +260,17 @@ class SyncEngine {
     const { synced: _localSynced, ...serverPayload } = item.payload;
 
     const isAppendOnly =
-      item.table_name === "sales" || item.table_name === "sale_items";
+      item.table_name === "sales" || item.table_name === "sale_items" ||
+      item.table_name === "purchase_orders" || item.table_name === "purchase_order_items";
 
     switch (item.operation) {
       case "INSERT":
+        // A retried draft must never reset an order already sent/received online.
+        if (item.table_name === "purchase_orders" || item.table_name === "purchase_order_items") {
+          return client.from(item.table_name).upsert(serverPayload, {
+            onConflict: "id", ignoreDuplicates: true,
+          });
+        }
         // Append-only tables and fresh inserts both upsert-by-id, which is
         // idempotent on retry — the difference for append-only tables is
         // simply that they are NEVER reached via the 'UPDATE' branch below.
@@ -355,6 +372,39 @@ class SyncEngine {
     if (categories?.length) {
       await clearOfflineStore("categories");
       await saveToOfflineDB("categories", categories);
+    }
+    await this.pullPurchaseOrders(orgId, supabase);
+  }
+
+  // Full paginated snapshots: items have no updated_at column. Never replace
+  // local drafts whose creation is still pending, syncing, or failed.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async pullPurchaseOrders(orgId: string, supabase: any = createClient()) {
+    const db = await getDB();
+    for (const table of ["suppliers", "purchase_orders", "purchase_order_items"] as const) {
+      for (let offset = 0; ; offset += 500) {
+        let query = supabase.from(table).select(table === "purchase_order_items"
+          ? "*, purchase_orders!inner(organization_id)"
+          : table === "purchase_orders"
+            ? "*, creator:users!purchase_orders_created_by_fkey(full_name), receiver:users!purchase_orders_received_by_fkey(full_name)"
+            : "*");
+        query = query.eq(table === "purchase_order_items"
+          ? "purchase_orders.organization_id" : "organization_id", orgId);
+        const { data, error } = await query.order("id").range(offset, offset + 499);
+        if (error) throw error;
+        const tx = db.transaction([table, "sync_queue"], "readwrite");
+        const queue = tx.objectStore("sync_queue");
+        for (const row of data ?? []) {
+          const pending = (await queue.index("by-queue-key").getAll([
+            table, row.id, "INSERT",
+          ])) as SyncQueueRecord[];
+          if (pending.some((entry) => entry.status !== "synced")) continue;
+          const { purchase_orders: _join, ...record } = row;
+          await tx.objectStore(table).put({ ...record, synced: true });
+        }
+        await tx.done;
+        if (!data || data.length < 500) break;
+      }
     }
   }
 

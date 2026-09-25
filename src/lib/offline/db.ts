@@ -1,10 +1,10 @@
 /**
  * TradeTrack - IndexedDB Setup
  * Manages offline storage for all core entities
- * VERSION 2 - includes user_sessions store for offline login
+ * VERSION 4 - includes Purchase Order drafts, items and supplier cache
  */
 
-import { openDB, type IDBPDatabase } from "idb";
+import { openDB, type IDBPDatabase, type IDBPTransaction } from "idb";
 import { generateId } from "@/lib/utils/id";
 import { getOfflineAccountNamespace } from "./auth-cache";
 
@@ -120,11 +120,16 @@ type StoreNames =
   | "categories"
   | "sync_queue"
   | "pending_receipts"
+  | "suppliers"
+  | "purchase_orders"
+  | "purchase_order_items"
   | "user_sessions";
 
 // Use any for the generic DB to avoid complex type gymnastics with idb
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TradeTrackIDB = IDBPDatabase<any>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type OfflineWriteTransaction = IDBPTransaction<any, string[], "readwrite">;
 
 let dbInstance: TradeTrackIDB | null = null;
 let activeDbName: string | null = null;
@@ -141,8 +146,19 @@ export async function getDB(): Promise<TradeTrackIDB> {
   dbInstance = null;
   activeDbName = null;
 
-  dbInstance = await openDB(dbName, 3, {
+  dbInstance = await openDB(dbName, 4, {
     upgrade(db, oldVersion, _newVersion, transaction) {
+      // v4: Purchase Order drafts and the supplier catalog needed offline.
+      for (const name of ["suppliers", "purchase_orders"] as const) {
+        if (!db.objectStoreNames.contains(name)) {
+          const store = db.createObjectStore(name, { keyPath: "id" });
+          store.createIndex("by-org", "organization_id", { unique: false });
+        }
+      }
+      if (!db.objectStoreNames.contains("purchase_order_items")) {
+        const store = db.createObjectStore("purchase_order_items", { keyPath: "id" });
+        store.createIndex("by-purchase-order", "purchase_order_id", { unique: false });
+      }
       // -- v1 stores --
       if (!db.objectStoreNames.contains("products")) {
         const productsStore = db.createObjectStore("products", {
@@ -350,8 +366,10 @@ export async function addToSyncQueue(
   operation: "INSERT" | "UPDATE" | "DELETE",
   recordId: string,
   payload: Record<string, unknown>,
+  transaction?: OfflineWriteTransaction,
 ): Promise<void> {
-  const db = await getDB();
+  const db = transaction ? null : await getDB();
+  const queueStore = transaction?.objectStore("sync_queue");
   // Duplicate check: only rows that could still be "in flight" (pending or
   // syncing) matter. Instead of scanning the whole backlog, use the
   // `by-queue-key` composite index to fetch ONLY rows matching this exact
@@ -360,11 +378,14 @@ export async function addToSyncQueue(
   // This is on the critical path to rendering a sale's receipt, where
   // persistOfflineSale() queues the sale + every line item + every
   // inventory update in one burst, so it must not scale with backlog size.
-  const existing = (await db.getAllFromIndex("sync_queue", "by-queue-key", [
+  const key = [
     tableName,
     recordId,
     operation,
-  ])) as SyncQueueRecord[];
+  ];
+  const existing = (queueStore
+    ? await queueStore.index("by-queue-key").getAll(key)
+    : await db!.getAllFromIndex("sync_queue", "by-queue-key", key)) as SyncQueueRecord[];
   const alreadyQueued = existing.some(
     (record) => record.status === "pending" || record.status === "syncing",
   );
@@ -390,7 +411,8 @@ export async function addToSyncQueue(
     created_at: new Date().toISOString(),
     client_updated_at: clientUpdatedAt,
   };
-  await db.add("sync_queue", record);
+  if (queueStore) await queueStore.add(record);
+  else await db!.add("sync_queue", record);
 }
 
 export async function getPendingSyncItems(): Promise<SyncQueueRecord[]> {
