@@ -424,6 +424,10 @@ export const yo = {
     received_by_label: "Tí A Gbà Nípasẹ̀",
   },
   vendors: {
+    stock_check_title: "A nílò láti ṣàyẹ̀wò àtúnṣe iye ọjà yìí",
+    stock_check_instruction: "Ka àwọn ọjà tó wà nísàlẹ̀, kí o sì sọ fún oníṣọ́ọ̀bù láti fi iye náà wé èyí tó wà ní Inventory. A ti pa àwọn àtúnṣe rẹ mọ́ fún àyẹ̀wò.",
+    stock_check_quantity: "iye tí a fi pamọ́ {quantity}",
+    stock_check_link: "Ṣí Inventory láti ṣàyẹ̀wò ọjà",
     title: "Tìtà Oníjà",
     add_vendor: "Fikún Ìṣe Oníjà",
     vendor_name: "Orúkọ Oníjà",

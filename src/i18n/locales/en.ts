@@ -424,6 +424,10 @@ export const en = {
     received_by_label: "Received by",
   },
   vendors: {
+    stock_check_title: "This stock update needs a quick check",
+    stock_check_instruction: "Count the items below and ask the shop owner to compare the count with Inventory. Your saved updates are kept for review.",
+    stock_check_quantity: "saved quantity {quantity}",
+    stock_check_link: "Open Inventory to check stock",
     title: "Vendor Sales",
     add_vendor: "Add Vendor Transaction",
     vendor_name: "Vendor Name",

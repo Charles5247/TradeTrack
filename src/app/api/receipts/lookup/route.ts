@@ -2,9 +2,7 @@
  * TracKasuwa - Receipt Barcode Lookup API
  *
  * GET /api/receipts/lookup?code=<barcodeValue>
-  .eq("invoice_number", invoiceNumber)
-  .maybeSingle();
- * encoding either the sale's invoice number or a synthesized transfer
+ * Receipts include a barcode encoding either the sale's invoice number or a synthesized transfer
  * reference (`TRF-XXXXXXXX`). This endpoint resolves that scanned value
  * back to the full record + item list so a barcode scanner (or the
  * in-app /receipts/lookup page) can look up "what was on this receipt".

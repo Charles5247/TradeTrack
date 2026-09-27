@@ -57,6 +57,7 @@ import {
   getOfflineVendorTransactions,
   persistOfflineVendorTransaction,
   requireSyncedVendorTransaction,
+  getVendorStockChecks,
 } from "@/lib/offline/vendor-transactions";
 import { syncEngine } from "@/lib/offline/sync-engine";
 import { isOffline } from "@/lib/utils/network";
@@ -109,6 +110,13 @@ function VendorsPageInner() {
   const { user } = useAuthStore();
   const orgId = user?.organization_id;
   const isOnline = useOnlineStatus();
+  const { data: stockChecks = [] } = useQuery({
+    queryKey: ["vendor-stock-checks", orgId],
+    queryFn: () => getVendorStockChecks(orgId!),
+    enabled: !!orgId,
+    networkMode: "always",
+    refetchInterval: 3000,
+  });
   React.useEffect(
     () =>
       syncEngine?.subscribe((state) => {
@@ -306,6 +314,16 @@ function VendorsPageInner() {
 
   return (
     <div className="space-y-6">
+      {stockChecks.length > 0 && (
+        <div role="alert" className="rounded-md border border-amber-300 bg-amber-50 p-4 text-amber-950">
+          <p className="font-semibold">{t.vendors.stock_check_title}</p>
+          <p>{t.vendors.stock_check_instruction}</p>
+          <ul className="my-2 list-disc pl-5">
+            {stockChecks.map((check) => <li key={check.id}>{check.productName}: {t.vendors.stock_check_quantity.replace("{quantity}", String(check.savedQuantity))}</li>)}
+          </ul>
+          <a href="/inventory" className="underline font-medium">{t.vendors.stock_check_link}</a>
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">{t.vendors.title}</h1>

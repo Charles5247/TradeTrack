@@ -424,6 +424,10 @@ export const ha = {
     received_by_label: "Wanda ya karɓa",
   },
   vendors: {
+    stock_check_title: "Ana bukatar a duba wannan sauyin kaya",
+    stock_check_instruction: "Kirga kayan da ke kasa, sannan ka nemi mai shago ya kwatanta adadin da na Inventory. An adana sauye-sauyenka don dubawa.",
+    stock_check_quantity: "adadin da aka adana {quantity}",
+    stock_check_link: "Bude Inventory don duba kaya",
     title: "Siyar da hannun uku",
     add_vendor: "Ƙara ma'amalar mai sayarwa",
     vendor_name: "Sunan mai sayarwa",

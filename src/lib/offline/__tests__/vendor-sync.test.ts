@@ -118,6 +118,7 @@ it("claims the latest pending inventory payload even when refreshed after the fl
     product_id: "product",
     warehouse_id: "warehouse",
     quantity: 20,
+    updated_at: "2026-09-25T12:00:00.123456+00:00",
   });
   await persistOfflineVendorTransaction(payload);
   let refreshed = false;
@@ -125,14 +126,12 @@ it("claims the latest pending inventory payload even when refreshed after the fl
   client.from.mockImplementation((table: string) => {
     if (table === "inventory")
       return {
-        select: () => ({
-          eq: () => ({
-            maybeSingle: async () => ({ data: null, error: null }),
-          }),
-        }),
-        upsert: (row: { quantity: number }) => {
-          sent.push(row.quantity);
-          return { eq: async () => ({ error: null }) };
+        update: (row: { quantity: number }) => {
+          const query = { eq: () => query, select: async () => {
+            sent.push(row.quantity);
+            return { data: [{ updated_at: "2026-09-25T12:00:01.987654+00:00" }], error: null };
+          } };
+          return query;
         },
       };
     return {
@@ -200,34 +199,32 @@ it("applies a successor stock snapshot after an in-flight predecessor commits", 
     product_id: "product",
     warehouse_id: "warehouse",
     quantity: 20,
+    updated_at: "2026-09-25T12:00:00.123456+00:00",
   });
   await persistOfflineVendorTransaction(payload);
   let serverQuantity = 20;
-  let serverTimestamp = "1970-01-01T00:00:00Z";
+  let serverTimestamp = "2026-09-25T12:00:00.123456+00:00";
   let createdSuccessor = false;
   client.from.mockImplementation((table: string) => {
     if (table !== "inventory") return { upsert: async () => ({ error: null }) };
     return {
-      select: () => ({
-        eq: () => ({
-          maybeSingle: async () => ({
-            data: { updated_at: serverTimestamp },
-            error: null,
-          }),
-        }),
-      }),
-      upsert: (row: { quantity: number }) => ({
-        eq: async () => {
-          if (!createdSuccessor) {
-            createdSuccessor = true;
-            await persistOfflineVendorTransaction(payload);
-          }
-          serverQuantity = row.quantity;
-          // Simulate a server commit after both local writes (network latency).
-          serverTimestamp = new Date(Date.now() + 1000).toISOString();
-          return { error: null };
-        },
-      }),
+      update: (row: { quantity: number }) => {
+        let expected: unknown;
+        const query = {
+          eq: (key: string, value: unknown) => { if (key === 'updated_at') expected = value; return query; },
+          select: async () => {
+            if (expected !== serverTimestamp) return { data: [], error: null };
+            if (!createdSuccessor) {
+              createdSuccessor = true;
+              await persistOfflineVendorTransaction(payload);
+            }
+            serverQuantity = row.quantity;
+            serverTimestamp = row.quantity === 17 ? '2026-09-25T12:00:01.987654+00:00' : '2026-09-25T12:00:02.654321+00:00';
+            return { data: [{ updated_at: serverTimestamp }], error: null };
+          },
+        };
+        return query;
+      },
     };
   });
   await engine.pushChanges();

@@ -82,6 +82,14 @@ interface SyncQueueRecord {
   error?: string;
   created_at: string;
   synced_at?: string;
+  /** Local-only causal information for opt-in vendor stock writes. Treat
+   * server timestamps as opaque strings; never round them through Date. */
+  stock_sync?: {
+    expected_version?: string;
+    predecessor_id?: string;
+    confirmed_version?: string;
+    review_reason?: string;
+  };
   /**
    * The client's local `updated_at` timestamp for this record AT THE TIME
    * the change was queued (not when it's eventually synced). Used by the
@@ -390,8 +398,11 @@ export async function addToSyncQueue(
   recordId: string,
   payload: Record<string, unknown>,
   transaction?: OfflineWriteTransaction,
-  options?: { refreshPendingInventoryUpdate?: boolean },
+  options?: { refreshPendingInventoryUpdate?: boolean; vendorStock?: { expectedVersion?: string } },
 ): Promise<void> {
+  if (options?.vendorStock && !options.refreshPendingInventoryUpdate) {
+    throw new Error("Vendor stock metadata requires the inventory update opt-in");
+  }
   if (
     options?.refreshPendingInventoryUpdate &&
     (!transaction || tableName !== "inventory" || operation !== "UPDATE")
@@ -437,6 +448,7 @@ export async function addToSyncQueue(
         ...pending,
         payload,
         client_updated_at: clientUpdatedAt,
+        ...(options.vendorStock ? { stock_sync: pending.stock_sync ?? { review_reason: "legacy_pending_write" } } : {}),
       });
       return;
     }
@@ -454,6 +466,16 @@ export async function addToSyncQueue(
     created_at: new Date().toISOString(),
     client_updated_at: clientUpdatedAt,
   };
+  if (options?.vendorStock) {
+    const unresolved = existing.filter((entry) => entry.status !== "synced");
+    const predecessor = unresolved.length === 1 ? unresolved[0] : undefined;
+    record.stock_sync = predecessor?.stock_sync && predecessor.status === "syncing"
+      ? { predecessor_id: predecessor.id }
+      : unresolved.length ? { review_reason: "legacy_or_unresolved_write" }
+      : options.vendorStock.expectedVersion
+        ? { expected_version: options.vendorStock.expectedVersion }
+        : { review_reason: "missing_server_version" };
+  }
   if (queueStore) await queueStore.add(record);
   else await db!.add("sync_queue", record);
 }
@@ -498,9 +520,25 @@ export async function pruneSyncedQueueItems(
 
   const tx = db.transaction("sync_queue", "readwrite");
   const store = tx.objectStore("sync_queue");
-  await Promise.all([...staleIds.map((id) => store.delete(id)), tx.done]);
+  let deleted = 0;
+  for (const id of staleIds) {
+    const predecessor = await store.get(id) as SyncQueueRecord | undefined;
+    if (predecessor?.stock_sync) {
+      const siblings = await store.index("by-queue-key").getAll(["inventory", predecessor.record_id, "UPDATE"]) as SyncQueueRecord[];
+      const successors = siblings.filter((entry) => entry.stock_sync?.predecessor_id === id);
+      // Retain evidence if we cannot safely detach a successor.
+      if (successors.length && !predecessor.stock_sync.confirmed_version) continue;
+      for (const successor of successors) {
+        await store.put({ ...successor, stock_sync: { ...successor.stock_sync,
+          predecessor_id: undefined, expected_version: predecessor.stock_sync.confirmed_version } });
+      }
+    }
+    await store.delete(id);
+    deleted++;
+  }
+  await tx.done;
 
-  return staleIds.length;
+  return deleted;
 }
 
 // Export types for use in other modules

@@ -23,6 +23,25 @@ import {
 type SyncStatus = "idle" | "syncing" | "error" | "offline";
 const SYNC_AUTH_TIMEOUT = "Sync authentication timed out";
 
+// Parse only whole seconds for timezone normalization; keep all fractional
+// digits as text so PostgreSQL microseconds never pass through a JS Date.
+function timestampParts(value?: string): [number, string] {
+  if (!value) return [0, ""];
+  const match = /^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}:\d{2})(?:\.(\d+))?(Z|[+-]\d{2}:\d{2})$/.exec(value);
+  if (!match) throw new Error("Invalid sync timestamp");
+  const seconds = Date.parse(`${match[1]}T${match[2]}${match[4]}`);
+  if (!Number.isFinite(seconds)) throw new Error("Invalid sync timestamp");
+  return [seconds, (match[3] ?? "").replace(/0+$/, "")];
+}
+
+function isTimestampNewer(server?: string, client?: string): boolean {
+  const [serverSeconds, serverFraction] = timestampParts(server);
+  const [clientSeconds, clientFraction] = timestampParts(client);
+  if (serverSeconds !== clientSeconds) return serverSeconds > clientSeconds;
+  const digits = Math.max(serverFraction.length, clientFraction.length);
+  return serverFraction.padEnd(digits, "0") > clientFraction.padEnd(digits, "0");
+}
+
 interface SyncState {
   status: SyncStatus;
   lastSync: Date | null;
@@ -33,6 +52,7 @@ interface SyncState {
 type SyncListener = (state: SyncState) => void;
 
 class SyncEngine {
+  private activeStockWrites = new Set<string>();
   private listeners: SyncListener[] = [];
   private state: SyncState = {
     status: "idle",
@@ -157,11 +177,13 @@ class SyncEngine {
         console.warn("[sync] Failed to prune synced queue items:", pruneErr);
       }
 
+      const remaining = await getPendingSyncItems();
+      const needsStockCheck = remaining.some((entry) => entry.stock_sync?.review_reason);
       this.setState({
-        status: "idle",
+        status: needsStockCheck ? "error" : "idle",
         lastSync: new Date(),
-        pendingCount: 0,
-        error: null,
+        pendingCount: remaining.length,
+        error: needsStockCheck ? "This stock update needs a quick check. Open Vendors for details." : null,
       });
     } catch (err) {
       // A bare "Failed to fetch" TypeError means the request never even
@@ -194,6 +216,19 @@ class SyncEngine {
   }
 
   private async pushChanges() {
+    const stockDB = await getDB();
+    // An interrupted PATCH may have committed remotely. Never blindly resend
+    // it on restart: preserve the entry and ask for a stock check instead.
+    const recovery = stockDB.transaction("sync_queue", "readwrite");
+    const stockEntries = await recovery.store.index("by-table").getAll("inventory") as SyncQueueRecord[];
+    for (const entry of stockEntries) {
+      if (entry.stock_sync && entry.status === "syncing" && !this.activeStockWrites.has(entry.id)) {
+        await recovery.store.put({ ...entry, status: "pending", stock_sync: {
+          ...entry.stock_sync, review_reason: "interrupted_write",
+        } });
+      }
+    }
+    await recovery.done;
     const pendingItems = await getPendingSyncItems();
     // IndexedDB returns UUID key order, not insertion/dependency order.
     // Preserve the relative order of existing operations; send PO parents first.
@@ -214,6 +249,10 @@ class SyncEngine {
     const db = await getDB();
 
     for (const queuedItem of pendingItems) {
+      if (queuedItem.table_name === "inventory" && queuedItem.operation === "UPDATE" && queuedItem.stock_sync) {
+        await this.syncVendorStock(queuedItem.id, supabase);
+        continue;
+      }
       let item = queuedItem;
       if (item.table_name === "inventory" && item.operation === "UPDATE") {
         // A vendor may refresh a pending payload after this flush took its
@@ -274,6 +313,77 @@ class SyncEngine {
           error: errMessage,
         });
       }
+    }
+  }
+
+  private async syncVendorStock(id: string, supabase: ReturnType<typeof createClient>) {
+    const db = await getDB();
+    const claim = db.transaction("sync_queue", "readwrite");
+    const item = await claim.store.get(id) as SyncQueueRecord | undefined;
+    if (!item || item.status !== "pending" || !item.stock_sync || item.stock_sync.review_reason) {
+      await claim.done;
+      return;
+    }
+    const metadata = { ...item.stock_sync };
+    if (metadata.predecessor_id) {
+      const predecessor = await claim.store.get(metadata.predecessor_id) as SyncQueueRecord | undefined;
+      if (predecessor?.status === "synced" && predecessor.stock_sync?.confirmed_version) {
+        metadata.expected_version = predecessor.stock_sync.confirmed_version;
+        delete metadata.predecessor_id;
+      } else if (predecessor && !predecessor.stock_sync?.review_reason &&
+          (predecessor.status === "pending" || predecessor.status === "syncing")) {
+        await claim.done;
+        return;
+      } else metadata.review_reason = "predecessor_needs_check";
+    }
+    if (!metadata.expected_version && !metadata.review_reason) metadata.review_reason = "missing_server_version";
+    if (metadata.review_reason) {
+      await claim.store.put({ ...item, stock_sync: metadata });
+      await claim.done;
+      return;
+    }
+    await claim.store.put({ ...item, status: "syncing", stock_sync: metadata });
+    this.activeStockWrites.add(id);
+    await claim.done;
+
+    try {
+      // Exact server string, including Postgres sub-millisecond precision.
+      // Only quantity is changed: do not overwrite unrelated inventory fields.
+      const { data, error } = await supabase.from("inventory")
+        .update({ quantity: Number(item.payload.quantity) })
+        .eq("id", item.record_id)
+        .eq("organization_id", String(item.payload.organization_id))
+        .eq("updated_at", metadata.expected_version!)
+        .select("updated_at");
+      const version = !error && data?.length === 1 ? data[0].updated_at : undefined;
+      if (typeof version !== "string" || !version) {
+        await db.put("sync_queue", { ...item, status: "pending", stock_sync: { ...metadata,
+          review_reason: error ? "write_not_confirmed" : "server_stock_changed",
+        } });
+        return;
+      }
+      const finish = db.transaction(["sync_queue", "inventory"], "readwrite");
+      void finish.done.catch(() => {});
+      const queue = finish.objectStore("sync_queue");
+      await queue.put({ ...item, status: "synced", synced_at: new Date().toISOString(),
+        stock_sync: { ...metadata, confirmed_version: version } });
+      const successors = await queue.index("by-queue-key").getAll(["inventory", item.record_id, "UPDATE"]) as SyncQueueRecord[];
+      for (const successor of successors) {
+        if (successor.stock_sync?.predecessor_id !== id) continue;
+        await queue.put({ ...successor, stock_sync: { ...successor.stock_sync,
+          predecessor_id: undefined, expected_version: version } });
+      }
+      const local = await finish.objectStore("inventory").get(item.record_id);
+      if (local && local.updated_at === item.payload.updated_at && local.quantity === item.payload.quantity) {
+        await finish.objectStore("inventory").put({ ...local, updated_at: version });
+      }
+      await finish.done;
+    } catch {
+      await db.put("sync_queue", { ...item, status: "pending", stock_sync: {
+        ...metadata, review_reason: "write_not_confirmed",
+      } });
+    } finally {
+      this.activeStockWrites.delete(id);
     }
   }
 
@@ -375,14 +485,7 @@ class SyncEngine {
 
         if (fetchErr) return { error: fetchErr };
 
-        const serverUpdatedAt = serverRow?.updated_at
-          ? new Date(serverRow.updated_at).getTime()
-          : 0;
-        const clientUpdatedAt = item.client_updated_at
-          ? new Date(item.client_updated_at).getTime()
-          : 0;
-
-        if (serverRow && serverUpdatedAt > clientUpdatedAt) {
+        if (serverRow && isTimestampNewer(serverRow.updated_at, item.client_updated_at)) {
           // The server already has a newer version (a concurrent change
           // from another device/cashier) — drop our stale local write
           // instead of overwriting it. Not an error: the sync is
@@ -430,7 +533,15 @@ class SyncEngine {
       .gte("updated_at", since);
 
     if (inventory?.length) {
-      await saveToOfflineDB("inventory", inventory);
+      const db = await getDB();
+      const tx = db.transaction(["inventory", "sync_queue"], "readwrite");
+      for (const row of inventory) {
+        const entries = await tx.objectStore("sync_queue").index("by-queue-key")
+          .getAll(["inventory", row.id, "UPDATE"]) as SyncQueueRecord[];
+        if (entries.some((entry) => entry.stock_sync && entry.status !== "synced")) continue;
+        await tx.objectStore("inventory").put(row);
+      }
+      await tx.done;
     }
 
     const { data: warehouses } = await supabase

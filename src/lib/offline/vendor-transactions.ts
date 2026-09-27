@@ -59,6 +59,7 @@ export async function persistOfflineVendorTransaction(payload: OfflineVendorTran
       byProduct.set(row.product_id, group);
     }
     const updates = new Map<string, InventoryRecord>();
+    const originalVersions = new Map(inventory.map((row) => [row.id, row.updated_at]));
     for (const item of items) {
       const rows = byProduct.get(item.product_id) ?? [];
       const stock = rows.reduce<InventoryRecord | undefined>((best, row) => !best || row.quantity > best.quantity ? row : best, undefined);
@@ -82,7 +83,9 @@ export async function persistOfflineVendorTransaction(payload: OfflineVendorTran
       addToSyncQueue('vendor_transactions', 'INSERT', id, vendor, tx),
       ...items.map((item) => addToSyncQueue('vendor_transaction_items', 'INSERT', item.id, item, tx)),
       addToSyncQueue('sales', 'INSERT', saleId, sale, tx),
-      ...Array.from(updates.values(), (row) => addToSyncQueue('inventory', 'UPDATE', row.id, { ...row }, tx, { refreshPendingInventoryUpdate: true })),
+      ...Array.from(updates.values(), (row) => addToSyncQueue('inventory', 'UPDATE', row.id, { ...row }, tx, {
+        refreshPendingInventoryUpdate: true, vendorStock: { expectedVersion: originalVersions.get(row.id) },
+      })),
     ]);
     await done;
     return vendor;
@@ -120,4 +123,15 @@ export async function requireSyncedVendorTransaction(id: string, organizationId:
   if (isOffline()) throw new Error('Reconnect to record a vendor payment.');
   const vendor = (await getOfflineVendorTransactions(organizationId)).find((row) => row.id === id);
   if (!vendor?.paymentReady) throw new Error('Wait for this transaction, its items and linked sale to sync before recording payment.');
+}
+
+export async function getVendorStockChecks(organizationId: string) {
+  const db = await getDB();
+  const entries = await db.getAllFromIndex('sync_queue', 'by-table', 'inventory') as import('./db').SyncQueueRecord[];
+  const products = await getAllFromOfflineDB<Product>('products');
+  const names = new Map(products.map((product) => [product.id, product.name]));
+  return entries.filter((entry) => entry.payload.organization_id === organizationId &&
+    entry.status !== 'synced' && !!entry.stock_sync?.review_reason)
+    .map((entry) => ({ id: entry.id, productName: names.get(String(entry.payload.product_id)) ?? 'Item',
+      savedQuantity: Number(entry.payload.quantity) }));
 }

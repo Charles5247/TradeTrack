@@ -9,7 +9,11 @@ vi.mock('@/store', () => ({
   useAuthStore: () => ({ user: { id: 'user', organization_id: 'org', role: 'business_owner' } }),
   useOrgStore: () => ({ organizationName: 'Shop' }),
 }));
-vi.mock('@/i18n', () => ({ useI18n: () => ({ t: new Proxy({}, { get: () => new Proxy({}, { get: (_target, key) => String(key) }) }) }) }));
+vi.mock('@/i18n', async () => {
+  const { en } = await import('@/i18n/locales/en');
+  return { useI18n: () => ({ t: new Proxy({}, { get: () => new Proxy({}, { get: (_target, key) =>
+    String(key).startsWith('stock_check_') ? en.vendors[key as keyof typeof en.vendors] : String(key) }) }) }) };
+});
 vi.mock('@/components/shared/access-guard', () => ({ AccessGuard: ({ children }: { children: React.ReactNode }) => children }));
 vi.mock('@/lib/pdf/receipt-pdf', () => ({ downloadReceiptPDF: vi.fn() }));
 vi.mock('../sync-engine', () => ({ syncEngine: { subscribe: () => () => {}, sync: vi.fn(), pullVendorTransactions: vi.fn().mockRejectedValue(new TypeError('Failed to fetch')) } }));
@@ -25,6 +29,10 @@ it('renders cached vendors and gates payment offline and until the linked sale h
   const vendor = await persistOfflineVendorTransaction({ organization_id: 'org', created_by: 'user', vendor_name: 'Cached Vendor',
     date_issued: '2026-09-25', items: [{ product_id: 'product', quantity: '2', unit_price: '10' }] });
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  await db.put('products', { id: 'product', organization_id: 'org', name: 'Rice' });
+  await db.put('sync_queue', { id: 'stock-check', table_name: 'inventory', record_id: 'stock', operation: 'UPDATE',
+    status: 'pending', payload: { organization_id: 'org', product_id: 'product', quantity: 17 },
+    stock_sync: { review_reason: 'server_stock_changed' } });
   const container = document.createElement('div'); document.body.append(container);
   const root = createRoot(container);
   const pay = () => Array.from(container.querySelectorAll('button')).find((button) => button.textContent?.trim() === 'pay');
@@ -35,6 +43,11 @@ it('renders cached vendors and gates payment offline and until the linked sale h
   try {
     await act(async () => root.render(<QueryClientProvider client={client}><VendorsPage /></QueryClientProvider>));
     await waitFor(() => container.textContent?.includes('Cached Vendor') === true);
+    await waitFor(() => container.textContent?.includes('This stock update needs a quick check') === true);
+    expect(container.textContent).toContain('Count the items below and ask the shop owner');
+    expect(container.textContent).toContain('Rice: saved quantity 17');
+    expect(container.querySelector('a[href="/inventory"]')?.textContent).toBe('Open Inventory to check stock');
+    expect(container.textContent).not.toMatch(/version mismatch|conflict/i);
     expect(pay()?.disabled).toBe(true);
     expect(container.textContent).toContain('Reconnect to record payment.');
     online.mockReturnValue(true);
@@ -47,6 +60,9 @@ it('renders cached vendors and gates payment offline and until the linked sale h
     for (const sale of await db.getAll('sales')) await db.put('sales', { ...sale, synced: true });
     await act(async () => { await client.invalidateQueries({ queryKey: ['vendors'] }); });
     await waitFor(() => pay()?.disabled === false);
+    await db.delete('sync_queue', 'stock-check');
+    await act(async () => { await client.invalidateQueries({ queryKey: ['vendor-stock-checks'] }); });
+    await waitFor(() => container.querySelector('[role="alert"]') === null);
   } finally {
     await act(async () => root.unmount()); client.clear(); container.remove(); online.mockRestore(); onlineManager.setOnline(true);
   }
