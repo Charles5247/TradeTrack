@@ -175,7 +175,9 @@ it("pulls organization-scoped data and only vendor-linked sales, preserving pend
                 { ...vendor, vendor_name: "Server" },
                 { ...vendor, id: "remote" },
               ]
-            : [],
+            : table === "sales"
+              ? [{ id: "remote-sale", organization_id: "org", notes: "Vendor transaction remote", payment_status: "paid" }]
+              : [],
       }),
     };
     return query;
@@ -189,6 +191,9 @@ it("pulls organization-scoped data and only vendor-linked sales, preserving pend
     "Vendor",
   );
   expect((await db.get("vendor_transactions", "remote")).synced).toBe(true);
+  expect(await db.get("sales", "remote-sale")).toMatchObject({
+    organization_id: "org", notes: "Vendor transaction remote", payment_status: "paid", synced: true,
+  });
 });
 
 it("applies a successor stock snapshot after an in-flight predecessor commits", async () => {

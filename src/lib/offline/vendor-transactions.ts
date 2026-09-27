@@ -111,7 +111,7 @@ export async function getOfflineVendorTransactions(organizationId: string): Prom
     group.push({ ...item, product: productById.get(item.product_id) });
     itemsByVendor.set(item.vendor_transaction_id, group);
   }
-  const syncedSaleNotes = new Set(sales.filter((sale) => sale.organization_id === organizationId && sale.synced && !sale.deleted_at).map((sale) => sale.notes));
+  const syncedSaleNotes = new Set(sales.filter((sale) => sale.organization_id === organizationId && sale.synced).map((sale) => sale.notes));
   return vendors.filter((vendor) => vendor.organization_id === organizationId).map((vendor) => {
     const lines = itemsByVendor.get(vendor.id) ?? [];
     return { ...vendor, items: lines, paymentReady: vendor.synced === true && lines.length > 0 &&

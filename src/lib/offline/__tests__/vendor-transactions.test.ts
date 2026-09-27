@@ -114,6 +114,11 @@ it('requires the vendor, all items and exact linked sale to sync before payment'
   }
   await expect(requireSyncedVendorTransaction(vendor.id, 'org')).rejects.toThrow('linked sale');
   const [sale] = await db.getAll('sales');
+  expect(sale).not.toHaveProperty('deleted_at');
+  await db.put('sales', { ...sale, synced: true, organization_id: 'other' });
+  await expect(requireSyncedVendorTransaction(vendor.id, 'org')).rejects.toThrow('linked sale');
+  await db.put('sales', { ...sale, synced: true, notes: `Vendor transaction ${vendor.id}-different` });
+  await expect(requireSyncedVendorTransaction(vendor.id, 'org')).rejects.toThrow('linked sale');
   await db.put('sales', { ...sale, synced: true });
   await expect(requireSyncedVendorTransaction(vendor.id, 'org')).resolves.toBeUndefined();
   vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
