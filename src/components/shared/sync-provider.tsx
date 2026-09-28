@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { syncEngine } from '@/lib/offline/sync-engine';
 import { useSyncStore } from '@/store';
 import type { SyncStatus } from '@/types';
@@ -20,6 +20,7 @@ function mapEngineStatus(status: string): SyncStatus {
 }
 
 export function SyncProvider({ children }: { children: React.ReactNode }) {
+  const [authError, setAuthError] = useState<string | null>(null);
   const { setSyncStatus, setLastSync, setPendingCount } = useSyncStore();
 
   useEffect(() => {
@@ -33,6 +34,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     engine.sync();
 
     const unsubscribe = engine.subscribe((state) => {
+      setAuthError(state.error?.includes('sign in again') ? state.error : null);
       setSyncStatus(mapEngineStatus(state.status));
       if (state.lastSync) setLastSync(state.lastSync);
       setPendingCount(state.pendingCount);
@@ -52,5 +54,5 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     };
   }, [setSyncStatus, setLastSync, setPendingCount]);
 
-  return <>{children}</>;
+  return <>{authError && <div role="alert" className="bg-amber-100 p-3 text-amber-950">{authError} <a href="/login" className="underline">Sign in</a></div>}{children}</>;
 }

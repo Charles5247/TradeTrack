@@ -1,5 +1,7 @@
 "use client";
 
+import { requireOrganization } from "@/lib/auth/organization";
+import { withTimeout, AUTH_CHECK_TIMEOUT_MS } from "@/lib/utils/timeout";
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -114,7 +116,7 @@ async function fetchSubscriptionData() {
   try {
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await withTimeout(supabase.auth.getUser(), AUTH_CHECK_TIMEOUT_MS);
     if (!user) {
       return { subscription: null, plans: FALLBACK_PLANS, payments: [] };
     }
@@ -127,14 +129,15 @@ async function fetchSubscriptionData() {
 
     const orgId = profile?.organization_id;
     const role = (profile as { role?: string } | null)?.role;
-    if (!orgId && role !== "platform_owner") {
-      return { subscription: null, plans: FALLBACK_PLANS, payments: [] };
+    if (!orgId?.trim()) {
+      if (role === "platform_owner") return { subscription: null, plans: await getAllSubscriptionPlansForCatalogManagement(supabase), payments: [] };
+      throw new Error("Your account is not linked to a business. Please contact your business owner.");
     }
 
     const { data: subscription } = await supabase
       .from("subscriptions")
       .select("*, plan:subscription_plans(*)")
-      .eq("organization_id", orgId ?? "")
+      .eq("organization_id", orgId)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -147,7 +150,7 @@ async function fetchSubscriptionData() {
     const { data: payments } = await supabase
       .from("payment_transactions")
       .select("*")
-      .eq("organization_id", orgId ?? "")
+      .eq("organization_id", orgId)
       .order("created_at", { ascending: false })
       .limit(20);
 
@@ -155,10 +158,10 @@ async function fetchSubscriptionData() {
       subscription: subscription as any as Subscription | null,
       plans: plans || FALLBACK_PLANS,
       payments: (payments as any as PaymentRecord[]) || [],
-      orgId: orgId ?? "",
+      orgId: orgId,
     };
-  } catch {
-    return { subscription: null, plans: FALLBACK_PLANS, payments: [] };
+  } catch (error) {
+    throw error;
   }
 }
 
@@ -496,7 +499,7 @@ export default function SubscriptionsPage() {
       // platform_owner catalog management is a separate, gated code path above.
       const {
         data: { user: authUser },
-      } = await supabase.auth.getUser();
+      } = await withTimeout(supabase.auth.getUser(), AUTH_CHECK_TIMEOUT_MS);
       if (!authUser) throw new Error("Not authenticated");
 
       const { data: profile } = await supabase
@@ -504,6 +507,8 @@ export default function SubscriptionsPage() {
         .select("organization_id")
         .eq("id", authUser.id)
         .single();
+
+      const organizationId = requireOrganization(profile);
 
       const expiresAt = new Date();
       if (cycle === "yearly") {
@@ -514,7 +519,7 @@ export default function SubscriptionsPage() {
 
       // Upsert subscription
       const { error } = await supabase.from("subscriptions").upsert({
-        organization_id: profile?.organization_id ?? "",
+        organization_id: organizationId,
         plan_id: planId,
         status: "active",
         starts_at: new Date().toISOString(),
@@ -528,7 +533,7 @@ export default function SubscriptionsPage() {
       await supabase
         .from("audit_logs")
         .insert({
-          organization_id: profile?.organization_id ?? "",
+          organization_id: organizationId,
           user_id: authUser.id,
           action: "SUBSCRIPTION_CHANGE",
           resource_type: "subscription",
@@ -1020,7 +1025,7 @@ export default function SubscriptionsPage() {
                 {t.subscriptions.could_not_load}
               </p>
               <p className="text-sm text-muted-foreground">
-                {t.subscriptions.fallback_notice}
+                {error instanceof Error ? error.message : t.subscriptions.fallback_notice}
               </p>
             </div>
           </CardContent>

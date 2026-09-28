@@ -4,7 +4,7 @@ import { AuthRetryableFetchError, AuthSessionMissingError } from '@supabase/supa
 import { AUTH_CHECK_TIMEOUT_MS } from '@/lib/utils/timeout';
 import { getDB } from '../db';
 
-const { client } = vi.hoisted(() => ({ client: { auth: { getUser: vi.fn() }, from: vi.fn() } }));
+const { client } = vi.hoisted(() => ({ client: { auth: { getUser: vi.fn(), refreshSession: vi.fn() }, from: vi.fn() } }));
 vi.mock('@/lib/supabase/client', () => ({ createClient: () => client }));
 import { syncEngine } from '../sync-engine';
 
@@ -70,4 +70,23 @@ it('does not request authentication when the browser is offline', async () => {
   await syncEngine!.sync(true);
   expect(client.auth.getUser).not.toHaveBeenCalled();
   expect(syncEngine!.getState().status).toBe('offline');
+});
+
+
+it.each(['network', 'invalid', 'timeout'])('preserves queued records when refresh fails: %s', async (kind) => {
+  const db = await getDB();
+  const queued = { id: 'refresh-pending', table_name: 'sales', record_id: 'sale-refresh', operation: 'INSERT', status: 'pending', payload: { id: 'sale-refresh' }, retry_count: 0 };
+  await db.put('sync_queue', queued);
+  client.auth.getUser.mockResolvedValueOnce({ data: { user: { id: 'user' } }, error: null });
+  client.from.mockReturnValue({ select: () => ({ eq: () => ({ single: async () => ({ data: { organization_id: 'org' } }) }) }) });
+  if (kind === 'network') client.auth.refreshSession.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+  if (kind === 'invalid') client.auth.refreshSession.mockResolvedValueOnce({ data: { session: null }, error: new AuthSessionMissingError() });
+  if (kind === 'timeout') client.auth.refreshSession.mockReturnValueOnce(new Promise(() => {}));
+  const attempt = syncEngine!.sync(true);
+  if (kind === 'timeout') await vi.advanceTimersByTimeAsync(AUTH_CHECK_TIMEOUT_MS);
+  await attempt;
+  expect(client.auth.refreshSession).toHaveBeenCalledTimes(1);
+  expect(await db.get('sync_queue', queued.id)).toEqual(queued);
+  expect(syncEngine!.getState().status).toBe(kind === 'invalid' ? 'error' : 'offline');
+  if (kind === 'invalid') expect(syncEngine!.getState().error).toContain('sign in again');
 });

@@ -1,5 +1,6 @@
 'use server';
 
+import { withTimeout, AUTH_CHECK_TIMEOUT_MS } from "@/lib/utils/timeout";
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import type { User } from '@/types';
@@ -8,7 +9,7 @@ export async function getSession() {
   const supabase = await createClient();
   if (!supabase) return null;
 
-  const { data: { user }, error } = await supabase.auth.getUser();
+  const { data: { user }, error } = await withTimeout(supabase.auth.getUser(), AUTH_CHECK_TIMEOUT_MS);
   if (error || !user) return null;
   return user;
 }
@@ -17,7 +18,7 @@ export async function getCurrentUser(): Promise<User | null> {
   const supabase = await createClient();
   if (!supabase) return null;
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await withTimeout(supabase.auth.getUser(), AUTH_CHECK_TIMEOUT_MS);
   if (!user) return null;
 
   const { data } = await supabase

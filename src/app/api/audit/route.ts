@@ -6,6 +6,7 @@
  * code tries to INSERT into audit_logs directly.
  */
 
+import { withTimeout, AUTH_CHECK_TIMEOUT_MS } from "@/lib/utils/timeout";
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
     );
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await withTimeout(supabase.auth.getUser(), AUTH_CHECK_TIMEOUT_MS);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

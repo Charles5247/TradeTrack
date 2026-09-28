@@ -14,6 +14,7 @@
  * service-role client.
  */
 
+import { withTimeout, AUTH_CHECK_TIMEOUT_MS } from "@/lib/utils/timeout";
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
@@ -46,7 +47,7 @@ export async function GET(request: NextRequest) {
     const supabase = await getSupabase();
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await withTimeout(supabase.auth.getUser(), AUTH_CHECK_TIMEOUT_MS);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

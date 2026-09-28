@@ -162,6 +162,17 @@ class SyncEngine {
 
       const orgId = profile.organization_id;
 
+      // Authenticate before touching queued records; failures preserve all data.
+      const refreshed = await withTimeout(supabase.auth.refreshSession(), AUTH_CHECK_TIMEOUT_MS, SYNC_AUTH_TIMEOUT);
+      if (refreshed.error) {
+        if (isAuthRetryableFetchError(refreshed.error)) throw refreshed.error;
+        this.setState({ status: "error", error: "Please sign in again to resume sync. Your queued data is safe." });
+        return;
+      }
+      if (!refreshed.data.session) {
+        this.setState({ status: "error", error: "Please sign in again to resume sync. Your queued data is safe." });
+        return;
+      }
       await this.pushChanges();
       await this.pullData(orgId, supabase);
 

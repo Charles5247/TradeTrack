@@ -35,6 +35,7 @@
  * plaintext anywhere and is not retrievable again after this response.
  */
 
+import { withTimeout, AUTH_CHECK_TIMEOUT_MS } from "@/lib/utils/timeout";
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
@@ -62,7 +63,7 @@ async function getAuthenticatedUser(): Promise<UserRow | null> {
   );
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await withTimeout(supabase.auth.getUser(), AUTH_CHECK_TIMEOUT_MS);
   if (!user) return null;
   const { data: profile } = await supabase
     .from("users")

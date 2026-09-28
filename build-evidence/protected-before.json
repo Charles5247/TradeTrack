@@ -1,0 +1,6 @@
+{
+  "src/lib/offline/sales.ts": "2a797642c5c4a0e4072ce1fb521b11ae966da737e15f1d4af77f2c2bbead41ef",
+  "src/lib/offline/purchase-orders.ts": "3c6894381bdd2b0959dfcaa37e12a406641beb2afe197e977cf6e99f25f9a105",
+  "src/app/(dashboard)/purchase-orders/page.tsx": "ca80702efbe86f28b0202c6403c5cc47c3e5088f68b974de96e9a2c8a9eec0da",
+  "src/app/(dashboard)/pos/page.tsx": "a6b6fadd5f75dd4223d19105cff1ea94df4a148fb3eed0117114ca24bf1fba4c"
+}

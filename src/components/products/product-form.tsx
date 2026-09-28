@@ -1,5 +1,6 @@
 'use client';
 
+import { withTimeout, AUTH_CHECK_TIMEOUT_MS } from "@/lib/utils/timeout";
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -56,7 +57,7 @@ export function ProductForm({ product, categories, onSuccess, onCancel }: Produc
     setIsLoading(true);
     try {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await withTimeout(supabase.auth.getUser(), AUTH_CHECK_TIMEOUT_MS);
       if (!user) throw new Error('Not authenticated');
 
       const { data: profile } = await supabase

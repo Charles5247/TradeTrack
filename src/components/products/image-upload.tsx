@@ -1,5 +1,6 @@
 'use client';
 
+import { withTimeout, AUTH_CHECK_TIMEOUT_MS } from "@/lib/utils/timeout";
 import React, { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { Upload, X, ImageOff, Loader2 } from 'lucide-react';
@@ -94,7 +95,7 @@ export function ImageUpload({
 
       try {
         const supabase = createClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await withTimeout(supabase.auth.getUser(), AUTH_CHECK_TIMEOUT_MS);
         if (!user) throw new Error('Not authenticated');
 
         // Compress

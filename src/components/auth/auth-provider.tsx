@@ -1,5 +1,6 @@
 "use client";
 
+import { withTimeout, AUTH_CHECK_TIMEOUT_MS } from "@/lib/utils/timeout";
 import React, { useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore, useOrgStore } from "@/store";
@@ -83,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const {
           data: { user },
           error,
-        } = await supabase.auth.getUser();
+        } = await withTimeout(supabase.auth.getUser(), AUTH_CHECK_TIMEOUT_MS);
 
         if (user && !error) {
           // Fetch profile from database

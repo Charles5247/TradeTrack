@@ -332,7 +332,6 @@ function POSPageInner() {
       return;
     }
 
-    const { data: profile } = { data: { organization_id: "" } };
 
     // Get org_id from user store
     const orgId = (user as unknown as { organization_id: string })

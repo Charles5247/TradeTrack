@@ -1,5 +1,6 @@
 "use client";
 
+import { withTimeout, AUTH_CHECK_TIMEOUT_MS } from "@/lib/utils/timeout";
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -724,7 +725,7 @@ function VendorsPageInner() {
                         const supabase = createClient();
                         const {
                           data: { user: authUser },
-                        } = await supabase.auth.getUser();
+                        } = await withTimeout(supabase.auth.getUser(), AUTH_CHECK_TIMEOUT_MS);
                         if (!authUser) throw new Error("Not authenticated");
                         const path = `${authUser.id}/vendor-${generateId()}-${Date.now()}.${file.name.split(".").pop() || "jpg"}`;
                         const { error: uploadErr } = await supabase.storage
