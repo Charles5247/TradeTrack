@@ -1,13 +1,14 @@
 import { createBrowserClient } from '@supabase/ssr';
 import type { Database } from './types';
 import { browserFetch } from './browser-fetch';
+import { deviceId } from '@/lib/utils/device-id';
 
 export function createClient() {
   return createBrowserClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      global: { fetch: browserFetch },
+      global: { fetch: browserFetch, headers: { "x-track-device": deviceId() } },
       // AuthProvider explicitly starts this only while the browser is online.
       // Leaving Supabase's browser default enabled causes refresh-token retry
       // requests while a POS is intentionally offline.

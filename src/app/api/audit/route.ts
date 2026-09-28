@@ -37,7 +37,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { data: profile } = await supabase.from("users").select("organization_id, role, status").eq("id", user.id).single();
+    if (!profile?.organization_id || profile.status !== "active") return NextResponse.json({ error: "Business membership required" }, { status: 403 });
     const body = await request.json();
+    if (body.organization_id && body.organization_id !== profile.organization_id) return NextResponse.json({ error: "Organization mismatch" }, { status: 403 });
     const {
       organization_id,
       action,
@@ -75,7 +78,7 @@ export async function POST(request: NextRequest) {
       : supabase;
 
     const record: AuditLogInsert = {
-      organization_id: organization_id || user.id,
+      organization_id: profile.organization_id,
       user_id: user.id,
       action,
       resource_type,
@@ -87,12 +90,13 @@ export async function POST(request: NextRequest) {
       user_agent: userAgent,
     };
 
-    await adminClient.from("audit_logs").insert(record);
+    const { error } = await adminClient.from("audit_logs").insert(record);
+    if (error) throw error;
 
     return NextResponse.json({ success: true });
   } catch (err) {
     // Audit failures should not crash the app
     console.error("[POST /api/audit]", err);
-    return NextResponse.json({ success: false }, { status: 200 }); // Always 200
+    return NextResponse.json({ success: false }, { status: 503 });
   }
 }

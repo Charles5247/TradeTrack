@@ -24,15 +24,19 @@ async function fetchAuditLogs(search: string, resourceType: string, startDate: s
   let query = supabase
     .from('audit_logs')
     .select('*, user:users(full_name, email)')
-    .order('created_at', { ascending: false })
-    .limit(200);
+    .order('created_at', { ascending: false });
 
   if (resourceType && resourceType !== 'all') query = query.eq('resource_type', resourceType);
   if (startDate) query = query.gte('created_at', startDate);
   if (endDate) query = query.lte('created_at', endDate + 'T23:59:59');
 
-  const { data, error } = await query;
-  if (error) throw error;
+  const data: unknown[] = [];
+  for (let offset = 0; ; offset += 1000) {
+    const result = await query.range(offset, offset + 999);
+    if (result.error) throw result.error;
+    data.push(...(result.data || []));
+    if (!result.data || result.data.length < 1000) break;
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const logs = (data as any) as AuditLog[];
@@ -115,6 +119,7 @@ function AuditPageInner() {
 
   return (
     <div className="space-y-6">
+      <a className="underline" href="/accounting">Accounting, cash-up and reconciliation reports</a>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="tt-page-title">{t.audit.title}</h1>

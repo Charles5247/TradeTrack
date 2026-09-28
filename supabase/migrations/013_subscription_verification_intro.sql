@@ -1,4 +1,4 @@
-﻿-- TracKasuwa: new-organization introductory period, server-time verification.
+-- TracKasuwa: new-organization introductory period, server-time verification.
 BEGIN;
 CREATE SCHEMA IF NOT EXISTS track_private;
 REVOKE ALL ON SCHEMA track_private FROM PUBLIC;

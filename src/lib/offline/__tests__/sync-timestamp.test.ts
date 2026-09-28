@@ -19,23 +19,23 @@ it.each([
   const query = {
     select: vi.fn(() => query), eq: vi.fn(() => query),
     maybeSingle: vi.fn(async () => ({ data: { updated_at: server }, error: null })),
-    upsert: vi.fn(() => query),
+    update: vi.fn(() => query),
   };
   await engine.executeSyncOperation({ from: () => query }, {
     id: 'queue', status: 'pending', retry_count: 0, created_at: local,
     table_name: 'inventory', operation: 'UPDATE', record_id: 'stock',
     payload: { id: 'stock', quantity: 3 }, client_updated_at: local,
   } as SyncQueueRecord);
-  expect(query.upsert).toHaveBeenCalledTimes(write ? 1 : 0);
+  expect(query.update).toHaveBeenCalledTimes(write ? 1 : 0);
 });
 
 it('does not overwrite stock when a version cannot be compared', async () => {
   const query = { select: () => query, eq: () => query,
-    maybeSingle: async () => ({ data: { updated_at: 'invalid' }, error: null }), upsert: vi.fn() };
+    maybeSingle: async () => ({ data: { updated_at: 'invalid' }, error: null }), update: vi.fn() };
   await expect(engine.executeSyncOperation({ from: () => query }, {
     id: 'queue', status: 'pending', retry_count: 0, created_at: '2026-09-25T12:00:00Z',
     table_name: 'inventory', operation: 'UPDATE', record_id: 'stock', payload: {},
     client_updated_at: '2026-09-25T12:00:00Z',
   } as SyncQueueRecord)).rejects.toThrow('Invalid sync timestamp');
-  expect(query.upsert).not.toHaveBeenCalled();
+  expect(query.update).not.toHaveBeenCalled();
 });

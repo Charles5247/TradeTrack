@@ -254,6 +254,8 @@ class SyncEngine {
         Number(b.table_name === "vendor_transactions") -
         Number(a.table_name === "vendor_transactions"),
     );
+    const dependencyOrder: Record<string, number> = { purchase_orders: 0, vendor_transactions: 1, sales: 2, sale_items: 3, inventory: 5 };
+    pendingItems.sort((a, b) => (dependencyOrder[a.table_name] ?? 4) - (dependencyOrder[b.table_name] ?? 4));
     if (pendingItems.length === 0) return;
 
     const supabase = createClient();
@@ -438,6 +440,9 @@ class SyncEngine {
     // `synced` is a local IndexedDB marker; it is not a column on the
     // Supabase sales table and must never be sent through the Data API.
     const { synced: _localSynced, ...serverPayload } = item.payload;
+    if (["sales", "sale_items", "inventory", "inventory_movements", "purchase_orders", "vendor_transactions", "products"].includes(item.table_name)) {
+      serverPayload.original_device_timestamp = item.payload.updated_at || item.payload.created_at || item.created_at;
+    }
 
     const isAppendOnly =
       item.table_name === "sales" ||
@@ -455,7 +460,7 @@ class SyncEngine {
 
     switch (item.operation) {
       case "INSERT":
-        if (isVendorInsert) {
+        if (isVendorInsert || item.table_name === "sales" || item.table_name === "sale_items") {
           return client.from(item.table_name).upsert(serverPayload, {
             onConflict: "id",
             ignoreDuplicates: true,
@@ -508,6 +513,10 @@ class SyncEngine {
           return { error: null };
         }
 
+        if (item.table_name === "inventory") {
+          if (!serverRow) return { error: new Error("Inventory missing on server; review stock before syncing") };
+          return client.from(item.table_name).update(serverPayload).eq("id", item.record_id);
+        }
         return client
           .from(item.table_name)
           .upsert(serverPayload, { onConflict: "id" })
