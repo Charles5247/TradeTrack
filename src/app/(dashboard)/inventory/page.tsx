@@ -63,7 +63,7 @@ async function fetchInventory(warehouseId: string, filter: string, search: strin
 
 /**
  * Adjust stock for a product/warehouse. Offline-aware following the exact
- * "always commit locally first" pattern established in
+ * local persistence pattern established in
  * `src/lib/offline/sales.ts`'s `persistOfflineSale`: a stale
  * `navigator.onLine` read must never block an admin who is genuinely
  * offline from recording a stock movement. When offline, the quantity
@@ -95,7 +95,7 @@ async function adjustStock(payload: {
   notes?: string;
   reason?: string;
 }) {
-  if (isOffline()) {
+  const saveOffline = async () => {
     const nowIso = new Date().toISOString();
 
     // Look for a locally cached inventory row for this product+warehouse
@@ -152,37 +152,49 @@ async function adjustStock(payload: {
     ]);
 
     return { offline: true, quantity: newQty };
-  }
+  };
+
+  if (isOffline()) return saveOffline();
 
   const supabase = createClient();
 
-  const { data: inv } = await supabase
-    .from('inventory')
-    .select('id, quantity')
-    .eq('product_id', payload.product_id)
-    .eq('warehouse_id', payload.warehouse_id)
-    .single();
+  let inv: { id: string; quantity: number } | null;
+  try {
+    const { data, error } = await supabase
+      .from('inventory')
+      .select('id, quantity')
+      .eq('product_id', payload.product_id)
+      .eq('warehouse_id', payload.warehouse_id)
+      .maybeSingle();
+    if (error) throw error;
+    inv = data;
+  } catch {
+    // navigator.onLine can be stale. No remote write has been attempted yet.
+    return saveOffline();
+  }
 
   const oldQty = inv?.quantity || 0;
   const newQty = Math.max(0, oldQty + payload.quantity_change);
 
   if (inv) {
-    await supabase
+    const { error } = await supabase
       .from('inventory')
       .update({ quantity: newQty })
       .eq('id', inv.id);
+    if (error) throw error;
   } else {
-    await supabase.from('inventory').insert({
+    const { error } = await supabase.from('inventory').insert({
       organization_id: payload.organization_id,
       product_id: payload.product_id,
       warehouse_id: payload.warehouse_id,
       quantity: Math.max(0, payload.quantity_change),
       min_stock_level: 5,
     });
+    if (error) throw error;
   }
 
   // Record movement
-  await supabase.from('inventory_movements').insert({
+  const { error: movementError } = await supabase.from('inventory_movements').insert({
     organization_id: payload.organization_id,
     product_id: payload.product_id,
     warehouse_id: payload.warehouse_id,
@@ -191,9 +203,10 @@ async function adjustStock(payload: {
     notes: payload.notes,
     created_by: payload.user_id,
   });
+  if (movementError) throw movementError;
 
   // Audit log
-  await supabase.from('audit_logs').insert({
+  const { error: auditError } = await supabase.from('audit_logs').insert({
     organization_id: payload.organization_id,
     user_id: payload.user_id,
     action: 'ADJUST_STOCK',
@@ -203,6 +216,7 @@ async function adjustStock(payload: {
     new_values: { quantity: newQty },
     reason: payload.reason,
   });
+  if (auditError) throw auditError;
 
   return { offline: false, quantity: newQty };
 }
@@ -243,6 +257,7 @@ function InventoryPageInner() {
   });
 
   const adjustMutation = useMutation({
+    networkMode: 'always',
     mutationFn: adjustStock,
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
