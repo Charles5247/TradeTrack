@@ -81,3 +81,32 @@ it('prevents cashier self-escalation, discounts and ad-hoc stock changes',async(
  await expect(db.exec(`INSERT INTO sales(organization_id,invoice_number,cashier_id,warehouse_id,total,discount,payment_method) VALUES('${org}','BAD','${cashier}','${warehouse}',90,10,'cash')`)).rejects.toThrow('discounts');
  await db.exec(`SELECT set_config('test.uid','${owner}',false)`);
 });
+it('imports opening stock idempotently and reverses without deleting records',async()=>{
+ const batch='60000000-0000-0000-0000-000000000001';const imported='70000000-0000-0000-0000-000000000001';
+ await db.exec(`INSERT INTO import_batches(id,organization_id,kind,created_by) VALUES('${batch}','${org}','products','${owner}')`);
+ const args=[batch,1,JSON.stringify({name:'Beans',sku:'BEANS',selling_price:20,cost_price:10,opening_stock:5}),'skip',warehouse,imported];
+ const r=await db.query<{v:{outcome:string}}>('SELECT apply_import_row($1,$2,$3,$4,$5,$6) v',args);expect(r.rows[0].v.outcome).toBe('create');
+ await db.query('SELECT apply_import_row($1,$2,$3,$4,$5,$6)',args);
+ expect((await db.query<{quantity:number}>(`SELECT quantity FROM inventory WHERE product_id='${imported}'`)).rows[0].quantity).toBe(5);
+ expect((await db.query<{summary:{create:number}}>(`SELECT summary FROM import_batches WHERE id='${batch}'`)).rows[0].summary.create).toBe(1);
+ await db.query('SELECT reverse_import($1,$2)',[batch,'Wrong opening file']);
+ expect((await db.query<{status:string}>(`SELECT status FROM products WHERE id='${imported}'`)).rows[0].status).toBe('inactive');
+ expect((await db.query<{quantity:number}>(`SELECT quantity FROM inventory WHERE product_id='${imported}'`)).rows[0].quantity).toBe(0);
+});
+it('imports history without changing stock and stores row-level validation failures',async()=>{
+ const batch='60000000-0000-0000-0000-000000000002';
+ await db.exec(`INSERT INTO import_batches(id,organization_id,kind,created_by) VALUES('${batch}','${org}','historical_sales','${owner}')`);
+ const before=await db.query('SELECT sum(quantity) qty FROM inventory');
+ const r=await db.query<{v:{outcome:string}}>('SELECT apply_import_row($1,1,$2,$3,NULL,$4) v',[batch,JSON.stringify({invoice_number:'OLD-1',sold_at:'2025-01-01',total:100,amount_paid:100,payment_method:'cash'}),'skip','70000000-0000-0000-0000-000000000002']);
+ expect(r.rows[0].v.outcome).toBe('create');expect((await db.query('SELECT sum(quantity) qty FROM inventory')).rows).toEqual(before.rows);
+ const bad=await db.query<{v:{outcome:string}}>('SELECT apply_import_row($1,2,$2,$3,NULL,$4) v',[batch,JSON.stringify({invoice_number:'OLD-2',sold_at:'bad',total:-1,payment_method:'cash'}),'skip','70000000-0000-0000-0000-000000000003']);
+ expect(bad.rows[0].v.outcome).toBe('error');
+});
+it('stores pending invitations with no password field and blocks cross-org imports',async()=>{
+ const batch='60000000-0000-0000-0000-000000000003';
+ await db.exec(`INSERT INTO import_batches(id,organization_id,kind,created_by) VALUES('${batch}','${org}','staff_invites','${owner}')`);
+ const r=await db.query<{v:{outcome:string}}>('SELECT apply_import_row($1,1,$2,$3,NULL,$4) v',[batch,JSON.stringify({name:'Staff',email:'staff@test.local',role:'cashier',password:'ignored'}),'skip','70000000-0000-0000-0000-000000000004']);
+ expect(r.rows[0].v.outcome).toBe('create');
+ const invited=await db.query('SELECT * FROM staff_invites');expect(invited.rows[0]).not.toHaveProperty('password');expect(invited.rows[0]).toHaveProperty('status','pending');
+ await expect(db.query('SELECT apply_import_row($1,1,$2,$3,NULL,$4)',['60000000-0000-0000-0000-000000000099','{}','skip','70000000-0000-0000-0000-000000000099'])).rejects.toThrow('not found');
+});

@@ -16,7 +16,8 @@ export async function GET(request: Request) {
     const reversed = new Set<string>(reversals.filter(r => r.kind !== 'vendor_payment_correction').map(r => r.sale_id));
     const corrected = new Set<string>(reversals.filter(r => r.kind === 'vendor_payment_correction').map(r => r.sale_id));
     const params = new URL(request.url).searchParams;
-    const visible = sales.filter(s => (!params.get('from') || s.created_at >= params.get('from')!) && (!params.get('to') || s.created_at < `${params.get('to')}T23:59:59.999Z`));
+    const history = params.get('include_history') === 'true' ? (await table('historical_sales')).filter(s => s.status === 'active').map(s => ({ ...s, created_at: s.sold_at, payment_status: s.amount_paid >= s.total ? 'paid' : 'partial', discount: 0, change_amount: 0 })) : [];
+    const visible = [...sales, ...history].filter(s => (!params.get('from') || s.created_at >= params.get('from')!) && (!params.get('to') || s.created_at < `${params.get('to')}T23:59:59.999Z`));
     return Response.json({ daily: dailySales(visible.map(s => corrected.has(s.id) ? { ...s, amount_paid: s.total, payment_status: 'paid' } : s), reversed), mismatches: vendorMismatches(vendors, sales, corrected),
       exceptions: [...reversals, ...visible.filter(s => Number(s.discount) > 0), ...movements.filter(m => m.movement_type === 'adjustment')],
       movements: movements.filter(m => m.reference_type === 'inventory_ledger'), closes, sales: visible }, { headers: { 'Cache-Control': 'no-store' } });

@@ -254,7 +254,7 @@ class SyncEngine {
         Number(b.table_name === "vendor_transactions") -
         Number(a.table_name === "vendor_transactions"),
     );
-    const dependencyOrder: Record<string, number> = { purchase_orders: 0, vendor_transactions: 1, sales: 2, sale_items: 3, inventory: 5 };
+    const dependencyOrder: Record<string, number> = { import_batches: -2, import_commands: -1, purchase_orders: 0, vendor_transactions: 1, sales: 2, sale_items: 3, inventory: 5 };
     pendingItems.sort((a, b) => (dependencyOrder[a.table_name] ?? 4) - (dependencyOrder[b.table_name] ?? 4));
     if (pendingItems.length === 0) return;
 
@@ -262,6 +262,10 @@ class SyncEngine {
     const db = await getDB();
 
     for (const queuedItem of pendingItems) {
+      if (queuedItem.table_name === "import_commands") {
+        const parents = await db.getAllFromIndex("sync_queue", "by-queue-key", ["import_batches", queuedItem.payload.batch, "INSERT"]) as SyncQueueRecord[];
+        if (parents.some(parent => parent.status !== "synced")) continue;
+      }
       if (queuedItem.table_name === "inventory" && queuedItem.operation === "UPDATE" && queuedItem.stock_sync) {
         await this.syncVendorStock(queuedItem.id, supabase);
         continue;
@@ -437,6 +441,33 @@ class SyncEngine {
     // Use type assertion to allow dynamic table name
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const client = supabase as any;
+    if (item.table_name === "import_commands") {
+      const { batch, row_index, row_data, duplicate_mode, warehouse, proposed_id } = item.payload;
+      const result = await client.rpc("apply_import_row", { batch, row_index, row_data, duplicate_mode, warehouse, proposed_id });
+      if (!result.error) {
+        const db = await getDB();
+        const row = result.data;
+        const tx = db.transaction(["app_meta", "products", "suppliers", "inventory"], "readwrite");
+        await tx.objectStore("app_meta").put({ ...row, id: `import-result:${batch}:${row_index}`, batch_id: batch });
+        if (["products", "suppliers"].includes(row.target_type)) {
+          const store = tx.objectStore(row.target_type);
+          const local = await store.get(proposed_id as string);
+          if (local?.import_batch_id === batch) {
+            if (row.outcome === "error" || row.entity_id !== proposed_id || row.outcome === "skip") {
+              if (item.payload.local_before) await store.put(item.payload.local_before);
+              else await store.delete(proposed_id as string);
+              const inventoryId = (row_data as Record<string, unknown>).inventory_id;
+              if (inventoryId) {
+                const inventory = await tx.objectStore("inventory").get(inventoryId as string);
+                if (inventory?.import_batch_id === batch) await tx.objectStore("inventory").delete(inventoryId as string);
+              }
+            } else if (row.after_values) await store.put(row.after_values);
+          }
+        }
+        await tx.done;
+      }
+      return result;
+    }
     // `synced` is a local IndexedDB marker; it is not a column on the
     // Supabase sales table and must never be sent through the Data API.
     const { synced: _localSynced, ...serverPayload } = item.payload;
@@ -460,7 +491,7 @@ class SyncEngine {
 
     switch (item.operation) {
       case "INSERT":
-        if (isVendorInsert || item.table_name === "sales" || item.table_name === "sale_items") {
+        if (isVendorInsert || item.table_name === "sales" || item.table_name === "sale_items" || item.table_name === "import_batches") {
           return client.from(item.table_name).upsert(serverPayload, {
             onConflict: "id",
             ignoreDuplicates: true,

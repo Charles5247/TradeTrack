@@ -10,6 +10,7 @@
  */
 
 import { withTimeout, AUTH_CHECK_TIMEOUT_MS } from "@/lib/utils/timeout";
+import { createClient as createRequestClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
@@ -82,6 +83,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    if (body.action === "import_invites") {
+      if (!isBusinessOwner || currentUser.status !== "active" || body.confirm !== true || !currentUser.organization_id) return NextResponse.json({ error: "Owner confirmation required" }, { status: 403 });
+      const requestDb = await createRequestClient();
+      if (!requestDb) throw new Error("Service unavailable");
+      const { error: batchError } = await (requestDb as any).from("import_batches").upsert({ id: body.batch_id, organization_id: currentUser.organization_id, kind: "staff_invites", created_by: currentUser.id, summary: body.summary || {} }, { onConflict: "id", ignoreDuplicates: true });
+      if (batchError) throw batchError;
+      const { data, error } = await (requestDb as any).rpc("apply_import_chunk", { batch: body.batch_id, import_rows: body.rows, duplicate_mode: body.mode, warehouse: null });
+      if (error) throw error;
+      return NextResponse.json(data);
+    }
     const { email, full_name, role, phone, password, organization_id } =
       body as Record<string, string>;
 
