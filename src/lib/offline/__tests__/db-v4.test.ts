@@ -45,7 +45,7 @@ it("upgrades a populated v3 database without losing POS rows or queue indexes", 
   });
   old.close();
   const db = await getDB();
-  expect(db.version).toBe(5);
+  expect(db.version).toBe(6);
   expect(await db.get("sales", "existing-sale")).toEqual({
     id: "existing-sale",
     total: 100,

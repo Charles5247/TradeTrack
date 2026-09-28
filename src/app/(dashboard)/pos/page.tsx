@@ -320,7 +320,8 @@ function POSPageInner() {
     [cart],
   );
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
+    if (!(await (await import("@/lib/subscriptions/verification")).allowCheckout(user?.organization_id || "", toast.error))) return;
     if (!user) return toast.error(t.pos.not_authenticated);
     if (cart.items.length === 0) return toast.error(t.pos.cart_is_empty_toast);
 

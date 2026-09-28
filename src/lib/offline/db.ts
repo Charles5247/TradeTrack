@@ -156,8 +156,9 @@ export async function getDB(): Promise<TracKasuwaIDB> {
   dbInstance = null;
   activeDbName = null;
 
-  dbInstance = await openDB(dbName, 5, {
+  dbInstance = await openDB(dbName, 6, {
     upgrade(db, oldVersion, _newVersion, transaction) {
+      if (!db.objectStoreNames.contains("app_meta")) db.createObjectStore("app_meta", { keyPath: "id" });
       if (!db.objectStoreNames.contains("vendor_transactions")) {
         const store = db.createObjectStore("vendor_transactions", {
           keyPath: "id",

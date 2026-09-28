@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { syncEngine } from '@/lib/offline/sync-engine';
 import { useSyncStore } from '@/store';
 import type { SyncStatus } from '@/types';
+import { VerificationBanner } from '@/components/subscriptions/verification-banner';
 
 function mapEngineStatus(status: string): SyncStatus {
   switch (status) {
@@ -54,5 +55,5 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     };
   }, [setSyncStatus, setLastSync, setPendingCount]);
 
-  return <>{authError && <div role="alert" className="bg-amber-100 p-3 text-amber-950">{authError} <a href="/login" className="underline">Sign in</a></div>}{children}</>;
+  return <><VerificationBanner />{authError && <div role="alert" className="bg-amber-100 p-3 text-amber-950">{authError} <a href="/login" className="underline">Sign in</a></div>}{children}</>;
 }
