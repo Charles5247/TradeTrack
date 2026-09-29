@@ -35,7 +35,7 @@ export function ImportWorkbench({ initialRows, onApproved }: { initialRows?: Imp
     const batch = crypto.randomUUID(); setBatchId(batch);
     await onApproved?.(batch);
     return executeImport({ batchId: batch, kind, mode, warehouseId: warehouse, org: user.organization_id, userId: user.id, role: user.role, rows: preview },setProgress);
-  }, onSuccess: rows => { setResults(rows); void syncEngine?.sync(); }, onError: e => setError(e.message) });
+  }, onSuccess: rows => { setResults(rows); void syncEngine?.sync(); void fetch('/api/imports').then(r => r.ok ? r.json() : []).then(setBatches).catch(() => {}); }, onError: e => setError(e.message) });
   const downloadResults = (rows = results) => {
     const columns = ['row_number','outcome','entity_id','error'];
     const csv = [columns.join(','), ...rows.map(r => columns.map(k => csvCell((r as any)[k])).join(','))].join('\r\n');
@@ -54,7 +54,7 @@ export function ImportWorkbench({ initialRows, onApproved }: { initialRows?: Imp
   const templateKey=`TracKasuwa-import-mapping:${user?.organization_id}:${kind}`;
   return <div className="space-y-4"><p>Upload → map columns → validate → preview → confirm. Offline previews are provisional; the server rechecks duplicates on sync.</p>
     <fieldset disabled={mutation.isPending} className="space-y-3">
-      <label>Record type <select className="border p-2" value={kind} onChange={e => setKind(e.target.value as ImportKind)}>{Object.keys(fields).filter(k => k !== 'staff_invites' || user?.role === 'business_owner').map(k => <option key={k} value={k}>{k.replaceAll('_',' ')}</option>)}</select></label>
+      <label>Record type <select disabled={!!onApproved} className="border p-2" value={kind} onChange={e => setKind(e.target.value as ImportKind)}>{Object.keys(fields).filter(k => k !== 'staff_invites' || user?.role === 'business_owner').map(k => <option key={k} value={k}>{k.replaceAll('_',' ')}</option>)}</select></label>
       <input aria-label="CSV or Excel file" type="file" accept=".csv,.xlsx" onChange={async e => { const file=e.target.files?.[0]; if (!file) return; try { setSource(await parseImportFile(file)); setResults([]); } catch(error) { setError(error instanceof Error ? error.message : 'Could not parse file'); } }} />
       {kind === 'products' && <label>Opening-stock warehouse <select value={warehouse} onChange={e => {setWarehouse(e.target.value);setPreview([]);}} className="border p-2"><option value="">Choose warehouse</option>{warehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}</select></label>}
       <label>Duplicates <select value={mode} onChange={e => {setMode(e.target.value as DuplicateMode);setPreview([]);}} className="border p-2"><option value="skip">Skip</option><option value="update">Update</option><option value="create">Create another record</option></select></label>

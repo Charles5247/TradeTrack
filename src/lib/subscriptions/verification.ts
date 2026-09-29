@@ -10,6 +10,13 @@ export interface Verification {
   lastSeen: number;
   rollback?: boolean;
   trialEndsAt?: string | null;
+  serverTime?: string;
+}
+
+export function introductionDays(state: Verification | undefined) {
+  if (!state?.trialEndsAt || !state.serverTime) return 0;
+  const remaining = Date.parse(state.trialEndsAt) - Date.parse(state.serverTime);
+  return Number.isFinite(remaining) ? Math.max(0, Math.ceil(remaining / DAY)) : 0;
 }
 
 export function evaluateVerification(state: Verification | undefined, now: number) {
@@ -44,7 +51,7 @@ export async function verifySubscription(org: string) {
     const result = await response.json();
     if (result.organization_id !== org || typeof result.active !== 'boolean') throw new Error('Invalid verification response');
     const now = Date.now();
-    const state: Verification = { id: `subscription:${org}`, active: result.active, verifiedAt: now, lastSeen: now, rollback: false, trialEndsAt: result.trial_ends_at };
+    const state: Verification = { id: `subscription:${org}`, active: result.active, verifiedAt: now, lastSeen: now, rollback: false, trialEndsAt: result.trial_ends_at, serverTime: result.server_time };
     await (await getDB()).put('app_meta', state);
     return state;
   } catch {

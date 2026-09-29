@@ -110,3 +110,54 @@ it('stores pending invitations with no password field and blocks cross-org impor
  const invited=await db.query('SELECT * FROM staff_invites');expect(invited.rows[0]).not.toHaveProperty('password');expect(invited.rows[0]).toHaveProperty('status','pending');
  await expect(db.query('SELECT apply_import_row($1,1,$2,$3,NULL,$4)',['60000000-0000-0000-0000-000000000099','{}','skip','70000000-0000-0000-0000-000000000099'])).rejects.toThrow('not found');
 });
+it('protects assigned official invoice numbers from owner edits',async()=>{
+ await expect(db.exec(`UPDATE sales SET official_invoice_number=999 WHERE id='${sale}'`)).rejects.toThrow('invoice numbers are immutable');
+});
+it('requires AI approval and opt-in before creating an in-app notification',async()=>{
+ const result=await db.query<{id:string}>("SELECT reserve_ai_job('insights') id");const job=result.rows[0].id;
+ await db.query('SELECT finish_ai_job($1,$2)',[job,JSON.stringify({summary:'Stub: organization data only'})]);
+ await expect(db.query("SELECT reserve_ai_delivery($1,'in_app')",[job])).rejects.toThrow('Approve');
+ await db.query('SELECT approve_ai_job($1)',[job]);
+ await expect(db.query("SELECT reserve_ai_delivery($1,'in_app')",[job])).rejects.toThrow('Opt in');
+ await db.exec('SELECT set_ai_preferences(true,false,false)');
+ const delivery=await db.query<{id:string}>("SELECT reserve_ai_delivery($1,'in_app') id",[job]);
+ await db.query('SELECT complete_ai_delivery($1,true)',[delivery.rows[0].id]);
+ const notifications=await db.query<{message:string}>("SELECT message FROM notifications WHERE type='ai_insight'");
+ expect(notifications.rows[0].message).toContain('Stub');
+ await expect(db.query("SELECT reserve_ai_delivery($1,'email')",[job])).rejects.toThrow('Opt in');
+ await expect(db.query('SELECT complete_ai_delivery($1,true)',[delivery.rows[0].id])).rejects.toThrow('not found');
+ await db.exec(`SELECT set_config('test.uid','${cashier}',false)`);
+ await expect(db.query('SELECT approve_ai_job($1)',[job])).rejects.toThrow('Owner or manager');
+ await db.exec(`SELECT set_config('test.uid','${owner}',false)`);
+});
+it('requires an import batch for AI inventory approval and rejects inactive access',async()=>{
+ const result=await db.query<{id:string}>("SELECT reserve_ai_job('inventory') id");const job=result.rows[0].id;
+ await db.query('SELECT finish_ai_job($1,$2)',[job,'{"rows":[]}']);
+ await expect(db.query('SELECT approve_ai_job($1)',[job])).rejects.toThrow('preview batch');
+ await db.exec(`SELECT set_config('test.jwt','{"role":"service_role"}',false); UPDATE subscriptions SET status='expired' WHERE organization_id='${org}'; UPDATE organizations SET trial_ends_at=now()-interval '1 day' WHERE id='${org}';`);
+ await expect(db.exec("SELECT reserve_ai_job('insights')")).rejects.toThrow('AI requires');
+ await db.exec(`UPDATE subscriptions SET status='active' WHERE organization_id='${org}'; SELECT set_config('test.jwt','{}',false);`);
+});
+it('enforces the AI request quota in the database',async()=>{
+ const before=await db.query<{n:number}>('SELECT count(*)::int n FROM ai_jobs');
+ for(let i=before.rows[0].n;i<20;i++) await db.exec("SELECT reserve_ai_job('insights')");
+ await expect(db.exec("SELECT reserve_ai_job('insights')")).rejects.toThrow('limit reached');
+});
+it('isolates AI rows with real authenticated-role RLS and denies direct writes',async()=>{
+ const otherOrg='10000000-0000-0000-0000-000000000002';const otherOwner='20000000-0000-0000-0000-000000000003';
+ await db.exec(`INSERT INTO organizations(id,name,slug) VALUES('${otherOrg}','Other','other'); INSERT INTO users(id,email,full_name,role,organization_id) VALUES('${otherOwner}','other@test.local','Other','business_owner','${otherOrg}'); GRANT USAGE ON SCHEMA auth TO authenticated; SELECT set_config('test.uid','${otherOwner}',false); SET ROLE authenticated;`);
+ try {
+  expect((await db.query('SELECT * FROM ai_jobs')).rows).toHaveLength(0);
+  expect((await db.query('SELECT * FROM ai_deliveries')).rows).toHaveLength(0);
+  expect((await db.query('SELECT * FROM ai_preferences')).rows).toHaveLength(0);
+  await expect(db.exec(`INSERT INTO ai_jobs(organization_id,user_id,kind) VALUES('${org}','${otherOwner}','inventory')`)).rejects.toThrow();
+ } finally {await db.exec(`RESET ROLE; SELECT set_config('test.uid','${owner}',false);`);}
+});
+it('does not count legacy unpaid signup trials as an introduction on new organizations',async()=>{
+ const unpaid='10000000-0000-0000-0000-000000000002';const user='20000000-0000-0000-0000-000000000003';
+ await db.exec(`SELECT set_config('test.jwt','{"role":"service_role"}',false); INSERT INTO subscriptions(organization_id,plan_id,status,starts_at,expires_at) VALUES('${unpaid}','${plan}','trial',now(),now()+interval '14 days'); SELECT set_config('test.uid','${user}',false); SELECT set_config('test.jwt','{}',false);`);
+ try {
+  expect((await db.query<{v:{active:boolean}}>('SELECT verify_business_subscription() v')).rows[0].v.active).toBe(false);
+  await expect(db.exec("SELECT reserve_ai_job('insights')")).rejects.toThrow('AI requires');
+ } finally {await db.exec(`SELECT set_config('test.uid','${owner}',false)`);}
+});
