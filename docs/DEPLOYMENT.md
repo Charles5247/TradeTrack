@@ -62,6 +62,12 @@ Optionally, run `supabase/seed/001_seed_data.sql` for demo data, then run
 the seed SQL only inserts profile rows, it does **not** create real Auth
 accounts.
 
+### September 2026 schema rollout
+
+The live TracKasuwa project has received migrations 013–019; see [LIVE_MIGRATION_RECEIPT.md](LIVE_MIGRATION_RECEIPT.md) for the applied state and verification. Do not rerun already-applied files.
+
+For another populated hosted database, migration **018 must run before 014** when `pgcrypto` is installed in `extensions`; it supplies the owner-only compatibility function used by 014's backfill. The continuation after the original 001–012 baseline is therefore **013 → 018 → 014 → 015 → 016 → 017 → 019**. Migration 019 accounts for Supabase's direct default grants to anonymous/authenticated roles. This project still uses explicitly applied SQL; do not use `db push` until its legacy history has been reconciled.
+
 ### Configure Storage
 
 1. Storage → Create bucket: `product-images` (public).

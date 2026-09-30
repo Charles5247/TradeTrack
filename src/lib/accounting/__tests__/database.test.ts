@@ -16,7 +16,9 @@ beforeAll(async () => {
  await db.exec(`CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role; CREATE SCHEMA auth;
  CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT NULLIF(current_setting('test.uid',true),'')::uuid $$;
  CREATE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE AS $$ SELECT COALESCE(NULLIF(current_setting('test.jwt',true),''),'{}')::jsonb $$;
- CREATE FUNCTION auth.role() RETURNS text LANGUAGE sql STABLE AS $$ SELECT 'authenticated'::text $$;`);
+ CREATE FUNCTION auth.role() RETURNS text LANGUAGE sql STABLE AS $$ SELECT 'authenticated'::text $$;
+ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO anon,authenticated;
+ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon,authenticated;`);
  for(const f of readdirSync('supabase/migrations').sort()) {
    if(!f.endsWith('.sql'))continue;
    try { await db.exec(readFileSync(`supabase/migrations/${f}`,'utf8')); }
@@ -30,6 +32,10 @@ beforeAll(async () => {
  SELECT set_config('test.uid','${owner}',false);`);
 },120000);
 afterAll(async()=>{await db?.close();});
+it('removes hosted default anonymous grants while retaining authorized RPC access',async()=>{
+ const result=await db.query<{anonymous:boolean;authenticated:boolean;write:boolean;batch_insert:boolean}>(`SELECT has_function_privilege('anon','public.reserve_ai_job(text)','EXECUTE') anonymous,has_function_privilege('authenticated','public.reserve_ai_job(text)','EXECUTE') authenticated,has_table_privilege('authenticated','public.ai_jobs','INSERT') write,has_table_privilege('authenticated','public.import_batches','INSERT') batch_insert`);
+ expect(result.rows[0]).toEqual({anonymous:false,authenticated:true,write:false,batch_insert:true});
+});
 it('captures and chains database changes, prevents log mutation and financial deletion',async()=>{
  const {rows}=await db.query<{n:number,h:string}>(`SELECT count(*)::int n,min(row_hash) h FROM audit_logs WHERE organization_id='${org}'`);
  expect(rows[0].n).toBeGreaterThan(0);expect(rows[0].h).toHaveLength(64);

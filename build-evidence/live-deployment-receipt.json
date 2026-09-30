@@ -1,0 +1,139 @@
+{
+  "project_ref": "ajrflgewbsosthsjtvuj",
+  "verified_at": "2026-09-30T11:34:05.876Z",
+  "previously_applied": [
+    "013"
+  ],
+  "atomic_application_order": [
+    "018",
+    "014",
+    "015",
+    "016",
+    "017"
+  ],
+  "subsequent_application": [
+    "019"
+  ],
+  "verification": {
+    "audit_chain_errors": 0,
+    "audit_hash_errors": 0,
+    "chained_audit_rows": 23,
+    "digest_exposed_to_authenticated": false,
+    "function_owners": [
+      "postgres"
+    ],
+    "invoice_sequence_errors": 0,
+    "new_rpc_anonymous_grants": 0,
+    "new_rpc_missing_authenticated_grants": 0,
+    "new_tables": [
+      {
+        "rls": true,
+        "table": "accounting_counters"
+      },
+      {
+        "rls": true,
+        "table": "ai_deliveries"
+      },
+      {
+        "rls": true,
+        "table": "ai_jobs"
+      },
+      {
+        "rls": true,
+        "table": "ai_preferences"
+      },
+      {
+        "rls": true,
+        "table": "cash_up_closes"
+      },
+      {
+        "rls": true,
+        "table": "financial_reversals"
+      },
+      {
+        "rls": true,
+        "table": "historical_sales"
+      },
+      {
+        "rls": true,
+        "table": "import_batches"
+      },
+      {
+        "rls": true,
+        "table": "import_reversals"
+      },
+      {
+        "rls": true,
+        "table": "import_rows"
+      },
+      {
+        "rls": true,
+        "table": "staff_invites"
+      }
+    ],
+    "numbered_sales": 23,
+    "required_triggers": [
+      "protect_intro",
+      "subscription_intro",
+      "official_invoice",
+      "protect_official_invoice_number",
+      "audit_immutable",
+      "chain_audit",
+      "protect_reversal_stock_link",
+      "ai_import_execution"
+    ],
+    "sales": 23
+  },
+  "security_advisor_counts": {
+    "ERROR: security_definer_view": 2,
+    "WARN: function_search_path_mutable": 10,
+    "WARN: anon_security_definer_function_executable": 6,
+    "WARN: authenticated_security_definer_function_executable": 17,
+    "WARN: auth_leaked_password_protection": 1
+  },
+  "remaining_security_errors": [
+    {
+      "name": "security_definer_view",
+      "object": "v_subscription_revenue"
+    },
+    {
+      "name": "security_definer_view",
+      "object": "v_merchant_summary"
+    }
+  ],
+  "targeted_tests": {
+    "files": 2,
+    "passed": 19
+  },
+  "typecheck_exit_code": 0,
+  "migrations": [
+    {
+      "file": "013_subscription_verification_intro.sql",
+      "sha256": "19cb1a674c97a84ebbebb6bb4f7672a49bbab76adf7e17384ce084d8b6d54bae"
+    },
+    {
+      "file": "014_accounting_controls.sql",
+      "sha256": "9113f96caf30a2944101ae80faf437c99c606fed136f33cfa81e1b14410ec3d0"
+    },
+    {
+      "file": "015_business_imports.sql",
+      "sha256": "160a60274be315d32bc8dfae17f959b64f273ec25fd43039432e799b503f4a0c"
+    },
+    {
+      "file": "016_ai_assistant_plumbing.sql",
+      "sha256": "bae8c70a96d2bab24bfdef8ef79e2da71ad5ed96cb90e9eb8bcb0daadf2151c0"
+    },
+    {
+      "file": "017_invoice_number_immutability.sql",
+      "sha256": "77eafaf7ba13071f6976c441808e547aa519e709757a6d86e7ec889daee7fd65"
+    },
+    {
+      "file": "018_pgcrypto_schema_compatibility.sql",
+      "sha256": "d3db29219b3c957d5c159c460713573885f14dfaafdc0e6da9a33feed28f0b5e"
+    },
+    {
+      "file": "019_explicit_api_grants.sql",
+      "sha256": "683d1c5831f5eae30ae27452694282dafe7df3ff6fb0abc748e04fdb07360a74"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # TracKasuwa consolidated build handoff
 
-This batch implements Phases A–E locally. No migrations were applied to live Supabase, no external deliveries were sent, and no deployment or push was performed. The six-page redesign and mobile work were excluded.
+This report records the original local Phases A–E handoff. At that handoff, no migrations had been applied to live Supabase. **Deployment update, 30 September 2026:** the live schema rollout is recorded in [LIVE_MIGRATION_RECEIPT.md](LIVE_MIGRATION_RECEIPT.md), including compatibility migration 018 and explicit-grant migration 019. No external deliveries, application deployment, or push were performed. The six-page redesign and mobile work were excluded.
 
 ## A — Authentication and sync
 
