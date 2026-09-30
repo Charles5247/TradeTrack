@@ -18,6 +18,8 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
+    "@caveman-ai/middleware": "^0.1.0-alpha.2",
+    "@caveman-ai/sdk": "^1.1.0",
     "@hookform/error-message": "^2.0.1",
     "@hookform/resolvers": "^5.4.0",
     "@radix-ui/react-accordion": "^1.2.16",
