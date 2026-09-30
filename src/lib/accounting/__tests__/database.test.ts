@@ -32,6 +32,19 @@ beforeAll(async () => {
  SELECT set_config('test.uid','${owner}',false);`);
 },120000);
 afterAll(async()=>{await db?.close();});
+it('saves a profile under authenticated RLS without allowing role escalation',async()=>{
+ await db.exec(`GRANT USAGE ON SCHEMA auth TO authenticated;
+ SELECT set_config('test.uid','${cashier}',false);
+ SELECT set_config('test.jwt','{"role":"authenticated"}',false);
+ SET ROLE authenticated;`);
+ try {
+  const result=await db.query<{full_name:string}>(`UPDATE public.users SET full_name='Updated Cashier' WHERE id='${cashier}' RETURNING full_name`);
+  expect(result.rows).toEqual([{full_name:'Updated Cashier'}]);
+  await expect(db.exec(`UPDATE public.users SET role='platform_owner' WHERE id='${cashier}'`)).rejects.toThrow('owner permission');
+ } finally {
+  await db.exec(`RESET ROLE; SELECT set_config('test.uid','${owner}',false); SELECT set_config('test.jwt','{}',false);`);
+ }
+});
 it('removes hosted default anonymous grants while retaining authorized RPC access',async()=>{
  const result=await db.query<{anonymous:boolean;authenticated:boolean;write:boolean;batch_insert:boolean}>(`SELECT has_function_privilege('anon','public.reserve_ai_job(text)','EXECUTE') anonymous,has_function_privilege('authenticated','public.reserve_ai_job(text)','EXECUTE') authenticated,has_table_privilege('authenticated','public.ai_jobs','INSERT') write,has_table_privilege('authenticated','public.import_batches','INSERT') batch_insert`);
  expect(result.rows[0]).toEqual({anonymous:false,authenticated:true,write:false,batch_insert:true});

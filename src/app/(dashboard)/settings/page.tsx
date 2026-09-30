@@ -80,6 +80,12 @@ export default function SettingsPage() {
   }, [user]);
 
   const handleUpdateProfile = async () => {
+    if (!user?.id) {
+      toast.error(t.settings.profile_update_failed, {
+        description: 'Your profile is not loaded. Refresh the page and sign in again if needed.',
+      });
+      return;
+    }
     if (!profileData.full_name.trim()) {
       toast.error(t.settings.full_name_required);
       return;
@@ -94,7 +100,7 @@ export default function SettingsPage() {
           phone: profileData.phone.trim() || null,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', user?.id ?? '')
+        .eq('id', user.id)
         .select('*')
         .single();
 
@@ -109,8 +115,14 @@ export default function SettingsPage() {
 
       toast.success(t.settings.profile_updated);
     } catch (err) {
-      console.error(err);
-      toast.error(t.settings.profile_update_failed);
+      // PostgREST errors are plain objects; the dev overlay can render them as {}.
+      const failure = err !== null && typeof err === 'object' ? err as Record<string, unknown> : null;
+      const message = typeof failure?.message === 'string' && failure.message.trim()
+        ? failure.message
+        : err instanceof Error ? err.message : 'An unexpected error occurred while saving your profile.';
+      const code = typeof failure?.code === 'string' && failure.code ? ` [${failure.code}]` : '';
+      console.error(`Profile update failed${code}: ${message}`);
+      toast.error(t.settings.profile_update_failed, { description: `${message}${code}` });
     } finally {
       setIsProfileLoading(false);
     }
