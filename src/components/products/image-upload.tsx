@@ -1,14 +1,18 @@
 'use client';
 
 import { withTimeout, AUTH_CHECK_TIMEOUT_MS } from "@/lib/utils/timeout";
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import Link from 'next/link';
 import Image from 'next/image';
-import { Upload, X, ImageOff, Loader2 } from 'lucide-react';
+import { Upload, X, ImageOff, Loader2, Camera, ScanLine, FileSpreadsheet } from 'lucide-react';
 import { toast } from 'sonner';
 import { generateId } from '@/lib/utils/id';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils/cn';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { ProductCodeLookup } from './product-code-lookup';
+import type { CodeMatch } from '@/lib/products/lookup-code';
 
 interface ImageUploadProps {
   currentImageUrl?: string | null;
@@ -16,6 +20,8 @@ interface ImageUploadProps {
   onImageRemoved: () => void;
   productId?: string;
   className?: string;
+  onProductMatched: (product: CodeMatch, cached: boolean) => void;
+  onCodeSelected: (code: string) => void;
 }
 
 const MAX_SIZE_MB = 2;
@@ -69,11 +75,18 @@ export function ImageUpload({
   onImageRemoved,
   productId,
   className,
+  onProductMatched,
+  onCodeSelected,
 }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(currentImageUrl ?? null);
   const [isDragOver, setIsDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  useEffect(() => { setPreview(currentImageUrl ?? null); }, [currentImageUrl]);
+  const openMenu = () => { setScanning(false); setMenuOpen(true); };
 
   const handleUpload = useCallback(
     async (file: File) => {
@@ -195,12 +208,14 @@ export function ImageUpload({
             </div>
           )}
           {!isUploading && (
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+            <div className="absolute bottom-0 inset-x-0 bg-card/90 p-2 flex items-center justify-center gap-2">
               <Button
                 type="button"
                 size="icon-sm"
                 variant="secondary"
-                onClick={() => inputRef.current?.click()}
+                onClick={openMenu}
+                aria-label="Replace image"
+                className="min-h-11 min-w-11"
                 title="Replace image"
               >
                 <Upload className="h-3 w-3" />
@@ -210,6 +225,8 @@ export function ImageUpload({
                 size="icon-sm"
                 variant="destructive"
                 onClick={handleRemove}
+                aria-label="Remove image"
+                className="min-h-11 min-w-11"
                 title="Remove image"
               >
                 <X className="h-3 w-3" />
@@ -220,13 +237,18 @@ export function ImageUpload({
       ) : (
         /* Drop zone */
         <div
+          role="button"
+          tabIndex={isUploading ? -1 : 0}
+          aria-label="Product image and capture options"
+          aria-disabled={isUploading}
           className={cn(
-            'border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-3 cursor-pointer transition-colors max-w-48 aspect-square',
+            'border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-3 cursor-pointer transition-colors w-full max-w-48 aspect-square focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
             isDragOver
               ? 'border-primary bg-primary/5'
               : 'border-border hover:border-primary/50 hover:bg-muted/50'
           )}
-          onClick={() => inputRef.current?.click()}
+          onClick={() => { if (!isUploading) openMenu(); }}
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!isUploading) openMenu(); } }}
           onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
           onDragLeave={() => setIsDragOver(false)}
           onDrop={handleDrop}
@@ -240,7 +262,7 @@ export function ImageUpload({
               </div>
               <div className="text-center">
                 <p className="text-xs font-medium text-muted-foreground">
-                  Click or drag to upload
+                  Photo, scan or import
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   JPG, PNG, WebP · Max {MAX_SIZE_MB}MB
@@ -257,7 +279,21 @@ export function ImageUpload({
         accept={ALLOWED_TYPES.join(',')}
         onChange={handleFileChange}
         className="hidden"
+        aria-label="Upload product photo"
       />
+      <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={handleFileChange} className="hidden" aria-label="Take product photo" />
+      {preview && <Button type="button" variant="outline" className="min-h-11 w-full sm:w-auto" disabled={isUploading} onClick={openMenu}>Photo, scan or import</Button>}
+      <Dialog open={menuOpen} onOpenChange={setMenuOpen}>
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[90dvh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{scanning ? 'Find a product by code' : 'Add a photo or product data'}</DialogTitle><DialogDescription>{scanning ? 'Look up an existing product before filling the form.' : 'Choose one option. Camera access depends on your device; desktop may open the file picker.'}</DialogDescription></DialogHeader>
+          {scanning ? <><ProductCodeLookup onMatch={(match, cached) => { onProductMatched(match, cached); setMenuOpen(false); }} onCode={code => { onCodeSelected(code); setMenuOpen(false); }} /><Button type="button" variant="ghost" onClick={() => setScanning(false)}>Back to options</Button></> : <div className="grid gap-2">
+            <Button type="button" variant="outline" className="h-auto min-h-14 justify-start whitespace-normal px-4 py-3 text-left" onClick={() => { cameraRef.current?.click(); setMenuOpen(false); }}><Camera className="h-5 w-5 shrink-0" strokeWidth={1.75} /><span>Take a photo<span className="block text-xs font-normal tt-muted">Open your camera · up to 2 MB</span></span></Button>
+            <Button type="button" variant="outline" className="h-auto min-h-14 justify-start whitespace-normal px-4 py-3 text-left" onClick={() => setScanning(true)}><ScanLine className="h-5 w-5 shrink-0" strokeWidth={1.75} /><span>Scan barcode / QR<span className="block text-xs font-normal tt-muted">Find and prefill a product · manual entry available</span></span></Button>
+            <Button type="button" variant="outline" className="h-auto min-h-14 justify-start whitespace-normal px-4 py-3 text-left" onClick={() => { inputRef.current?.click(); setMenuOpen(false); }}><Upload className="h-5 w-5 shrink-0" strokeWidth={1.75} /><span>Upload a photo<span className="block text-xs font-normal tt-muted">Choose an existing image from your device</span></span></Button>
+            <Button asChild variant="outline" className="h-auto min-h-14 justify-start whitespace-normal px-4 py-3 text-left"><Link href="/imports" target="_blank" rel="noopener noreferrer" prefetch={false}><FileSpreadsheet className="h-5 w-5 shrink-0" strokeWidth={1.75} /><span>Upload an inventory list<span className="block text-xs font-normal tt-muted">CSV / Excel · opens bulk import in a new tab</span></span></Link></Button>
+          </div>}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

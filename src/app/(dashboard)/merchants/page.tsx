@@ -138,27 +138,27 @@ interface DeviceLimits {
 // ─── Status helpers ───────────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<
   MerchantStatus,
-  { label: string; color: string; icon: React.ReactNode }
+  { label: string; variant: "warning" | "success" | "destructive" | "secondary"; icon: React.ReactNode }
 > = {
   pending: {
     label: "Pending",
-    color: "bg-yellow-100 text-yellow-800 border-yellow-200",
-    icon: <Clock className="h-3 w-3" />,
+    variant: "warning",
+    icon: <Clock className="h-3 w-3" strokeWidth={1.75} />,
   },
   active: {
     label: "Active",
-    color: "bg-green-100 text-green-800 border-green-200",
-    icon: <CheckCircle className="h-3 w-3" />,
+    variant: "success",
+    icon: <CheckCircle className="h-3 w-3" strokeWidth={1.75} />,
   },
   suspended: {
     label: "Suspended",
-    color: "bg-red-100 text-red-800 border-red-200",
-    icon: <Ban className="h-3 w-3" />,
+    variant: "destructive",
+    icon: <Ban className="h-3 w-3" strokeWidth={1.75} />,
   },
   deactivated: {
     label: "Deactivated",
-    color: "bg-gray-100 text-gray-800 border-gray-200",
-    icon: <XCircle className="h-3 w-3" />,
+    variant: "secondary",
+    icon: <XCircle className="h-3 w-3" strokeWidth={1.75} />,
   },
 };
 
@@ -178,12 +178,10 @@ const VERIFICATION_CONFIG: Record<
 function MerchantStatusBadge({ status }: { status: MerchantStatus }) {
   const cfg = STATUS_CONFIG[status];
   return (
-    <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${cfg.color}`}
-    >
+    <Badge variant={cfg.variant}>
       {cfg.icon}
       {cfg.label}
-    </span>
+    </Badge>
   );
 }
 
@@ -193,27 +191,27 @@ function getOnboardingSteps(t: ReturnType<typeof useI18n>["t"]) {
     {
       step: 1,
       label: t.merchants.onboard_step_business_info,
-      icon: <Building2 className="h-4 w-4" />,
+      icon: <Building2 className="h-4 w-4" strokeWidth={1.75} />,
     },
     {
       step: 2,
       label: t.merchants.onboard_step_contact_address,
-      icon: <MapPin className="h-4 w-4" />,
+      icon: <MapPin className="h-4 w-4" strokeWidth={1.75} />,
     },
     {
       step: 3,
       label: t.merchants.onboard_step_doc_verification,
-      icon: <FileText className="h-4 w-4" />,
+      icon: <FileText className="h-4 w-4" strokeWidth={1.75} />,
     },
     {
       step: 4,
       label: t.merchants.onboard_step_payment_setup,
-      icon: <CheckCircle className="h-4 w-4" />,
+      icon: <CheckCircle className="h-4 w-4" strokeWidth={1.75} />,
     },
     {
       step: 5,
       label: t.merchants.onboard_step_complete,
-      icon: <CheckCircle className="h-4 w-4" />,
+      icon: <CheckCircle className="h-4 w-4" strokeWidth={1.75} />,
     },
   ];
 }
@@ -361,10 +359,10 @@ function CreateMerchantDialog({
   if (onboardResult) {
     return (
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-[520px]">
+        <DialogContent className="sm:max-w-[520px] w-[calc(100%-2rem)] max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-600" />
+              <CheckCircle className="h-5 w-5 text-[var(--c-success)]" strokeWidth={1.75} />
               {t.merchants.onboard_success_title}
             </DialogTitle>
             <DialogDescription>
@@ -389,8 +387,8 @@ function CreateMerchantDialog({
                   {t.merchants.temp_password_copy}
                 </Button>
               </div>
-              <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-                <AlertTriangle className="h-3 w-3" />{" "}
+              <p className="text-xs text-[var(--c-warn)] mt-1 flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3" strokeWidth={1.75} />{" "}
                 {t.merchants.temp_password_warning}
               </p>
             </div>
@@ -419,10 +417,10 @@ function CreateMerchantDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto w-[calc(100%-2rem)] max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-primary" />
+            <Building2 className="h-5 w-5 text-primary" strokeWidth={1.75} />
             {t.merchants.dialog_title}
           </DialogTitle>
           <DialogDescription>{t.merchants.dialog_desc}</DialogDescription>
@@ -456,8 +454,8 @@ function CreateMerchantDialog({
         {step === 1 && (
           <div className="space-y-4">
             <h3 className="font-semibold text-sm">{t.merchants.step1_title}</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="sm:col-span-2">
                 <Label>{t.merchants.business_name} *</Label>
                 <Input
                   value={form.business_name}
@@ -541,8 +539,8 @@ function CreateMerchantDialog({
         {step === 2 && (
           <div className="space-y-4">
             <h3 className="font-semibold text-sm">{t.merchants.step2_title}</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="sm:col-span-2">
                 <Label>{t.merchants.contact_person_name} *</Label>
                 <Input
                   value={form.contact_name}
@@ -567,7 +565,7 @@ function CreateMerchantDialog({
                   placeholder={t.merchants.contact_phone_placeholder}
                 />
               </div>
-              <div className="col-span-2">
+              <div className="sm:col-span-2">
                 <Label>{t.merchants.street_address}</Label>
                 <Input
                   value={form.address}
@@ -676,7 +674,7 @@ function CreateMerchantDialog({
               onClick={() => setStep((s) => s + 1)}
               disabled={step === 1 && !form.business_name}
             >
-              {t.merchants.next} <ChevronRight className="h-4 w-4 ml-1" />
+              {t.merchants.next} <ChevronRight className="h-4 w-4 ml-1" strokeWidth={1.75} />
             </Button>
           ) : (
             <Button onClick={handleSubmit} disabled={loading}>
@@ -840,10 +838,10 @@ function ViewMerchantDialog({
 
   return (
     <Dialog open={!!merchant} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[620px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[620px] max-h-[90vh] overflow-y-auto w-[calc(100%-2rem)] max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-primary" />
+            <Building2 className="h-5 w-5 text-primary" strokeWidth={1.75} />
             {merchant.business_name}
           </DialogTitle>
           <DialogDescription className="flex items-center gap-2">
@@ -864,7 +862,7 @@ function ViewMerchantDialog({
             <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
               {t.merchants.business_details}
             </h4>
-            <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <Detail
                 label={t.merchants.business_type}
                 value={merchant.business_type}
@@ -893,20 +891,20 @@ function ViewMerchantDialog({
             </h4>
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
-                <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                <Mail className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.75} />
                 <span>
                   {merchant.contact_name} — {merchant.contact_email}
                 </span>
               </div>
               {merchant.contact_phone && (
                 <div className="flex items-center gap-2">
-                  <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Phone className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.75} />
                   <span>{merchant.contact_phone}</span>
                 </div>
               )}
               {(merchant.address || merchant.city) && (
                 <div className="flex items-center gap-2">
-                  <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                  <MapPin className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.75} />
                   <span>
                     {[merchant.address, merchant.city, merchant.state]
                       .filter(Boolean)
@@ -924,11 +922,11 @@ function ViewMerchantDialog({
             </h4>
             <div className="space-y-2">
               {getOnboardingSteps(t).map((s) => (
-                <div key={s.step} className="flex items-center gap-3">
+                <div key={s.step} className="flex flex-wrap items-center gap-3">
                   <div
                     className={`p-1 rounded ${
                       merchant.onboarding_step > s.step
-                        ? "bg-green-100 text-green-600"
+                        ? "bg-[color-mix(in_oklch,var(--c-success),transparent_85%)] text-[var(--c-success)]"
                         : merchant.onboarding_step === s.step
                           ? "bg-primary/10 text-primary"
                           : "bg-muted text-muted-foreground"
@@ -939,7 +937,7 @@ function ViewMerchantDialog({
                   <span
                     className={`text-sm ${
                       merchant.onboarding_step > s.step
-                        ? "text-green-600 line-through"
+                        ? "text-[var(--c-success)] line-through"
                         : merchant.onboarding_step === s.step
                           ? "font-semibold"
                           : "text-muted-foreground"
@@ -948,10 +946,10 @@ function ViewMerchantDialog({
                     {s.label}
                   </span>
                   {merchant.onboarding_step > s.step && (
-                    <CheckCircle className="h-3.5 w-3.5 text-green-500 ml-auto" />
+                    <CheckCircle className="h-3.5 w-3.5 text-[var(--c-success)] ml-auto" strokeWidth={1.75} />
                   )}
                   {merchant.onboarding_step === s.step && (
-                    <Clock className="h-3.5 w-3.5 text-primary ml-auto" />
+                    <Clock className="h-3.5 w-3.5 text-primary ml-auto" strokeWidth={1.75} />
                   )}
                 </div>
               ))}
@@ -969,13 +967,13 @@ function ViewMerchantDialog({
                 size="sm"
                 onClick={() => setEditDevices(!editDevices)}
               >
-                <Edit className="h-3.5 w-3.5 mr-1" /> {t.merchants.edit}
+                <Edit className="h-3.5 w-3.5 mr-1" strokeWidth={1.75} /> {t.merchants.edit}
               </Button>
             </div>
             {deviceLimits ? (
               <div className="p-3 bg-muted/50 rounded-lg text-sm">
                 <div className="flex items-center gap-2 mb-2">
-                  <Smartphone className="h-4 w-4 text-primary" />
+                  <Smartphone className="h-4 w-4 text-primary" strokeWidth={1.75} />
                   <span className="font-medium">
                     {deviceLimits.plan_type} {t.merchants.plan_suffix}
                   </span>
@@ -1126,11 +1124,11 @@ function ConfirmDialog({
   const { t } = useI18n();
   return (
     <Dialog open={open} onOpenChange={onCancel}>
-      <DialogContent className="sm:max-w-[420px]">
+      <DialogContent className="sm:max-w-[420px] w-[calc(100%-2rem)] max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {variant === "destructive" && (
-              <AlertTriangle className="h-5 w-5 text-destructive" />
+              <AlertTriangle className="h-5 w-5 text-destructive" strokeWidth={1.75} />
             )}
             {title}
           </DialogTitle>
@@ -1277,18 +1275,18 @@ export default function MerchantsPage() {
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="min-w-0 space-y-6">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <Building2 className="h-6 w-6 text-primary" />
+          <h1 className="tt-page-title flex flex-wrap items-center gap-2">
+            <Building2 className="h-6 w-6 text-primary" strokeWidth={1.75} />
             {t.merchants.title}
           </h1>
           <p className="text-muted-foreground mt-1">{t.merchants.subtitle}</p>
         </div>
         <Button onClick={() => setCreateOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
+          <Plus className="h-4 w-4" strokeWidth={1.75} />
           {t.merchants.add_merchant}
         </Button>
       </div>
@@ -1314,7 +1312,7 @@ export default function MerchantsPage() {
                       {status}
                     </span>
                   </div>
-                  <p className="text-2xl font-bold">{count}</p>
+                  <p className="tt-page-title">{count}</p>
                 </CardContent>
               </Card>
             );
@@ -1323,7 +1321,7 @@ export default function MerchantsPage() {
 
       {/* ── Filters ─────────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-xs">
+        <div className="relative w-full min-w-0 sm:flex-1 sm:max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder={t.merchants.search_placeholder}
@@ -1333,8 +1331,8 @@ export default function MerchantsPage() {
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40">
-            <Filter className="h-4 w-4 mr-2" />
+          <SelectTrigger className="flex-1 sm:flex-none sm:w-40">
+            <Filter className="h-4 w-4 mr-2" strokeWidth={1.75} />
             <SelectValue placeholder={t.merchants.status} />
           </SelectTrigger>
           <SelectContent>
@@ -1374,13 +1372,13 @@ export default function MerchantsPage() {
             queryClient.invalidateQueries({ queryKey: ["merchants"] })
           }
         >
-          <RefreshCw className="h-4 w-4" />
+          <RefreshCw className="h-4 w-4" strokeWidth={1.75} />
         </Button>
       </div>
 
       {/* ── Table ───────────────────────────────────────────────────────────── */}
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="min-w-0 overflow-hidden p-0">
           {isLoading ? (
             <div className="p-6 space-y-3">
               {[1, 2, 3, 4, 5].map((i) => (
@@ -1408,7 +1406,7 @@ export default function MerchantsPage() {
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-16">
                         <div className="flex flex-col items-center gap-3">
-                          <Building2 className="h-10 w-10 text-muted-foreground/40" />
+                          <Building2 className="h-10 w-10 text-muted-foreground/40" strokeWidth={1.75} />
                           <div>
                             <p className="font-medium text-muted-foreground">
                               {t.merchants.no_merchants}
@@ -1425,7 +1423,7 @@ export default function MerchantsPage() {
                               size="sm"
                               className="gap-2"
                             >
-                              <Plus className="h-4 w-4" />{" "}
+                              <Plus className="h-4 w-4" strokeWidth={1.75} />{" "}
                               {t.merchants.add_merchant}
                             </Button>
                           )}
@@ -1499,7 +1497,7 @@ export default function MerchantsPage() {
                                 size="icon"
                                 className="h-8 w-8"
                               >
-                                <MoreHorizontal className="h-4 w-4" />
+                                <MoreHorizontal className="h-4 w-4" strokeWidth={1.75} />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48">
@@ -1510,7 +1508,7 @@ export default function MerchantsPage() {
                               <DropdownMenuItem
                                 onClick={() => setViewMerchant(merchant)}
                               >
-                                <Eye className="h-4 w-4 mr-2" />{" "}
+                                <Eye className="h-4 w-4 mr-2" strokeWidth={1.75} />{" "}
                                 {t.merchants.view_details}
                               </DropdownMenuItem>
                               {merchant.status !== "active" && (
@@ -1521,9 +1519,9 @@ export default function MerchantsPage() {
                                       merchant,
                                     })
                                   }
-                                  className="text-green-600"
+                                  className="text-[var(--c-success)]"
                                 >
-                                  <CheckCircle className="h-4 w-4 mr-2" />{" "}
+                                  <CheckCircle className="h-4 w-4 mr-2" strokeWidth={1.75} />{" "}
                                   {t.merchants.activate}
                                 </DropdownMenuItem>
                               )}
@@ -1535,9 +1533,9 @@ export default function MerchantsPage() {
                                       merchant,
                                     })
                                   }
-                                  className="text-blue-600"
+                                  className="text-[var(--c-info)]"
                                 >
-                                  <FileText className="h-4 w-4 mr-2" />{" "}
+                                  <FileText className="h-4 w-4 mr-2" strokeWidth={1.75} />{" "}
                                   {t.merchants.mark_verified}
                                 </DropdownMenuItem>
                               )}
@@ -1551,7 +1549,7 @@ export default function MerchantsPage() {
                                   }
                                   className="text-orange-600"
                                 >
-                                  <Ban className="h-4 w-4 mr-2" />{" "}
+                                  <Ban className="h-4 w-4 mr-2" strokeWidth={1.75} />{" "}
                                   {t.merchants.suspend}
                                 </DropdownMenuItem>
                               )}
@@ -1562,7 +1560,7 @@ export default function MerchantsPage() {
                                 }
                                 className="text-destructive"
                               >
-                                <Trash2 className="h-4 w-4 mr-2" />{" "}
+                                <Trash2 className="h-4 w-4 mr-2" strokeWidth={1.75} />{" "}
                                 {t.merchants.delete}
                               </DropdownMenuItem>
                             </DropdownMenuContent>

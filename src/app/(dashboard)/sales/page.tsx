@@ -145,21 +145,21 @@ function SalesPageInner() {
   const totalRevenue = sales.filter(s => s.status === 'completed').reduce((sum, s) => sum + s.total, 0);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="min-w-0 space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{t.sales.title}</h1>
-          <p className="text-muted-foreground text-sm">
+          <h1 className="tt-page-title">{t.sales.title}</h1>
+          <p className="tt-muted text-sm">
             {t.sales.subtitle.replace('{count}', String(sales.length)).replace('{revenue}', formatCurrency(totalRevenue))}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => exportToCSV(sales)}>
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="h-4 w-4 mr-2" strokeWidth={1.75} />
             {t.sales.export_csv}
           </Button>
           <Button variant="outline" onClick={() => exportToPDF(sales)}>
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="h-4 w-4 mr-2" strokeWidth={1.75} />
             PDF
           </Button>
         </div>
@@ -168,16 +168,16 @@ function SalesPageInner() {
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-wrap gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <Input
               placeholder={t.sales.search_placeholder}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              leftIcon={<Search className="h-4 w-4" />}
-              className="w-60"
+              leftIcon={<Search className="h-4 w-4" strokeWidth={1.75} />}
+              className="w-full"
             />
             <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="w-36">
+              <SelectTrigger className="w-full min-w-0">
                 <SelectValue placeholder={t.common.status} />
               </SelectTrigger>
               <SelectContent>
@@ -189,7 +189,7 @@ function SalesPageInner() {
               </SelectContent>
             </Select>
             <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder={t.sales.payment} />
               </SelectTrigger>
               <SelectContent>
@@ -201,10 +201,10 @@ function SalesPageInner() {
                 <SelectItem value="partial">{t.sales.payment_partial}</SelectItem>
               </SelectContent>
             </Select>
-            <div className="flex items-center gap-2">
-              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-36" />
-              <span className="text-muted-foreground text-sm">{t.sales.to_separator}</span>
-              <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-36" />
+            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:col-span-2">
+              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full min-w-0" />
+              <span className="tt-muted text-sm">{t.sales.to_separator}</span>
+              <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full min-w-0" />
             </div>
           </div>
         </CardContent>
@@ -212,7 +212,7 @@ function SalesPageInner() {
 
       {/* Table */}
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="min-w-0 overflow-hidden p-0">
           <Table>
             <TableHeader>
               <TableRow>
@@ -240,7 +240,7 @@ function SalesPageInner() {
                 <TableRow>
                   <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">
                     <div className="flex flex-col items-center gap-2">
-                      <Receipt className="h-8 w-8 opacity-30" />
+                      <Receipt className="h-8 w-8 opacity-30" strokeWidth={1.75} />
                       <p>{t.sales.no_sales}</p>
                     </div>
                   </TableCell>
@@ -264,7 +264,7 @@ function SalesPageInner() {
                     </TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="icon-sm" onClick={() => setViewSale(sale)}>
-                        <Eye className="h-4 w-4" />
+                        <Eye className="h-4 w-4" strokeWidth={1.75} />
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -278,12 +278,12 @@ function SalesPageInner() {
       {/* Sale Details Dialog */}
       {viewSale && (
         <Dialog open={!!viewSale} onOpenChange={() => setViewSale(null)}>
-          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto w-[calc(100%-2rem)] max-h-[90dvh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{t.sales.sale_details_title.replace('{invoice}', viewSale.invoice_number)}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 <div><span className="text-muted-foreground">{t.sales.date}:</span> <span className="font-medium">{formatDateTime(viewSale.created_at)}</span></div>
                 <div><span className="text-muted-foreground">{t.sales.cashier}:</span> <span className="font-medium">{(viewSale.cashier as { full_name?: string } | null)?.full_name}</span></div>
                 <div><span className="text-muted-foreground">{t.sales.customer}:</span> <span className="font-medium">{viewSale.customer_name || t.sales.walk_in}</span></div>
@@ -317,7 +317,7 @@ function SalesPageInner() {
 
               <div className="space-y-1 text-sm border-t pt-3">
                 <div className="flex justify-between"><span>{t.sales.subtotal}</span><span>{formatCurrency(viewSale.subtotal)}</span></div>
-                {viewSale.discount > 0 && <div className="flex justify-between text-green-600"><span>{t.sales.discount}</span><span>-{formatCurrency(viewSale.discount)}</span></div>}
+                {viewSale.discount > 0 && <div className="flex justify-between text-[var(--c-success)]"><span>{t.sales.discount}</span><span>-{formatCurrency(viewSale.discount)}</span></div>}
                 {viewSale.tax > 0 && <div className="flex justify-between"><span>{t.sales.tax}</span><span>{formatCurrency(viewSale.tax)}</span></div>}
                 <div className="flex justify-between font-bold text-base border-t pt-2">
                   <span>{t.sales.total}</span>
@@ -328,7 +328,7 @@ function SalesPageInner() {
                   <span>{formatCurrency(viewSale.amount_paid)}</span>
                 </div>
                 {viewSale.change_amount > 0 && (
-                  <div className="flex justify-between text-green-600">
+                  <div className="flex justify-between text-[var(--c-success)]">
                     <span>{t.sales.change}</span>
                     <span>{formatCurrency(viewSale.change_amount)}</span>
                   </div>

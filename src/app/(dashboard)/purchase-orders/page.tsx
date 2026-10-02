@@ -420,7 +420,7 @@ function PurchaseOrdersPageInner() {
         variant={variant as Parameters<typeof Badge>[0]['variant']}
         className="flex items-center gap-1 w-fit capitalize"
       >
-        <Icon className="h-3 w-3" />
+        <Icon className="h-3 w-3" strokeWidth={1.75} />
         {status}
       </Badge>
     );
@@ -432,7 +432,7 @@ function PurchaseOrdersPageInner() {
   if (featureLocked) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <Lock className="h-12 w-12 text-muted-foreground" />
+        <Lock className="h-12 w-12 text-muted-foreground" strokeWidth={1.75} />
         <div className="text-center max-w-md">
           <p className="font-medium">{t.purchaseOrders.title}</p>
           <p className="text-sm text-muted-foreground mt-1">
@@ -444,24 +444,24 @@ function PurchaseOrdersPageInner() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="min-w-0 space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{t.purchaseOrders.title}</h1>
-          <p className="text-muted-foreground text-sm">
+          <h1 className="tt-page-title">{t.purchaseOrders.title}</h1>
+          <p className="tt-muted text-sm">
             {t.purchaseOrders.subtitle
               .replace('{draft}', String(draftCount))
               .replace('{sent}', String(sentCount))}
           </p>
         </div>
         <Button onClick={() => setIsFormOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-4 w-4 mr-2" strokeWidth={1.75} />
           {t.purchaseOrders.new_po}
         </Button>
       </div>
 
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="min-w-0 overflow-hidden p-0">
           <Table>
             <TableHeader>
               <TableRow>
@@ -512,26 +512,26 @@ function PurchaseOrdersPageInner() {
                           {!isOnline ? 'Reconnect to send, cancel or receive.' : 'Waiting for this order and all items to sync.'}
                         </p>
                       )}
-                      <div className="flex items-center justify-end gap-1">
+                      <div className="flex flex-wrap items-center justify-end gap-2">
                         {po.status === 'draft' && (
                           <>
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-7 text-xs"
+                              className="min-h-11 sm:min-h-0 sm:h-8 text-xs"
                               onClick={() => sendMutation.mutate(po.id)}
                               disabled={!isOnline || !po.lifecycleReady || sendMutation.isPending || cancelMutation.isPending || receiveMutation.isPending}
                             >
-                              <Send className="h-3 w-3 mr-1" /> {t.purchaseOrders.send}
+                              <Send className="h-3 w-3 mr-1" strokeWidth={1.75} /> {t.purchaseOrders.send}
                             </Button>
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-7 text-xs text-red-600 border-red-200"
+                              className="min-h-11 sm:min-h-0 sm:h-8 text-xs text-destructive border-destructive/30"
                               onClick={() => cancelMutation.mutate(po.id)}
                               disabled={!isOnline || !po.lifecycleReady || sendMutation.isPending || cancelMutation.isPending || receiveMutation.isPending}
                             >
-                              <Trash2 className="h-3 w-3 mr-1" /> {t.purchaseOrders.cancel_action}
+                              <Trash2 className="h-3 w-3 mr-1" strokeWidth={1.75} /> {t.purchaseOrders.cancel_action}
                             </Button>
                           </>
                         )}
@@ -540,16 +540,16 @@ function PurchaseOrdersPageInner() {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-7 text-xs text-green-600 border-green-200"
+                              className="min-h-11 sm:min-h-0 sm:h-8 text-xs text-[var(--c-success)] border-[color-mix(in_oklch,var(--c-success),transparent_70%)]"
                               onClick={() => receiveMutation.mutate(po.id)}
                               disabled={!isOnline || !po.lifecycleReady || receiveMutation.isPending || cancelMutation.isPending}
                             >
-                              <PackageCheck className="h-3 w-3 mr-1" /> {t.purchaseOrders.receive}
+                              <PackageCheck className="h-3 w-3 mr-1" strokeWidth={1.75} /> {t.purchaseOrders.receive}
                             </Button>
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-7 text-xs text-red-600 border-red-200"
+                              className="min-h-11 sm:min-h-0 sm:h-8 text-xs text-destructive border-destructive/30"
                               onClick={() => cancelMutation.mutate(po.id)}
                               disabled={!isOnline || !po.lifecycleReady || sendMutation.isPending || cancelMutation.isPending || receiveMutation.isPending}
                             >
@@ -569,7 +569,7 @@ function PurchaseOrdersPageInner() {
 
       {/* Create PO Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg w-[calc(100%-2rem)] max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t.purchaseOrders.create_dialog_title}</DialogTitle>
           </DialogHeader>
@@ -605,7 +605,7 @@ function PurchaseOrdersPageInner() {
             <div>
               <Label className="mb-2 block">{t.purchaseOrders.line_items_required}</Label>
               {formData.items.map((item, idx) => (
-                <div key={idx} className="grid grid-cols-3 gap-2 mb-2">
+                <div key={idx} className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
                   <Select
                     onValueChange={(v) => {
                       const p = products.find((pr) => pr.id === v);
@@ -665,7 +665,7 @@ function PurchaseOrdersPageInner() {
                   })
                 }
               >
-                <Plus className="h-3 w-3 mr-1" /> {t.purchaseOrders.add_item}
+                <Plus className="h-3 w-3 mr-1" strokeWidth={1.75} /> {t.purchaseOrders.add_item}
               </Button>
             </div>
 
@@ -704,7 +704,7 @@ function PurchaseOrdersPageInner() {
 
       {/* View PO Dialog */}
       <Dialog open={!!viewPO} onOpenChange={(open) => !open && setViewPO(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg w-[calc(100%-2rem)] max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t.purchaseOrders.details_dialog_title}</DialogTitle>
           </DialogHeader>
@@ -760,8 +760,8 @@ function PurchaseOrdersPageInner() {
               )}
 
               {viewPO.status === 'received' && (
-                <p className="text-xs text-green-600 flex items-center gap-1">
-                  <CheckCircle className="h-3 w-3" />
+                <p className="text-xs text-[var(--c-success)] flex items-center gap-1">
+                  <CheckCircle className="h-3 w-3" strokeWidth={1.75} />
                   {t.purchaseOrders.received_by_label}{' '}
                   {(viewPO.receiver as { full_name?: string } | undefined)?.full_name || '—'}
                   {viewPO.received_at ? ` · ${formatDateTime(viewPO.received_at)}` : ''}

@@ -18,6 +18,7 @@ import { createAuditEntry } from '@/lib/utils/client-audit';
 import { canAddProduct, productLimitMessage, resolveSubscriptionPlan } from '@/lib/subscriptions/plan-limits';
 import type { Product } from '@/types';
 import type { z } from 'zod';
+import type { CodeMatch } from '@/lib/products/lookup-code';
 
 type ProductFormData = z.infer<typeof productSchema>;
 
@@ -28,7 +29,10 @@ interface ProductFormProps {
   onCancel: () => void;
 }
 
-export function ProductForm({ product, categories, onSuccess, onCancel }: ProductFormProps) {
+export function ProductForm({ product: initialProduct, categories, onSuccess, onCancel }: ProductFormProps) {
+  const [scannedProduct, setScannedProduct] = useState<CodeMatch | null>(null);
+  const [cachedMatch, setCachedMatch] = useState(false);
+  const product = scannedProduct ?? initialProduct;
   const [isLoading, setIsLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(product?.image_url ?? null);
 
@@ -36,6 +40,8 @@ export function ProductForm({ product, categories, onSuccess, onCancel }: Produc
     register,
     handleSubmit,
     setValue,
+    reset,
+    watch,
     formState: { errors },
   } = useForm<ProductFormData>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -54,6 +60,10 @@ export function ProductForm({ product, categories, onSuccess, onCancel }: Produc
   });
 
   const onSubmit = async (data: ProductFormData) => {
+    if (cachedMatch) {
+      toast.error('This is a cached product. Reconnect and look up the code again before saving.');
+      return;
+    }
     setIsLoading(true);
     try {
       const supabase = createClient();
@@ -122,10 +132,10 @@ export function ProductForm({ product, categories, onSuccess, onCancel }: Produc
         selling_price: data.selling_price,
         cost_price: data.cost_price,
         category_id: data.category_id || null,
-        supplier_id: null,
+        supplier_id: product?.supplier_id || null,
         status: data.status,
         organization_id: orgId,
-        created_by: user.id,
+        created_by: product?.created_by || user.id,
         image_url: imageUrl || null,
       };
 
@@ -196,7 +206,15 @@ export function ProductForm({ product, categories, onSuccess, onCancel }: Produc
           productId={product?.id}
           onImageUploaded={(url) => setImageUrl(url)}
           onImageRemoved={() => setImageUrl(null)}
+          onProductMatched={(match, cached) => {
+            setScannedProduct(match);
+            setCachedMatch(cached);
+            setImageUrl(match.image_url ?? null);
+            reset({ name: match.name, make: match.make || '', description: match.description || '', sku: match.sku, barcode: match.barcode || '', selling_price: match.selling_price, cost_price: match.cost_price, category_id: match.category_id || null, status: match.status as ProductFormData['status'] });
+          }}
+          onCodeSelected={code => setValue('barcode', code, { shouldDirty: true })}
         />
+        {scannedProduct && <p role="status" className="text-sm tt-muted">Editing existing product: {scannedProduct.name}.{cachedMatch && ' Cached preview only — reconnect and look up the code again before saving.'}</p>}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -265,7 +283,7 @@ export function ProductForm({ product, categories, onSuccess, onCancel }: Produc
         <div className="space-y-2">
           <Label>Category</Label>
           <Select
-            defaultValue={product?.category_id ?? undefined}
+            value={watch('category_id') ?? ''}
             onValueChange={(val) => setValue('category_id', val || null)}
           >
             <SelectTrigger>
@@ -283,7 +301,7 @@ export function ProductForm({ product, categories, onSuccess, onCancel }: Produc
         <div className="space-y-2">
           <Label>Status</Label>
           <Select
-            defaultValue={product?.status || 'active'}
+            value={watch('status')}
             onValueChange={(val) => setValue('status', val as ProductFormData['status'])}
           >
             <SelectTrigger>
@@ -302,7 +320,7 @@ export function ProductForm({ product, categories, onSuccess, onCancel }: Produc
         <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
           Cancel
         </Button>
-        <Button type="submit" className="flex-1" disabled={isLoading}>
+        <Button type="submit" className="flex-1" disabled={isLoading || cachedMatch}>
           {isLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
           {product ? 'Update Product' : 'Create Product'}
         </Button>

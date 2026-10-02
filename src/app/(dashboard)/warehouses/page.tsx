@@ -96,14 +96,14 @@ function WarehousesPageInner() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="min-w-0 space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{t.warehouse.title}</h1>
-          <p className="text-muted-foreground text-sm">{t.warehouse.locations_count.replace('{count}', String(warehouses.length))}</p>
+          <h1 className="tt-page-title">{t.warehouse.title}</h1>
+          <p className="tt-muted text-sm">{t.warehouse.locations_count.replace('{count}', String(warehouses.length))}</p>
         </div>
         <Button onClick={openCreate}>
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-4 w-4 mr-2" strokeWidth={1.75} />
           {t.warehouse.add_warehouse}
         </Button>
       </div>
@@ -120,23 +120,23 @@ function WarehousesPageInner() {
           return (
             <Card key={w.id} className="relative">
               <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
+                <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Warehouse className="h-5 w-5 text-primary" />
+                      <Warehouse className="h-5 w-5 text-primary" strokeWidth={1.75} />
                     </div>
                     <div>
-                      <CardTitle className="text-base">{w.name}</CardTitle>
+                      <CardTitle className="text-base break-words">{w.name}</CardTitle>
                       {w.is_main && (
                         <Badge variant="default" className="text-xs mt-0.5">
-                          <Star className="h-2.5 w-2.5 mr-1" />{t.warehouse.main_badge}
+                          <Star className="h-2.5 w-2.5 mr-1" strokeWidth={1.75} />{t.warehouse.main_badge}
                         </Badge>
                       )}
                     </div>
                   </div>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon-sm" onClick={() => openEdit(w)}>
-                      <Edit className="h-4 w-4" />
+                      <Edit className="h-4 w-4" strokeWidth={1.75} />
                     </Button>
                     {!w.is_main && (
                       <Button
@@ -147,7 +147,7 @@ function WarehousesPageInner() {
                           if (confirm(t.warehouse.delete_confirm.replace('{name}', w.name))) deleteMutation.mutate(w.id);
                         }}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4" strokeWidth={1.75} />
                       </Button>
                     )}
                   </div>
@@ -162,7 +162,7 @@ function WarehousesPageInner() {
                 )}
                 <div className="flex items-center justify-between bg-muted/50 rounded-lg p-3">
                   <span className="text-sm text-muted-foreground">{t.warehouse.total_stock}</span>
-                  <span className="font-bold text-lg">{totalStock.toLocaleString()}</span>
+                  <span className="tt-head text-lg">{totalStock.toLocaleString()}</span>
                 </div>
               </CardContent>
             </Card>
@@ -171,7 +171,7 @@ function WarehousesPageInner() {
       </div>
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent>
+        <DialogContent className="w-[calc(100%-2rem)] max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editWarehouse ? t.warehouse.edit_warehouse : t.warehouse.create_warehouse}</DialogTitle>
           </DialogHeader>

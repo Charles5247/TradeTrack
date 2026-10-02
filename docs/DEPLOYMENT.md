@@ -1,3 +1,5 @@
+> Current-build live test instructions: [RENDER_LIVE_TEST.md](./RENDER_LIVE_TEST.md). Read its payment and demo-account limitations before using the older setup steps below.
+
 # TracKasuwa — Deployment Guide
 
 > **This replaces the older `docs/DEPLOYMENT_GUIDE.md`**, which described a

@@ -59,16 +59,16 @@ export default function ReceiptLookupPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="min-w-0 w-full max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">{t.receiptLookup.title}</h1>
-        <p className="text-muted-foreground text-sm">{t.receiptLookup.subtitle}</p>
+        <h1 className="tt-page-title">{t.receiptLookup.title}</h1>
+        <p className="tt-muted text-sm">{t.receiptLookup.subtitle}</p>
       </div>
 
       {!result && (
         <Card>
           <CardContent className="p-4 space-y-3">
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Input
                 autoFocus
                 value={code}
@@ -78,10 +78,10 @@ export default function ReceiptLookupPage() {
               />
               <Button onClick={handleLookup} disabled={isLoading || !code.trim()}>
                 {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.75} />
                 ) : (
                   <>
-                    <Search className="h-4 w-4 mr-2" />
+                    <Search className="h-4 w-4 mr-2" strokeWidth={1.75} />
                     {t.receiptLookup.lookup}
                   </>
                 )}
@@ -94,11 +94,11 @@ export default function ReceiptLookupPage() {
       {result?.kind === 'sale' && (
         <Card>
           <CardContent className="p-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="font-bold text-lg">{t.receiptLookup.sale_title}</h2>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <h2 className="tt-head text-lg">{t.receiptLookup.sale_title}</h2>
               <Badge>{result.receipt.status}</Badge>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm break-words">
               <div><span className="text-muted-foreground">{t.receiptLookup.invoice}:</span> <span className="font-medium">{result.receipt.invoiceNumber}</span></div>
               <div><span className="text-muted-foreground">{t.receiptLookup.date}:</span> {formatDateTime(result.receipt.dateISO)}</div>
               {result.receipt.cashierName && (
@@ -110,15 +110,15 @@ export default function ReceiptLookupPage() {
               <div><span className="text-muted-foreground">{t.receiptLookup.payment_method}:</span> {result.receipt.paymentMethod}</div>
             </div>
 
-            <div className="border rounded-lg divide-y">
-              <div className="grid grid-cols-4 gap-2 p-2 text-xs font-semibold text-muted-foreground">
-                <span className="col-span-2">{t.receiptLookup.item}</span>
+            <div className="overflow-x-auto rounded-lg border border-border divide-y divide-border">
+              <div className="grid min-w-[280px] grid-cols-4 gap-2 p-3 bg-muted text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <span className="col-span-2 break-words">{t.receiptLookup.item}</span>
                 <span>{t.receiptLookup.qty}</span>
                 <span className="text-right">{t.receiptLookup.total}</span>
               </div>
               {result.receipt.items.map((item, i) => (
-                <div key={i} className="grid grid-cols-4 gap-2 p-2 text-sm">
-                  <span className="col-span-2">{item.name}{item.sku ? ` (${item.sku})` : ''}</span>
+                <div key={i} className="grid min-w-[280px] grid-cols-4 gap-2 p-3 text-sm">
+                  <span className="col-span-2 break-words">{item.name}{item.sku ? ` (${item.sku})` : ''}</span>
                   <span>{item.quantity}</span>
                   <span className="text-right">{item.total != null ? formatCurrency(item.total) : '—'}</span>
                 </div>
@@ -149,27 +149,27 @@ export default function ReceiptLookupPage() {
         <Card>
           <CardContent className="p-4 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="font-bold text-lg">{t.receiptLookup.transfer_title}</h2>
+              <h2 className="tt-head text-lg">{t.receiptLookup.transfer_title}</h2>
               <Badge>{result.receipt.status}</Badge>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm break-words">
               <div><span className="text-muted-foreground">{t.receiptLookup.reference}:</span> <span className="font-medium">{result.receipt.transferRef}</span></div>
               <div><span className="text-muted-foreground">{t.receiptLookup.date}:</span> {formatDateTime(result.receipt.dateISO)}</div>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <span className="font-medium">{result.receipt.fromWarehouse}</span>
-              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              <ArrowRight className="h-4 w-4 text-muted-foreground" strokeWidth={1.75} />
               <span className="font-medium">{result.receipt.toWarehouse}</span>
             </div>
 
-            <div className="border rounded-lg divide-y">
-              <div className="grid grid-cols-3 gap-2 p-2 text-xs font-semibold text-muted-foreground">
-                <span className="col-span-2">{t.receiptLookup.item}</span>
+            <div className="overflow-x-auto rounded-lg border border-border divide-y divide-border">
+              <div className="grid min-w-[240px] grid-cols-3 gap-2 p-3 bg-muted text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <span className="col-span-2 break-words">{t.receiptLookup.item}</span>
                 <span>{t.receiptLookup.qty}</span>
               </div>
               {result.receipt.items.map((item, i) => (
-                <div key={i} className="grid grid-cols-3 gap-2 p-2 text-sm">
-                  <span className="col-span-2">{item.name}{item.sku ? ` (${item.sku})` : ''}</span>
+                <div key={i} className="grid min-w-[240px] grid-cols-3 gap-2 p-3 text-sm">
+                  <span className="col-span-2 break-words">{item.name}{item.sku ? ` (${item.sku})` : ''}</span>
                   <span>{item.quantity}</span>
                 </div>
               ))}

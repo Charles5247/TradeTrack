@@ -4,10 +4,12 @@ services:
     env: node
     plan: free
     rootDir: .
-    buildCommand: npm install && npm run build
+    buildCommand: npm ci --include=dev && npm run verify:env && npm run build
     startCommand: npm start
     healthCheckPath: /
     envVars:
+      - key: NODE_VERSION
+        value: "22"
       - key: NODE_ENV
         value: production
       - key: NEXT_PUBLIC_APP_URL
@@ -29,6 +31,10 @@ services:
       - key: ZAINPAY_DEFAULT_ZAINBOX
         sync: false
       - key: ZAINPAY_WEBHOOK_SECRET
+        sync: false
+      - key: ZAINPAY_SECRET_KEY
+        sync: false
+      - key: ZAINPAY_ZAINBOX_CODE
         sync: false
       - key: TracKasuwa_WINDOWS_LATEST_VERSION
         value: 1.0.0

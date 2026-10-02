@@ -1,0 +1,79 @@
+▲ Next.js 16.2.12 (Turbopack)
+- Environments: .env.local
+- Experiments (use with caution):
+  · optimizePackageImports
+
+node : ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: 
+https://nextjs.org/docs/messages/middleware-to-proxy
+At line:2 char:1
++ node node_modules/next/dist/bin/next build *> build-evidence/ui-ux/bu ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (⚠ The "middlewa...leware-to-proxy:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  Creating an optimized production build ...
+✓ Compiled successfully in 57s
+  Running TypeScript ...
+  Finished TypeScript in 57s ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/43) ...
+  Generating static pages using 7 workers (10/43) 
+  Generating static pages using 7 workers (21/43) 
+  Generating static pages using 7 workers (32/43) 
+✓ Generating static pages using 7 workers (43/43) in 3.6s
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /accounting
+├ ƒ /admin
+├ ƒ /api/accounting
+├ ƒ /api/ai
+├ ƒ /api/audit
+├ ƒ /api/auth/signup
+├ ƒ /api/imports
+├ ƒ /api/merchants/onboard
+├ ƒ /api/payments/initialize
+├ ƒ /api/payments/verify
+├ ƒ /api/receipts/lookup
+├ ƒ /api/subscriptions/verification
+├ ƒ /api/users
+├ ƒ /api/users/[id]
+├ ƒ /api/version
+├ ƒ /api/webhooks/zainpay
+├ ƒ /assistant
+├ ƒ /audit
+├ ƒ /change-password
+├ ƒ /dashboard
+├ ƒ /download
+├ ƒ /features
+├ ƒ /forgot-password
+├ ƒ /imports
+├ ƒ /inventory
+├ ƒ /login
+├ ƒ /merchants
+├ ƒ /notifications
+├ ƒ /pos
+├ ƒ /pricing
+├ ƒ /products
+├ ƒ /purchase-orders
+├ ƒ /receipts
+├ ƒ /receipts/lookup
+├ ƒ /reports
+├ ƒ /sales
+├ ƒ /settings
+├ ƒ /signup
+├ ƒ /subscriptions
+├ ƒ /transfers
+├ ƒ /users
+├ ƒ /vendors
+└ ƒ /warehouses
+
+
+ƒ Proxy (Middleware)
+
+ƒ  (Dynamic)  server-rendered on demand
+
+
+EXIT_CODE=0

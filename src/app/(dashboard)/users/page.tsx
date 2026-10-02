@@ -249,7 +249,7 @@ export default function UsersPage() {
   if (currentUser?.role !== "business_owner") {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <ShieldCheck className="h-12 w-12 text-muted-foreground" />
+        <ShieldCheck className="h-12 w-12 text-muted-foreground" strokeWidth={1.75} />
         <div className="text-center">
           <p className="font-medium">{t.users.access_denied}</p>
           <p className="text-sm text-muted-foreground">
@@ -263,24 +263,24 @@ export default function UsersPage() {
   // ── Render ────────────────────────────────────────────────
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{t.users.title}</h1>
-          <p className="text-muted-foreground text-sm">
+          <h1 className="tt-page-title">{t.users.title}</h1>
+          <p className="tt-muted text-sm">
             {t.users.subtitle.replace("{count}", String(users.length))}
           </p>
         </div>
         <Button onClick={() => setIsCreateOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-4 w-4 mr-2" strokeWidth={1.75} />
           {t.users.add_user}
         </Button>
       </div>
 
       {/* Table */}
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="min-w-0 overflow-hidden p-0">
           <Table>
             <TableHeader>
               <TableRow>
@@ -350,7 +350,7 @@ export default function UsersPage() {
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon-sm">
-                            <MoreHorizontal className="h-4 w-4" />
+                            <MoreHorizontal className="h-4 w-4" strokeWidth={1.75} />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
@@ -364,7 +364,7 @@ export default function UsersPage() {
                               });
                             }}
                           >
-                            <Edit className="h-4 w-4 mr-2" />
+                            <Edit className="h-4 w-4 mr-2" strokeWidth={1.75} />
                             {t.users.edit}
                           </DropdownMenuItem>
                           <DropdownMenuItem
@@ -374,13 +374,13 @@ export default function UsersPage() {
                               setConfirmNewPassword("");
                             }}
                           >
-                            <Key className="h-4 w-4 mr-2" />
+                            <Key className="h-4 w-4 mr-2" strokeWidth={1.75} />
                             {t.users.reset_password}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           {u.status === "active" ? (
                             <DropdownMenuItem
-                              className="text-amber-600"
+                              className="text-[var(--c-warn)]"
                               onClick={() =>
                                 statusMutation.mutate({
                                   id: u.id,
@@ -388,12 +388,12 @@ export default function UsersPage() {
                                 })
                               }
                             >
-                              <UserX className="h-4 w-4 mr-2" />
+                              <UserX className="h-4 w-4 mr-2" strokeWidth={1.75} />
                               {t.users.suspend_user}
                             </DropdownMenuItem>
                           ) : (
                             <DropdownMenuItem
-                              className="text-green-600"
+                              className="text-[var(--c-success)]"
                               onClick={() =>
                                 statusMutation.mutate({
                                   id: u.id,
@@ -401,7 +401,7 @@ export default function UsersPage() {
                                 })
                               }
                             >
-                              <UserCheck className="h-4 w-4 mr-2" />
+                              <UserCheck className="h-4 w-4 mr-2" strokeWidth={1.75} />
                               {t.users.activate_user}
                             </DropdownMenuItem>
                           )}
@@ -411,7 +411,7 @@ export default function UsersPage() {
                               className="text-destructive"
                               onClick={() => setDeleteTarget(u)}
                             >
-                              <Trash2 className="h-4 w-4 mr-2" />
+                              <Trash2 className="h-4 w-4 mr-2" strokeWidth={1.75} />
                               {t.users.delete}
                             </DropdownMenuItem>
                           )}
@@ -428,7 +428,7 @@ export default function UsersPage() {
 
       {/* ── Create User Dialog ─────────────────────────────── */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md w-[calc(100%-2rem)] max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t.users.create_dialog_title}</DialogTitle>
             <DialogDescription>{t.users.create_dialog_desc}</DialogDescription>
@@ -527,7 +527,7 @@ export default function UsersPage() {
 
       {/* ── Edit User Dialog ───────────────────────────────── */}
       <Dialog open={!!editUser} onOpenChange={(o) => !o && setEditUser(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md w-[calc(100%-2rem)] max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t.users.edit_dialog_title}</DialogTitle>
             <DialogDescription>{t.users.edit_dialog_desc}</DialogDescription>
@@ -602,7 +602,7 @@ export default function UsersPage() {
         open={!!resetPwdUser}
         onOpenChange={(o) => !o && setResetPwdUser(null)}
       >
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md w-[calc(100%-2rem)] max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t.users.reset_password_title}</DialogTitle>
             <DialogDescription>{t.users.reset_password_desc}</DialogDescription>
@@ -670,10 +670,10 @@ export default function UsersPage() {
         open={!!deleteTarget}
         onOpenChange={(o) => !o && setDeleteTarget(null)}
       >
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md w-[calc(100%-2rem)] max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
-              <AlertTriangle className="h-5 w-5" />
+              <AlertTriangle className="h-5 w-5" strokeWidth={1.75} />
               {t.users.delete_title}
             </DialogTitle>
             <DialogDescription>{t.users.delete_warning}</DialogDescription>

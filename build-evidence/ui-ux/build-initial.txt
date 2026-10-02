@@ -1,0 +1,30 @@
+▲ Next.js 16.2.12 (Turbopack)
+- Environments: .env.local
+- Experiments (use with caution):
+  · optimizePackageImports
+
+node : ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: 
+https://nextjs.org/docs/messages/middleware-to-proxy
+At line:2 char:1
++ node node_modules/next/dist/bin/next build *> build-evidence/ui-ux/bu ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (⚠ The "middlewa...leware-to-proxy:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  Creating an optimized production build ...
+✓ Compiled successfully in 107s
+  Running TypeScript ...
+Failed to type check.
+
+.next/dev/types/routes.d.ts:116:3
+Type error: Declaration or statement expected.
+
+  [90m114 |[0m }
+  [90m115 |[0m [33mPromise[0m<[33mParamMap[0m[[33mAppRouteHandlerRoute[0m]>
+[31m[1m>[0m [90m116 |[0m   }
+  [90m    |[0m   [31m[1m^[0m
+  [90m117 |[0m }
+  [90m118 |[0m
+Next.js build worker exited with code: 1 and signal: null
+
+EXIT_CODE=1
