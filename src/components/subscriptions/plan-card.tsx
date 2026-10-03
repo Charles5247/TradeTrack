@@ -297,6 +297,7 @@ export function PlanCard({
   isLoading,
   selectLabel,
   selectHref,
+  catalogOnly = false,
 }: {
   plan: Plan;
   allPlans: Plan[];
@@ -313,6 +314,8 @@ export function PlanCard({
    *  instead of a button calling `onSelect` — used by the logged-out
    *  public Pricing page, which has no mutation to trigger. */
   selectHref?: string;
+  /** Platform catalog management has its own edit actions, not checkout. */
+  catalogOnly?: boolean;
 }) {
   const { t } = useI18n();
   const isCurrent = plan.id === currentPlanId;
@@ -388,7 +391,7 @@ export function PlanCard({
             </span>
           ) : (
             <>
-              <span className="text-3xl font-bold">
+              <span className="tt-stat-value tt-tabular">
                 {formatCurrency(displayedPrice)}
               </span>
               <span className="text-muted-foreground text-sm">
@@ -400,7 +403,7 @@ export function PlanCard({
 
         {/* Savings line for annual billing */}
         {showAsYearly && yearlySavings > 0 && (
-          <p className="text-xs text-green-600 dark:text-green-500 font-medium mt-1">
+          <p className="text-xs text-[var(--c-success)] font-medium mt-1">
             {t.subscriptions.yearly_savings_line
               .replace("{savings}", formatCurrency(yearlySavings))
               .replace("{yearly}", formatCurrency(yearlyPrice))}
@@ -429,7 +432,7 @@ export function PlanCard({
               <li key={feature} className="flex items-start gap-2 text-sm">
                 <CheckCircle
                   className={`h-4 w-4 shrink-0 mt-0.5 ${
-                    pending ? "text-muted-foreground" : "text-green-500"
+                    pending ? "text-muted-foreground" : "text-[var(--c-success)]"
                   }`}
                 />
                 <span className={pending ? "text-muted-foreground" : undefined}>
@@ -457,7 +460,7 @@ export function PlanCard({
           })}
         </ul>
 
-        {isEnterprise ? (
+        {catalogOnly ? null : isEnterprise ? (
           <Button className="w-full mt-4" variant="outline" asChild>
             <a
               href={`mailto:${SALES_CONTACT_EMAIL}?subject=${encodeURIComponent(

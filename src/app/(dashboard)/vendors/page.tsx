@@ -325,12 +325,12 @@ function VendorsPageInner() {
           <a href="/inventory" className="underline font-medium">{t.vendors.stock_check_link}</a>
         </div>
       )}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">{t.vendors.title}</h1>
-          <p className="text-muted-foreground text-sm">
+          <h1 className="tt-page-title">{t.vendors.title}</h1>
+          <p className="tt-muted text-sm">
             {t.vendors.subtitle_debt.split(":")[0]}:{" "}
-            <span className="font-semibold text-amber-600">
+            <span className="font-semibold text-[var(--c-warn)]">
               {formatCurrency(totalPending)}
             </span>
           </p>
@@ -343,9 +343,9 @@ function VendorsPageInner() {
 
       {/* Alert Banner */}
       {totalPending > 0 && (
-        <div className="flex items-center gap-3 p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-          <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
-          <p className="text-sm text-amber-800 dark:text-amber-200">
+        <div className="flex items-center gap-3 p-4 bg-[color-mix(in_oklch,var(--c-warn),transparent_92%)] border border-[color-mix(in_oklch,var(--c-warn),transparent_65%)] rounded-lg">
+          <AlertCircle className="h-5 w-5 text-[var(--c-warn)] shrink-0" />
+          <p className="text-sm text-foreground">
             {t.vendors.alert_banner.split("{amount}")[0]}
             <strong>{formatCurrency(totalPending)}</strong>
             {t.vendors.alert_banner.split("{amount}")[1]}
@@ -354,7 +354,7 @@ function VendorsPageInner() {
       )}
 
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="min-w-0 overflow-hidden p-0">
           <Table>
             <TableHeader>
               <TableRow>
@@ -384,7 +384,7 @@ function VendorsPageInner() {
                 <TableRow>
                   <TableCell
                     colSpan={9}
-                    className="h-32 text-center text-muted-foreground"
+                    className="h-32 text-center tt-muted"
                   >
                     {t.vendors.no_transactions}
                   </TableCell>
@@ -409,7 +409,7 @@ function VendorsPageInner() {
                             className={
                               new Date(v.expected_payment_date) < new Date() &&
                               v.status === "pending"
-                                ? "text-red-600 font-medium"
+                                ? "text-[var(--c-danger)] font-medium"
                                 : ""
                             }
                           >
@@ -420,14 +420,14 @@ function VendorsPageInner() {
                         )}
                       </TableCell>
                       <TableCell>{formatCurrency(v.total_value)}</TableCell>
-                      <TableCell className="text-green-600">
+                      <TableCell className="text-[var(--c-success)]">
                         {formatCurrency(v.amount_paid)}
                       </TableCell>
                       <TableCell
                         className={
                           balance > 0
-                            ? "text-amber-600 font-semibold"
-                            : "text-green-600"
+                            ? "text-[var(--c-warn)] font-semibold"
+                            : "text-[var(--c-success)]"
                         }
                       >
                         {formatCurrency(balance)}
@@ -439,7 +439,7 @@ function VendorsPageInner() {
                         {(v.status === "pending" || v.status === "partial") &&
                           (!isOnline || !v.paymentReady) && (
                             <p
-                              className="text-xs text-muted-foreground mb-1"
+                              className="text-xs tt-muted mb-1"
                               role="status"
                             >
                               {!isOnline
@@ -451,7 +451,7 @@ function VendorsPageInner() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="h-7 text-xs"
+                            className="min-h-11 sm:min-h-8 text-xs"
                             onClick={() => setViewVendor(v)}
                           >
                             {t.vendors.view}
@@ -461,7 +461,7 @@ function VendorsPageInner() {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-7 text-xs text-green-600 border-green-200"
+                              className="min-h-11 sm:min-h-8 text-xs text-[var(--c-success)] border-[var(--c-success)]"
                               disabled={
                                 !isOnline ||
                                 !v.paymentReady ||
@@ -489,12 +489,12 @@ function VendorsPageInner() {
 
       {/* Create Form */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[calc(100%-2rem)] max-h-[90dvh] overflow-y-auto max-w-2xl">
           <DialogHeader>
             <DialogTitle>{t.vendors.new_transaction}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>{t.vendors.vendor_name_required}</Label>
                 <Input
@@ -544,7 +544,7 @@ function VendorsPageInner() {
                 {t.vendors.products_required}
               </Label>
               {formData.items.map((item, idx) => (
-                <div key={idx} className="grid grid-cols-3 gap-2 mb-2">
+                <div key={idx} className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
                   <Select
                     onValueChange={(v) => {
                       const p = products.find((pr) => pr.id === v);
@@ -645,12 +645,12 @@ function VendorsPageInner() {
           setPaymentDialog({ open, vendor: open ? paymentDialog.vendor : null })
         }
       >
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-h-[90dvh] overflow-y-auto max-w-md">
           <DialogHeader>
             <DialogTitle>Record payment</DialogTitle>
           </DialogHeader>
           {(!isOnline || !paymentReady) && (
-            <p role="status" className="text-sm text-muted-foreground">
+            <p role="status" className="text-sm tt-muted">
               {!isOnline
                 ? "Reconnect to record payment."
                 : "Waiting for this transaction, its items and linked sale to sync."}
@@ -659,7 +659,7 @@ function VendorsPageInner() {
           <div className="space-y-4">
             <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm">
               <p className="font-medium">{paymentDialog.vendor?.vendor_name}</p>
-              <p className="text-muted-foreground">
+              <p className="tt-muted">
                 Balance:{" "}
                 {formatCurrency(
                   (paymentDialog.vendor?.total_value || 0) -
@@ -692,7 +692,7 @@ function VendorsPageInner() {
               <Label>{t.vendors.proof_of_payment}</Label>
               {paymentReceiptUrl ? (
                 <div className="flex items-center justify-between rounded-md border border-border p-2 text-xs">
-                  <span className="text-green-600">
+                  <span className="text-[var(--c-success)]">
                     {t.vendors.receipt_uploaded}
                   </span>
                   <Button
@@ -794,7 +794,7 @@ function VendorsPageInner() {
       {/* View Dialog */}
       {viewVendor && (
         <Dialog open={!!viewVendor} onOpenChange={() => setViewVendor(null)}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-h-[90dvh] overflow-y-auto max-w-lg">
             <DialogHeader>
               <DialogTitle>
                 {t.vendors.view_dialog_title.replace(
@@ -806,25 +806,25 @@ function VendorsPageInner() {
             <div className="space-y-4 text-sm">
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <span className="text-muted-foreground">
+                  <span className="tt-muted">
                     {t.common.status}:
                   </span>{" "}
                   {statusBadge(viewVendor.status)}
                 </div>
                 <div>
-                  <span className="text-muted-foreground">
+                  <span className="tt-muted">
                     {t.vendors.phone}:
                   </span>{" "}
                   {viewVendor.vendor_phone || "—"}
                 </div>
                 <div>
-                  <span className="text-muted-foreground">
+                  <span className="tt-muted">
                     {t.vendors.issued}:
                   </span>{" "}
                   {formatDate(viewVendor.date_issued)}
                 </div>
                 <div>
-                  <span className="text-muted-foreground">
+                  <span className="tt-muted">
                     {t.vendors.expected}:
                   </span>{" "}
                   {viewVendor.expected_payment_date
@@ -832,16 +832,16 @@ function VendorsPageInner() {
                     : "—"}
                 </div>
                 <div>
-                  <span className="text-muted-foreground">
+                  <span className="tt-muted">
                     {t.vendors.total}:
                   </span>{" "}
                   <strong>{formatCurrency(viewVendor.total_value)}</strong>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">
+                  <span className="tt-muted">
                     {t.vendors.paid}:
                   </span>{" "}
-                  <span className="text-green-600 font-medium">
+                  <span className="text-[var(--c-success)] font-medium">
                     {formatCurrency(viewVendor.amount_paid)}
                   </span>
                 </div>

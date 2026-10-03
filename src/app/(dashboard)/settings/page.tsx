@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Save, User, Building, Globe, Palette, Lock, Loader2 } from 'lucide-react';
+import { Save, User, Building, Globe, Palette, Lock, Loader2, Sun, Moon, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,6 +18,8 @@ import { cacheUserSession } from '@/lib/offline/db';
 
 export default function SettingsPage() {
   const { user, setUser } = useAuthStore();
+  const isPlatformOwner = user?.role === 'platform_owner';
+  const hasBusiness = !isPlatformOwner && Boolean(user?.organization_id);
   const { setCurrency, setOrganizationName, setOrganizationAddress, setOrganizationPhone } = useOrgStore();
   const { theme, setTheme } = useTheme();
   const { t, locale, setLocale } = useI18n();
@@ -192,22 +194,22 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">{t.settings.title}</h1>
-        <p className="text-muted-foreground text-sm">{t.settings.subtitle}</p>
+        <h1 className="tt-page-title">{t.settings.title}</h1>
+        <p className="tt-muted text-sm">{isPlatformOwner ? 'Manage your platform account, appearance, and security.' : t.settings.subtitle}</p>
       </div>
 
-      <Tabs defaultValue="profile">
-        <TabsList className="grid grid-cols-4 w-full max-w-lg">
+      <Tabs key={user?.role} defaultValue="profile" orientation="vertical" className="grid items-start gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-8">
+        <TabsList aria-label="Settings sections" className="grid grid-cols-2 gap-1 border-0 lg:sticky lg:top-4 lg:grid-cols-1 [&>button]:min-h-11 [&>button]:justify-start [&>button]:rounded-[var(--radius)] [&>button]:border-0 [&>button]:px-3 [&>button]:data-[state=active]:bg-accent">
           <TabsTrigger value="profile">
             <User className="h-4 w-4 mr-1.5" />
             {t.settings.tab_profile}
           </TabsTrigger>
-          <TabsTrigger value="organization">
+          {hasBusiness && <TabsTrigger value="organization">
             <Building className="h-4 w-4 mr-1.5" />
             {t.settings.tab_business}
-          </TabsTrigger>
+          </TabsTrigger>}
           <TabsTrigger value="appearance">
             <Palette className="h-4 w-4 mr-1.5" />
             {t.settings.tab_display}
@@ -217,24 +219,25 @@ export default function SettingsPage() {
             {t.settings.tab_security}
           </TabsTrigger>
         </TabsList>
+        <div className="min-w-0 space-y-6">
 
         {/* ── Profile Tab ─────────────────────────────────── */}
-        <TabsContent value="profile" className="mt-6">
+        <TabsContent value="profile" className="mt-0">
           <Card>
             <CardHeader>
-              <CardTitle>{t.settings.personal_information}</CardTitle>
+              <CardTitle className="tt-section-title">{t.settings.personal_information}</CardTitle>
               <CardDescription>{t.settings.personal_information_desc}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Avatar */}
               <div className="flex items-center gap-4 pb-4 border-b">
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-2xl font-bold text-primary">
+                <div className="tt-avatar shrink-0 w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-2xl font-bold text-primary">
                   {user?.full_name?.charAt(0)?.toUpperCase() || 'U'}
                 </div>
-                <div>
+                <div className="min-w-0 break-words">
                   <p className="font-medium">{user?.full_name}</p>
-                  <p className="text-sm text-muted-foreground">{user?.email}</p>
-                  <p className="text-xs text-muted-foreground capitalize mt-0.5">
+                  <p className="text-sm tt-muted">{user?.email}</p>
+                  <p className="text-xs tt-muted capitalize mt-0.5">
                     {user?.role?.replace('_', ' ')}
                   </p>
                 </div>
@@ -264,10 +267,10 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <Label>{t.settings.email_address}</Label>
                 <Input value={user?.email || ''} disabled className="bg-muted" />
-                <p className="text-xs text-muted-foreground">{t.settings.email_cannot_change}</p>
+                <p className="text-xs tt-muted">{t.settings.email_cannot_change}</p>
               </div>
 
-              <Button onClick={handleUpdateProfile} disabled={isProfileLoading}>
+              <Button className="w-full sm:w-auto" onClick={handleUpdateProfile} disabled={isProfileLoading}>
                 {isProfileLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : (
@@ -280,10 +283,10 @@ export default function SettingsPage() {
         </TabsContent>
 
         {/* ── Organization Tab ─────────────────────────────── */}
-        <TabsContent value="organization" className="mt-6">
+        {hasBusiness && <TabsContent value="organization" className="mt-0">
           <Card>
             <CardHeader>
-              <CardTitle>{t.settings.business_information}</CardTitle>
+              <CardTitle className="tt-section-title">{t.settings.business_information}</CardTitle>
               <CardDescription>{t.settings.business_information_desc}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -297,7 +300,7 @@ export default function SettingsPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="org_phone">{t.common.phone}</Label>
                   <Input
@@ -330,7 +333,7 @@ export default function SettingsPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>{t.settings.currency}</Label>
                   <Select
@@ -368,7 +371,7 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <Button onClick={handleUpdateOrg} disabled={isOrgLoading}>
+              <Button className="w-full sm:w-auto" onClick={handleUpdateOrg} disabled={isOrgLoading}>
                 {isOrgLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : (
@@ -378,31 +381,34 @@ export default function SettingsPage() {
               </Button>
             </CardContent>
           </Card>
-        </TabsContent>
+        </TabsContent>}
 
         {/* ── Appearance Tab ──────────────────────────────── */}
-        <TabsContent value="appearance" className="mt-6">
+        <TabsContent value="appearance" className="mt-0">
           <Card>
             <CardHeader>
-              <CardTitle>{t.settings.display_preferences}</CardTitle>
+              <CardTitle className="tt-section-title">{t.settings.display_preferences}</CardTitle>
               <CardDescription>{t.settings.display_preferences_desc}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Theme */}
               <div className="space-y-3">
                 <Label>{t.settings.theme}</Label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {(['light', 'dark', 'system'] as const).map((themeOption) => (
                     <button
                       key={themeOption}
+                      type="button"
+                      aria-pressed={theme === themeOption}
                       onClick={() => setTheme(themeOption)}
-                      className={`border-2 rounded-lg p-3 text-sm font-medium capitalize transition-all ${
+                      className={`min-h-11 border rounded-[var(--radius)] p-4 text-sm font-medium capitalize transition-all ${
                         theme === themeOption
                           ? 'border-primary bg-primary/10 text-primary'
-                          : 'border-border hover:border-primary/50 text-muted-foreground'
+                          : 'border-border hover:border-primary/50 tt-muted'
                       }`}
                     >
-                      {themeOption === 'light' ? `☀️ ${t.settings.theme_light}` : themeOption === 'dark' ? `🌙 ${t.settings.theme_dark}` : `💻 ${t.settings.theme_system}`}
+                      {themeOption === 'light' ? <Sun className="mx-auto mb-2 h-5 w-5" strokeWidth={1.75} /> : themeOption === 'dark' ? <Moon className="mx-auto mb-2 h-5 w-5" strokeWidth={1.75} /> : <Monitor className="mx-auto mb-2 h-5 w-5" strokeWidth={1.75} />}
+                      {themeOption === 'light' ? t.settings.theme_light : themeOption === 'dark' ? t.settings.theme_dark : t.settings.theme_system}
                     </button>
                   ))}
                 </div>
@@ -416,7 +422,7 @@ export default function SettingsPage() {
                   onValueChange={(v) => setLocale(v as Locale)}
                 >
                   <SelectTrigger className="max-w-xs">
-                    <Globe className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <Globe className="h-4 w-4 mr-2 tt-muted" />
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -427,7 +433,7 @@ export default function SettingsPage() {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs tt-muted">
                   {t.settings.language_hint}
                 </p>
               </div>
@@ -436,10 +442,10 @@ export default function SettingsPage() {
         </TabsContent>
 
         {/* ── Security Tab ─────────────────────────────────── */}
-        <TabsContent value="security" className="mt-6">
+        <TabsContent value="security" className="mt-0">
           <Card>
             <CardHeader>
-              <CardTitle>{t.settings.change_password}</CardTitle>
+              <CardTitle className="tt-section-title">{t.settings.change_password}</CardTitle>
               <CardDescription>{t.settings.change_password_desc}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -471,6 +477,7 @@ export default function SettingsPage() {
                 />
               </div>
               <Button
+                className="w-full sm:w-auto"
                 onClick={handleChangePassword}
                 disabled={isPwdLoading}
               >
@@ -484,6 +491,7 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+        </div>
       </Tabs>
     </div>
   );

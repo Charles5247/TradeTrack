@@ -1,0 +1,89 @@
+▲ Next.js 16.2.12 (Turbopack)
+- Environments: .env.local
+- Experiments (use with caution):
+  · optimizePackageImports
+
+node : ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: 
+https://nextjs.org/docs/messages/middleware-to-proxy
+At line:2 char:290
++ ... typeExit }; node node_modules/next/dist/bin/next build *> build-evide ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (⚠ The "middlewa...leware-to-proxy:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  Creating an optimized production build ...
+Turbopack build encountered 3 warnings:
+[next]/internal/font/google/inter_ea55aed0.module.css
+Error while requesting resource
+There was an issue establishing a connection while requesting 
+https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_ea55aed0.module.css
+    [next]/internal/font/google/inter_ea55aed0.js
+    ./src/app/layout.tsx
+
+
+[next]/internal/font/google/jetbrains_mono_46ea6e1d.module.css
+Error while requesting resource
+There was an issue establishing a connection while requesting 
+https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/jetbrains_mono_46ea6e1d.module.css
+    [next]/internal/font/google/jetbrains_mono_46ea6e1d.js
+    ./src/app/layout.tsx
+
+
+[next]/internal/font/google/space_grotesk_a24e7e3a.module.css
+Error while requesting resource
+There was an issue establishing a connection while requesting 
+https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/space_grotesk_a24e7e3a.module.css
+    [next]/internal/font/google/space_grotesk_a24e7e3a.js
+    ./src/app/layout.tsx
+
+
+
+> Build error occurred
+Error: Turbopack build failed with 3 errors:
+[next]/internal/font/google/inter_ea55aed0.module.css
+next/font: error:
+Failed to fetch `Inter` from Google Fonts.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_ea55aed0.module.css
+    [next]/internal/font/google/inter_ea55aed0.js
+    ./src/app/layout.tsx
+
+
+[next]/internal/font/google/jetbrains_mono_46ea6e1d.module.css
+next/font: error:
+Failed to fetch `JetBrains Mono` from Google Fonts.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/jetbrains_mono_46ea6e1d.module.css
+    [next]/internal/font/google/jetbrains_mono_46ea6e1d.js
+    ./src/app/layout.tsx
+
+
+[next]/internal/font/google/space_grotesk_a24e7e3a.module.css
+next/font: error:
+Failed to fetch `Space Grotesk` from Google Fonts.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/space_grotesk_a24e7e3a.module.css
+    [next]/internal/font/google/space_grotesk_a24e7e3a.js
+    ./src/app/layout.tsx
+
+
+    at ignore-listed frames
+EXIT_CODE=1

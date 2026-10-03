@@ -4,6 +4,7 @@ import React from 'react';
 import { usePathname } from 'next/navigation';
 import { AppScreen } from '@/components/ui/app-screen';
 import { isPosRoute, isDenseRoute } from '@/lib/utils/route-mode';
+import { useAuthStore } from '@/store';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -25,8 +26,9 @@ interface DashboardLayoutProps {
  */
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname() ?? '';
+  const { user } = useAuthStore();
   const pos = isPosRoute(pathname);
-  const dense = isDenseRoute(pathname);
+  const dense = isDenseRoute(pathname) || (pathname === '/dashboard' && user?.role === 'platform_owner');
   // POS/KDS screens own their own edge-to-edge padding (README §9.2's
   // full-screen mode) instead of the shared `p-4 lg:p-6` content inset —
   // pass noPadding through so the POS page doesn't need a negative-margin

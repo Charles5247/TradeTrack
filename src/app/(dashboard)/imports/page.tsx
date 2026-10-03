@@ -2,5 +2,5 @@ import { AccessGuard } from '@/components/shared/access-guard';
 import { ImportWorkbench } from '@/components/imports/import-workbench';
 import Link from 'next/link';
 export default function ImportsPage() {
-  return <AccessGuard allow={['business_owner','admin']}><div className="space-y-4 p-4"><h1 className="text-2xl font-semibold">Business-data import</h1><Link className="underline" href="/assistant">Draft product rows with the assistant</Link><ImportWorkbench /></div></AccessGuard>;
+  return <AccessGuard allow={['business_owner','admin']}><div className="min-w-0 space-y-6"><h1 className="tt-page-title">Business-data import</h1><Link className="inline-flex min-h-11 items-center text-sm font-medium text-primary underline underline-offset-4" href="/assistant">Draft product rows with the assistant</Link><ImportWorkbench /></div></AccessGuard>;
 }

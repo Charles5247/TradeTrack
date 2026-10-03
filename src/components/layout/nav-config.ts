@@ -18,6 +18,9 @@ import {
   Building2,
   Shield,
   Search,
+  FileInput,
+  Calculator,
+  Sparkles,
 } from "lucide-react";
 import type { UserRole } from "@/types";
 
@@ -40,6 +43,7 @@ import type { UserRole } from "@/types";
  */
 export interface NavItem {
   navKey: string;
+  label?: string;
   href: string;
   icon: ComponentType<LucideProps>;
   /** Roles allowed to see this item. Omit for "every authenticated role". */
@@ -101,6 +105,8 @@ export const NAV_GROUPS_BO: NavGroup[] = [
         icon: Warehouse,
         roles: ["business_owner", "admin"],
       },
+      { navKey: "warehouses", href: "/warehouses", icon: Warehouse, roles: ["business_owner", "admin"] },
+      { navKey: "imports", label: "Imports", href: "/imports", icon: FileInput, roles: ["business_owner", "admin"] },
       {
         navKey: "purchaseOrders",
         href: "/purchase-orders",
@@ -130,6 +136,8 @@ export const NAV_GROUPS_BO: NavGroup[] = [
         icon: BarChart3,
         roles: ["business_owner", "admin"],
       },
+      { navKey: "accounting", label: "Accounting", href: "/accounting", icon: Calculator, roles: ["business_owner", "admin"] },
+      { navKey: "assistant", label: "Assistant", href: "/assistant", icon: Sparkles, roles: ["business_owner", "admin"] },
       {
         navKey: "audit",
         href: "/audit",
@@ -230,6 +238,9 @@ export function getBreadcrumbForPath(
   role: UserRole | undefined,
   navLabels: Record<string, string>,
 ): { breadcrumb: string[]; title: string } {
+  if (role === "platform_owner" && (pathname === "/dashboard" || pathname === "/admin")) {
+    return { breadcrumb: ["Platform"], title: "Platform overview" };
+  }
   const groups = role === "platform_owner" ? NAV_GROUPS_PO : NAV_GROUPS_BO;
   let bestMatch: { group: NavGroup; item: NavItem } | null = null;
 
@@ -248,7 +259,7 @@ export function getBreadcrumbForPath(
   }
 
   if (bestMatch) {
-    const label = navLabels[bestMatch.item.navKey] ?? bestMatch.item.navKey;
+    const label = navLabels[bestMatch.item.navKey] ?? bestMatch.item.label ?? bestMatch.item.navKey;
     return { breadcrumb: [bestMatch.group.title], title: label };
   }
 

@@ -111,7 +111,7 @@ export function Header() {
   };
 
   return (
-    <header className="h-[var(--header-h)] border-b border-border bg-[color-mix(in_oklch,var(--c-bg),transparent_20%)] backdrop-blur-[10px] flex items-center gap-4 px-4 lg:px-6 shrink-0 sticky top-0 z-10">
+    <header className="h-[var(--header-h)] border-b border-border bg-[color-mix(in_oklch,var(--c-bg),transparent_20%)] backdrop-blur-[10px] flex items-center gap-2 sm:gap-4 px-3 sm:px-4 lg:px-6 shrink-0 sticky top-0 z-10">
       <Button
         variant="ghost"
         size="icon"
@@ -150,7 +150,7 @@ export function Header() {
       >
         <Search className="h-4 w-4 shrink-0" strokeWidth={1.75} />
         <span className="flex-1 text-left truncate">
-          {t.header.search_placeholder}
+          {user?.role === "platform_owner" ? "Search platform navigation…" : t.header.search_placeholder}
         </span>
         <Kbd>⌘K</Kbd>
       </button>
@@ -196,13 +196,13 @@ export function Header() {
           <span>
             {isOnline
               ? t.header.online
-              : pendingCount > 0
+              : user?.role !== "platform_owner" && pendingCount > 0
                 ? `${t.header.offline} · ${pendingCount} queued`
                 : t.header.offline}
           </span>
         </div>
 
-        {syncStatus === "syncing" ? (
+        {user?.role !== "platform_owner" && (syncStatus === "syncing" ? (
           <Button
             variant="ghost"
             size="icon-sm"
@@ -234,7 +234,7 @@ export function Header() {
               </Badge>
             )}
           </Button>
-        )}
+        ))}
 
         <Button
           variant="ghost"

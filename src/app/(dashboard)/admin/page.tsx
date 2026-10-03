@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
+import { StatCard } from "@/components/ui/stat-card";
 import { useQuery } from "@tanstack/react-query";
 import {
   Building2,
@@ -40,6 +42,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/ui/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/ui/loading-state";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -58,83 +61,6 @@ import { useI18n } from "@/i18n";
 
 const supabase = createClient();
 
-// ─── KPI Card Component ───────────────────────────────────────────────────────
-interface KPICardProps {
-  title: string;
-  value: string | number;
-  subtitle?: string;
-  icon: React.ReactNode;
-  trend?: number;
-  color?: "blue" | "green" | "orange" | "purple" | "red";
-  loading?: boolean;
-}
-
-function KPICard({
-  title,
-  value,
-  subtitle,
-  icon,
-  trend,
-  color = "blue",
-  loading,
-}: KPICardProps) {
-  const colorTokenMap: Record<string, string> = {
-    blue: "var(--c-info)",
-    green: "var(--c-success)",
-    orange: "var(--c-warn)",
-    purple: "var(--c-primary)",
-    red: "var(--c-danger)",
-  };
-
-  if (loading) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <Skeleton className="h-4 w-24 mb-3" />
-          <Skeleton className="h-8 w-32 mb-2" />
-          <Skeleton className="h-3 w-20" />
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const tone = colorTokenMap[color];
-  return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-sm font-medium tt-muted">{title}</p>
-          <div
-            className="p-2 rounded-lg"
-            style={{
-              background: `color-mix(in oklch, ${tone}, transparent 88%)`,
-              color: tone,
-            }}
-          >
-            {icon}
-          </div>
-        </div>
-        <div className="space-y-1">
-          <p className="tt-stat-value tt-tabular">{value}</p>
-          {subtitle && <p className="text-xs tt-muted">{subtitle}</p>}
-          {trend !== undefined && (
-            <p
-              className="text-xs font-medium tt-tabular"
-              style={{
-                color: trend >= 0 ? "var(--c-success)" : "var(--c-danger)",
-              }}
-            >
-              {trend >= 0 ? "\u2191" : "\u2193"} {Math.abs(trend)}% from last
-              month
-            </p>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-// ─── Status Badge ─────────────────────────────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
   const map: Record<
     string,
@@ -201,7 +127,7 @@ export default function AdminPage() {
   const isOwnerOrAdmin = user?.role === "platform_owner";
 
   // ── Merchants query ───────────────────────────────────────────────────────
-  const { data: merchants, isLoading: merchantsLoading } = useQuery({
+  const { data: merchants, isLoading: merchantsLoading, error: merchantsError } = useQuery({
     queryKey: ["admin-merchants", refreshKey],
     queryFn: async (): Promise<MerchantRow[]> => {
       const { data, error } = await supabase
@@ -211,17 +137,14 @@ export default function AdminPage() {
         )
         .order("created_at", { ascending: false })
         .limit(50);
-      if (error) {
-        console.error("merchants query error:", error);
-        return [];
-      }
+      if (error) throw new Error(error.message);
       return data as any as MerchantRow[];
     },
     enabled: isOwnerOrAdmin,
   });
 
   // ── Subscriptions / revenue query ─────────────────────────────────────────
-  const { data: revenueData, isLoading: revenueLoading } = useQuery({
+  const { data: revenueData, isLoading: revenueLoading, error: revenueError } = useQuery({
     queryKey: ["admin-revenue", refreshKey],
     queryFn: async (): Promise<RevenuePoint[]> => {
       const { data, error } = await supabase
@@ -230,10 +153,7 @@ export default function AdminPage() {
         .eq("status", "paid")
         .order("created_at", { ascending: true })
         .limit(200);
-      if (error) {
-        console.error("invoices query error:", error);
-        return [];
-      }
+      if (error) throw new Error(error.message);
       // Group by month
       const monthMap = new Map<string, { revenue: number; invoices: number }>();
       ((data as any[]) ?? []).forEach(
@@ -258,7 +178,7 @@ export default function AdminPage() {
   });
 
   // ── Acquisition query ─────────────────────────────────────────────────────
-  const { data: acquisitionData, isLoading: acquisitionLoading } = useQuery({
+  const { data: acquisitionData, isLoading: acquisitionLoading, error: acquisitionError } = useQuery({
     queryKey: ["admin-acquisition", refreshKey],
     queryFn: async (): Promise<AcquisitionPoint[]> => {
       const { data, error } = await supabase
@@ -266,10 +186,7 @@ export default function AdminPage() {
         .select("created_at, status")
         .order("created_at", { ascending: true })
         .limit(200);
-      if (error) {
-        console.error("merchant acquisition query error:", error);
-        return [];
-      }
+      if (error) throw new Error(error.message);
       const monthMap = new Map<string, { merchants: number; active: number }>();
       ((data as any[]) ?? []).forEach(
         (m: { created_at: string; status: string }) => {
@@ -293,7 +210,7 @@ export default function AdminPage() {
   });
 
   // ── Audit logs stream ─────────────────────────────────────────────────────
-  const { data: auditLogs, isLoading: auditLoading } = useQuery({
+  const { data: auditLogs, isLoading: auditLoading, error: auditError } = useQuery({
     queryKey: ["admin-audit-stream", refreshKey],
     queryFn: async (): Promise<AuditLogRow[]> => {
       const { data, error } = await supabase
@@ -303,10 +220,7 @@ export default function AdminPage() {
         )
         .order("created_at", { ascending: false })
         .limit(20);
-      if (error) {
-        console.error("audit_logs query error:", error);
-        return [];
-      }
+      if (error) throw new Error(error.message);
       return data as any as AuditLogRow[];
     },
     enabled: isOwnerOrAdmin,
@@ -314,13 +228,26 @@ export default function AdminPage() {
   });
 
   // ── Compute KPIs ──────────────────────────────────────────────────────────
-  const totalMerchants = merchants?.length ?? 0;
-  const activeMerchants =
-    merchants?.filter((m) => m.status === "active").length ?? 0;
-  const pendingMerchants =
-    merchants?.filter((m) => m.status === "pending").length ?? 0;
-  const suspendedMerchants =
-    merchants?.filter((m) => m.status === "suspended").length ?? 0;
+  const { data: merchantCounts, isLoading: countsLoading, error: countsError } = useQuery({
+    queryKey: ["admin-merchant-counts", refreshKey],
+    queryFn: async () => {
+      const results = await Promise.all([
+        supabase.from("merchants").select("id", { count: "exact", head: true }),
+        supabase.from("merchants").select("id", { count: "exact", head: true }).eq("status", "active"),
+        supabase.from("merchants").select("id", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("merchants").select("id", { count: "exact", head: true }).eq("status", "suspended"),
+        supabase.from("merchants").select("id", { count: "exact", head: true }).eq("onboarding_completed", true),
+      ]);
+      const error = results.find(result => result.error)?.error;
+      if (error) throw new Error(error.message);
+      return { total: results[0].count ?? 0, active: results[1].count ?? 0, pending: results[2].count ?? 0, suspended: results[3].count ?? 0, onboarded: results[4].count ?? 0 };
+    },
+    enabled: isOwnerOrAdmin,
+  });
+  const totalMerchants = merchantCounts?.total ?? 0;
+  const activeMerchants = merchantCounts?.active ?? 0;
+  const pendingMerchants = merchantCounts?.pending ?? 0;
+  const suspendedMerchants = merchantCounts?.suspended ?? 0;
   const mrr = revenueData?.slice(-1)[0]?.revenue ?? 0;
   const arr = mrr * 12;
   const totalRevenue = revenueData?.reduce((s, r) => s + r.revenue, 0) ?? 0;
@@ -350,10 +277,13 @@ export default function AdminPage() {
     );
   }
 
+  const loadError = merchantsError || countsError || revenueError || acquisitionError || auditError;
+  if (loadError) return <div className="space-y-6"><h1 className="tt-page-title">Platform overview</h1><ErrorState title="Could not load platform data" body={loadError.message} onRetry={() => setRefreshKey(k => k + 1)} /></div>;
+
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       {/* -- Header -- */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="tt-page-title flex items-center gap-2">
             <BarChart3
@@ -361,9 +291,9 @@ export default function AdminPage() {
               style={{ color: "var(--c-primary)" }}
               strokeWidth={1.75}
             />
-            {t.admin.title}
+            Platform overview
           </h1>
-          <p className="tt-muted mt-1">{t.admin.subtitle}</p>
+          <p className="tt-muted mt-1">Merchant operations, subscription collections, and platform activity.</p>
         </div>
         <Button
           variant="outline"
@@ -376,74 +306,26 @@ export default function AdminPage() {
         </Button>
       </div>
 
-      {/* -- System Health Banner -- */}
-      <div
-        className="flex items-center gap-2 p-3 rounded-lg border"
-        style={{
-          background: "color-mix(in oklch, var(--c-success), transparent 92%)",
-          borderColor: "color-mix(in oklch, var(--c-success), transparent 70%)",
-        }}
-      >
-        <CheckCircle
-          className="h-4 w-4"
-          style={{ color: "var(--c-success)" }}
-          strokeWidth={1.75}
-        />
-        <span
-          className="text-sm font-medium"
-          style={{ color: "var(--c-success)" }}
-        >
-          {t.admin.systems_operational}
-        </span>
-        <span
-          className="text-xs ml-auto tt-tabular"
-          style={{ color: "var(--c-success)" }}
-        >
-          {t.admin.last_checked}: {new Date().toLocaleTimeString()}
-        </span>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard label="Total merchants" value={totalMerchants} sub="Across the platform" icon={Building2} loading={countsLoading} />
+        <StatCard label="Active merchants" value={activeMerchants} sub="Across the platform" icon={Users} loading={countsLoading} />
+        <StatCard label="Latest month collected" value={formatCurrency(mrr)} sub={revenueData?.slice(-1)[0]?.month ?? 'No paid invoices loaded'} icon={DollarSign} loading={revenueLoading} />
+        <StatCard label="Pending merchants" value={pendingMerchants} sub="Awaiting review" icon={Clock} loading={countsLoading} />
       </div>
-
-      {/* ── KPI Cards ─────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard
-          title={t.admin.total_merchants}
-          value={totalMerchants}
-          subtitle={`${activeMerchants} ${t.admin.active.toLowerCase()} · ${pendingMerchants} ${t.admin.pending.toLowerCase()}`}
-          icon={<Building2 className="h-4 w-4" />}
-          color="blue"
-          loading={merchantsLoading}
-        />
-        <KPICard
-          title={t.admin.active_subscriptions}
-          value={activeMerchants}
-          subtitle={`${suspendedMerchants} ${t.admin.suspended.toLowerCase()}`}
-          icon={<Users className="h-4 w-4" />}
-          color="green"
-          loading={merchantsLoading}
-        />
-        <KPICard
-          title={t.admin.mrr}
-          value={formatCurrency(mrr)}
-          subtitle={t.admin.monthly_recurring_revenue}
-          icon={<DollarSign className="h-4 w-4" />}
-          trend={8.3}
-          color="purple"
-          loading={revenueLoading}
-        />
-        <KPICard
-          title={t.admin.arr}
-          value={formatCurrency(arr)}
-          subtitle={`${t.admin.total_collected}: ${formatCurrency(totalRevenue)}`}
-          icon={<TrendingUp className="h-4 w-4" />}
-          trend={12.1}
-          color="orange"
-          loading={revenueLoading}
-        />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Link href="/merchants" className="tt-card-flat flex min-h-20 items-center gap-4 rounded-[var(--radius-lg)] border border-border p-4 transition-colors hover:bg-accent">
+          <Building2 className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.75} />
+          <div><p className="font-semibold">Manage merchants</p><p className="text-sm tt-muted">Onboarding, verification, and account access</p></div>
+        </Link>
+        <Link href="/subscriptions" className="tt-card-flat flex min-h-20 items-center gap-4 rounded-[var(--radius-lg)] border border-border p-4 transition-colors hover:bg-accent">
+          <ShieldCheck className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.75} />
+          <div><p className="font-semibold">Manage subscription plans</p><p className="text-sm tt-muted">Platform pricing, features, and usage limits</p></div>
+        </Link>
       </div>
+      <p className="text-xs tt-muted">Charts use up to 200 loaded records. Collections are paid invoice amounts, not recurring revenue. Service health is not monitored on this page.</p>
 
-      {/* ── Tabs ──────────────────────────────────────────────────────────── */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="flex w-full overflow-x-auto [&>button]:min-h-11 [&>button]:shrink-0">
           <TabsTrigger value="overview">{t.admin.overview}</TabsTrigger>
           <TabsTrigger value="merchants">{t.admin.merchants}</TabsTrigger>
           <TabsTrigger value="revenue">{t.admin.revenue}</TabsTrigger>
@@ -456,7 +338,7 @@ export default function AdminPage() {
             {/* Revenue Growth AreaChart */}
             <Card>
               <CardHeader>
-                <CardTitle>{t.admin.revenue_growth}</CardTitle>
+                <CardTitle className="tt-section-title">{t.admin.revenue_growth}</CardTitle>
                 <CardDescription>{t.admin.revenue_growth_desc}</CardDescription>
               </CardHeader>
               <CardContent>
@@ -481,12 +363,12 @@ export default function AdminPage() {
                         >
                           <stop
                             offset="5%"
-                            stopColor="#6366f1"
+                            stopColor="var(--c-primary)"
                             stopOpacity={0.3}
                           />
                           <stop
                             offset="95%"
-                            stopColor="#6366f1"
+                            stopColor="var(--c-primary)"
                             stopOpacity={0}
                           />
                         </linearGradient>
@@ -512,7 +394,7 @@ export default function AdminPage() {
                       <Area
                         type="monotone"
                         dataKey="revenue"
-                        stroke="#6366f1"
+                        stroke="var(--c-primary)"
                         strokeWidth={2}
                         fill="url(#revenueGrad)"
                       />
@@ -525,7 +407,7 @@ export default function AdminPage() {
             {/* Merchant Acquisition BarChart */}
             <Card>
               <CardHeader>
-                <CardTitle>{t.admin.merchant_acquisition}</CardTitle>
+                <CardTitle className="tt-section-title">{t.admin.merchant_acquisition}</CardTitle>
                 <CardDescription>
                   {t.admin.merchant_acquisition_desc}
                 </CardDescription>
@@ -553,13 +435,13 @@ export default function AdminPage() {
                       <Bar
                         dataKey="merchants"
                         name="Total"
-                        fill="#6366f1"
+                        fill="var(--c-primary)"
                         radius={[4, 4, 0, 0]}
                       />
                       <Bar
                         dataKey="active"
                         name="Active"
-                        fill="#22c55e"
+                        fill="var(--c-success)"
                         radius={[4, 4, 0, 0]}
                       />
                     </BarChart>
@@ -592,7 +474,7 @@ export default function AdminPage() {
             <StatusSummaryCard
               label={t.admin.onboarded}
               count={
-                merchants?.filter((m) => m.onboarding_completed).length ?? 0
+                merchantCounts?.onboarded ?? 0
               }
               icon={Activity}
               tone="var(--c-info)"
@@ -604,9 +486,9 @@ export default function AdminPage() {
         <TabsContent value="merchants">
           <Card>
             <CardHeader>
-              <CardTitle>{t.admin.all_merchants}</CardTitle>
+              <CardTitle className="tt-section-title">{t.admin.all_merchants}</CardTitle>
               <CardDescription>
-                {t.admin.merchant_list_desc} ({totalMerchants} total)
+                {t.admin.merchant_list_desc} ({merchants?.length ?? 0} recent records)
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
@@ -682,9 +564,10 @@ export default function AdminPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-8 w-8 p-0"
+                              className="min-h-11 px-3"
+                              asChild
                             >
-                              <Eye className="h-4 w-4" />
+                              <Link href="/merchants">Manage merchants<Eye className="ml-2 h-4 w-4" /></Link>
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -702,7 +585,7 @@ export default function AdminPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card>
               <CardContent className="p-6 text-center">
-                <p className="text-sm tt-muted mb-1">{t.admin.total_revenue}</p>
+                <p className="text-sm tt-muted mb-1">Loaded invoice collections</p>
                 <p
                   className="text-2xl font-bold tt-tabular"
                   style={{ color: "var(--c-success)" }}
@@ -713,7 +596,7 @@ export default function AdminPage() {
             </Card>
             <Card>
               <CardContent className="p-6 text-center">
-                <p className="text-sm tt-muted mb-1">{t.admin.current_mrr}</p>
+                <p className="text-sm tt-muted mb-1">Latest month collected</p>
                 <p
                   className="text-2xl font-bold tt-tabular"
                   style={{ color: "var(--c-primary)" }}
@@ -725,7 +608,7 @@ export default function AdminPage() {
             <Card>
               <CardContent className="p-6 text-center">
                 <p className="text-sm tt-muted mb-1">
-                  {t.admin.arr_projection}
+                  Annualized collection estimate
                 </p>
                 <p
                   className="text-2xl font-bold tt-tabular"
@@ -739,7 +622,7 @@ export default function AdminPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>{t.admin.revenue_trend}</CardTitle>
+              <CardTitle className="tt-section-title">{t.admin.revenue_trend}</CardTitle>
             </CardHeader>
             <CardContent>
               {revenueLoading ? (
@@ -757,12 +640,12 @@ export default function AdminPage() {
                       <linearGradient id="revGrad2" x1="0" y1="0" x2="0" y2="1">
                         <stop
                           offset="5%"
-                          stopColor="#22c55e"
+                          stopColor="var(--c-success)"
                           stopOpacity={0.3}
                         />
                         <stop
                           offset="95%"
-                          stopColor="#22c55e"
+                          stopColor="var(--c-success)"
                           stopOpacity={0}
                         />
                       </linearGradient>
@@ -789,7 +672,7 @@ export default function AdminPage() {
                       type="monotone"
                       dataKey="revenue"
                       name="Revenue (NGN)"
-                      stroke="#22c55e"
+                      stroke="var(--c-success)"
                       strokeWidth={2}
                       fill="url(#revGrad2)"
                     />
@@ -797,7 +680,7 @@ export default function AdminPage() {
                       type="monotone"
                       dataKey="invoices"
                       name="Invoices"
-                      stroke="#6366f1"
+                      stroke="var(--c-primary)"
                       strokeWidth={1.5}
                       fill="none"
                       strokeDasharray="5 5"
@@ -814,7 +697,7 @@ export default function AdminPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>{t.admin.live_audit_stream}</CardTitle>
+                <CardTitle className="tt-section-title">{t.admin.live_audit_stream}</CardTitle>
                 <CardDescription>{t.admin.live_audit_desc}</CardDescription>
               </div>
               <div className="flex items-center gap-1">

@@ -312,7 +312,7 @@ function PlanFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="sm:max-w-[520px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100%-2rem)] max-h-[90dvh] overflow-y-auto sm:max-w-[520px]">
         <DialogHeader>
           <DialogTitle>
             {editingPlan
@@ -566,10 +566,10 @@ export default function SubscriptionsPage() {
   if (!canAccessPage) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <Shield className="h-12 w-12 text-muted-foreground" />
+        <Shield className="h-12 w-12 tt-muted" />
         <div className="text-center">
           <p className="font-medium">{t.subscriptions.access_restricted}</p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm tt-muted">
             {t.subscriptions.super_admin_only}
           </p>
         </div>
@@ -590,13 +590,13 @@ export default function SubscriptionsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="tt-head text-2xl font-bold text-foreground">
-            {t.subscriptions.title}
+          <h1 className="tt-page-title">
+            {isPlatformOwner ? "Subscription plans" : t.subscriptions.title}
           </h1>
-          <p className="text-muted-foreground text-sm">
-            {t.subscriptions.subtitle}
+          <p className="tt-muted text-sm">
+            {isPlatformOwner ? "Manage platform pricing, features, and merchant usage limits." : t.subscriptions.subtitle}
           </p>
         </div>
         <Button
@@ -615,7 +615,7 @@ export default function SubscriptionsPage() {
           loop. `value`/`onValueChange` map 1:1 onto the pre-existing
           `activeTab` state so none of the conditional panel-rendering
           logic below needed to change. */}
-      <Tabs
+      {!isPlatformOwner && <Tabs
         value={activeTab}
         onValueChange={(v) => setActiveTab(v as typeof activeTab)}
       >
@@ -628,10 +628,10 @@ export default function SubscriptionsPage() {
             {t.subscriptions.tab_billing}
           </TabsTrigger>
         </TabsList>
-      </Tabs>
+      </Tabs>}
 
       {/* Overview Tab */}
-      {activeTab === "overview" && (
+      {!isPlatformOwner && activeTab === "overview" && (
         <div className="space-y-6">
           {isLoading ? (
             <div className="grid gap-4 md:grid-cols-3">
@@ -679,10 +679,10 @@ export default function SubscriptionsPage() {
                       <div
                         className={`flex items-center gap-1 text-sm ${
                           daysRemaining <= 7
-                            ? "text-red-600"
+                            ? "text-[var(--c-danger)]"
                             : daysRemaining <= 30
-                              ? "text-amber-600"
-                              : "text-green-600"
+                              ? "text-[var(--c-warn)]"
+                              : "text-[var(--c-success)]"
                         }`}
                       >
                         {daysRemaining <= 7 ? (
@@ -713,7 +713,7 @@ export default function SubscriptionsPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm tt-muted">
                       {t.subscriptions.per_month}
                     </p>
                   </CardContent>
@@ -724,7 +724,7 @@ export default function SubscriptionsPage() {
               {daysRemaining !== null && daysRemaining <= 14 && (
                 <Card className="border-amber-300 bg-amber-50 dark:bg-amber-900/10">
                   <CardContent className="flex items-center gap-3 py-4">
-                    <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
+                    <AlertTriangle className="h-5 w-5 text-[var(--c-warn)] shrink-0" />
                     <div className="flex-1">
                       <p className="font-medium text-amber-800 dark:text-amber-400">
                         {t.subscriptions.expiring_soon}
@@ -747,12 +747,12 @@ export default function SubscriptionsPage() {
               {!subscription && (
                 <Card className="border-dashed">
                   <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
-                    <CreditCard className="h-12 w-12 text-muted-foreground" />
+                    <CreditCard className="h-12 w-12 tt-muted" />
                     <div>
                       <p className="font-medium text-lg">
                         {t.subscriptions.no_active_subscription}
                       </p>
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <p className="text-sm tt-muted mt-1">
                         {t.subscriptions.choose_plan_unlock}
                       </p>
                     </div>
@@ -767,7 +767,7 @@ export default function SubscriptionsPage() {
               {subscription?.plan && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>
+                    <CardTitle className="tt-section-title">
                       {t.subscriptions.current_plan_features}
                     </CardTitle>
                     <CardDescription>
@@ -791,13 +791,13 @@ export default function SubscriptionsPage() {
                             <CheckCircle
                               className={`h-4 w-4 shrink-0 ${
                                 pending
-                                  ? "text-muted-foreground"
+                                  ? "tt-muted"
                                   : "text-green-500"
                               }`}
                             />
                             <span
                               className={
-                                pending ? "text-muted-foreground" : undefined
+                                pending ? "tt-muted" : undefined
                               }
                             >
                               {FEATURE_LABELS[feature] ?? feature}
@@ -845,18 +845,18 @@ export default function SubscriptionsPage() {
       )}
 
       {/* Plans Tab */}
-      {activeTab === "plans" && (
+      {(isPlatformOwner || activeTab === "plans") && (
         <div className="space-y-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-lg font-semibold">
-                {t.subscriptions.choose_a_plan}
+                {isPlatformOwner ? "Plan catalog" : t.subscriptions.choose_a_plan}
               </h2>
-              <p className="text-sm text-muted-foreground">
-                {t.subscriptions.select_plan_desc}
+              <p className="text-sm tt-muted">
+                {isPlatformOwner ? "Active plans appear on merchant subscription and public pricing pages." : t.subscriptions.select_plan_desc}
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <Segmented
                 value={billingCycle}
                 onChange={setBillingCycle}
@@ -889,9 +889,10 @@ export default function SubscriptionsPage() {
               {plans.map((plan) => (
                 <div key={plan.id} className="space-y-2">
                   <PlanCard
+                    catalogOnly={isPlatformOwner}
                     plan={plan}
                     allPlans={plans}
-                    currentPlanId={subscription?.plan_id}
+                    currentPlanId={isPlatformOwner ? undefined : subscription?.plan_id}
                     billingCycle={billingCycle}
                     onSelect={(planId) =>
                       upgradeMutation.mutate({ planId, cycle: billingCycle })
@@ -932,21 +933,21 @@ export default function SubscriptionsPage() {
               ))}
             </div>
           )}
-          <p className="text-xs text-center text-muted-foreground">
+          <p className="text-xs text-center tt-muted">
             {t.subscriptions.all_plans_notice}
           </p>
         </div>
       )}
 
       {/* Billing Tab */}
-      {activeTab === "billing" && (
+      {!isPlatformOwner && activeTab === "billing" && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold">
                 {t.subscriptions.payment_history}
               </h2>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm tt-muted">
                 {t.subscriptions.all_transactions}
               </p>
             </div>
@@ -961,18 +962,18 @@ export default function SubscriptionsPage() {
           ) : payments.length === 0 ? (
             <Card className="border-dashed">
               <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
-                <CreditCard className="h-10 w-10 text-muted-foreground" />
+                <CreditCard className="h-10 w-10 tt-muted" />
                 <p className="font-medium">
                   {t.subscriptions.no_payment_records}
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm tt-muted">
                   {t.subscriptions.no_payment_records_desc}
                 </p>
               </CardContent>
             </Card>
           ) : (
             <Card>
-              <CardContent className="p-0">
+              <CardContent className="min-w-0 overflow-hidden p-0">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -993,7 +994,7 @@ export default function SubscriptionsPage() {
                         <TableCell className="text-sm">
                           {payment.plan_name || "—"}
                         </TableCell>
-                        <TableCell className="text-xs font-mono text-muted-foreground">
+                        <TableCell className="text-xs font-mono tt-muted">
                           {payment.reference}
                         </TableCell>
                         <TableCell className="font-medium">
@@ -1024,7 +1025,7 @@ export default function SubscriptionsPage() {
               <p className="font-medium text-destructive">
                 {t.subscriptions.could_not_load}
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm tt-muted">
                 {error instanceof Error ? error.message : t.subscriptions.fallback_notice}
               </p>
             </div>
@@ -1050,7 +1051,7 @@ export default function SubscriptionsPage() {
         open={!!deletingPlan}
         onOpenChange={(v) => !v && setDeletingPlan(null)}
       >
-        <DialogContent className="sm:max-w-[420px]">
+        <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-[420px]">
           <DialogHeader>
             <DialogTitle>{t.subscriptions.delete_plan_title}</DialogTitle>
             <DialogDescription>

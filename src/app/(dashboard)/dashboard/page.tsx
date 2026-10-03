@@ -30,6 +30,7 @@ import { formatCurrency, formatRelativeTime } from "@/lib/utils/format";
 import { useAuthStore } from "@/store";
 import { useI18n } from "@/i18n";
 import type { Sale } from "@/types";
+import AdminPage from "../admin/page";
 
 type RangeKey = "today" | "week" | "month";
 
@@ -200,6 +201,12 @@ async function fetchDashboardData() {
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
+  if (!user) return <Skeleton className="h-64 w-full" />;
+  return user.role === "platform_owner" ? <AdminPage /> : <MerchantDashboard />;
+}
+
+function MerchantDashboard() {
+  const { user } = useAuthStore();
   const { t } = useI18n();
   const [range, setRange] = useState<RangeKey>("week");
   const { data, isLoading, isFetching, isError, error, refetch } = useQuery({
@@ -238,10 +245,12 @@ export default function DashboardPage() {
           <p className="tt-muted text-sm mt-1">{t.dashboard.subtitle}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
+          {user?.role !== "cashier" && <Button variant="outline" size="sm" asChild>
+            <Link href="/reports">
             <Download className="h-4 w-4 mr-1.5" strokeWidth={1.75} />
-            Export
-          </Button>
+            Reports
+            </Link>
+          </Button>}
           <Button size="sm" asChild>
             <Link href="/pos">
               <ShoppingCart className="h-4 w-4 mr-1.5" strokeWidth={1.75} />
@@ -454,12 +463,15 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {[
+                {(user?.role === "cashier" ? [
+                  { href: "/pos", icon: ShoppingCart, label: t.dashboard.new_sale },
+                  { href: "/receipts/lookup", icon: ShoppingCart, label: t.nav.receiptLookup },
+                ] : [
                   { href: "/pos", icon: ShoppingCart, label: t.dashboard.new_sale },
                   { href: "/inventory", icon: Package, label: t.dashboard.stock_in },
                   { href: "/transfers", icon: ArrowLeftRight, label: t.nav.transfers },
                   { href: "/reports", icon: TrendingUp, label: t.nav.reports },
-                ].map(({ href, icon: Icon, label }) => (
+                ]).map(({ href, icon: Icon, label }) => (
                   <Link
                     key={href}
                     href={href}

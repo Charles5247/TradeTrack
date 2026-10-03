@@ -8,6 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
+import { StatCard } from '@/components/ui/stat-card';
+import { ErrorState } from '@/components/ui/error-state';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
@@ -50,6 +53,8 @@ async function fetchReport(period: ReportPeriod) {
       .eq('status', 'completed'),
   ]);
 
+  const queryError = [salesData, topProductsData, paymentMethods].find(result => result.error)?.error;
+  if (queryError) throw new Error(queryError.message);
   const sales = salesData.data || [];
   const items = topProductsData.data || [];
   const pmData = paymentMethods.data || [];
@@ -107,7 +112,7 @@ async function fetchReport(period: ReportPeriod) {
   };
 }
 
-const PIE_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444'];
+const PIE_COLORS = ['var(--c-chart1)', 'var(--c-chart2)', 'var(--c-chart3)', 'var(--c-chart4)', 'var(--c-chart5)'];
 
 export default function ReportsPage() {
   return (
@@ -120,7 +125,7 @@ export default function ReportsPage() {
 function ReportsPageInner() {
   const [period, setPeriod] = useState<ReportPeriod>('monthly');
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['reports', period],
     queryFn: () => fetchReport(period),
   });
@@ -156,17 +161,18 @@ function ReportsPageInner() {
   };
 
   const summary = data?.summary;
+  if (error) return <div className="space-y-6"><h1 className="tt-page-title">Reports & Analytics</h1><ErrorState body={error.message} onRetry={() => refetch()} /></div>;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Reports & Analytics</h1>
-          <p className="text-muted-foreground text-sm">Business performance insights</p>
+          <h1 className="tt-page-title">Reports & Analytics</h1>
+          <p className="tt-muted text-sm">Business performance insights</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
           <Select value={period} onValueChange={(v) => setPeriod(v as ReportPeriod)}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full sm:w-40">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -190,37 +196,21 @@ function ReportsPageInner() {
 
       {/* Summary Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          { label: 'Total Transactions', value: summary?.total_transactions || 0, icon: BarChart3, color: 'text-blue-600', bg: 'bg-blue-100' },
-          { label: 'Total Revenue', value: formatCurrency(summary?.total_revenue || 0), icon: DollarSign, color: 'text-green-600', bg: 'bg-green-100' },
-          { label: 'Gross Profit', value: formatCurrency(summary?.gross_profit || 0), icon: TrendingUp, color: 'text-purple-600', bg: 'bg-purple-100' },
-          { label: 'Profit Margin', value: `${(summary?.profit_margin || 0).toFixed(1)}%`, icon: Package, color: 'text-amber-600', bg: 'bg-amber-100' },
-        ].map((stat, i) => (
-          <Card key={i}>
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className={`p-2.5 rounded-xl ${stat.bg} dark:opacity-80 shrink-0`}>
-                <stat.icon className={`h-5 w-5 ${stat.color}`} />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">{stat.label}</p>
-                {isLoading ? <Skeleton className="h-6 w-24 mt-1" /> : (
-                  <p className="text-xl font-bold">{stat.value}</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        <StatCard label="Total transactions" value={summary?.total_transactions || 0} icon={BarChart3} loading={isLoading} />
+        <StatCard label="Total revenue" value={formatCurrency(summary?.total_revenue || 0)} icon={DollarSign} loading={isLoading} />
+        <StatCard label="Gross profit" value={formatCurrency(summary?.gross_profit || 0)} icon={TrendingUp} loading={isLoading} />
+        <StatCard label="Profit margin" value={`${(summary?.profit_margin || 0).toFixed(1)}%`} icon={Package} loading={isLoading} />
       </div>
 
       {/* Charts */}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Revenue by Day</CardTitle>
+            <CardTitle className="tt-section-title">Revenue by Day</CardTitle>
             <CardDescription>Daily revenue breakdown</CardDescription>
           </CardHeader>
           <CardContent>
-            {isLoading ? <Skeleton className="h-48 w-full" /> : (
+            {isLoading ? <Skeleton className="h-48 w-full" /> : !data?.dailyChart.length ? <EmptyState icon={BarChart3} title="No revenue for this period" body="Choose another period or return after a completed sale." /> : (
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={data?.dailyChart || []}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -236,11 +226,11 @@ function ReportsPageInner() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Payment Methods</CardTitle>
+            <CardTitle className="tt-section-title">Payment Methods</CardTitle>
             <CardDescription>Revenue by payment method</CardDescription>
           </CardHeader>
           <CardContent>
-            {isLoading ? <Skeleton className="h-48 w-full" /> : (
+            {isLoading ? <Skeleton className="h-48 w-full" /> : !data?.pmChartData.length ? <EmptyState icon={DollarSign} title="No payment data" body="Completed sales will show your payment-method mix here." /> : (
               <ResponsiveContainer width="100%" height={220}>
                 <PieChart>
                   <Pie
@@ -270,10 +260,10 @@ function ReportsPageInner() {
       {/* Top Products */}
       <Card>
         <CardHeader>
-          <CardTitle>Top Selling Products</CardTitle>
+          <CardTitle className="tt-section-title">Top Selling Products</CardTitle>
           <CardDescription>Products by revenue for selected period</CardDescription>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="min-w-0 overflow-hidden p-0">
           <Table>
             <TableHeader>
               <TableRow>
@@ -291,9 +281,9 @@ function ReportsPageInner() {
                     {[...Array(5)].map((_, j) => <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>)}
                   </TableRow>
                 ))
-              ) : (data?.topProducts || []).map((p, i) => (
+              ) : !data?.topProducts.length ? <TableRow><TableCell colSpan={5}><EmptyState icon={Package} title="No products sold in this period" /></TableCell></TableRow> : (data?.topProducts || []).map((p, i) => (
                 <TableRow key={i}>
-                  <TableCell className="font-bold text-muted-foreground">{i + 1}</TableCell>
+                  <TableCell className="font-bold tt-muted">{i + 1}</TableCell>
                   <TableCell className="font-medium">{p.name}</TableCell>
                   <TableCell>{p.quantity}</TableCell>
                   <TableCell className="font-semibold">{formatCurrency(p.revenue)}</TableCell>
@@ -305,7 +295,7 @@ function ReportsPageInner() {
                           style={{ width: `${((p.revenue / (summary?.total_revenue || 1)) * 100).toFixed(0)}%` }}
                         />
                       </div>
-                      <span className="text-xs text-muted-foreground w-8 text-right">
+                      <span className="text-xs tt-muted w-8 text-right">
                         {((p.revenue / (summary?.total_revenue || 1)) * 100).toFixed(0)}%
                       </span>
                     </div>

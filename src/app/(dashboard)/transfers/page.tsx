@@ -294,10 +294,10 @@ function TransfersPageInner() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">{t.transfers.title}</h1>
-          <p className="text-muted-foreground text-sm">
+          <h1 className="tt-page-title">{t.transfers.title}</h1>
+          <p className="tt-muted text-sm">
             {t.transfers.subtitle_pending.replace('{count}', String(pendingCount))}
           </p>
         </div>
@@ -308,7 +308,7 @@ function TransfersPageInner() {
       </div>
 
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="min-w-0 overflow-hidden p-0">
           <Table>
             <TableHeader>
               <TableRow>
@@ -334,7 +334,7 @@ function TransfersPageInner() {
                 ))
               ) : transfers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">
+                  <TableCell colSpan={9} className="h-32 text-center tt-muted">
                     {t.transfers.no_transfers}
                   </TableCell>
                 </TableRow>
@@ -344,27 +344,27 @@ function TransfersPageInner() {
                     <TableCell>
                       <div>
                         <p className="font-medium text-sm">{(tr.product as { name?: string } | null)?.name}</p>
-                        <p className="text-xs text-muted-foreground">{(tr.product as { sku?: string } | null)?.sku}</p>
+                        <p className="text-xs tt-muted">{(tr.product as { sku?: string } | null)?.sku}</p>
                       </div>
                     </TableCell>
                     <TableCell className="text-sm">{(tr.from_warehouse as { name?: string } | null)?.name}</TableCell>
                     <TableCell className="text-sm">
                       <span className="flex items-center gap-1">
-                        <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                        <ArrowRight className="h-3 w-3 tt-muted" />
                         {(tr.to_warehouse as { name?: string } | null)?.name}
                       </span>
                     </TableCell>
                     <TableCell className="font-semibold">{tr.quantity}</TableCell>
                     <TableCell className="text-sm">{(tr.sender as { full_name?: string } | null)?.full_name}</TableCell>
                     <TableCell className="text-sm">{(tr.receiver as { full_name?: string } | null)?.full_name || '—'}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{formatDateTime(tr.date_sent)}</TableCell>
+                    <TableCell className="text-xs tt-muted">{formatDateTime(tr.date_sent)}</TableCell>
                     <TableCell>{statusBadge(tr.status)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-7 text-xs"
+                          className="min-h-11 sm:min-h-8 text-xs"
                           onClick={() => setReceiptTransfer(tr)}
                           title={t.transfers.view_receipt}
                         >
@@ -375,7 +375,7 @@ function TransfersPageInner() {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-7 text-xs text-green-600 border-green-200"
+                              className="min-h-11 sm:min-h-8 text-xs text-[var(--c-success)] border-[var(--c-success)]"
                               onClick={() => updateMutation.mutate({ id: tr.id, status: 'received' })}
                             >
                               <CheckCircle className="h-3 w-3 mr-1" /> {t.transfers.receive}
@@ -383,7 +383,7 @@ function TransfersPageInner() {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-7 text-xs text-red-600 border-red-200"
+                              className="min-h-11 sm:min-h-8 text-xs text-[var(--c-danger)] border-[var(--c-danger)]"
                               onClick={() => updateMutation.mutate({ id: tr.id, status: 'cancelled' })}
                             >
                               {t.transfers.cancel_action}
@@ -402,12 +402,12 @@ function TransfersPageInner() {
 
       {/* Create Transfer Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent>
+        <DialogContent className="w-[calc(100%-2rem)] max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t.transfers.create_dialog_title}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>{t.transfers.from_warehouse}</Label>
                 <Select onValueChange={(v) => setFormData({ ...formData, from_warehouse_id: v })}>
@@ -507,7 +507,7 @@ function TransfersPageInner() {
 
       {/* Transfer Receipt Dialog — "Stock Transfer Note" preview + print/PDF/hardware actions */}
       <Dialog open={!!receiptTransfer} onOpenChange={(open) => !open && setReceiptTransfer(null)}>
-        <DialogContent className="max-w-sm no-print">
+        <DialogContent className="max-h-[90dvh] overflow-y-auto max-w-sm no-print">
           <DialogHeader>
             <DialogTitle>{t.transfers.transfer_note_title}</DialogTitle>
           </DialogHeader>
@@ -515,10 +515,10 @@ function TransfersPageInner() {
             <div className="space-y-4">
               <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm space-y-1">
                 <p className="font-medium">{receiptData.transferRef}</p>
-                <p className="text-muted-foreground">
+                <p className="tt-muted">
                   {receiptData.fromWarehouse} <ArrowRight className="inline h-3 w-3" /> {receiptData.toWarehouse}
                 </p>
-                <p className="text-muted-foreground">{receiptData.productName} &times; {receiptData.quantity}</p>
+                <p className="tt-muted">{receiptData.productName} &times; {receiptData.quantity}</p>
               </div>
               <div className="flex gap-3">
                 <Button variant="outline" className="flex-1" onClick={handleBrowserPrintTransfer}>
@@ -536,9 +536,9 @@ function TransfersPageInner() {
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 text-sm min-w-0">
                         {printer.transport === 'usb' ? (
-                          <Usb className="h-4 w-4 shrink-0 text-green-600" />
+                          <Usb className="h-4 w-4 shrink-0 text-[var(--c-success)]" />
                         ) : (
-                          <Bluetooth className="h-4 w-4 shrink-0 text-green-600" />
+                          <Bluetooth className="h-4 w-4 shrink-0 text-[var(--c-success)]" />
                         )}
                         <span className="truncate">{printer.deviceName}</span>
                       </div>

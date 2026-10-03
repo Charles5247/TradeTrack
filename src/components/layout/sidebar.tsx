@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronLeft, ChevronRight, Store, LogOut } from "lucide-react";
+import { ChevronLeft, ChevronRight, Store, Shield, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useUIStore, useAuthStore, useNotificationStore } from "@/store";
 import { Badge } from "@/components/ui/badge";
@@ -61,11 +61,12 @@ export function Sidebar() {
   const forceCollapsed = isPosRoute(pathname ?? "");
   const sidebarOpen = forceCollapsed ? false : sidebarOpenPref;
 
-  const orgLabel =
-    organization?.name ??
-    (user?.role === "platform_owner" ? "TracKasuwa Platform" : t.app.name);
+  const orgLabel = user?.role === "platform_owner"
+    ? "TracKasuwa Platform"
+    : organization?.name ?? t.app.name;
 
   const groups = getNavGroupsForRole(user?.role as UserRole | undefined);
+  const WorkspaceIcon = user?.role === "platform_owner" ? Shield : Store;
 
   return (
     <>
@@ -120,7 +121,7 @@ export function Sidebar() {
         {sidebarOpen && (
           <div className="px-3 pb-3 pt-2">
             <div className="tt-card-flat flex items-center gap-2.5 rounded-lg border border-border bg-muted px-3 py-2.5">
-              <Store className="h-4 w-4 tt-muted shrink-0" strokeWidth={1.75} />
+              <WorkspaceIcon className="h-4 w-4 tt-muted shrink-0" strokeWidth={1.75} />
               <div className="min-w-0 flex-1">
                 <div className="text-[11px] tt-muted leading-none">
                   {user?.role === "platform_owner"
@@ -147,12 +148,13 @@ export function Sidebar() {
               <div className="flex flex-col gap-[1px]">
                 {group.items.map((item) => {
                   const isActive =
+                    (user?.role === "platform_owner" && pathname === "/dashboard" && item.href === "/admin") ||
                     pathname === item.href ||
                     (item.href !== "/dashboard" &&
                       pathname.startsWith(item.href));
                   const Icon = item.icon;
                   const label =
-                    t.nav[item.navKey as keyof typeof t.nav] ?? item.navKey;
+                    t.nav[item.navKey as keyof typeof t.nav] ?? item.label ?? item.navKey;
 
                   const link = (
                     <Link

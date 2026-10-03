@@ -1,0 +1,62 @@
+{
+  "passed": true,
+  "hashes": [
+    {
+      "file": "src/lib/offline/sales.ts",
+      "before": "2a797642c5c4a0e4072ce1fb521b11ae966da737e15f1d4af77f2c2bbead41ef",
+      "after": "2a797642c5c4a0e4072ce1fb521b11ae966da737e15f1d4af77f2c2bbead41ef",
+      "unchanged": true
+    },
+    {
+      "file": "src/lib/offline/purchase-orders.ts",
+      "before": "3c6894381bdd2b0959dfcaa37e12a406641beb2afe197e977cf6e99f25f9a105",
+      "after": "3c6894381bdd2b0959dfcaa37e12a406641beb2afe197e977cf6e99f25f9a105",
+      "unchanged": true
+    },
+    {
+      "file": "src/lib/offline/sync-engine.ts",
+      "before": "d0a8fcee54861a66b76fa2206957c18512e3436de3e017ee06920a0850a4420a",
+      "after": "d0a8fcee54861a66b76fa2206957c18512e3436de3e017ee06920a0850a4420a",
+      "unchanged": true
+    },
+    {
+      "file": "src/app/(dashboard)/pos/page.tsx",
+      "before": "da3ad8c4bf22bd6ce50504808b0cc4d0ffdd035aef11ce321a9e3ac706e4be93",
+      "after": "da3ad8c4bf22bd6ce50504808b0cc4d0ffdd035aef11ce321a9e3ac706e4be93",
+      "unchanged": true
+    }
+  ],
+  "pages": [
+    {
+      "file": "src/app/(dashboard)/purchase-orders/page.tsx",
+      "handlersUnchanged": true,
+      "queriesAndMutationsUnchanged": true
+    },
+    {
+      "file": "src/app/(dashboard)/warehouses/page.tsx",
+      "handlersUnchanged": true,
+      "queriesAndMutationsUnchanged": true
+    },
+    {
+      "file": "src/app/(dashboard)/receipts/lookup/page.tsx",
+      "handlersUnchanged": true,
+      "queriesAndMutationsUnchanged": true
+    },
+    {
+      "file": "src/app/(dashboard)/sales/page.tsx",
+      "handlersUnchanged": true,
+      "queriesAndMutationsUnchanged": true
+    },
+    {
+      "file": "src/app/(dashboard)/users/page.tsx",
+      "handlersUnchanged": true,
+      "queriesAndMutationsUnchanged": true
+    },
+    {
+      "file": "src/app/(dashboard)/merchants/page.tsx",
+      "handlersUnchanged": true,
+      "queriesAndMutationsUnchanged": true
+    }
+  ]
+}
+EXIT_CODE=0

@@ -59,7 +59,7 @@ export function CommandPalette() {
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandInput placeholder="Search screens, products, sales, merchants…" />
+      <CommandInput placeholder={user?.role === "platform_owner" ? "Search platform navigation…" : "Search navigation…"} />
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
         {groups.map((group) => (
@@ -67,7 +67,7 @@ export function CommandPalette() {
             {group.items.map((item) => {
               const Icon = item.icon;
               const label =
-                t.nav[item.navKey as keyof typeof t.nav] ?? item.navKey;
+                t.nav[item.navKey as keyof typeof t.nav] ?? item.label ?? item.navKey;
               return (
                 <CommandItem
                   key={item.href}
@@ -102,10 +102,10 @@ export function CommandPalette() {
         <CommandSeparator />
         <CommandGroup heading="Go to">
           <CommandItem
-            onSelect={() => runCommand(() => router.push("/dashboard"))}
+            onSelect={() => runCommand(() => router.push(user?.role === "platform_owner" ? "/admin" : "/dashboard"))}
           >
             <LayoutDashboard className="h-4 w-4" />
-            <span>Dashboard</span>
+            <span>{user?.role === "platform_owner" ? "Platform overview" : "Dashboard"}</span>
           </CommandItem>
           <CommandItem
             onSelect={() => runCommand(() => router.push("/settings"))}

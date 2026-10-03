@@ -6,6 +6,7 @@ import { Bell, CheckCheck, AlertTriangle, Package, DollarSign, ArrowLeftRight, C
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
+import { ErrorState } from '@/components/ui/error-state';
 import { Skeleton } from '@/components/ui/skeleton';
 import { createClient } from '@/lib/supabase/client';
 import { formatRelativeTime } from '@/lib/utils/format';
@@ -59,7 +60,7 @@ export default function NotificationsPage() {
   const { t } = useI18n();
   const queryClient = useQueryClient();
 
-  const { data: notifications = [], isLoading } = useQuery({
+  const { data: notifications = [], isLoading, error, refetch } = useQuery({
     queryKey: ['notifications'],
     queryFn: fetchNotifications,
   });
@@ -81,7 +82,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="tt-page-title">{t.notifications.title}</h1>
           <p className="tt-muted text-sm mt-1">
@@ -101,14 +102,14 @@ export default function NotificationsPage() {
       </div>
 
       <div className="space-y-2">
-        {isLoading ? (
+        {error ? <ErrorState title="Could not load notifications" body={error.message} onRetry={() => refetch()} /> : isLoading ? (
           [...Array(5)].map((_, i) => (
             <Card key={i}>
               <CardContent className="p-4 flex gap-4">
                 <Skeleton className="h-10 w-10 rounded-lg" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-48" />
-                  <Skeleton className="h-3 w-64" />
+                <div className="min-w-0 flex-1 space-y-2">
+                  <Skeleton className="h-4 w-full max-w-48" />
+                  <Skeleton className="h-3 w-full max-w-64" />
                 </div>
               </CardContent>
             </Card>
@@ -126,6 +127,15 @@ export default function NotificationsPage() {
             return (
               <Card
                 key={notification.id}
+                role={!notification.is_read ? 'button' : undefined}
+                tabIndex={!notification.is_read ? 0 : undefined}
+                aria-label={!notification.is_read ? `Mark as read: ${notification.title}` : undefined}
+                onKeyDown={event => {
+                  if (!notification.is_read && (event.key === 'Enter' || event.key === ' ')) {
+                    event.preventDefault();
+                    markOneMutation.mutate(notification.id);
+                  }
+                }}
                 className={cn(
                   'transition-all',
                   !notification.is_read && 'border-primary/50 bg-primary/5'
@@ -143,8 +153,8 @@ export default function NotificationsPage() {
                     <Icon className="h-5 w-5" strokeWidth={1.75} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
+                    <div className="flex flex-col items-start justify-between gap-2 sm:flex-row">
+                      <div className="min-w-0 break-words">
                         <p className={cn('font-medium text-sm', !notification.is_read && 'font-semibold')}>
                           {notification.title}
                         </p>
