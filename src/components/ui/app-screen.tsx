@@ -9,6 +9,7 @@ import { OrganizationProvider } from '@/components/shared/organization-provider'
 import { SyncProvider } from '@/components/shared/sync-provider';
 import { useAuthStore, useUIStore } from '@/store';
 import { getOfflineAuthSession } from '@/lib/offline/auth-cache';
+import { LoadingState } from '@/components/ui/loading-state';
 import { cn } from '@/lib/utils/cn';
 
 interface AppScreenProps {
@@ -67,7 +68,7 @@ export function AppScreen({ children, pos, dense, noPadding }: AppScreenProps) {
   }, [user, isLoading, router]);
 
   if (isLoading) {
-    return null;
+    return <div className="p-6" role="status" aria-label="Loading workspace"><LoadingState /></div>;
   }
 
   if (user?.must_change_password) {

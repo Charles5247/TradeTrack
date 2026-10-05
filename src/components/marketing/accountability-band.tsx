@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { CheckCircle2 } from "lucide-react";
 import { Reveal } from "@/components/marketing/reveal";
 
@@ -35,6 +36,9 @@ export function AccountabilityBand() {
   return (
     <section style={{ padding: "100px 0", background: "var(--c-bgAlt)" }}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="grid gap-4 sm:grid-cols-3 mb-10">
+          {["photo-testimonial-african-corp-woman.jpg", "photo-testimonial-man1.jpg", "photo-testimonial-african-man-restaurant.jpg"].map((photo) => <div key={photo} className="relative aspect-[4/3] overflow-hidden rounded-lg"><Image src={`/images/retail/${photo}`} alt="Merchant portrait from the design photography collection" fill sizes="(min-width: 640px) 33vw, 100vw" className="object-cover" /></div>)}
+        </div>
         <div className="grid gap-14 md:grid-cols-2 items-center">
           <Reveal>
             <div className="tt-eyebrow mb-3">Built for accountability</div>

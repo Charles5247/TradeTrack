@@ -1,0 +1,134 @@
+{
+  "paletteValuesMatched": 46,
+  "protectedFiles": {
+    "src/lib/offline/sales.ts": "2a797642c5c4a0e4072ce1fb521b11ae966da737e15f1d4af77f2c2bbead41ef",
+    "src/lib/offline/purchase-orders.ts": "3c6894381bdd2b0959dfcaa37e12a406641beb2afe197e977cf6e99f25f9a105",
+    "src/lib/offline/sync-engine.ts": "d0a8fcee54861a66b76fa2206957c18512e3436de3e017ee06920a0850a4420a",
+    "src/app/(dashboard)/pos/page.tsx": "da3ad8c4bf22bd6ce50504808b0cc4d0ffdd035aef11ce321a9e3ac706e4be93"
+  },
+  "images": [
+    {
+      "file": "public/images/retail/photo-aba-traders.jpg",
+      "width": 960,
+      "height": 720
+    },
+    {
+      "file": "public/images/retail/photo-african-hotel-women.jpg",
+      "width": 800,
+      "height": 621
+    },
+    {
+      "file": "public/images/retail/photo-african-spices-market.jpg",
+      "width": 800,
+      "height": 600
+    },
+    {
+      "file": "public/images/retail/photo-bakery.jpg",
+      "width": 1024,
+      "height": 1024
+    },
+    {
+      "file": "public/images/retail/photo-hotel.jpg",
+      "width": 2048,
+      "height": 2048
+    },
+    {
+      "file": "public/images/retail/photo-mall.jpg",
+      "width": 970,
+      "height": 646
+    },
+    {
+      "file": "public/images/retail/photo-market.jpg",
+      "width": 800,
+      "height": 535
+    },
+    {
+      "file": "public/images/retail/photo-phone.jpg",
+      "width": 2560,
+      "height": 1706
+    },
+    {
+      "file": "public/images/retail/photo-restaurant-culinary-team.jpg",
+      "width": 1000,
+      "height": 667
+    },
+    {
+      "file": "public/images/retail/photo-restaurant.jpg",
+      "width": 1024,
+      "height": 1024
+    },
+    {
+      "file": "public/images/retail/photo-testimonial-african-corp-woman.jpg",
+      "width": 2048,
+      "height": 2048
+    },
+    {
+      "file": "public/images/retail/photo-testimonial-african-man-restaurant.jpg",
+      "width": 2560,
+      "height": 1761
+    },
+    {
+      "file": "public/images/retail/photo-testimonial-central-african-man.jpg",
+      "width": 615,
+      "height": 461
+    },
+    {
+      "file": "public/images/retail/photo-testimonial-man1.jpg",
+      "width": 728,
+      "height": 485
+    },
+    {
+      "file": "public/images/retail/photo-testimonial-nigerian-woman.jpg",
+      "width": 2560,
+      "height": 1927
+    },
+    {
+      "file": "public/images/retail/photo-testimonial-woman1.jpg",
+      "width": 2304,
+      "height": 4096
+    },
+    {
+      "file": "public/images/retail/photo-testimonial-woman2.jpg",
+      "width": 2304,
+      "height": 4096
+    }
+  ],
+  "pages": [
+    "src/app/(auth)/forgot-password/page.tsx",
+    "src/app/(auth)/login/page.tsx",
+    "src/app/(auth)/signup/page.tsx",
+    "src/app/(dashboard)/accounting/page.tsx",
+    "src/app/(dashboard)/admin/page.tsx",
+    "src/app/(dashboard)/assistant/page.tsx",
+    "src/app/(dashboard)/audit/page.tsx",
+    "src/app/(dashboard)/dashboard/page.tsx",
+    "src/app/(dashboard)/imports/page.tsx",
+    "src/app/(dashboard)/inventory/page.tsx",
+    "src/app/(dashboard)/merchants/page.tsx",
+    "src/app/(dashboard)/merchants/[id]/page.tsx",
+    "src/app/(dashboard)/notifications/page.tsx",
+    "src/app/(dashboard)/pos/page.tsx",
+    "src/app/(dashboard)/products/page.tsx",
+    "src/app/(dashboard)/products/[id]/edit/page.tsx",
+    "src/app/(dashboard)/purchase-orders/new/page.tsx",
+    "src/app/(dashboard)/purchase-orders/page.tsx",
+    "src/app/(dashboard)/receipts/lookup/page.tsx",
+    "src/app/(dashboard)/receipts/page.tsx",
+    "src/app/(dashboard)/reports/page.tsx",
+    "src/app/(dashboard)/sales/page.tsx",
+    "src/app/(dashboard)/sales/[id]/page.tsx",
+    "src/app/(dashboard)/settings/page.tsx",
+    "src/app/(dashboard)/subscriptions/page.tsx",
+    "src/app/(dashboard)/transfers/page.tsx",
+    "src/app/(dashboard)/users/page.tsx",
+    "src/app/(dashboard)/vendors/page.tsx",
+    "src/app/(dashboard)/warehouses/page.tsx",
+    "src/app/(marketing)/download/page.tsx",
+    "src/app/(marketing)/features/page.tsx",
+    "src/app/(marketing)/industries/page.tsx",
+    "src/app/(marketing)/page.tsx",
+    "src/app/(marketing)/pricing/page.tsx",
+    "src/app/change-password/page.tsx"
+  ],
+  "browserVerification": "Unavailable: no browser provider in this session"
+}

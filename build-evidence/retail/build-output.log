@@ -1,0 +1,78 @@
+$ node node_modules/next/dist/bin/next build
+▲ Next.js 16.2.12 (Turbopack)
+- Environments: .env.local
+- Experiments (use with caution):
+  · optimizePackageImports
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 77s
+  Running TypeScript ...
+  Finished TypeScript in 3.1min ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/45) ...
+  Generating static pages using 7 workers (11/45) 
+  Generating static pages using 7 workers (22/45) 
+  Generating static pages using 7 workers (33/45) 
+✓ Generating static pages using 7 workers (45/45) in 8.9s
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /accounting
+├ ƒ /admin
+├ ƒ /api/accounting
+├ ƒ /api/ai
+├ ƒ /api/audit
+├ ƒ /api/auth/signup
+├ ƒ /api/imports
+├ ƒ /api/merchants/onboard
+├ ƒ /api/payments/initialize
+├ ƒ /api/payments/verify
+├ ƒ /api/receipts/lookup
+├ ƒ /api/subscriptions/verification
+├ ƒ /api/users
+├ ƒ /api/users/[id]
+├ ƒ /api/version
+├ ƒ /api/webhooks/zainpay
+├ ƒ /assistant
+├ ƒ /audit
+├ ƒ /change-password
+├ ƒ /dashboard
+├ ƒ /download
+├ ƒ /features
+├ ƒ /forgot-password
+├ ƒ /imports
+├ ƒ /industries
+├ ƒ /inventory
+├ ƒ /login
+├ ƒ /merchants
+├ ƒ /merchants/[id]
+├ ƒ /notifications
+├ ƒ /pos
+├ ƒ /pricing
+├ ƒ /products
+├ ƒ /products/[id]/edit
+├ ƒ /purchase-orders
+├ ƒ /purchase-orders/new
+├ ƒ /receipts
+├ ƒ /receipts/lookup
+├ ƒ /reports
+├ ƒ /sales
+├ ƒ /sales/[id]
+├ ƒ /settings
+├ ƒ /signup
+├ ƒ /subscriptions
+├ ƒ /transfers
+├ ƒ /users
+├ ƒ /vendors
+└ ƒ /warehouses
+
+
+ƒ Proxy (Middleware)
+
+ƒ  (Dynamic)  server-rendered on demand
+
+
+Exit code: 0

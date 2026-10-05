@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { Search, Download, Eye, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -108,6 +109,7 @@ export default function SalesPage() {
 }
 
 function SalesPageInner() {
+  const router = useRouter();
   const { t } = useI18n();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
@@ -263,7 +265,7 @@ function SalesPageInner() {
                       {formatDateTime(sale.created_at)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon-sm" onClick={() => setViewSale(sale)}>
+                      <Button variant="ghost" size="icon-sm" onClick={() => router.push(`/sales/${sale.id}`)}>
                         <Eye className="h-4 w-4" strokeWidth={1.75} />
                       </Button>
                     </TableCell>

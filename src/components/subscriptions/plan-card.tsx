@@ -336,7 +336,7 @@ export function PlanCard({
         plan.is_popular
           ? "border-primary shadow-lg ring-2 ring-primary md:scale-[1.03] z-10"
           : isCurrent
-            ? "border-green-500 ring-1 ring-green-500"
+            ? "border-[color-mix(in_oklch,var(--c-success),transparent_65%)] ring-1 ring-[var(--c-success)]"
             : ""
       }`}
     >
@@ -363,7 +363,7 @@ export function PlanCard({
               plan.is_popular
                 ? "bg-primary/10"
                 : isCurrent
-                  ? "bg-green-100 dark:bg-green-900/30"
+                  ? "bg-[color-mix(in_oklch,var(--c-success),transparent_90%)] bg-[color-mix(in_oklch,var(--c-success),transparent_90%)]"
                   : "bg-muted"
             }`}
           >
@@ -372,7 +372,7 @@ export function PlanCard({
                 plan.is_popular
                   ? "text-primary"
                   : isCurrent
-                    ? "text-green-600"
+                    ? "text-[var(--c-success)]"
                     : "text-muted-foreground"
               }`}
             />

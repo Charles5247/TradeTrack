@@ -1,0 +1,785 @@
+'use client';
+
+/**
+ * Purchase Orders — minimal Business-tier feature.
+ *
+ * Workflow: Create (draft) -> Send (sent) -> Receive (received) or
+ * Cancel (cancelled). Receiving updates inventory using the SAME
+ * read-qty -> upsert `inventory` -> insert `inventory_movements`
+ * pattern already used inline in inventory/page.tsx's adjustStock(),
+ * transfers/page.tsx's updateTransferStatus() and vendors/page.tsx's
+ * createMutation — no new inventory-mutation mechanism is introduced.
+ *
+ * Explicitly out of scope for this version (see docs/ROADMAP.md):
+ * partial receiving, PO approval workflows, PDF export, purchasing
+ * analytics, supplier payment automation, complex procurement.
+ *
+ * Gated behind the `purchase_orders` Business-tier feature flag via
+ * `hasFeature(plan, 'purchase_orders')`, per the pattern documented in
+ * docs/SUBSCRIPTION_SYSTEM.md. Falls open (renders normally) if
+ * subscription data cannot be loaded, matching this codebase's
+ * offline-first "never block core work on a transient fetch" rule
+ * used everywhere else feature/limit checks are read (see
+ * product-form.tsx's canAddProduct() usage).
+ */
+
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { FormTemplate } from '@/components/ui/form-template';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  Plus,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Send,
+  PackageCheck,
+  Trash2,
+  Lock,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { createClient } from '@/lib/supabase/client';
+import { getAllFromOfflineDB, saveToOfflineDB } from '@/lib/offline/db';
+import { getOfflinePurchaseOrders, persistOfflinePurchaseOrder, requireSyncedPurchaseOrder } from '@/lib/offline/purchase-orders';
+import { syncEngine } from '@/lib/offline/sync-engine';
+import { isOffline } from '@/lib/utils/network';
+import { useOnlineStatus } from '@/hooks/use-online-status';
+import { formatCurrency, formatDate, formatDateTime } from '@/lib/utils/format';
+import { useAuthStore } from '@/store';
+import type { PurchaseOrder, Supplier, Product, Warehouse } from '@/types';
+import { useI18n } from '@/i18n';
+import { AccessGuard } from '@/components/shared/access-guard';
+import {
+  hasFeature,
+  resolveSubscriptionPlan,
+  upgradePromptMessage,
+  type PlanLike,
+  type SubscriptionLike,
+} from '@/lib/subscriptions/plan-limits';
+
+// ── Data fetching ────────────────────────────────────────────
+
+async function fetchPurchaseOrders(organizationId: string) {
+  if (!isOffline()) {
+    try { await syncEngine?.pullPurchaseOrders(organizationId); }
+    catch { /* Fall back when the browser reports online but requests fail. */ }
+  }
+  return getOfflinePurchaseOrders(organizationId);
+}
+
+async function fetchSuppliersAndProducts(organizationId: string) {
+  if (!isOffline()) {
+    try {
+      const supabase = createClient();
+      const [s, p, w] = await Promise.all([
+        supabase.from('suppliers').select('*').eq('organization_id', organizationId),
+        supabase.from('products').select('*').eq('organization_id', organizationId),
+        supabase.from('warehouses').select('*').eq('organization_id', organizationId),
+      ]);
+      if (s.error || p.error || w.error) throw s.error || p.error || w.error;
+      await Promise.all([
+        saveToOfflineDB('suppliers', s.data || []),
+        saveToOfflineDB('products', p.data || []),
+        saveToOfflineDB('warehouses', w.data || []),
+      ]);
+    } catch { /* Preserve cached choices when requests fail. */ }
+  }
+  const [suppliers, products, warehouses] = await Promise.all([
+    getAllFromOfflineDB<Supplier>('suppliers'),
+    getAllFromOfflineDB<Product>('products'),
+    getAllFromOfflineDB<Warehouse>('warehouses'),
+  ]);
+  return {
+    suppliers: suppliers.filter((s) => s.organization_id === organizationId).sort((a, b) => a.name.localeCompare(b.name)),
+    products: products.filter((p) => p.organization_id === organizationId && p.status === 'active').sort((a, b) => a.name.localeCompare(b.name)),
+    warehouses: warehouses.filter((w) => w.organization_id === organizationId).sort((a, b) => Number(b.is_main) - Number(a.is_main)),
+  };
+}
+
+/** Fails open (returns null/allows) on any error — subscription checks
+ *  must never block the page from rendering, matching the rest of the
+ *  codebase's offline-first philosophy. */
+async function fetchSubscriptionPlan(organizationId: string) {
+  try {
+    const supabase = createClient();
+    const [{ data: subscription }, { data: allPlans }] = await Promise.all([
+      supabase
+        .from('subscriptions')
+        .select('id, plan_id, status')
+        .eq('organization_id', organizationId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase.from('subscription_plans').select('*'),
+    ]);
+    return resolveSubscriptionPlan(
+      subscription as SubscriptionLike | null,
+      (allPlans as unknown as PlanLike[]) || [],
+    );
+  } catch {
+    return null;
+  }
+}
+
+type POItemForm = { product_id: string; quantity: string; unit_cost: string };
+
+async function sendPurchaseOrder(id: string) {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('purchase_orders')
+    .update({ status: 'sent', sent_at: new Date().toISOString() })
+    .eq('id', id);
+  if (error) throw error;
+}
+
+async function cancelPurchaseOrder(id: string) {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('purchase_orders')
+    .update({ status: 'cancelled' })
+    .eq('id', id);
+  if (error) throw error;
+}
+
+/**
+ * Receive a PO in full (no partial receiving in this version). Updates
+ * inventory via the SAME read-qty -> upsert `inventory` -> insert
+ * `inventory_movements` pattern used elsewhere in the app (see
+ * inventory/page.tsx's adjustStock()) — deliberately replicated inline
+ * rather than extracted into a new shared helper, since no such shared
+ * helper exists anywhere else in the codebase either.
+ */
+async function receivePurchaseOrder(payload: {
+  poId: string;
+  organizationId: string;
+  warehouseId: string;
+  userId: string;
+}) {
+  const supabase = createClient();
+
+  const { data: items, error: itemsError } = await supabase
+    .from('purchase_order_items')
+    .select('id, product_id, quantity_ordered')
+    .eq('purchase_order_id', payload.poId);
+  if (itemsError) throw itemsError;
+
+  for (const item of items || []) {
+    const { data: inv } = await supabase
+      .from('inventory')
+      .select('id, quantity')
+      .eq('product_id', item.product_id)
+      .eq('warehouse_id', payload.warehouseId)
+      .maybeSingle();
+
+    const oldQty = inv?.quantity || 0;
+    const newQty = oldQty + item.quantity_ordered;
+
+    if (inv) {
+      await supabase.from('inventory').update({ quantity: newQty }).eq('id', inv.id);
+    } else {
+      await supabase.from('inventory').insert({
+        organization_id: payload.organizationId,
+        product_id: item.product_id,
+        warehouse_id: payload.warehouseId,
+        quantity: item.quantity_ordered,
+        min_stock_level: 5,
+      });
+    }
+
+    await supabase.from('inventory_movements').insert({
+      organization_id: payload.organizationId,
+      product_id: item.product_id,
+      warehouse_id: payload.warehouseId,
+      movement_type: 'in',
+      quantity: item.quantity_ordered,
+      reference_id: payload.poId,
+      reference_type: 'purchase_order',
+      notes: 'Received from purchase order',
+      created_by: payload.userId,
+    });
+
+    await supabase
+      .from('purchase_order_items')
+      .update({ quantity_received: item.quantity_ordered })
+      .eq('id', item.id);
+  }
+
+  const { error } = await supabase
+    .from('purchase_orders')
+    .update({
+      status: 'received',
+      received_by: payload.userId,
+      received_at: new Date().toISOString(),
+    })
+    .eq('id', payload.poId);
+  if (error) throw error;
+}
+
+// ── Page ─────────────────────────────────────────────────────
+
+export function PurchaseOrdersScreen({ createMode = false }: { createMode?: boolean }) {
+  return (
+    <AccessGuard allow={['business_owner', 'admin']}>
+      <PurchaseOrdersPageInner createMode={createMode} />
+    </AccessGuard>
+  );
+}
+
+function PurchaseOrdersPageInner({ createMode }: { createMode: boolean }) {
+  const router = useRouter();
+  const { t } = useI18n();
+  const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const { user } = useAuthStore();
+  const orgId = (user as unknown as { organization_id: string } | null)?.organization_id;
+
+  useEffect(() => syncEngine?.subscribe((state) => {
+    if (state.status === 'idle' && state.lastSync) {
+      queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+    }
+  }), [queryClient]);
+
+  const [isFormOpen, setFormOpen] = useState(createMode);
+  const setIsFormOpen = (open: boolean) => {
+    if (createMode && !open) router.push("/purchase-orders");
+    else setFormOpen(open);
+  };
+  const [viewPO, setViewPO] = useState<PurchaseOrder | null>(null);
+  const [formData, setFormData] = useState({
+    supplier_id: '',
+    expected_date: '',
+    notes: '',
+    items: [{ product_id: '', quantity: '', unit_cost: '' }] as POItemForm[],
+  });
+
+  const { data: plan } = useQuery({
+    queryKey: ['purchase-orders-plan', orgId],
+    queryFn: () => fetchSubscriptionPlan(orgId as string),
+    enabled: !!orgId,
+  });
+
+  // Fails OPEN: if the plan can't be resolved (offline/transient error),
+  // never block the page — matches this codebase's existing philosophy
+  // for feature/limit checks (see product-form.tsx's canAddProduct()).
+  const featureLocked = !!plan && !hasFeature(plan, 'purchase_orders');
+
+  const { data: purchaseOrders = [], isLoading } = useQuery({
+    queryKey: ['purchase-orders', orgId],
+    queryFn: () => fetchPurchaseOrders(orgId!),
+    networkMode: 'always',
+    enabled: !featureLocked && !!orgId,
+  });
+
+  const { data: { suppliers = [], products = [], warehouses = [] } = {} } = useQuery({
+    queryKey: ['po-suppliers-products-warehouses', orgId],
+    queryFn: () => fetchSuppliersAndProducts(orgId!),
+    networkMode: 'always',
+    enabled: !featureLocked && !!orgId,
+  });
+
+  const resetForm = () =>
+    setFormData({
+      supplier_id: '',
+      expected_date: '',
+      notes: '',
+      items: [{ product_id: '', quantity: '', unit_cost: '' }],
+    });
+
+  const createMutation = useMutation({
+    networkMode: 'always',
+    mutationFn: (data: typeof formData) =>
+      persistOfflinePurchaseOrder({
+        organization_id: orgId as string,
+        supplier_id: data.supplier_id,
+        expected_date: data.expected_date || null,
+        notes: data.notes,
+        created_by: user!.id,
+        items: data.items.filter((item) => item.product_id && item.quantity && item.unit_cost),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+      setIsFormOpen(false);
+      resetForm();
+      toast.success(t.purchaseOrders.created_success);
+      void syncEngine?.sync();
+    },
+    onError: () => toast.error(t.purchaseOrders.create_failed),
+  });
+
+  const sendMutation = useMutation({
+    networkMode: 'always',
+    mutationFn: async (id: string) => {
+      await requireSyncedPurchaseOrder(id, orgId!);
+      return sendPurchaseOrder(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+      toast.success(t.purchaseOrders.sent_success);
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : t.purchaseOrders.update_failed),
+  });
+
+  const cancelMutation = useMutation({
+    networkMode: 'always',
+    mutationFn: async (id: string) => {
+      await requireSyncedPurchaseOrder(id, orgId!);
+      return cancelPurchaseOrder(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+      toast.success(t.purchaseOrders.cancelled_success);
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : t.purchaseOrders.update_failed),
+  });
+
+  const receiveMutation = useMutation({
+    networkMode: 'always',
+    mutationFn: async (poId: string) => {
+      await requireSyncedPurchaseOrder(poId, orgId!);
+      const destination = warehouses.find((w) => w.is_main) || warehouses[0];
+      if (!destination) throw new Error(t.purchaseOrders.no_warehouse);
+      return receivePurchaseOrder({
+        poId,
+        organizationId: orgId as string,
+        warehouseId: destination.id,
+        userId: user!.id,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      toast.success(t.purchaseOrders.received_success);
+    },
+    onError: (e) =>
+      toast.error(e instanceof Error ? e.message : t.purchaseOrders.update_failed),
+  });
+
+  const itemsSubtotal = (items: POItemForm[]) =>
+    items.reduce((sum, i) => {
+      const qty = parseInt(i.quantity, 10);
+      const cost = parseFloat(i.unit_cost);
+      if (isNaN(qty) || isNaN(cost)) return sum;
+      return sum + qty * cost;
+    }, 0);
+
+  const handleCreate = () => {
+    if (!user || !orgId) return;
+    if (!formData.supplier_id) {
+      toast.error(t.purchaseOrders.select_supplier_required);
+      return;
+    }
+    const validItems = formData.items.filter(
+      (i) => i.product_id && i.quantity && i.unit_cost,
+    );
+    if (validItems.length === 0) {
+      toast.error(t.purchaseOrders.add_item_required);
+      return;
+    }
+    for (const i of validItems) {
+      const qty = parseInt(i.quantity, 10);
+      const cost = parseFloat(i.unit_cost);
+      if (isNaN(qty) || qty <= 0 || isNaN(cost) || cost < 0) {
+        toast.error(t.purchaseOrders.valid_item_values);
+        return;
+      }
+    }
+    createMutation.mutate(formData);
+  };
+
+  const statusBadge = (status: string) => {
+    const map: Record<string, { icon: React.ElementType; variant: string }> = {
+      draft: { icon: Clock, variant: 'outline' },
+      sent: { icon: Send, variant: 'info' },
+      received: { icon: CheckCircle, variant: 'success' },
+      cancelled: { icon: XCircle, variant: 'destructive' },
+    };
+    const { icon: Icon, variant } = map[status] || map.draft;
+    return (
+      <Badge
+        variant={variant as Parameters<typeof Badge>[0]['variant']}
+        className="flex items-center gap-1 w-fit capitalize"
+      >
+        <Icon className="h-3 w-3" strokeWidth={1.75} />
+        {status}
+      </Badge>
+    );
+  };
+
+  const draftCount = purchaseOrders.filter((po) => po.status === 'draft').length;
+  const sentCount = purchaseOrders.filter((po) => po.status === 'sent').length;
+
+  if (featureLocked) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-4">
+        <Lock className="h-12 w-12 text-muted-foreground" strokeWidth={1.75} />
+        <div className="text-center max-w-md">
+          <p className="font-medium">{t.purchaseOrders.title}</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {upgradePromptMessage('purchase_orders')}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-w-0 space-y-6">
+      {!createMode && <>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="tt-page-title">{t.purchaseOrders.title}</h1>
+          <p className="tt-muted text-sm">
+            {t.purchaseOrders.subtitle
+              .replace('{draft}', String(draftCount))
+              .replace('{sent}', String(sentCount))}
+          </p>
+        </div>
+        <Button onClick={() => router.push("/purchase-orders/new")}>
+          <Plus className="h-4 w-4 mr-2" strokeWidth={1.75} />
+          {t.purchaseOrders.new_po}
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="min-w-0 overflow-hidden p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t.purchaseOrders.supplier}</TableHead>
+                <TableHead>{t.purchaseOrders.items_count}</TableHead>
+                <TableHead>{t.purchaseOrders.total_value}</TableHead>
+                <TableHead>{t.purchaseOrders.expected_date}</TableHead>
+                <TableHead>{t.common.status}</TableHead>
+                <TableHead className="text-right">{t.common.actions}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                [...Array(5)].map((_, i) => (
+                  <TableRow key={i}>
+                    {[...Array(6)].map((_, j) => (
+                      <TableCell key={j}>
+                        <Skeleton className="h-4 w-full" />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : purchaseOrders.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                    {t.purchaseOrders.no_purchase_orders}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                purchaseOrders.map((po) => (
+                  <TableRow key={po.id} className="cursor-pointer" onClick={() => setViewPO(po)}>
+                    <TableCell>
+                      <p className="font-medium text-sm">
+                        {(po.supplier as { name?: string } | undefined)?.name}
+                      </p>
+                    </TableCell>
+                    <TableCell className="text-sm">{po.items?.length ?? 0}</TableCell>
+                    <TableCell className="font-semibold">
+                      {formatCurrency(po.total_value)}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {po.expected_date ? formatDate(po.expected_date) : '—'}
+                    </TableCell>
+                    <TableCell>{statusBadge(po.status)}</TableCell>
+                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                      {(po.status === 'draft' || po.status === 'sent') && (!isOnline || !po.lifecycleReady) && (
+                        <p className="text-xs text-muted-foreground mb-1" role="status">
+                          {!isOnline ? 'Reconnect to send, cancel or receive.' : 'Waiting for this order and all items to sync.'}
+                        </p>
+                      )}
+                      <div className="flex flex-wrap items-center justify-end gap-2">
+                        {po.status === 'draft' && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="min-h-11 sm:min-h-0 sm:h-8 text-xs"
+                              onClick={() => sendMutation.mutate(po.id)}
+                              disabled={!isOnline || !po.lifecycleReady || sendMutation.isPending || cancelMutation.isPending || receiveMutation.isPending}
+                            >
+                              <Send className="h-3 w-3 mr-1" strokeWidth={1.75} /> {t.purchaseOrders.send}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="min-h-11 sm:min-h-0 sm:h-8 text-xs text-destructive border-destructive/30"
+                              onClick={() => cancelMutation.mutate(po.id)}
+                              disabled={!isOnline || !po.lifecycleReady || sendMutation.isPending || cancelMutation.isPending || receiveMutation.isPending}
+                            >
+                              <Trash2 className="h-3 w-3 mr-1" strokeWidth={1.75} /> {t.purchaseOrders.cancel_action}
+                            </Button>
+                          </>
+                        )}
+                        {po.status === 'sent' && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="min-h-11 sm:min-h-0 sm:h-8 text-xs text-[var(--c-success)] border-[color-mix(in_oklch,var(--c-success),transparent_70%)]"
+                              onClick={() => receiveMutation.mutate(po.id)}
+                              disabled={!isOnline || !po.lifecycleReady || receiveMutation.isPending || cancelMutation.isPending}
+                            >
+                              <PackageCheck className="h-3 w-3 mr-1" strokeWidth={1.75} /> {t.purchaseOrders.receive}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="min-h-11 sm:min-h-0 sm:h-8 text-xs text-destructive border-destructive/30"
+                              onClick={() => cancelMutation.mutate(po.id)}
+                              disabled={!isOnline || !po.lifecycleReady || sendMutation.isPending || cancelMutation.isPending || receiveMutation.isPending}
+                            >
+                              {t.purchaseOrders.cancel_action}
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      </>}
+      {/* Create PO Dialog */}
+      <CreateOrderSurface standalone={createMode} open={isFormOpen} onOpenChange={setIsFormOpen} title={t.purchaseOrders.create_dialog_title}>
+          <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+            <div className="space-y-2">
+              <Label>{t.purchaseOrders.supplier_required}</Label>
+              <Select
+                onValueChange={(v) => setFormData({ ...formData, supplier_id: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t.purchaseOrders.select_supplier} />
+                </SelectTrigger>
+                <SelectContent>
+                  {suppliers.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>{t.purchaseOrders.expected_date}</Label>
+              <Input
+                type="date"
+                value={formData.expected_date}
+                onChange={(e) => setFormData({ ...formData, expected_date: e.target.value })}
+              />
+            </div>
+
+            {/* Line items */}
+            <div>
+              <Label className="mb-2 block">{t.purchaseOrders.line_items_required}</Label>
+              {formData.items.map((item, idx) => (
+                <div key={idx} className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
+                  <Select
+                    onValueChange={(v) => {
+                      const p = products.find((pr) => pr.id === v);
+                      const items = [...formData.items];
+                      items[idx] = {
+                        ...items[idx],
+                        product_id: v,
+                        unit_cost: String(p?.cost_price ?? ''),
+                      };
+                      setFormData({ ...formData, items });
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={t.purchaseOrders.product} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {products.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    type="number"
+                    min="1"
+                    placeholder={t.purchaseOrders.qty}
+                    value={item.quantity}
+                    onChange={(e) => {
+                      const items = [...formData.items];
+                      items[idx] = { ...items[idx], quantity: e.target.value };
+                      setFormData({ ...formData, items });
+                    }}
+                  />
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder={t.purchaseOrders.unit_cost}
+                    value={item.unit_cost}
+                    onChange={(e) => {
+                      const items = [...formData.items];
+                      items[idx] = { ...items[idx], unit_cost: e.target.value };
+                      setFormData({ ...formData, items });
+                    }}
+                  />
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setFormData({
+                    ...formData,
+                    items: [...formData.items, { product_id: '', quantity: '', unit_cost: '' }],
+                  })
+                }
+              >
+                <Plus className="h-3 w-3 mr-1" strokeWidth={1.75} /> {t.purchaseOrders.add_item}
+              </Button>
+            </div>
+
+            <div className="rounded-md border p-3 bg-muted/30 text-sm flex items-center justify-between">
+              <span className="text-muted-foreground">{t.purchaseOrders.total_value}</span>
+              <span className="font-semibold">
+                {formatCurrency(itemsSubtotal(formData.items))}
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              <Label>{t.purchaseOrders.notes}</Label>
+              <Textarea
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                rows={2}
+                placeholder={t.purchaseOrders.notes_placeholder}
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1" onClick={() => setIsFormOpen(false)}>
+                {t.purchaseOrders.cancel}
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={handleCreate}
+                disabled={createMutation.isPending}
+              >
+                {t.purchaseOrders.save_draft}
+              </Button>
+            </div>
+          </div>
+        </CreateOrderSurface>
+
+      {/* View PO Dialog */}
+      <Dialog open={!!viewPO} onOpenChange={(open) => !open && setViewPO(null)}>
+        <DialogContent className="max-w-lg w-[calc(100%-2rem)] max-h-[90dvh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t.purchaseOrders.details_dialog_title}</DialogTitle>
+          </DialogHeader>
+          {viewPO && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">
+                    {(viewPO.supplier as { name?: string } | undefined)?.name}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {t.purchaseOrders.created_by_label}{' '}
+                    {(viewPO.creator as { full_name?: string } | undefined)?.full_name || '—'}
+                    {' · '}
+                    {formatDateTime(viewPO.created_at)}
+                  </p>
+                </div>
+                {statusBadge(viewPO.status)}
+              </div>
+
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t.purchaseOrders.product}</TableHead>
+                    <TableHead>{t.purchaseOrders.qty}</TableHead>
+                    <TableHead>{t.purchaseOrders.unit_cost}</TableHead>
+                    <TableHead className="text-right">{t.purchaseOrders.line_total}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(viewPO.items || []).map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell className="text-sm">
+                        {(item.product as { name?: string } | undefined)?.name}
+                      </TableCell>
+                      <TableCell className="text-sm">{item.quantity_ordered}</TableCell>
+                      <TableCell className="text-sm">{formatCurrency(item.unit_cost)}</TableCell>
+                      <TableCell className="text-right text-sm">
+                        {formatCurrency(item.unit_cost * item.quantity_ordered)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              <div className="flex items-center justify-between border-t pt-3 text-sm font-semibold">
+                <span>{t.purchaseOrders.total_value}</span>
+                <span>{formatCurrency(viewPO.total_value)}</span>
+              </div>
+
+              {viewPO.notes && (
+                <p className="text-sm text-muted-foreground">{viewPO.notes}</p>
+              )}
+
+              {viewPO.status === 'received' && (
+                <p className="text-xs text-[var(--c-success)] flex items-center gap-1">
+                  <CheckCircle className="h-3 w-3" strokeWidth={1.75} />
+                  {t.purchaseOrders.received_by_label}{' '}
+                  {(viewPO.receiver as { full_name?: string } | undefined)?.full_name || '—'}
+                  {viewPO.received_at ? ` · ${formatDateTime(viewPO.received_at)}` : ''}
+                </p>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function CreateOrderSurface({ standalone, open, onOpenChange, title, children }: { standalone: boolean; open: boolean; onOpenChange: (open: boolean) => void; title: string; children: React.ReactNode }) {
+ if (standalone) return <div className="space-y-6"><h1 className="tt-page-title">{title}</h1><FormTemplate sections={[{ title: "Supplier and order items", description: "Prepare your purchase order. Drafts are saved on this device when offline.", fields: children }]} /></div>;
+ return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent><DialogHeader><DialogTitle>{title}</DialogTitle></DialogHeader>{children}</DialogContent></Dialog>;
+}

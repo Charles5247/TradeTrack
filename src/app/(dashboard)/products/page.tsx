@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Search, Edit, Trash2, Package, MoreHorizontal, Eye } from 'lucide-react';
 import { toast } from 'sonner';
@@ -69,6 +70,7 @@ export default function ProductsPage() {
 }
 
 function ProductsPageInner() {
+  const router = useRouter();
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
@@ -256,7 +258,7 @@ function ProductsPageInner() {
                           <DropdownMenuItem onClick={() => setViewProduct(product)}>
                             <Eye className="h-4 w-4 mr-2" strokeWidth={1.75} /> {t.products.view_details}
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => { setEditProduct(product); setIsFormOpen(true); }}>
+                          <DropdownMenuItem onClick={() => router.push(`/products/${product.id}/edit`)}>
                             <Edit className="h-4 w-4 mr-2" strokeWidth={1.75} /> {t.products.edit}
                           </DropdownMenuItem>
                           <DropdownMenuItem

@@ -1,36 +1,14 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { Store, ShoppingCart, Warehouse, Receipt } from "lucide-react";
 
-/**
- * Auto-advancing photo carousel for the right-hand brand panel of every
- * auth screen (Login / Signup / Forgot password / Change password),
- * replacing the previous solid-`var(--c-primary)` background per the
- * user's explicit request for "a background carousel or photo on the
- * right side of the auth pages (already having a solid blue colored
- * background)".
- *
- * Photography sourcing note (same constraint as hero.tsx /
- * feature-grid.tsx / industries-band.tsx): real commissioned photography
- * is not available this session — AI image generation failed
- * (insufficient credits) and image_search only returned commercially
- * licensed stock photography (Alamy/Dreamstime/DepositPhotos), which
- * this codebase's image-licensing policy explicitly forbids using. Each
- * slide therefore uses the same `.tt-placeholder` flagged-placeholder
- * treatment as every other photo slot in the app, so this carousel is
- * structurally ready to receive real photography (four aspect-ratio-
- * correct slide slots, real caption copy, real auto-advance + dot
- * navigation) the moment it's available, without any component changes.
- *
- * Captions describe real, shipped product capabilities only (POS,
- * multi-warehouse inventory, offline sync, receipts) — no fabricated
- * customer quotes or invented statistics, per the honesty policy
- * established in accountability-band.tsx / auth-shell.tsx.
- */
+/* Supplied design photography for the authentication brand panel. */
 
 interface Slide {
   key: string;
+  image: string;
   Icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>;
   caption: string;
   sub: string;
@@ -38,25 +16,25 @@ interface Slide {
 
 const SLIDES: Slide[] = [
   {
-    key: "counter",
+    key: "counter", image: "photo-market.jpg",
     Icon: Store,
     caption: "Photo: shop owner at the counter",
     sub: "Every retail counter, tracked from one dashboard.",
   },
   {
-    key: "pos",
+    key: "pos", image: "photo-aba-traders.jpg",
     Icon: ShoppingCart,
     caption: "Photo: cashier ringing up a sale",
     sub: "Barcode-scan checkout, even with no signal.",
   },
   {
-    key: "warehouse",
+    key: "warehouse", image: "photo-african-spices-market.jpg",
     Icon: Warehouse,
     caption: "Photo: stock check across warehouses",
     sub: "Multi-warehouse inventory, always in sync.",
   },
   {
-    key: "receipt",
+    key: "receipt", image: "photo-testimonial-nigerian-woman.jpg",
     Icon: Receipt,
     caption: "Photo: printed receipt with QR code",
     sub: "Every sale recorded, every receipt traceable.",
@@ -70,7 +48,7 @@ export function AuthCarousel() {
   const [paused, setPaused] = React.useState(false);
 
   React.useEffect(() => {
-    if (paused) return;
+    if (paused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const id = setInterval(() => {
       setIndex((i) => (i + 1) % SLIDES.length);
     }, SLIDE_INTERVAL_MS);
@@ -82,15 +60,17 @@ export function AuthCarousel() {
       className="relative h-full w-full overflow-hidden"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={() => setPaused(false)}
     >
       {SLIDES.map((slide, i) => {
-        const Icon = slide.Icon;
+
         const active = i === index;
         return (
           <div
             key={slide.key}
             aria-hidden={!active}
-            className="tt-placeholder absolute inset-0 flex-col gap-3"
+            className="absolute inset-0"
             style={{
               display: "flex",
               opacity: active ? 1 : 0,
@@ -98,12 +78,7 @@ export function AuthCarousel() {
               padding: 0,
             }}
           >
-            <Icon size={40} strokeWidth={1.5} />
-            <div style={{ maxWidth: 220 }}>
-              {slide.caption}
-              <br />
-              (pending commissioned photography)
-            </div>
+            <Image src={`/images/retail/${slide.image}`} alt="" fill sizes="50vw" className="object-cover" />
           </div>
         );
       })}
@@ -133,7 +108,7 @@ export function AuthCarousel() {
               type="button"
               aria-label={`Show slide ${i + 1}: ${slide.sub}`}
               onClick={() => setIndex(i)}
-              className="h-1.5 rounded-full transition-all"
+              className="h-11 min-w-11 rounded-full border border-white/30 transition-all"
               style={{
                 width: i === index ? 24 : 8,
                 background:

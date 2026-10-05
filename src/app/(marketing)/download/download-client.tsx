@@ -204,7 +204,7 @@ export function DownloadClient({
               </Button>
             )}
             {os === "android" && chromium && installed && (
-              <div className="flex items-center gap-2 text-sm text-green-600">
+              <div className="flex items-center gap-2 text-sm text-[var(--c-success)]">
                 <CheckCircle2 className="h-4 w-4" />
                 Already installed
               </div>
@@ -269,7 +269,7 @@ export function DownloadClient({
                 Install App
               </Button>
             ) : chromium && installed ? (
-              <div className="flex items-center gap-2 text-sm text-green-600">
+              <div className="flex items-center gap-2 text-sm text-[var(--c-success)]">
                 <CheckCircle2 className="h-4 w-4" />
                 Already installed
               </div>
@@ -318,7 +318,7 @@ export function DownloadClient({
 function RecommendedBanner({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg px-4 py-2 w-fit mx-auto">
-      <CheckCircle2 className="h-4 w-4 text-green-600" />
+      <CheckCircle2 className="h-4 w-4 text-[var(--c-success)]" />
       {label} — showing the best option for your device below.
     </div>
   );

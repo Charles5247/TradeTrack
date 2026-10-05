@@ -1,0 +1,17 @@
+[
+  {
+    "path": "/industries",
+    "status": 200,
+    "bytes": 81696
+  },
+  {
+    "path": "/download",
+    "status": 200,
+    "bytes": 56896
+  },
+  {
+    "path": "/change-password",
+    "status": 200,
+    "bytes": 43401
+  }
+]

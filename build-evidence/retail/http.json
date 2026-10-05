@@ -1,0 +1,49 @@
+[
+  {
+    "path": "/",
+    "status": 200,
+    "bytes": 146527
+  },
+  {
+    "path": "/industries",
+    "error": "The operation was aborted due to timeout"
+  },
+  {
+    "path": "/features",
+    "status": 200,
+    "bytes": 118071
+  },
+  {
+    "path": "/pricing",
+    "status": 200,
+    "bytes": 84699
+  },
+  {
+    "path": "/download",
+    "error": "The operation was aborted due to timeout"
+  },
+  {
+    "path": "/login",
+    "status": 200,
+    "bytes": 47324
+  },
+  {
+    "path": "/signup",
+    "status": 200,
+    "bytes": 49889
+  },
+  {
+    "path": "/forgot-password",
+    "status": 200,
+    "bytes": 46816
+  },
+  {
+    "path": "/change-password",
+    "error": "The operation was aborted due to timeout"
+  },
+  {
+    "path": "/images/retail/photo-aba-traders.jpg",
+    "status": 200,
+    "bytes": 192937
+  }
+]

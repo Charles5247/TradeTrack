@@ -12,6 +12,7 @@ import { useScrollY } from "@/hooks/use-scroll-y";
 const NAV_ITEMS = [
   { href: "/", label: "Home" },
   { href: "/features", label: "Features" },
+  { href: "/industries", label: "Industries" },
   { href: "/pricing", label: "Pricing" },
   { href: "/download", label: "Download" },
 ];

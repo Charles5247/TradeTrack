@@ -20,6 +20,7 @@ const FOOTER_COLUMNS: {
     title: "Product",
     links: [
       { label: "Features", href: "/features" },
+      { label: "Industries", href: "/industries" },
       { label: "Pricing", href: "/pricing" },
       { label: "Download", href: "/download" },
     ],

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 /* ============================================================================
  * TracKasuwa — "Retail" design system (README §4)
@@ -12,19 +13,7 @@
  * rounded-lg, ...) keeps working unchanged — they now simply *alias* the
  * --c-* tokens instead of holding their own hardcoded HSL triples.
  *
- * Deviation from the handoff (flagged per README's own instruction to
- * flag conflicts rather than guess): the handoff's literal CSS also
- * redefines --radius-sm/--radius-lg/--radius-xl as a 4/12/18px scale. That
- * would collide with shadcn's pre-existing --radius-sm/--radius-md/
- * --radius-lg (4/6/8px, derived from --radius=8px) which Tailwind's
- * rounded-sm/rounded-md/rounded-lg utilities already depend on across
- * ~40+ existing components. Resolution: the Tailwind-facing radius scale
- * is left wired to --radius (8px, matching Retail's own default, so
- * rounded-lg/md/sm render identically to what the handoff intends for a
- * default-radius surface); the handoff's distinct 4/12/18 scale is
- * exposed under separate --tt-radius-sm/--tt-radius-lg/--tt-radius-xl
- * custom properties for new components that need those exact values
- * (StatCard, .tt-card, .tt-badge, etc.). See docs/CHANGELOG.md.
+ * Radius and density follow the authoritative Retail handoff.
  * ========================================================================= */
 
 @theme inline {
@@ -52,9 +41,10 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
-  --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 4px);
+  --radius-lg: 12px;
+  --radius-xl: 18px;
+  --radius-md: var(--radius);
+  --radius-sm: 4px;
   --font-sans: var(--font-body);
 }
 
@@ -105,8 +95,7 @@
 
     /* ── Radius scale — Tailwind-facing (derived from --radius) ────── */
     --radius: 8px;
-    /* Retail's own literal 4/12/18 scale, for new .tt-* components only
-       (see architecture note above — does not drive Tailwind's rounded-*) */
+    /* Compatibility aliases for existing Retail components. */
     --tt-radius-sm: 4px;
     --tt-radius-lg: 12px;
     --tt-radius-xl: 18px;
@@ -387,19 +376,23 @@
    gated on the same boolean — a CSS variable alone can't switch
    between the two content modes, only a pixel width. */
 [data-pos-mode="true"] {
-  --row-h: 56px;
-  --input-h: 48px;
-  --btn-h: 48px;
+  --sidebar-w: 264px;
+  --header-h: 68px;
+  --row-h: 52px;
+  --input-h: 44px;
+  --btn-h: 44px;
   --base-font: 15px;
-  --card-pad: 20px;
+  --card-pad: 24px;
 }
 /* Reports/Admin surfaces force Dense — tighter grid for data density. */
 [data-dense-mode="true"] {
-  --row-h: 34px;
-  --input-h: 30px;
-  --btn-h: 30px;
+  --sidebar-w: 232px;
+  --header-h: 52px;
+  --row-h: 36px;
+  --input-h: 32px;
+  --btn-h: 32px;
   --base-font: 13px;
-  --card-pad: 14px;
+  --card-pad: 16px;
 }
 
 /* ============================================================================
@@ -955,4 +948,12 @@
     opacity: 1;
     transform: translateX(0);
   }
+}
+
+.tt-app { font-size: var(--base-font); height: 100dvh; }
+.tt-mono { font-weight: 500; line-height: 1.5; }
+.lucide { stroke-width: 1.75; }
+@media (prefers-reduced-motion: reduce) {
+ *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+ .tt-reveal { opacity: 1; }
 }

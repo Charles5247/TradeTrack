@@ -55,5 +55,5 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     };
   }, [setSyncStatus, setLastSync, setPendingCount]);
 
-  return <><VerificationBanner />{authError && <div role="alert" className="bg-amber-100 p-3 text-amber-950">{authError} <a href="/login" className="underline">Sign in</a></div>}{children}</>;
+  return <><VerificationBanner />{authError && <div role="alert" className="bg-[color-mix(in_oklch,var(--c-warn),transparent_90%)] p-3 text-[var(--c-warn)]">{authError} <a href="/login" className="underline">Sign in</a></div>}{children}</>;
 }

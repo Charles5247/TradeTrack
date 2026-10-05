@@ -23,5 +23,5 @@ export function VerificationBanner() {
   const decision = evaluateVerification(state, Date.now());
   const trialDays = introductionDays(state);
   if (decision.allowed && !decision.warning && !trialDays) return null;
-  return <div role="status" className="border-b bg-amber-50 px-4 py-2 text-sm text-amber-950">{decision.message}{trialDays > 0 && ` Introductory period: ${trialDays} days remaining at the last server verification.`}</div>;
+  return <div role="status" className="border-b bg-[color-mix(in_oklch,var(--c-warn),transparent_90%)] px-4 py-2 text-sm text-[var(--c-warn)]">{decision.message}{trialDays > 0 && ` Introductory period: ${trialDays} days remaining at the last server verification.`}</div>;
 }

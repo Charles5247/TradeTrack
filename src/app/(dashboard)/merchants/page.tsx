@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Building2,
@@ -844,7 +845,8 @@ function ViewMerchantDialog({
             <Building2 className="h-5 w-5 text-primary" strokeWidth={1.75} />
             {merchant.business_name}
           </DialogTitle>
-          <DialogDescription className="flex items-center gap-2">
+          <DialogDescription className="flex flex-wrap items-center gap-2">
+            <Link href={`/merchants/${merchant.id}`} className="text-primary underline">Open merchant page</Link>
             <MerchantStatusBadge status={merchant.status} />
             <Badge
               variant={
@@ -1547,7 +1549,7 @@ export default function MerchantsPage() {
                                       merchant,
                                     })
                                   }
-                                  className="text-orange-600"
+                                  className="text-[var(--c-warn)]"
                                 >
                                   <Ban className="h-4 w-4 mr-2" strokeWidth={1.75} />{" "}
                                   {t.merchants.suspend}

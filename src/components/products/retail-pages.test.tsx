@@ -3,6 +3,7 @@ import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { expect, it, vi } from 'vitest';
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock('@/store',()=>({useAuthStore:()=>({user:{id:'owner',organization_id:'org',role:'business_owner'}}),useOrgStore:()=>({currency:'NGN'})}));
 vi.mock('@/i18n',()=>({useI18n:()=>({t:new Proxy({},{get:()=>new Proxy({},{get:(_t,k)=>String(k)})})})}));
 vi.mock('@/components/shared/access-guard',()=>({AccessGuard:({children}:any)=>children}));

@@ -722,14 +722,14 @@ export default function SubscriptionsPage() {
 
               {/* Expiry Warning */}
               {daysRemaining !== null && daysRemaining <= 14 && (
-                <Card className="border-amber-300 bg-amber-50 dark:bg-amber-900/10">
+                <Card className="border-[color-mix(in_oklch,var(--c-warn),transparent_65%)] bg-[color-mix(in_oklch,var(--c-warn),transparent_90%)] bg-[color-mix(in_oklch,var(--c-warn),transparent_90%)]">
                   <CardContent className="flex items-center gap-3 py-4">
                     <AlertTriangle className="h-5 w-5 text-[var(--c-warn)] shrink-0" />
                     <div className="flex-1">
-                      <p className="font-medium text-amber-800 dark:text-amber-400">
+                      <p className="font-medium text-[var(--c-warn)] text-[var(--c-warn)]">
                         {t.subscriptions.expiring_soon}
                       </p>
-                      <p className="text-sm text-amber-700 dark:text-amber-500">
+                      <p className="text-sm text-[var(--c-warn)] text-[var(--c-warn)]">
                         {t.subscriptions.expiring_soon_desc.replace(
                           "{count}",
                           String(daysRemaining),
@@ -792,7 +792,7 @@ export default function SubscriptionsPage() {
                               className={`h-4 w-4 shrink-0 ${
                                 pending
                                   ? "tt-muted"
-                                  : "text-green-500"
+                                  : "text-[var(--c-success)]"
                               }`}
                             />
                             <span

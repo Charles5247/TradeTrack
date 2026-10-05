@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, Download, Check, ArrowUp } from "lucide-react";
 import { Reveal } from "@/components/marketing/reveal";
 import { LogoMarquee } from "@/components/marketing/logo-marquee";
@@ -50,31 +51,18 @@ function MiniBars() {
   );
 }
 
-/**
- * Hero visual — photo of a trader + floating app-mockup card overlay.
- * Ported from the handoff's `HeroCompositePhoto`. The main photo slot
- * uses `.tt-placeholder` (see docs/CHANGELOG.md's "Photography sourcing"
- * note): AI image generation was unavailable this session (credits
- * exhausted) and image-search results were either commercially
- * licensed or not authentically on-topic, so the photo slot is left as
- * an explicitly-flagged placeholder pending real commissioned
- * photography or a later image-generation pass, per the original
- * Step 10 plan ("leave placeholder photography, flagged with
- * `.tt-placeholder`").
- */
+/* Supplied design photography; replace with licensed launch assets. */
 function HeroCompositePhoto() {
   return (
     <div className="relative" style={{ aspectRatio: "1 / 1.05" }}>
       <div
-        className="tt-hero-photo tt-placeholder absolute inset-0 rounded-xl overflow-hidden"
+        className="tt-hero-photo absolute inset-0 rounded-xl overflow-hidden"
         style={{
           boxShadow:
             "0 40px 100px -20px color-mix(in oklch, var(--c-primary), transparent 75%)",
         }}
       >
-        Photo: Nigerian shop owner at checkout counter
-        <br />
-        (pending commissioned photography)
+        <Image src="/images/retail/photo-aba-traders.jpg" alt="Traders at a Nigerian market" fill sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" preload />
       </div>
 
       {/* Floating dashboard mockup */}

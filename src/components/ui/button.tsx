@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils/cn';
 // naming deviation only — every value below (height, radius, weight,
 // timing, colors, no-shadow-on-buttons) matches the Retail spec exactly.
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm [font-weight:550] tracking-[-0.005em] transition-colors duration-[140ms] ease-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius)] text-sm [font-weight:550] tracking-[-0.005em] transition-colors duration-[140ms] ease-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
   {
     variants: {
       variant: {
@@ -33,9 +33,9 @@ const buttonVariants = cva(
       },
       size: {
         default: 'h-[var(--btn-h)] px-4',
-        sm: 'h-[calc(var(--btn-h)-6px)] rounded-lg px-3 text-xs',
-        lg: 'h-[calc(var(--btn-h)+8px)] rounded-lg px-5 text-[var(--base-font)]',
-        xl: 'h-[calc(var(--btn-h)+16px)] rounded-lg px-6 text-base',
+        sm: 'h-[calc(var(--btn-h)-6px)] rounded-[var(--radius)] px-3 text-xs',
+        lg: 'h-[calc(var(--btn-h)+8px)] rounded-[var(--radius)] px-5 text-[var(--base-font)]',
+        xl: 'h-[calc(var(--btn-h)+16px)] rounded-[var(--radius)] px-6 text-base',
         icon: 'h-[var(--btn-h)] w-[var(--btn-h)] p-0',
         'icon-sm': 'h-[calc(var(--btn-h)-6px)] w-[calc(var(--btn-h)-6px)] p-0',
         'icon-lg': 'h-[calc(var(--btn-h)+8px)] w-[calc(var(--btn-h)+8px)] p-0',

@@ -35,9 +35,9 @@ export function StatsCard({
 }: StatsCardProps) {
   const variantStyles = {
     default: 'border-border',
-    warning: 'border-amber-200 dark:border-amber-900',
-    danger: 'border-red-200 dark:border-red-900',
-    success: 'border-green-200 dark:border-green-900',
+    warning: 'border-[color-mix(in_oklch,var(--c-warn),transparent_65%)] border-[color-mix(in_oklch,var(--c-warn),transparent_65%)]',
+    danger: 'border-[color-mix(in_oklch,var(--c-danger),transparent_65%)] border-[color-mix(in_oklch,var(--c-danger),transparent_65%)]',
+    success: 'border-[color-mix(in_oklch,var(--c-success),transparent_65%)] border-[color-mix(in_oklch,var(--c-success),transparent_65%)]',
   };
 
   if (loading) {
@@ -70,9 +70,9 @@ export function StatsCard({
             <p className="text-sm font-medium text-muted-foreground truncate">{title}</p>
             <p className={cn(
               'text-2xl font-bold mt-1',
-              variant === 'danger' && 'text-red-600 dark:text-red-400',
-              variant === 'warning' && 'text-amber-600 dark:text-amber-400',
-              variant === 'success' && 'text-green-600 dark:text-green-400',
+              variant === 'danger' && 'text-[var(--c-danger)] text-[var(--c-danger)]',
+              variant === 'warning' && 'text-[var(--c-warn)] text-[var(--c-warn)]',
+              variant === 'success' && 'text-[var(--c-success)] text-[var(--c-success)]',
             )}>
               {value}
             </p>
@@ -82,16 +82,16 @@ export function StatsCard({
             {change !== undefined && (
               <div className="flex items-center gap-1 mt-2">
                 {change > 0 ? (
-                  <TrendingUp className="h-3 w-3 text-green-500" />
+                  <TrendingUp className="h-3 w-3 text-[var(--c-success)]" />
                 ) : change < 0 ? (
-                  <TrendingDown className="h-3 w-3 text-red-500" />
+                  <TrendingDown className="h-3 w-3 text-[var(--c-danger)]" />
                 ) : (
                   <Minus className="h-3 w-3 text-muted-foreground" />
                 )}
                 <span
                   className={cn(
                     'text-xs font-medium',
-                    change > 0 ? 'text-green-500' : change < 0 ? 'text-red-500' : 'text-muted-foreground'
+                    change > 0 ? 'text-[var(--c-success)]' : change < 0 ? 'text-[var(--c-danger)]' : 'text-muted-foreground'
                   )}
                 >
                   {change > 0 ? '+' : ''}{change}%

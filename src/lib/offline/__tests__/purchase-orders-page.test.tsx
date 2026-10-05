@@ -6,6 +6,7 @@ import { expect, it, vi } from 'vitest';
 import { getDB } from '../db';
 import { persistOfflinePurchaseOrder } from '../purchase-orders';
 
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock('@/store', () => ({ useAuthStore: () => ({ user: { id: 'user-1', organization_id: 'org-1', role: 'business_owner' } }) }));
 vi.mock('@/i18n', () => ({ useI18n: () => ({ t: new Proxy({}, {
   get: () => new Proxy({}, { get: (_target, key) => String(key) }),

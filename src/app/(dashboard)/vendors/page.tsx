@@ -316,7 +316,7 @@ function VendorsPageInner() {
   return (
     <div className="space-y-6">
       {stockChecks.length > 0 && (
-        <div role="alert" className="rounded-md border border-amber-300 bg-amber-50 p-4 text-amber-950">
+        <div role="alert" className="rounded-md border border-[color-mix(in_oklch,var(--c-warn),transparent_65%)] bg-[color-mix(in_oklch,var(--c-warn),transparent_90%)] p-4 text-[var(--c-warn)]">
           <p className="font-semibold">{t.vendors.stock_check_title}</p>
           <p>{t.vendors.stock_check_instruction}</p>
           <ul className="my-2 list-disc pl-5">

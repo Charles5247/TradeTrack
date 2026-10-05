@@ -56,6 +56,8 @@ export function StatCard({
       className={cn("tt-stat", onClick && "cursor-pointer transition-shadow hover:shadow-md", className)}
       onClick={onClick}
       role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onClick(); } } : undefined}
     >
       <div className="flex items-start justify-between">
         <div className="tt-stat-label">{label}</div>

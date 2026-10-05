@@ -15,7 +15,7 @@ const Card = React.forwardRef<
     className={cn(
       flat
         ? 'rounded-lg border border-border bg-muted text-card-foreground'
-        : 'rounded-xl border border-border bg-card text-card-foreground shadow-sm',
+        : 'rounded-lg border border-border bg-card text-card-foreground shadow-sm',
       className
     )}
     {...props}

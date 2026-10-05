@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   ShoppingCart,
   WifiOff,
@@ -95,10 +96,8 @@ export function FeatureGrid() {
                 ))}
               </div>
             </div>
-            <div className="tt-placeholder relative min-h-[300px]">
-              Photo: shop owner ringing up a sale
-              <br />
-              (pending commissioned photography)
+            <div className="relative min-h-[300px]">
+              <Image src="/images/retail/photo-testimonial-nigerian-woman.jpg" alt="Women preparing produce at a market stall" fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" />
               <div
                 className="absolute right-6 bottom-6 rounded-xl p-4 w-[220px]"
                 style={{ background: "var(--c-surface)", boxShadow: "0 20px 40px rgba(0,0,0,0.2)" }}

@@ -22,8 +22,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         )}
         <input
           type={type}
+          aria-invalid={error ? true : undefined}
           className={cn(
-            'flex h-[var(--input-h)] w-full rounded-lg border border-input bg-card px-3 text-[var(--base-font)] text-foreground transition-colors duration-150 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-50',
+            'flex h-[var(--input-h)] w-full rounded-[var(--radius)] border border-input bg-card px-3 text-[var(--base-font)] text-foreground transition-colors duration-150 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-50',
             leftIcon && 'pl-9',
             rightIcon && 'pr-9',
             error && 'border-destructive focus-visible:ring-destructive/15',

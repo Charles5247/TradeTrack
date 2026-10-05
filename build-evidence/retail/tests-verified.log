@@ -1,0 +1,9 @@
+
+ RUN  v4.1.10 C:/Users/PC/TradeTrack
+
+
+ Test Files  45 passed (45)
+      Tests  322 passed (322)
+   Start at  15:01:22
+   Duration  256.04s (transform 19.28s, setup 13.95s, import 72.83s, tests 179.89s, environment 190.44s)
+

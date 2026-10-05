@@ -47,12 +47,12 @@ export function DetailTemplate({
   return (
     <div className={cn("space-y-6", className)}>
       <div>
-        <div className="mb-3 flex items-start justify-between gap-5">
+        <div className="mb-3 flex flex-wrap items-start justify-between gap-5">
           <div className="min-w-0 flex-1">
             <div className="mb-3 flex items-center gap-2.5">
-              <div className="tt-head text-[28px] leading-[1.1] text-foreground sm:text-[32px]">
+              <h1 className="tt-page-title break-words">
                 {title}
-              </div>
+              </h1>
               {statusBadge}
             </div>
             {subtitle && <div className="text-sm text-muted-foreground">{subtitle}</div>}

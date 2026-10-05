@@ -13,7 +13,7 @@
  * place avoids the two call sites silently drifting out of sync.
  */
 const POS_ROUTE_PREFIXES = ['/pos', '/production'];
-const DENSE_ROUTE_PREFIXES = ['/reports', '/admin', '/audit'];
+const DENSE_ROUTE_PREFIXES = ['/reports', '/admin', '/audit', '/merchants'];
 
 export function isPosRoute(pathname: string): boolean {
   return POS_ROUTE_PREFIXES.some((p) => pathname.startsWith(p));

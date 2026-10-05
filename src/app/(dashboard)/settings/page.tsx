@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { Save, User, Building, Globe, Palette, Lock, Loader2, Sun, Moon, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -202,6 +203,7 @@ export default function SettingsPage() {
 
       <Tabs key={user?.role} defaultValue="profile" orientation="vertical" className="grid items-start gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-8">
         <TabsList aria-label="Settings sections" className="grid grid-cols-2 gap-1 border-0 lg:sticky lg:top-4 lg:grid-cols-1 [&>button]:min-h-11 [&>button]:justify-start [&>button]:rounded-[var(--radius)] [&>button]:border-0 [&>button]:px-3 [&>button]:data-[state=active]:bg-accent">
+          {isPlatformOwner && <TabsTrigger value="platform"><Building className="h-4 w-4 mr-1.5" />Platform operations</TabsTrigger>}
           <TabsTrigger value="profile">
             <User className="h-4 w-4 mr-1.5" />
             {t.settings.tab_profile}
@@ -220,6 +222,7 @@ export default function SettingsPage() {
           </TabsTrigger>
         </TabsList>
         <div className="min-w-0 space-y-6">
+        {isPlatformOwner && <TabsContent value="platform" className="mt-0"><Card><CardHeader><CardTitle>Platform operations</CardTitle><CardDescription>Manage TracKasuwa across merchants. Personal language and theme preferences are in Display.</CardDescription></CardHeader><CardContent className="grid gap-4 sm:grid-cols-2">{[{ href: "/subscriptions", title: "Plans and subscriptions", body: "Manage the plans available to merchants and review subscriptions." }, { href: "/merchants", title: "Merchant access", body: "Review onboarding, verification, account status and device limits." }, { href: "/admin", title: "Platform overview", body: "Monitor platform activity and merchant growth." }, { href: "/notifications", title: "Notifications", body: "Review updates requiring your attention." }].map(item => <Link key={item.href} href={item.href} className="rounded-lg border p-4 transition-colors hover:border-primary hover:bg-primary/5"><h3 className="tt-head text-base">{item.title}</h3><p className="mt-2 text-sm tt-muted">{item.body}</p></Link>)}</CardContent></Card></TabsContent>}
 
         {/* ── Profile Tab ─────────────────────────────────── */}
         <TabsContent value="profile" className="mt-0">

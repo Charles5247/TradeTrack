@@ -38,7 +38,7 @@ const OFFLINE_AUTH_COOKIE_NAME = "TracKasuwa-offline-session";
 // session; middleware never redirects them to /login regardless of
 // auth state (the "/" + authenticated-user redirect below is the one
 // deliberate exception, sending logged-in users straight to the app).
-const PUBLIC_MARKETING_ROUTES = ["/", "/pricing", "/features", "/download"];
+const PUBLIC_MARKETING_ROUTES = ["/", "/pricing", "/features", "/industries", "/download"];
 
 function isProtectedRoute(pathname: string): boolean {
   return PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
