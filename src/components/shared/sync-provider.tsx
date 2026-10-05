@@ -22,6 +22,7 @@ function mapEngineStatus(status: string): SyncStatus {
 
 export function SyncProvider({ children }: { children: React.ReactNode }) {
   const [authError, setAuthError] = useState<string | null>(null);
+  const [storageError, setStorageError] = useState<string | null>(null);
   const { setSyncStatus, setLastSync, setPendingCount } = useSyncStore();
 
   useEffect(() => {
@@ -30,6 +31,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     // inside nested closures (module-level `syncEngine` binding is
     // otherwise widened back to `SyncEngine | null` in those scopes).
     const engine = syncEngine;
+    let disposed = false;
 
     engine.startAutoSync(30000);
     engine.sync();
@@ -42,18 +44,29 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     });
 
     const refreshPending = async () => {
-      const count = await engine.getPendingCount();
-      setPendingCount(count);
+      try {
+        const count = await engine.getPendingCount();
+        if (!disposed) {
+          setPendingCount(count);
+          setStorageError(null);
+        }
+      } catch {
+        if (!disposed) {
+          setSyncStatus('failed');
+          setStorageError('Offline storage is temporarily unavailable. Pending changes could not be checked; retrying automatically.');
+        }
+      }
     };
     refreshPending();
     const interval = setInterval(refreshPending, 15000);
 
     return () => {
+      disposed = true;
       unsubscribe();
       engine.stopAutoSync();
       clearInterval(interval);
     };
   }, [setSyncStatus, setLastSync, setPendingCount]);
 
-  return <><VerificationBanner />{authError && <div role="alert" className="bg-[color-mix(in_oklch,var(--c-warn),transparent_90%)] p-3 text-[var(--c-warn)]">{authError} <a href="/login" className="underline">Sign in</a></div>}{children}</>;
+  return <><VerificationBanner />{storageError && <div role="alert" className="bg-[color-mix(in_oklch,var(--c-warn),transparent_90%)] p-3 text-[var(--c-warn)]">{storageError}</div>}{authError && <div role="alert" className="bg-[color-mix(in_oklch,var(--c-warn),transparent_90%)] p-3 text-[var(--c-warn)]">{authError} <a href="/login" className="underline">Sign in</a></div>}{children}</>;
 }

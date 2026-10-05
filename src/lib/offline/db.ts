@@ -141,8 +141,9 @@ type TracKasuwaIDB = IDBPDatabase<any>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type OfflineWriteTransaction = IDBPTransaction<any, string[], "readwrite">;
 
-let dbInstance: TracKasuwaIDB | null = null;
-let activeDbName: string | null = null;
+// Cache the opening promise as well as the connection, separately per account.
+// A late open/close event for one account must not replace another's handle.
+const connections = new Map<string, Promise<TracKasuwaIDB>>();
 
 function getOfflineDatabaseName(): string {
   const namespace = getOfflineAccountNamespace();
@@ -151,12 +152,35 @@ function getOfflineDatabaseName(): string {
 
 export async function getDB(): Promise<TracKasuwaIDB> {
   const dbName = getOfflineDatabaseName();
-  if (dbInstance && activeDbName === dbName) return dbInstance;
+  for (let attempt = 0; ; attempt++) {
+    const opening = connections.get(dbName) ?? openOfflineDatabase(dbName);
+    const db = await opening;
+    try {
+      // IDB has no public connection-state property. Starting an empty read
+      // transaction detects close-pending handles, including explicit close()
+      // (which does not emit the close/terminated event).
+      const probe = db.transaction("app_meta", "readonly");
+      void probe.done.catch(() => {});
+      return db;
+    } catch (error) {
+      if ((error as { name?: string })?.name !== "InvalidStateError") throw error;
+      if (connections.get(dbName) === opening) connections.delete(dbName);
+      // Only reacquire a connection. Never replay a caller's transaction.
+      if (attempt >= 1) throw error;
+    }
+  }
+}
 
-  dbInstance = null;
-  activeDbName = null;
-
-  dbInstance = await openDB(dbName, 6, {
+function openOfflineDatabase(dbName: string): Promise<TracKasuwaIDB> {
+  const invalidate = () => {
+    if (connections.get(dbName) === opening) connections.delete(dbName);
+  };
+  const opening = openDB(dbName, 6, {
+    blocking(_currentVersion, _blockedVersion, event) {
+      (event.target as IDBDatabase).close();
+      invalidate();
+    },
+    terminated: invalidate,
     upgrade(db, oldVersion, _newVersion, transaction) {
       if (!db.objectStoreNames.contains("app_meta")) db.createObjectStore("app_meta", { keyPath: "id" });
       if (!db.objectStoreNames.contains("vendor_transactions")) {
@@ -294,10 +318,12 @@ export async function getDB(): Promise<TracKasuwaIDB> {
         }
       }
     },
+  }).catch((error) => {
+    invalidate();
+    throw error;
   });
-
-  activeDbName = dbName;
-  return dbInstance;
+  connections.set(dbName, opening);
+  return opening;
 }
 
 // ── User Session Cache ────────────────────────────────────────
