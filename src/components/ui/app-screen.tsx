@@ -88,7 +88,7 @@ export function AppScreen({ children, pos, dense, noPadding }: AppScreenProps) {
           <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
             <Header />
             <main className="flex-1 overflow-y-auto tt-fadein">
-              <div className={cn(!noPadding && 'p-4 lg:p-6')}>{children}</div>
+              <div className={cn(!noPadding && 'mx-auto w-full max-w-[1440px] p-4 lg:p-6')}>{children}</div>
             </main>
           </div>
         </div>

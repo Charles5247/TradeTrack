@@ -14,6 +14,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
+import { ErrorState } from '@/components/ui/error-state';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -167,7 +168,7 @@ export default function UsersPage() {
   const [editData, setEditData] = useState<Partial<User>>({});
 
   // Queries & mutations
-  const { data: users = [], isLoading } = useQuery({
+  const { data: users = [], isLoading, error: pageError, refetch: retryPage } = useQuery({
     queryKey: ["users"],
     queryFn: fetchUsers,
     // platform_owner (TracKasuwa staff) no longer manages per-org users
@@ -264,6 +265,7 @@ export default function UsersPage() {
 
   return (
     <div className="min-w-0 space-y-6">
+      {pageError && <ErrorState title="Could not load this page" body={pageError.message} onRetry={() => retryPage()} />}
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, ArrowRight, CheckCircle, XCircle, Clock, Printer, Download, Loader2, Usb, Bluetooth, Receipt as ReceiptIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { ErrorState } from '@/components/ui/error-state';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -162,7 +163,7 @@ function TransfersPageInner() {
   });
   const [receiptTransfer, setReceiptTransfer] = useState<WarehouseTransfer | null>(null);
 
-  const { data: transfers = [], isLoading } = useQuery({
+  const { data: transfers = [], isLoading, error: pageError, refetch: retryPage } = useQuery({
     queryKey: ['transfers'],
     queryFn: fetchTransfers,
   });
@@ -294,6 +295,7 @@ function TransfersPageInner() {
 
   return (
     <div className="space-y-6">
+      {pageError && <ErrorState title="Could not load this page" body={pageError.message} onRetry={() => retryPage()} />}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="tt-page-title">{t.transfers.title}</h1>

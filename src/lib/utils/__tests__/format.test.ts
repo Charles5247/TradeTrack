@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   formatCurrency,
   formatDate,
+  setAppDateFormat,
   formatDateTime,
   formatRelativeTime,
   generateInvoiceNumber,
@@ -198,4 +199,9 @@ describe('percentageChange', () => {
   it('returns 0 when both current and previous are 0', () => {
     expect(percentageChange(0, 0)).toBe(0);
   });
+});
+
+it('applies the saved business date format and safely defaults unknown values', () => {
+ const date = new Date(2026,7,24);
+ try { setAppDateFormat('iso'); expect(formatDate(date)).toBe('2026-08-24'); setAppDateFormat('numeric'); expect(formatDate(date)).toBe('24/08/2026'); setAppDateFormat('invalid'); expect(formatDate(date)).toContain('Aug'); } finally { setAppDateFormat('medium'); }
 });

@@ -25,6 +25,7 @@ import {
   FileText,
   AlertTriangle,
 } from "lucide-react";
+import { ErrorState } from '@/components/ui/error-state';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -1168,7 +1169,7 @@ export default function MerchantsPage() {
   const orgId = user?.organization_id ?? "";
 
   // ── Fetch merchants ───────────────────────────────────────────────────────
-  const { data: merchants, isLoading } = useQuery({
+  const { data: merchants, isLoading, error: pageError, refetch: retryPage } = useQuery({
     queryKey: ["merchants", orgId],
     queryFn: async (): Promise<Merchant[]> => {
       const query = supabase
@@ -1278,6 +1279,7 @@ export default function MerchantsPage() {
 
   return (
     <div className="min-w-0 space-y-6">
+      {pageError && <ErrorState title="Could not load this page" body={pageError.message} onRetry={() => retryPage()} />}
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -1308,7 +1310,7 @@ export default function MerchantsPage() {
                 }
               >
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-1">
+      <div className="flex items-center gap-2 mb-1">
                     {cfg?.icon}
                     <span className="text-xs text-muted-foreground capitalize">
                       {status}

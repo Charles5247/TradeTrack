@@ -951,6 +951,26 @@
 }
 
 .tt-app { font-size: var(--base-font); height: 100dvh; }
+
+/* Native selects share the same Retail sizing and focus treatment as Input. */
+.tt-input {
+  width: 100%;
+  min-width: 0;
+  height: var(--input-h);
+  padding: 0 12px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  background: var(--c-surface);
+  color: var(--c-text);
+  font: inherit;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+.tt-input:focus-visible {
+  outline: none;
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--c-primary), transparent 85%);
+}
+.tt-input:disabled { opacity: .5; cursor: not-allowed; }
 .tt-mono { font-weight: 500; line-height: 1.5; }
 .lucide { stroke-width: 1.75; }
 @media (prefers-reduced-motion: reduce) {

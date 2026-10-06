@@ -1,5 +1,6 @@
 "use client";
 
+import { BankAccountPanel, UsagePanel } from "@/components/subscriptions/account-panels";
 import { requireOrganization } from "@/lib/auth/organization";
 import { withTimeout, AUTH_CHECK_TIMEOUT_MS } from "@/lib/utils/timeout";
 import React, { useState } from "react";
@@ -95,7 +96,7 @@ interface PaymentRecord {
   currency: string;
   status: "success" | "failed" | "pending";
   payment_method: string;
-  reference: string;
+  provider_reference: string | null;
   created_at: string;
   plan_name?: string;
 }
@@ -121,12 +122,13 @@ async function fetchSubscriptionData() {
       return { subscription: null, plans: FALLBACK_PLANS, payments: [] };
     }
 
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from("users")
       .select("organization_id, role")
       .eq("id", user.id)
       .single();
 
+    if (profileError) throw profileError;
     const orgId = profile?.organization_id;
     const role = (profile as { role?: string } | null)?.role;
     if (!orgId?.trim()) {
@@ -134,7 +136,7 @@ async function fetchSubscriptionData() {
       throw new Error("Your account is not linked to a business. Please contact your business owner.");
     }
 
-    const { data: subscription } = await supabase
+    const { data: subscription, error: subscriptionError } = await supabase
       .from("subscriptions")
       .select("*, plan:subscription_plans(*)")
       .eq("organization_id", orgId)
@@ -142,18 +144,20 @@ async function fetchSubscriptionData() {
       .limit(1)
       .maybeSingle();
 
+    if (subscriptionError) throw subscriptionError;
     const plans =
       role === "platform_owner"
         ? await getAllSubscriptionPlansForCatalogManagement(supabase)
         : await getActiveSubscriptionPlans(supabase);
 
-    const { data: payments } = await supabase
+    const { data: payments, error: paymentsError } = await supabase
       .from("payment_transactions")
       .select("*")
       .eq("organization_id", orgId)
       .order("created_at", { ascending: false })
       .limit(20);
 
+    if (paymentsError) throw paymentsError;
     return {
       subscription: subscription as any as Subscription | null,
       plans: plans || FALLBACK_PLANS,
@@ -442,9 +446,10 @@ export default function SubscriptionsPage() {
   const { t } = useI18n();
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<"overview" | "plans" | "billing">(
-    "overview",
+  const [activeTab, setActiveTab] = useState<"plans" | "billing" | "methods" | "usage">(
+    "plans",
   );
+  const [cancelOpen, setCancelOpen] = useState(false);
   const [planDialogOpen, setPlanDialogOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
   const [deletingPlan, setDeletingPlan] = useState<Plan | null>(null);
@@ -453,7 +458,8 @@ export default function SubscriptionsPage() {
   );
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["subscriptions"],
+    queryKey: ["subscriptions", user?.id, user?.organization_id],
+    enabled: user?.role === "business_owner" || user?.role === "platform_owner",
     queryFn: fetchSubscriptionData,
   });
 
@@ -477,6 +483,16 @@ export default function SubscriptionsPage() {
       );
       setDeletingPlan(null);
     },
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: async () => {
+      if (!data?.subscription?.id || !user?.organization_id) throw new Error('No subscription to cancel.');
+      const { error } = await createClient().from('subscriptions').update({ status: 'cancelled' }).eq('id', data.subscription.id).eq('organization_id', user.organization_id).select('id').single();
+      if (error) throw error;
+    },
+    onSuccess: () => { setCancelOpen(false); queryClient.invalidateQueries({ queryKey: ['subscriptions'] }); toast.success('Subscription cancelled'); },
+    onError: (e) => toast.error(e.message),
   });
 
   const upgradeMutation = useMutation({
@@ -610,239 +626,26 @@ export default function SubscriptionsPage() {
         </Button>
       </div>
 
-      {/* Tabs — re-skinned to the shared underline-style <Tabs> primitive
-          (README §6.1 / .tt-tabs) instead of the old hand-rolled button
-          loop. `value`/`onValueChange` map 1:1 onto the pre-existing
-          `activeTab` state so none of the conditional panel-rendering
-          logic below needed to change. */}
-      {!isPlatformOwner && <Tabs
-        value={activeTab}
-        onValueChange={(v) => setActiveTab(v as typeof activeTab)}
-      >
-        <TabsList>
-          <TabsTrigger value="overview">
-            {t.subscriptions.tab_overview}
-          </TabsTrigger>
-          <TabsTrigger value="plans">{t.subscriptions.tab_plans}</TabsTrigger>
-          <TabsTrigger value="billing">
-            {t.subscriptions.tab_billing}
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>}
-
-      {/* Overview Tab */}
-      {!isPlatformOwner && activeTab === "overview" && (
-        <div className="space-y-6">
-          {isLoading ? (
-            <div className="grid gap-4 md:grid-cols-3">
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-36" />
-              ))}
-            </div>
-          ) : (
-            <>
-              {/* Subscription Status Cards */}
-              <div className="grid gap-4 md:grid-cols-3">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardDescription>
-                      {t.subscriptions.current_plan}
-                    </CardDescription>
-                    <CardTitle className="text-2xl">
-                      {subscription?.plan?.name || t.subscriptions.no_plan}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {subscription ? (
-                      <StatusBadge status={subscription.status} />
-                    ) : (
-                      <Badge variant="outline">
-                        {t.subscriptions.unsubscribed}
-                      </Badge>
-                    )}
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardDescription>
-                      {t.subscriptions.subscription_expires}
-                    </CardDescription>
-                    <CardTitle className="text-lg">
-                      {subscription?.expires_at
-                        ? formatDate(subscription.expires_at)
-                        : "—"}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {daysRemaining !== null && (
-                      <div
-                        className={`flex items-center gap-1 text-sm ${
-                          daysRemaining <= 7
-                            ? "text-[var(--c-danger)]"
-                            : daysRemaining <= 30
-                              ? "text-[var(--c-warn)]"
-                              : "text-[var(--c-success)]"
-                        }`}
-                      >
-                        {daysRemaining <= 7 ? (
-                          <AlertTriangle className="h-4 w-4" />
-                        ) : (
-                          <Calendar className="h-4 w-4" />
-                        )}
-                        {daysRemaining > 0
-                          ? t.subscriptions.days_remaining.replace(
-                              "{count}",
-                              String(daysRemaining),
-                            )
-                          : t.subscriptions.expired}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardDescription>
-                      {t.subscriptions.monthly_cost}
-                    </CardDescription>
-                    <CardTitle className="text-2xl">
-                      {subscription?.plan?.price
-                        ? formatCurrency(subscription.plan.price)
-                        : "₦0"}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm tt-muted">
-                      {t.subscriptions.per_month}
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Expiry Warning */}
-              {daysRemaining !== null && daysRemaining <= 14 && (
-                <Card className="border-[color-mix(in_oklch,var(--c-warn),transparent_65%)] bg-[color-mix(in_oklch,var(--c-warn),transparent_90%)] bg-[color-mix(in_oklch,var(--c-warn),transparent_90%)]">
-                  <CardContent className="flex items-center gap-3 py-4">
-                    <AlertTriangle className="h-5 w-5 text-[var(--c-warn)] shrink-0" />
-                    <div className="flex-1">
-                      <p className="font-medium text-[var(--c-warn)] text-[var(--c-warn)]">
-                        {t.subscriptions.expiring_soon}
-                      </p>
-                      <p className="text-sm text-[var(--c-warn)] text-[var(--c-warn)]">
-                        {t.subscriptions.expiring_soon_desc.replace(
-                          "{count}",
-                          String(daysRemaining),
-                        )}
-                      </p>
-                    </div>
-                    <Button size="sm" onClick={() => setActiveTab("plans")}>
-                      {t.subscriptions.renew_now}
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* No subscription */}
-              {!subscription && (
-                <Card className="border-dashed">
-                  <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
-                    <CreditCard className="h-12 w-12 tt-muted" />
-                    <div>
-                      <p className="font-medium text-lg">
-                        {t.subscriptions.no_active_subscription}
-                      </p>
-                      <p className="text-sm tt-muted mt-1">
-                        {t.subscriptions.choose_plan_unlock}
-                      </p>
-                    </div>
-                    <Button onClick={() => setActiveTab("plans")}>
-                      {t.subscriptions.view_plans}
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Plan Features */}
-              {subscription?.plan && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="tt-section-title">
-                      {t.subscriptions.current_plan_features}
-                    </CardTitle>
-                    <CardDescription>
-                      {t.subscriptions.plan_inclusions.replace(
-                        "{name}",
-                        subscription.plan.name,
-                      )}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {filterDisplayFeatures(
-                        subscription.plan.features || [],
-                      ).map((feature: string) => {
-                        const pending = isPendingFeature(feature);
-                        return (
-                          <div
-                            key={feature}
-                            className="flex items-center gap-2 text-sm"
-                          >
-                            <CheckCircle
-                              className={`h-4 w-4 shrink-0 ${
-                                pending
-                                  ? "tt-muted"
-                                  : "text-[var(--c-success)]"
-                              }`}
-                            />
-                            <span
-                              className={
-                                pending ? "tt-muted" : undefined
-                              }
-                            >
-                              {FEATURE_LABELS[feature] ?? feature}
-                            </span>
-                            {pending && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Badge
-                                    variant="warning"
-                                    className="align-middle text-[10px] py-0 px-1.5 cursor-help"
-                                  >
-                                    <Clock className="h-2.5 w-2.5 mr-1" />
-                                    {t.subscriptions.rolling_out_soon}
-                                  </Badge>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  {t.subscriptions.rolling_out_soon_tooltip}
-                                </TooltipContent>
-                              </Tooltip>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="mt-4 pt-4 border-t flex gap-3">
-                      <Button
-                        variant="outline"
-                        onClick={() => setActiveTab("plans")}
-                      >
-                        {t.subscriptions.upgrade_plan}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        className="text-destructive hover:text-destructive"
-                      >
-                        {t.subscriptions.cancel_subscription}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </>
-          )}
+      {!isPlatformOwner && <>
+        <div className="grid gap-5 xl:grid-cols-[1.5fr_1fr]">
+          <Card className="relative overflow-hidden border-transparent bg-primary p-6 text-primary-foreground sm:p-8">
+            <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-[var(--c-accent)] opacity-20 blur-3xl" />
+            {isLoading ? <Skeleton className="h-64" /> : <div className="relative space-y-6">
+              <div><span className="rounded-full bg-primary-foreground/10 px-3 py-1 text-xs">Current plan</span><h2 className="mt-4 font-[family-name:var(--font-head)] text-4xl font-bold tracking-tight sm:text-5xl">{subscription?.plan?.name || 'Choose your plan'}</h2><p className="mt-2 text-sm opacity-80">{subscription ? 'Status: ' + subscription.status : 'Find the right fit for your business.'}</p></div>
+              <dl className="flex flex-wrap items-end gap-x-8 gap-y-4"><div><dt className="sr-only">Plan price</dt><dd className="text-3xl font-bold">{formatCurrency(subscription?.plan?.price || 0, 'NGN')}</dd><p className="text-xs opacity-75">per {subscription?.plan?.billing_cycle === 'yearly' ? 'year' : 'month'}</p></div><div><dt className="text-xs opacity-75">Valid until</dt><dd className="mt-1 font-semibold">{subscription?.expires_at ? formatDate(subscription.expires_at) : 'No active period'}</dd></div><div><dt className="text-xs opacity-75">Renewal</dt><dd className="mt-1 font-semibold">Manual payment</dd></div></dl>
+              <div className="flex flex-wrap gap-3"><Button className="bg-primary-foreground text-primary hover:bg-primary-foreground/90" onClick={() => { setActiveTab('plans'); }}>Change plan</Button>{subscription && ['active','trial'].includes(subscription.status) && <Button variant="outline" className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10" onClick={() => setCancelOpen(true)}>Cancel subscription</Button>}</div>
+            </div>}
+          </Card>
+          <BankAccountPanel organizationId={user?.organization_id} />
         </div>
-      )}
+        {daysRemaining !== null && daysRemaining <= 14 && subscription?.status !== 'cancelled' && <p role="status" className="rounded-lg border border-[var(--c-warn)]/30 bg-[var(--c-warn)]/10 p-4 text-sm">{daysRemaining > 0 ? 'Your subscription expires in ' + daysRemaining + ' days.' : 'Your subscription has expired.'} Choose a plan to renew.</p>}
+        <Tabs value={activeTab} onValueChange={v => setActiveTab(v as typeof activeTab)}>
+          <TabsList aria-label="Subscription sections"><TabsTrigger value="plans">{t.subscriptions.tab_plans}</TabsTrigger><TabsTrigger value="billing">{t.subscriptions.tab_billing}</TabsTrigger><TabsTrigger value="methods">Payment methods</TabsTrigger><TabsTrigger value="usage">Usage</TabsTrigger></TabsList>
+        </Tabs>
+        {activeTab === 'methods' && <div className="max-w-2xl"><BankAccountPanel organizationId={user?.organization_id} /></div>}
+        {activeTab === 'usage' && <UsagePanel organizationId={user?.organization_id} plan={subscription?.plan} />}
+        <Dialog open={cancelOpen} onOpenChange={setCancelOpen}><DialogContent><DialogHeader><DialogTitle>Cancel subscription?</DialogTitle><DialogDescription>This ends subscription access immediately. Existing sales and records are retained. This does not issue a refund.</DialogDescription></DialogHeader><DialogFooter><Button variant="ghost" onClick={() => setCancelOpen(false)}>Keep subscription</Button><Button variant="destructive" disabled={cancelMutation.isPending} onClick={() => cancelMutation.mutate()}>{cancelMutation.isPending ? 'Cancelling?' : 'Confirm cancellation'}</Button></DialogFooter></DialogContent></Dialog>
+      </>}
 
       {/* Plans Tab */}
       {(isPlatformOwner || activeTab === "plans") && (
@@ -879,20 +682,21 @@ export default function SubscriptionsPage() {
             </div>
           </div>
           {isLoading ? (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
               {[1, 2, 3, 4, 5].map((i) => (
                 <Skeleton key={i} className="h-96" />
               ))}
             </div>
           ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 mt-8">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 mt-8">
               {plans.map((plan) => (
                 <div key={plan.id} className="space-y-2">
                   <PlanCard
+                    compact
                     catalogOnly={isPlatformOwner}
                     plan={plan}
                     allPlans={plans}
-                    currentPlanId={isPlatformOwner ? undefined : subscription?.plan_id}
+                    currentPlanId={isPlatformOwner || !subscription || !["active", "trial"].includes(subscription.status) ? undefined : subscription.plan_id}
                     billingCycle={billingCycle}
                     onSelect={(planId) =>
                       upgradeMutation.mutate({ planId, cycle: billingCycle })
@@ -951,7 +755,11 @@ export default function SubscriptionsPage() {
                 {t.subscriptions.all_transactions}
               </p>
             </div>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" disabled={!payments.length} onClick={() => {
+              const cell = (v: unknown) => '"' + String(v ?? '').replace(/"/g, '""').replace(/^[=+@-]/, match => "'" + match) + '"';
+              const csv = [['Date','Reference','Amount','Currency','Method','Status'], ...payments.map(p => [p.created_at,p.provider_reference,p.amount,p.currency,p.payment_method,p.status])].map(row => row.map(cell).join(',')).join('\r\n');
+              const url = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'})); const link = document.createElement('a'); link.href=url; link.download='billing-history.csv'; link.click(); URL.revokeObjectURL(url);
+            }}>
               <Download className="h-4 w-4 mr-2" />
               {t.subscriptions.export}
             </Button>
@@ -995,7 +803,7 @@ export default function SubscriptionsPage() {
                           {payment.plan_name || "—"}
                         </TableCell>
                         <TableCell className="text-xs font-mono tt-muted">
-                          {payment.reference}
+                          {payment.provider_reference}
                         </TableCell>
                         <TableCell className="font-medium">
                           {formatCurrency(payment.amount)}

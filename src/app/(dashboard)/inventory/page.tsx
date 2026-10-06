@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Package, AlertTriangle, XCircle, TrendingUp, TrendingDown } from 'lucide-react';
 import { toast } from 'sonner';
@@ -234,6 +234,7 @@ function InventoryPageInner() {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const [warehouseFilter, setWarehouseFilter] = useState('all');
+  useEffect(() => { setWarehouseFilter(new URLSearchParams(window.location.search).get('warehouse') || 'all'); }, []);
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [adjustDialog, setAdjustDialog] = useState<Record<string, unknown> | null>(null);

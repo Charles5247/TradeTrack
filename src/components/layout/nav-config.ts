@@ -82,6 +82,7 @@ export const NAV_GROUPS_BO: NavGroup[] = [
         icon: History,
         roles: ["business_owner", "admin"],
       },
+      { navKey: "receipts", label: "Receipts", href: "/receipts", icon: History, roles: ["business_owner", "admin", "cashier"] },
       {
         navKey: "receiptLookup",
         href: "/receipts/lookup",
@@ -105,6 +106,7 @@ export const NAV_GROUPS_BO: NavGroup[] = [
         icon: Warehouse,
         roles: ["business_owner", "admin"],
       },
+      { navKey: "suppliers", label: "Suppliers", href: "/suppliers", icon: Building2, roles: ["business_owner", "admin"] },
       { navKey: "warehouses", href: "/warehouses", icon: Warehouse, roles: ["business_owner", "admin"] },
       { navKey: "imports", label: "Imports", href: "/imports", icon: FileInput, roles: ["business_owner", "admin"] },
       {
@@ -121,6 +123,7 @@ export const NAV_GROUPS_BO: NavGroup[] = [
       },
       {
         navKey: "vendors",
+        label: "Vendor sales",
         href: "/vendors",
         icon: UserCheck,
         roles: ["business_owner", "admin"],

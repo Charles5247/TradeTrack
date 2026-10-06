@@ -298,6 +298,7 @@ export function PlanCard({
   selectLabel,
   selectHref,
   catalogOnly = false,
+  compact = false,
 }: {
   plan: Plan;
   allPlans: Plan[];
@@ -316,6 +317,7 @@ export function PlanCard({
   selectHref?: string;
   /** Platform catalog management has its own edit actions, not checkout. */
   catalogOnly?: boolean;
+  compact?: boolean;
 }) {
   const { t } = useI18n();
   const isCurrent = plan.id === currentPlanId;
@@ -329,6 +331,13 @@ export function PlanCard({
     billingCycle === "yearly" && plan.price > 0 && !isEnterprise;
   const displayedPrice = showAsYearly ? yearlyPrice : plan.price;
   const priceSuffix = showAsYearly ? "/yr" : "/mo";
+
+  if (compact) return <Card className={`relative flex h-full flex-col gap-4 p-5 ${isCurrent ? 'border-2 border-primary' : ''}`}>
+    {isCurrent && <Badge className="absolute -top-2.5 right-4" variant="outline">Current</Badge>}
+    <div><h3 className="tt-head">{plan.name}</h3><p className="mt-2 text-2xl font-bold tracking-tight">{isEnterprise ? 'Custom' : plan.price === 0 ? 'Free' : formatCurrency(displayedPrice,'NGN')}{!isEnterprise && plan.price > 0 && <span className="text-xs font-normal text-muted-foreground">{priceSuffix}</span>}</p></div>
+    <ul className="space-y-2 text-xs"><li className="flex gap-2"><CheckCircle className="h-3.5 w-3.5 shrink-0" />{plan.max_warehouses == null || plan.max_warehouses < 0 ? 'Unlimited locations' : plan.max_warehouses + ' locations'}</li><li className="flex gap-2"><CheckCircle className="h-3.5 w-3.5 shrink-0" />{plan.max_products == null || plan.max_products < 0 ? 'Unlimited products' : plan.max_products.toLocaleString('en-NG') + ' products'}</li><li className="flex gap-2"><CheckCircle className="h-3.5 w-3.5 shrink-0" />{plan.max_cashiers < 0 ? 'Unlimited cashiers' : plan.max_cashiers + ' cashiers'}</li>{filterDisplayFeatures(plan.features || []).slice(0,4).map(f => <li key={f} className="flex gap-2"><CheckCircle className="h-3.5 w-3.5 shrink-0" />{FEATURE_LABELS[f] || f}{isPendingFeature(f) ? ' (coming soon)' : ''}</li>)}</ul>
+    {!catalogOnly && (isEnterprise ? <Button asChild className="mt-auto w-full"><a href={`mailto:${SALES_CONTACT_EMAIL}`}>Talk to sales</a></Button> : <Button className="mt-auto w-full" variant={isCurrent ? 'outline' : 'default'} disabled={isCurrent || isLoading} onClick={() => onSelect?.(plan.id)}>{isCurrent ? 'Current plan' : t.subscriptions.select_plan}</Button>)}
+  </Card>;
 
   return (
     <Card

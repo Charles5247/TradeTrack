@@ -119,6 +119,7 @@
     "src/app/(dashboard)/sales/[id]/page.tsx",
     "src/app/(dashboard)/settings/page.tsx",
     "src/app/(dashboard)/subscriptions/page.tsx",
+    "src/app/(dashboard)/suppliers/page.tsx",
     "src/app/(dashboard)/transfers/page.tsx",
     "src/app/(dashboard)/users/page.tsx",
     "src/app/(dashboard)/vendors/page.tsx",

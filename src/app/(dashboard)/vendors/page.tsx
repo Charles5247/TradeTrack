@@ -13,6 +13,8 @@ import {
   Upload,
 } from "lucide-react";
 import { toast } from "sonner";
+import { StatCard } from "@/components/ui/stat-card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -110,6 +112,8 @@ function VendorsPageInner() {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const orgId = user?.organization_id;
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const isOnline = useOnlineStatus();
   const { data: stockChecks = [] } = useQuery({
     queryKey: ["vendor-stock-checks", orgId],
@@ -313,6 +317,7 @@ function VendorsPageInner() {
     });
   };
 
+  const visibleVendors = vendors.filter(v => (statusFilter === 'all' || (statusFilter === 'outstanding' ? v.total_value > v.amount_paid : v.status === statusFilter)) && [v.vendor_name,v.vendor_phone].join(' ').toLowerCase().includes(search.toLowerCase()));
   return (
     <div className="space-y-6">
       {stockChecks.length > 0 && (
@@ -327,7 +332,7 @@ function VendorsPageInner() {
       )}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="tt-page-title">{t.vendors.title}</h1>
+          <h1 className="tt-page-title">Vendor sales</h1>
           <p className="tt-muted text-sm">
             {t.vendors.subtitle_debt.split(":")[0]}:{" "}
             <span className="font-semibold text-[var(--c-warn)]">
@@ -341,6 +346,8 @@ function VendorsPageInner() {
         </Button>
       </div>
 
+      <div className="grid gap-4 sm:grid-cols-3"><StatCard label="Vendor transactions" value={vendors.length} loading={isLoading} /><StatCard label="Outstanding balance" value={formatCurrency(totalPending)} loading={isLoading} /><StatCard label="Collected" value={formatCurrency(vendors.reduce((sum,v) => sum+v.amount_paid,0))} loading={isLoading} /></div>
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"><Tabs value={statusFilter} onValueChange={setStatusFilter}><TabsList aria-label="Vendor sales status"><TabsTrigger value="all">All sales</TabsTrigger><TabsTrigger value="outstanding">Outstanding</TabsTrigger><TabsTrigger value="paid">Paid</TabsTrigger></TabsList></Tabs><Input className="lg:max-w-80" aria-label="Search vendor sales" placeholder="Search vendor name or phone?" value={search} onChange={e => setSearch(e.target.value)} /></div>
       {/* Alert Banner */}
       {totalPending > 0 && (
         <div className="flex items-center gap-3 p-4 bg-[color-mix(in_oklch,var(--c-warn),transparent_92%)] border border-[color-mix(in_oklch,var(--c-warn),transparent_65%)] rounded-lg">
@@ -380,7 +387,7 @@ function VendorsPageInner() {
                     ))}
                   </TableRow>
                 ))
-              ) : vendors.length === 0 ? (
+              ) : visibleVendors.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={9}
@@ -390,7 +397,7 @@ function VendorsPageInner() {
                   </TableCell>
                 </TableRow>
               ) : (
-                vendors.map((v) => {
+                visibleVendors.map((v) => {
                   const balance = v.total_value - v.amount_paid;
                   return (
                     <TableRow key={v.id}>

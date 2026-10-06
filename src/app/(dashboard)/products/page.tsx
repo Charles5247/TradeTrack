@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Search, Edit, Trash2, Package, MoreHorizontal, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import Image from 'next/image';
+import { ErrorState } from '@/components/ui/error-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -79,7 +80,7 @@ function ProductsPageInner() {
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [viewProduct, setViewProduct] = useState<Product | null>(null);
 
-  const { data: products = [], isLoading } = useQuery({
+  const { data: products = [], isLoading, error: pageError, refetch: retryPage } = useQuery({
     queryKey: ['products', search, categoryFilter],
     queryFn: () => fetchProducts(search || undefined, categoryFilter),
   });
@@ -116,6 +117,7 @@ function ProductsPageInner() {
   return (
     <div className="space-y-6">
       {/* Header */}
+      {pageError && <ErrorState title="Could not load this page" body={pageError.message} onRetry={() => retryPage()} />}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="tt-page-title">{t.products.title}</h1>

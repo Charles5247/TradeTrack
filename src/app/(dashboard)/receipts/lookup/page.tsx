@@ -1,13 +1,18 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Search, Loader2, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, Loader2, ArrowRight, ScanLine, ReceiptText, Download, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatDateTime } from '@/lib/utils/format';
+import { useAuthStore, useOrgStore } from '@/store';
+import { detectProductCode, supportsBarcodeDetection } from '@/lib/products/detect-code';
+import { downloadReceiptPDF } from '@/lib/pdf/receipt-pdf';
+import { Receipt } from '@/components/pos/receipt';
+import type { ReceiptData } from '@/lib/receipt/build-receipt';
 import { useI18n } from '@/i18n';
 
 interface SaleItem { name: string; sku?: string; quantity: number; unitPrice?: number; discount?: number; total?: number }
@@ -25,6 +30,13 @@ interface TransferLookupResult {
 
 export default function ReceiptLookupPage() {
   const { t } = useI18n();
+  const { user } = useAuthStore();
+  const org = useOrgStore();
+  const [lookupError, setLookupError] = useState('');
+  const [recent, setRecent] = useState<string[]>([]);
+  const scan = useRef<HTMLInputElement>(null);
+  const requestSequence = useRef(0);
+  const receiptKey = 'receipt-lookups:' + user?.organization_id + ':' + user?.id;
   const [code, setCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<
@@ -33,25 +45,46 @@ export default function ReceiptLookupPage() {
     | null
   >(null);
 
-  const handleLookup = async () => {
-    const value = code.trim();
+  const handleLookup = async (requested?: string) => {
+    const value = (requested ?? code).trim();
     if (!value) return;
+    const sequence = ++requestSequence.current;
+    setCode(value);
+    setLookupError('');
     setIsLoading(true);
     setResult(null);
     try {
       const res = await fetch(`/api/receipts/lookup?code=${encodeURIComponent(value)}`);
       const data = await res.json();
+      if (sequence !== requestSequence.current) return;
       if (!res.ok) {
-        toast.error(data.error || t.receiptLookup.not_found);
+        setLookupError(data.error || t.receiptLookup.not_found);
         return;
       }
       setResult(data);
+      setRecent(previous => { const next = [value, ...previous.filter(v => v !== value)].slice(0, 6); try { sessionStorage.setItem(receiptKey, JSON.stringify(next)); } catch {} return next; });
     } catch {
-      toast.error(t.receiptLookup.error);
+      if (sequence === requestSequence.current) setLookupError(t.receiptLookup.error);
     } finally {
-      setIsLoading(false);
+      if (sequence === requestSequence.current) setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    try { const stored = JSON.parse(sessionStorage.getItem(receiptKey) || '[]'); setRecent(Array.isArray(stored) ? stored.filter(v => typeof v === 'string').slice(0,6) : []); } catch { setRecent([]); }
+    setResult(null);
+    setLookupError('');
+    setIsLoading(false);
+    const initial = new URLSearchParams(window.location.search).get('code');
+    if (initial && user?.id) void handleLookup(initial);
+    return () => { requestSequence.current++; };
+    // Reset cached previews when the authenticated business changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [receiptKey]);
+  const receipt: ReceiptData | null = result?.kind === 'sale' ? {
+    ...result.receipt, orgName: org.organizationName, orgAddress: org.organizationAddress, orgPhone: org.organizationPhone, currency: org.currency,
+    items: result.receipt.items.map(i => ({ name:i.name, quantity:i.quantity, unitPrice:i.unitPrice ?? 0, total:i.total ?? 0 })),
+  } : null;
 
   const reset = () => {
     setResult(null);
@@ -59,38 +92,24 @@ export default function ReceiptLookupPage() {
   };
 
   return (
-    <div className="min-w-0 w-full max-w-2xl mx-auto space-y-6">
+    <div className="min-w-0 w-full mx-auto space-y-6">
       <div>
         <h1 className="tt-page-title">{t.receiptLookup.title}</h1>
         <p className="tt-muted text-sm">{t.receiptLookup.subtitle}</p>
       </div>
 
-      {!result && (
-        <Card>
-          <CardContent className="p-4 space-y-3">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Input
-                autoFocus
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleLookup()}
-                placeholder={t.receiptLookup.placeholder}
-              />
-              <Button onClick={handleLookup} disabled={isLoading || !code.trim()}>
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.75} />
-                ) : (
-                  <>
-                    <Search className="h-4 w-4 mr-2" strokeWidth={1.75} />
-                    {t.receiptLookup.lookup}
-                  </>
-                )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
+      <div className="grid items-start gap-5 lg:grid-cols-[1.2fr_1fr]">
+      <div className="space-y-5 no-print">
+        <Card><CardContent className="space-y-5 p-6 sm:p-8"><h2 className="tt-eyebrow">Look up a receipt</h2><form className="flex flex-col gap-3 sm:flex-row" onSubmit={e => { e.preventDefault(); if (!isLoading) void handleLookup(); }}><Input autoFocus aria-label="Receipt number" className="h-12" value={code} onChange={e => setCode(e.target.value)} placeholder={t.receiptLookup.placeholder} /><Button className="h-12" disabled={isLoading || !code.trim()}>{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}{t.receiptLookup.lookup}</Button></form>
+        <div className="flex items-center gap-3 text-xs text-muted-foreground"><span className="h-px flex-1 bg-border" />OR<span className="h-px flex-1 bg-border" /></div>
+        <Button variant="outline" className="h-12 w-full" disabled={isLoading || !supportsBarcodeDetection()} onClick={() => scan.current?.click()}><ScanLine className="h-4 w-4" />Scan barcode or QR</Button>
+        <input ref={scan} className="hidden" type="file" accept="image/*" capture="environment" aria-label="Receipt barcode photo" onChange={async e => { const file = e.target.files?.[0]; e.target.value=''; if (!file) return; try { await handleLookup(await detectProductCode(file)); } catch (err) { setLookupError((err as Error).message); } }} />
+        <p className="text-xs text-muted-foreground">Use a receipt number or a connected barcode scanner. Photo scanning requires a supported browser.</p>{lookupError && <p role="alert" className="rounded-lg bg-destructive/5 p-3 text-sm text-destructive">{lookupError}</p>}</CardContent></Card>
+        <Card><CardContent className="p-6"><h2 className="tt-eyebrow mb-3">Recent lookups</h2>{recent.length ? recent.map(value => <div key={value} className="flex items-center justify-between gap-3 border-b border-dashed py-3"><span className="font-mono text-sm">{value}</span><Button variant="ghost" size="sm" disabled={isLoading} onClick={() => handleLookup(value)}>Open</Button></div>) : <p className="text-sm text-muted-foreground">Your successful lookups in this session will appear here.</p>}</CardContent></Card>
+      </div>
+      <div className="min-w-0 space-y-4">
+      {!result && <Card className="flex min-h-80 flex-col items-center justify-center gap-3 p-8 text-center"><ReceiptText className="h-10 w-10 text-muted-foreground" /><h2 className="tt-head">Receipt preview</h2><p className="text-sm text-muted-foreground">Look up a receipt to review its items, totals and payment details.</p></Card>}
+      {receipt && <div className="flex flex-wrap justify-end gap-2 no-print"><Button variant="outline" onClick={() => window.print()}><Printer className="h-4 w-4" />Print receipt</Button><Button onClick={() => downloadReceiptPDF(receipt).catch(() => toast.error('Could not download receipt.'))}><Download className="h-4 w-4" />Download PDF</Button></div>}
       {result?.kind === 'sale' && (
         <Card>
           <CardContent className="p-4 space-y-4">
@@ -140,7 +159,7 @@ export default function ReceiptLookupPage() {
               )}
             </div>
 
-            <Button variant="outline" className="w-full" onClick={reset}>{t.receiptLookup.scan_another}</Button>
+            <Button variant="outline" className="no-print w-full" onClick={reset}>{t.receiptLookup.scan_another}</Button>
           </CardContent>
         </Card>
       )}
@@ -197,6 +216,8 @@ export default function ReceiptLookupPage() {
           </CardContent>
         </Card>
       )}
+      </div></div>
+      {receipt && <Receipt data={receipt} />}
     </div>
   );
 }

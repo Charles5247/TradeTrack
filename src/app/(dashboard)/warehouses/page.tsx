@@ -1,5 +1,10 @@
 'use client';
 
+import Link from 'next/link';
+import { StaffAssignments } from '@/components/warehouses/staff-assignments';
+import { StatCard } from '@/components/ui/stat-card';
+import { EmptyState } from '@/components/ui/empty-state';
+import { ErrorState } from '@/components/ui/error-state';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Warehouse, Edit, Trash2, Star } from 'lucide-react';
@@ -17,15 +22,16 @@ import type { Warehouse as WarehouseType } from '@/types';
 import { useI18n } from '@/i18n';
 import { AccessGuard } from '@/components/shared/access-guard';
 
-async function fetchWarehouses() {
+async function fetchWarehouses(organizationId: string) {
   const supabase = createClient();
   const { data, error } = await supabase
     .from('warehouses')
     .select(`*, inventory(quantity)`)
+    .eq('organization_id', organizationId)
     .order('is_main', { ascending: false });
   if (error) throw error;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (data as any) as (WarehouseType & { inventory: { quantity: number }[] })[];
+  return (data as any) as (WarehouseType & { inventory: { quantity: number; product?: {cost_price:number} }[] })[];
 }
 
 export default function WarehousesPage() {
@@ -44,17 +50,21 @@ function WarehousesPageInner() {
   const [editWarehouse, setEditWarehouse] = useState<WarehouseType | null>(null);
   const [formData, setFormData] = useState({ name: '', description: '', address: '', is_main: false });
 
-  const { data: warehouses = [], isLoading } = useQuery({
-    queryKey: ['warehouses-full'],
-    queryFn: fetchWarehouses,
+  const { data: warehouses = [], isLoading, error, refetch } = useQuery({
+    queryKey: ['warehouses-full', user?.organization_id],
+    enabled: Boolean(user?.organization_id),
+    queryFn: () => fetchWarehouses(user!.organization_id),
   });
 
   const saveMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
       const supabase = createClient();
       const orgId = (user as unknown as { organization_id: string })?.organization_id;
+      if (!orgId) throw new Error('No business is selected.');
+      if (!data.name.trim()) throw new Error('Enter a location name.');
+      data = { ...data, name: data.name.trim() };
       if (editWarehouse) {
-        const { error } = await supabase.from('warehouses').update(data).eq('id', editWarehouse.id);
+        const { error } = await supabase.from('warehouses').update(data).eq('id', editWarehouse.id).eq('organization_id', orgId);
         if (error) throw error;
       } else {
         const { error } = await supabase.from('warehouses').insert({ ...data, organization_id: orgId });
@@ -67,7 +77,7 @@ function WarehousesPageInner() {
       setEditWarehouse(null);
       toast.success(editWarehouse ? t.warehouse.updated_success : t.warehouse.created_success);
     },
-    onError: () => toast.error(t.warehouse.save_failed),
+    onError: (error) => toast.error(error instanceof Error ? error.message : t.warehouse.save_failed),
   });
 
   const deleteMutation = useMutation({
@@ -108,7 +118,10 @@ function WarehousesPageInner() {
         </Button>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-3"><StatCard label="Locations" value={warehouses.length} loading={isLoading} /><StatCard label="Main shops" value={warehouses.filter(w => w.is_main).length} loading={isLoading} /><StatCard label="Stock units" value={warehouses.reduce((n,w) => n + (w.inventory || []).reduce((a,i) => a+i.quantity,0),0).toLocaleString('en-NG')} loading={isLoading} /></div>
+      {error && <ErrorState body={error.message} onRetry={() => refetch()} />}
+      {!isLoading && !error && !warehouses.length && <EmptyState icon={Warehouse} title="Add your first location" body="Create your main shop or a warehouse, then assign its team." action={<Button onClick={openCreate}>Add location</Button>} />}
+      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
         {isLoading ? (
           [...Array(3)].map((_, i) => (
             <Card key={i} className="animate-pulse">
@@ -118,7 +131,7 @@ function WarehousesPageInner() {
         ) : warehouses.map((w) => {
           const totalStock = (w.inventory || []).reduce((s, i) => s + i.quantity, 0);
           return (
-            <Card key={w.id} className="relative">
+            <Card key={w.id} className="relative flex flex-col">
               <CardHeader className="pb-3">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
@@ -135,7 +148,7 @@ function WarehousesPageInner() {
                     </div>
                   </div>
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="icon-sm" onClick={() => openEdit(w)}>
+                    <Button variant="ghost" size="icon-sm" aria-label={`Edit ${w.name}`} onClick={() => openEdit(w)}>
                       <Edit className="h-4 w-4" strokeWidth={1.75} />
                     </Button>
                     {!w.is_main && (
@@ -153,7 +166,7 @@ function WarehousesPageInner() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex flex-1 flex-col gap-4">
                 {w.description && (
                   <p className="text-sm text-muted-foreground mb-3">{w.description}</p>
                 )}
@@ -164,6 +177,9 @@ function WarehousesPageInner() {
                   <span className="text-sm text-muted-foreground">{t.warehouse.total_stock}</span>
                   <span className="tt-head text-lg">{totalStock.toLocaleString()}</span>
                 </div>
+                <div className="mt-auto flex items-center justify-between text-sm"><span className="text-muted-foreground">Products stocked</span><span className="font-mono">{(w.inventory || []).length}</span></div>
+                <StaffAssignments warehouseId={w.id} name={w.name} />
+                <Button variant="outline" asChild><Link href={'/inventory?warehouse=' + w.id}>View inventory</Link></Button>
               </CardContent>
             </Card>
           );

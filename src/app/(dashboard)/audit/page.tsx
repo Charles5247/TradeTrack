@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Search, ClipboardList, Download } from 'lucide-react';
+import { ErrorState } from '@/components/ui/error-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -75,7 +76,7 @@ function AuditPageInner() {
   const [endDate, setEndDate] = useState('');
   const [viewLog, setViewLog] = useState<AuditLog | null>(null);
 
-  const { data: logs = [], isLoading } = useQuery({
+  const { data: logs = [], isLoading, error: pageError, refetch: retryPage } = useQuery({
     queryKey: ['audit-logs', search, resourceType, startDate, endDate],
     queryFn: () => fetchAuditLogs(search, resourceType, startDate, endDate),
   });
@@ -120,6 +121,7 @@ function AuditPageInner() {
   return (
     <div className="space-y-6">
       <a className="underline" href="/accounting">Accounting, cash-up and reconciliation reports</a>
+      {pageError && <ErrorState title="Could not load this page" body={pageError.message} onRetry={() => retryPage()} />}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="tt-page-title">{t.audit.title}</h1>

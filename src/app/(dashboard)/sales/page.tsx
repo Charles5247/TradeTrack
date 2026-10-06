@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { Search, Download, Eye, Receipt } from 'lucide-react';
+import { ErrorState } from '@/components/ui/error-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -118,7 +119,7 @@ function SalesPageInner() {
   const [endDate, setEndDate] = useState('');
   const [viewSale, setViewSale] = useState<Sale | null>(null);
 
-  const { data: sales = [], isLoading } = useQuery({
+  const { data: sales = [], isLoading, error: pageError, refetch: retryPage } = useQuery({
     queryKey: ['sales', search, status, paymentMethod, startDate, endDate],
     queryFn: () => fetchSales({ search, status, payment_method: paymentMethod, start_date: startDate, end_date: endDate }),
   });
@@ -148,6 +149,7 @@ function SalesPageInner() {
 
   return (
     <div className="min-w-0 space-y-6">
+      {pageError && <ErrorState title="Could not load this page" body={pageError.message} onRetry={() => retryPage()} />}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="tt-page-title">{t.sales.title}</h1>

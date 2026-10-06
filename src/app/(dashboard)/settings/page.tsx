@@ -10,18 +10,19 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useAuthStore, useOrgStore } from '@/store';
+import { useAuthStore } from '@/store';
 import { createClient } from '@/lib/supabase/client';
 import { SUPPORTED_LOCALES, useI18n } from '@/i18n';
 import { useTheme } from 'next-themes';
 import type { Locale } from '@/types';
+import { BusinessSettings } from '@/components/settings/business-settings';
+import { OperationsSettings } from '@/components/settings/operations-settings';
 import { cacheUserSession } from '@/lib/offline/db';
 
 export default function SettingsPage() {
   const { user, setUser } = useAuthStore();
   const isPlatformOwner = user?.role === 'platform_owner';
   const hasBusiness = !isPlatformOwner && Boolean(user?.organization_id);
-  const { setCurrency, setOrganizationName, setOrganizationAddress, setOrganizationPhone } = useOrgStore();
   const { theme, setTheme } = useTheme();
   const { t, locale, setLocale } = useI18n();
   const [isProfileLoading, setIsProfileLoading] = useState(false);
@@ -33,47 +34,10 @@ export default function SettingsPage() {
     phone: user?.phone || '',
   });
 
-  const [orgData, setOrgData] = useState({
-    name: '',
-    phone: '',
-    email: '',
-    address: '',
-    currency: 'NGN',
-    timezone: 'Africa/Lagos',
-  });
-
   const [pwdData, setPwdData] = useState({
     newPassword: '',
     confirmPassword: '',
   });
-
-  // Load organization data
-  useEffect(() => {
-    async function loadOrg() {
-      if (!user?.organization_id) return;
-      const supabase = createClient();
-      const { data } = await supabase
-        .from('organizations')
-        .select('*')
-        .eq('id', user.organization_id)
-        .single();
-      if (data) {
-        setOrgData({
-          name: data.name || '',
-          phone: data.phone || '',
-          email: data.email || '',
-          address: data.address || '',
-          currency: data.currency || 'NGN',
-          timezone: data.timezone || 'Africa/Lagos',
-        });
-        if (data.currency) setCurrency(data.currency);
-        if (data.name) setOrganizationName(data.name);
-        setOrganizationAddress(data.address || '');
-        setOrganizationPhone(data.phone || '');
-      }
-    }
-    loadOrg();
-  }, [user?.organization_id, setCurrency, setOrganizationName, setOrganizationAddress, setOrganizationPhone]);
 
   // Keep form in sync with user store
   useEffect(() => {
@@ -131,41 +95,6 @@ export default function SettingsPage() {
     }
   };
 
-  const handleUpdateOrg = async () => {
-    if (!orgData.name.trim()) {
-      toast.error(t.settings.business_name_required);
-      return;
-    }
-    setIsOrgLoading(true);
-    try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from('organizations')
-        .update({
-          name: orgData.name.trim(),
-          phone: orgData.phone.trim() || null,
-          email: orgData.email.trim() || null,
-          address: orgData.address.trim() || null,
-          currency: orgData.currency,
-          timezone: orgData.timezone,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', user?.organization_id ?? '');
-
-      if (error) throw error;
-      setCurrency(orgData.currency);
-      setOrganizationName(orgData.name.trim());
-      setOrganizationAddress(orgData.address.trim());
-      setOrganizationPhone(orgData.phone.trim());
-      toast.success(t.settings.org_settings_saved);
-    } catch (err) {
-      console.error(err);
-      toast.error(t.settings.org_settings_save_failed);
-    } finally {
-      setIsOrgLoading(false);
-    }
-  };
-
   const handleChangePassword = async () => {
     if (!pwdData.newPassword) {
       toast.error(t.settings.password_required);
@@ -195,23 +124,23 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-[1360px] space-y-6">
       <div>
         <h1 className="tt-page-title">{t.settings.title}</h1>
         <p className="tt-muted text-sm">{isPlatformOwner ? 'Manage your platform account, appearance, and security.' : t.settings.subtitle}</p>
       </div>
 
-      <Tabs key={user?.role} defaultValue="profile" orientation="vertical" className="grid items-start gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-8">
-        <TabsList aria-label="Settings sections" className="grid grid-cols-2 gap-1 border-0 lg:sticky lg:top-4 lg:grid-cols-1 [&>button]:min-h-11 [&>button]:justify-start [&>button]:rounded-[var(--radius)] [&>button]:border-0 [&>button]:px-3 [&>button]:data-[state=active]:bg-accent">
+      <Tabs key={user?.role} defaultValue={hasBusiness ? "organization" : "profile"} orientation="vertical" className="grid items-start gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-8">
+        <TabsList aria-label="Settings sections" className="grid grid-cols-2 gap-1 border-0 lg:sticky lg:top-4 lg:grid-cols-1 [&>button]:min-h-11 [&>button]:justify-start [&>button]:rounded-[var(--radius)] [&>button]:border-0 [&>button]:px-3 [&>button]:data-[state=active]:bg-primary/10 [&>button]:data-[state=active]:border-l-2 [&>button]:data-[state=active]:border-primary">
           {isPlatformOwner && <TabsTrigger value="platform"><Building className="h-4 w-4 mr-1.5" />Platform operations</TabsTrigger>}
-          <TabsTrigger value="profile">
-            <User className="h-4 w-4 mr-1.5" />
-            {t.settings.tab_profile}
-          </TabsTrigger>
-          {hasBusiness && <TabsTrigger value="organization">
-            <Building className="h-4 w-4 mr-1.5" />
-            {t.settings.tab_business}
-          </TabsTrigger>}
+          {hasBusiness && <><TabsTrigger value="organization">{t.settings.tab_business}</TabsTrigger>
+          <TabsTrigger value="localization">Localization</TabsTrigger>
+          <TabsTrigger value="receipts">Receipt template</TabsTrigger>
+          <TabsTrigger value="devices">Devices & printers</TabsTrigger>
+          <TabsTrigger value="sync">Offline sync</TabsTrigger>
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          <TabsTrigger value="export">Data & export</TabsTrigger></>}
+          <TabsTrigger value="profile"><User className="mr-1.5 h-4 w-4" />{t.settings.tab_profile}</TabsTrigger>
           <TabsTrigger value="appearance">
             <Palette className="h-4 w-4 mr-1.5" />
             {t.settings.tab_display}
@@ -286,107 +215,12 @@ export default function SettingsPage() {
         </TabsContent>
 
         {/* ── Organization Tab ─────────────────────────────── */}
-        {hasBusiness && <TabsContent value="organization" className="mt-0">
-          <Card>
-            <CardHeader>
-              <CardTitle className="tt-section-title">{t.settings.business_information}</CardTitle>
-              <CardDescription>{t.settings.business_information_desc}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="org_name">{t.settings.business_name}</Label>
-                <Input
-                  id="org_name"
-                  value={orgData.name}
-                  onChange={(e) => setOrgData({ ...orgData, name: e.target.value })}
-                  placeholder={t.settings.business_name_placeholder}
-                />
-              </div>
+        {hasBusiness && <>
+          <TabsContent value="organization" className="mt-0"><BusinessSettings key={user?.organization_id} /></TabsContent>
+          <TabsContent value="localization" className="mt-0"><BusinessSettings key={user?.organization_id + '-locale'} localizationOnly /></TabsContent>
+          {(['receipts', 'devices', 'sync', 'notifications', 'export'] as const).map(section => <TabsContent key={section} value={section} className="mt-0"><OperationsSettings section={section} /></TabsContent>)}
+        </>}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="org_phone">{t.common.phone}</Label>
-                  <Input
-                    id="org_phone"
-                    type="tel"
-                    value={orgData.phone}
-                    onChange={(e) => setOrgData({ ...orgData, phone: e.target.value })}
-                    placeholder="+234 800 000 0000"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="org_email">{t.common.email}</Label>
-                  <Input
-                    id="org_email"
-                    type="email"
-                    value={orgData.email}
-                    onChange={(e) => setOrgData({ ...orgData, email: e.target.value })}
-                    placeholder={t.settings.business_email_placeholder}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="org_address">{t.settings.business_address}</Label>
-                <Input
-                  id="org_address"
-                  value={orgData.address}
-                  onChange={(e) => setOrgData({ ...orgData, address: e.target.value })}
-                  placeholder={t.settings.business_address_placeholder}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>{t.settings.currency}</Label>
-                  <Select
-                    value={orgData.currency}
-                    onValueChange={(v) => setOrgData({ ...orgData, currency: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="NGN">Nigerian Naira (₦)</SelectItem>
-                      <SelectItem value="USD">US Dollar ($)</SelectItem>
-                      <SelectItem value="GBP">British Pound (£)</SelectItem>
-                      <SelectItem value="EUR">Euro (€)</SelectItem>
-                      <SelectItem value="GHS">Ghanaian Cedi (₵)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>{t.settings.timezone}</Label>
-                  <Select
-                    value={orgData.timezone}
-                    onValueChange={(v) => setOrgData({ ...orgData, timezone: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Africa/Lagos">Africa/Lagos (WAT)</SelectItem>
-                      <SelectItem value="Africa/Accra">Africa/Accra (GMT)</SelectItem>
-                      <SelectItem value="Africa/Nairobi">Africa/Nairobi (EAT)</SelectItem>
-                      <SelectItem value="UTC">UTC</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <Button className="w-full sm:w-auto" onClick={handleUpdateOrg} disabled={isOrgLoading}>
-                {isOrgLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <Save className="h-4 w-4 mr-2" />
-                )}
-                {t.settings.save_business_settings}
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>}
-
-        {/* ── Appearance Tab ──────────────────────────────── */}
         <TabsContent value="appearance" className="mt-0">
           <Card>
             <CardHeader>

@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store';
-import { setAppCurrency } from '@/lib/utils/format';
+import { setAppCurrency, setAppDateFormat } from '@/lib/utils/format';
 import type { Organization } from '@/types';
 
 interface OrganizationContextValue {
@@ -28,6 +28,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       if (!user?.organization_id) {
         setOrganization(null);
         setAppCurrency('NGN');
+        setAppDateFormat('medium');
         setIsLoading(false);
         return;
       }
@@ -46,10 +47,12 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
         const org = (data as Organization) ?? null;
         setOrganization(org);
         setAppCurrency(org?.currency ?? 'NGN');
+        setAppDateFormat(String(data?.settings?.date_format || 'medium'));
       } catch {
         if (!cancelled) {
           setOrganization(null);
           setAppCurrency('NGN');
+          setAppDateFormat('medium');
         }
       } finally {
         if (!cancelled) setIsLoading(false);

@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Bell, CheckCheck, AlertTriangle, Package, DollarSign, ArrowLeftRight, CreditCard } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -59,6 +60,7 @@ const colorTokenMap: Record<string, string> = {
 export default function NotificationsPage() {
   const { t } = useI18n();
   const queryClient = useQueryClient();
+  const [filter, setFilter] = useState("all");
 
   const { data: notifications = [], isLoading, error, refetch } = useQuery({
     queryKey: ['notifications'],
@@ -73,13 +75,15 @@ export default function NotificationsPage() {
   const markOneMutation = useMutation({
     mutationFn: async (id: string) => {
       const supabase = createClient();
-      await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+      const { error } = await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+      if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
   });
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
+  const visible = notifications.filter(n => filter === 'all' || (filter === 'unread' ? !n.is_read : filter === 'inventory' ? ['low_stock','out_of_stock','pending_transfer'].includes(n.type) : ['pending_payment','subscription_expiry'].includes(n.type)));
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -101,7 +105,9 @@ export default function NotificationsPage() {
         )}
       </div>
 
-      <div className="space-y-2">
+      <Tabs value={filter} onValueChange={setFilter}><TabsList aria-label="Notification filters"><TabsTrigger value="all">All ({notifications.length})</TabsTrigger><TabsTrigger value="unread">Unread ({unreadCount})</TabsTrigger><TabsTrigger value="inventory">Inventory</TabsTrigger><TabsTrigger value="payments">Payments</TabsTrigger></TabsList></Tabs>
+      {(markAllReadMutation.error || markOneMutation.error) && <p role="alert" className="text-sm text-destructive">Could not update notifications. Try again.</p>}
+      <div className="overflow-hidden rounded-lg border bg-card [&>div]:rounded-none [&>div]:border-x-0 [&>div]:border-t-0 [&>div]:shadow-none">
         {error ? <ErrorState title="Could not load notifications" body={error.message} onRetry={() => refetch()} /> : isLoading ? (
           [...Array(5)].map((_, i) => (
             <Card key={i}>
@@ -114,13 +120,13 @@ export default function NotificationsPage() {
               </CardContent>
             </Card>
           ))
-        ) : notifications.length === 0 ? (
+        ) : visible.length === 0 ? (
           <EmptyState
             icon={Bell}
             title={t.notifications.empty_state}
           />
         ) : (
-          notifications.map((notification) => {
+          visible.map((notification) => {
             const Icon = iconMap[notification.type] || iconMap.default;
             const colorToken = colorTokenMap[notification.type] || colorTokenMap.default;
 

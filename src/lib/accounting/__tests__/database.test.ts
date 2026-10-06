@@ -180,3 +180,23 @@ it('does not count legacy unpaid signup trials as an introduction on new organiz
   await expect(db.exec("SELECT reserve_ai_job('insights')")).rejects.toThrow('AI requires');
  } finally {await db.exec(`SELECT set_config('test.uid','${owner}',false)`);}
 });
+
+it('isolates supplier catalogs and lets only owners assign warehouse staff', async () => {
+ const other='10000000-0000-0000-0000-000000000099';
+ const supplier='60000000-0000-0000-0000-000000000001';
+ const foreignProduct='30000000-0000-0000-0000-000000000099';
+ await db.exec(`INSERT INTO organizations(id,name,slug) VALUES('${other}','Supplier boundary','supplier-boundary');
+ INSERT INTO suppliers(id,organization_id,name) VALUES('${supplier}','${org}','Supplier');
+ INSERT INTO products(id,organization_id,name,sku,cost_price,selling_price) VALUES('${foreignProduct}','${other}','Other item','OTHER',1,2);
+ SELECT set_config('test.uid','${owner}',false); SET ROLE authenticated;`);
+ try {
+  await db.exec(`INSERT INTO warehouse_staff(organization_id,warehouse_id,user_id,assignment_role) VALUES('${org}','${warehouse}','${cashier}','cashier');`);
+  await expect(db.exec(`UPDATE warehouse_staff SET assignment_role='manager' WHERE warehouse_id='${warehouse}'`)).rejects.toThrow();
+  await db.exec(`INSERT INTO supplier_products(organization_id,supplier_id,product_id) VALUES('${org}','${supplier}','${product}')`);
+  await expect(db.exec(`INSERT INTO supplier_products(organization_id,supplier_id,product_id) VALUES('${org}','${supplier}','${foreignProduct}')`)).rejects.toThrow();
+  await db.exec(`SELECT set_config('test.uid','${cashier}',false);`);
+  expect((await db.query('SELECT * FROM warehouse_staff')).rows).toHaveLength(1);
+  expect((await db.query('DELETE FROM warehouse_staff RETURNING *')).rows).toHaveLength(0);
+  await expect(db.exec(`INSERT INTO warehouse_staff(organization_id,warehouse_id,user_id,assignment_role) VALUES('${org}','${warehouse}','${owner}','manager')`)).rejects.toThrow();
+ } finally { await db.exec(`RESET ROLE; SELECT set_config('test.uid','${owner}',false);`); }
+});

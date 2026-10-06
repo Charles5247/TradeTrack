@@ -13,6 +13,18 @@ type NoRel = { Relationships: [] };
 export type Database = {
   public: {
     Tables: {
+      supplier_products: {
+        Row: { id: string; organization_id: string; supplier_id: string; product_id: string; created_at: string };
+        Insert: { id?: string; organization_id: string; supplier_id: string; product_id: string; created_at?: string };
+        Update: { supplier_id?: string; product_id?: string };
+        Relationships: [];
+      };
+      warehouse_staff: {
+        Row: { id: string; organization_id: string; warehouse_id: string; user_id: string; assignment_role: 'manager' | 'cashier'; created_at: string };
+        Insert: { id?: string; organization_id: string; warehouse_id: string; user_id: string; assignment_role: 'manager' | 'cashier'; created_at?: string };
+        Update: { assignment_role?: 'manager' | 'cashier' };
+        Relationships: [];
+      };
       organizations: {
         Row: {
           id: string;

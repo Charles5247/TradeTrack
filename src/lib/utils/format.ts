@@ -8,6 +8,10 @@
  * or AuthProvider/Settings via useOrgStore). Consulted by getOrgCurrency()
  * before falling back to the persisted useOrgStore value in localStorage.
  */
+let appDateFormat = 'medium';
+export function setAppDateFormat(format: string): void {
+  appDateFormat = ['medium', 'iso', 'numeric'].includes(format) ? format : 'medium';
+}
 let appCurrency = "NGN";
 let appCurrencyExplicitlySet = false;
 
@@ -97,6 +101,8 @@ export function formatDate(
   options?: Intl.DateTimeFormatOptions,
 ): string {
   const d = typeof date === "string" ? new Date(date) : date;
+  if (!options && appDateFormat === 'iso') return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-');
+  if (!options && appDateFormat === 'numeric') return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d);
   return new Intl.DateTimeFormat("en-NG", {
     dateStyle: "medium",
     ...options,
