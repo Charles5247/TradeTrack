@@ -1,4 +1,6 @@
 'use client';
+import { TranslatedText, useCopy } from '@/i18n/text';
+
 
 import { withTimeout, AUTH_CHECK_TIMEOUT_MS } from "@/lib/utils/timeout";
 import React, { useState } from 'react';
@@ -30,6 +32,7 @@ interface ProductFormProps {
 }
 
 export function ProductForm({ product: initialProduct, categories, onSuccess, onCancel }: ProductFormProps) {
+  const copy = useCopy();
   const [scannedProduct, setScannedProduct] = useState<CodeMatch | null>(null);
   const [cachedMatch, setCachedMatch] = useState(false);
   const product = scannedProduct ?? initialProduct;
@@ -200,7 +203,7 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
     <form onSubmit={handleSubmit(onSubmit as Parameters<typeof handleSubmit>[0])} className="space-y-4">
       {/* Image Upload */}
       <div className="space-y-2">
-        <Label>Product Image</Label>
+        <Label><TranslatedText text={"Product Image"} /></Label>
         <ImageUpload
           currentImageUrl={imageUrl}
           productId={product?.id}
@@ -214,49 +217,49 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
           }}
           onCodeSelected={code => setValue('barcode', code, { shouldDirty: true })}
         />
-        {scannedProduct && <p role="status" className="text-sm tt-muted">Editing existing product: {scannedProduct.name}.{cachedMatch && ' Cached preview only — reconnect and look up the code again before saving.'}</p>}
+        {scannedProduct && <p role="status" className="text-sm tt-muted"><TranslatedText text={"Editing existing product:"} />{" "}{scannedProduct.name}.{cachedMatch && ' Cached preview only — reconnect and look up the code again before saving.'}</p>}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="name">Product Name *</Label>
+          <Label htmlFor="name"><TranslatedText text={"Product Name *"} /></Label>
           <Input
             id="name"
             {...register('name')}
             error={errors.name?.message}
-            placeholder="e.g., Rice (50kg bag)"
+            placeholder={copy("e.g., Rice (50kg bag)")}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="make">Make / Brand</Label>
-          <Input id="make" {...register('make')} placeholder="e.g., Samsung, Nike" />
+          <Label htmlFor="make"><TranslatedText text={"Make / Brand"} /></Label>
+          <Input id="make" {...register('make')} placeholder={copy("e.g., Samsung, Nike")} />
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="description"><TranslatedText text={"Description"} /></Label>
         <Textarea
           id="description"
           {...register('description')}
           rows={2}
-          placeholder="Optional product description"
+          placeholder={copy("Optional product description")}
         />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="sku">SKU *</Label>
-          <Input id="sku" {...register('sku')} placeholder="PROD-001" error={errors.sku?.message} />
+          <Label htmlFor="sku"><TranslatedText text={"SKU *"} /></Label>
+          <Input id="sku" {...register('sku')} placeholder={copy("PROD-001")} error={errors.sku?.message} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="barcode">Barcode</Label>
+          <Label htmlFor="barcode"><TranslatedText text={"Barcode"} /></Label>
           <Input id="barcode" {...register('barcode')} placeholder="1234567890123" />
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="cost_price">Cost Price (₦) *</Label>
+          <Label htmlFor="cost_price"><TranslatedText text={"Cost Price (₦) *"} /></Label>
           <Input
             id="cost_price"
             type="number"
@@ -267,7 +270,7 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="selling_price">Selling Price (₦) *</Label>
+          <Label htmlFor="selling_price"><TranslatedText text={"Selling Price (₦) *"} /></Label>
           <Input
             id="selling_price"
             type="number"
@@ -281,13 +284,13 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Category</Label>
+          <Label><TranslatedText text={"Category"} /></Label>
           <Select
             value={watch('category_id') ?? ''}
             onValueChange={(val) => setValue('category_id', val || null)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select category" />
+              <SelectValue placeholder={copy("Select category")} />
             </SelectTrigger>
             <SelectContent>
               {categories.map((cat) => (
@@ -299,7 +302,7 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
           </Select>
         </div>
         <div className="space-y-2">
-          <Label>Status</Label>
+          <Label><TranslatedText text={"Status"} /></Label>
           <Select
             value={watch('status')}
             onValueChange={(val) => setValue('status', val as ProductFormData['status'])}
@@ -308,21 +311,19 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-              <SelectItem value="discontinued">Discontinued</SelectItem>
+              <SelectItem value="active"><TranslatedText text={"Active"} /></SelectItem>
+              <SelectItem value="inactive"><TranslatedText text={"Inactive"} /></SelectItem>
+              <SelectItem value="discontinued"><TranslatedText text={"Discontinued"} /></SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
       <div className="flex gap-3 pt-2">
-        <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
-          Cancel
-        </Button>
+        <Button type="button" variant="outline" onClick={onCancel} className="flex-1"><TranslatedText text={"Cancel"} /></Button>
         <Button type="submit" className="flex-1" disabled={isLoading || cachedMatch}>
           {isLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-          {product ? 'Update Product' : 'Create Product'}
+          <TranslatedText text={product ? 'Update Product' : 'Create Product'} />
         </Button>
       </div>
     </form>

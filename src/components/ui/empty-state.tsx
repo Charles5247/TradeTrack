@@ -1,4 +1,6 @@
 "use client";
+import { TranslatedLabel } from '@/i18n/text';
+
 
 import * as React from "react";
 import { cn } from "@/lib/utils/cn";
@@ -46,10 +48,10 @@ export function EmptyState({
           <Icon size={28} />
         </div>
       )}
-      <div className="tt-head mb-2 text-xl text-foreground">{title}</div>
+      <div className="tt-head mb-2 text-xl text-foreground"><TranslatedLabel>{title}</TranslatedLabel></div>
       {body && (
         <div className="mx-auto mb-5 max-w-[420px] text-sm leading-relaxed text-muted-foreground">
-          {body}
+          <TranslatedLabel>{body}</TranslatedLabel>
         </div>
       )}
       {(action || secondary) && (

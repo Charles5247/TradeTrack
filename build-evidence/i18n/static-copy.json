@@ -1,0 +1,2518 @@
+[
+  {
+    "file": "src\\app\\(auth)\\forgot-password\\page.tsx",
+    "text": "Reset password"
+  },
+  {
+    "file": "src\\app\\(auth)\\forgot-password\\page.tsx",
+    "text": "Let&apos;s get you back in."
+  },
+  {
+    "file": "src\\app\\(auth)\\forgot-password\\page.tsx",
+    "text": "Enter the email tied to your merchant account. We&apos;ll send a reset link."
+  },
+  {
+    "file": "src\\app\\(auth)\\forgot-password\\page.tsx",
+    "text": "We have sent a password reset link to your email address."
+  },
+  {
+    "file": "src\\app\\(auth)\\forgot-password\\page.tsx",
+    "text": "Back to Login"
+  },
+  {
+    "file": "src\\app\\(auth)\\forgot-password\\page.tsx",
+    "text": "Email Address"
+  },
+  {
+    "file": "src\\app\\(auth)\\forgot-password\\page.tsx",
+    "text": "you@shop.com"
+  },
+  {
+    "file": "src\\app\\(auth)\\forgot-password\\page.tsx",
+    "text": "Sending..."
+  },
+  {
+    "file": "src\\app\\(auth)\\forgot-password\\page.tsx",
+    "text": "Back to Login"
+  },
+  {
+    "file": "src\\app\\(auth)\\forgot-password\\page.tsx",
+    "text": "Cashier or admin account?"
+  },
+  {
+    "file": "src\\app\\(auth)\\forgot-password\\page.tsx",
+    "text": "Ask your business owner to reset your password from Settings → Team. We only send resets directly to business owners."
+  },
+  {
+    "file": "src\\app\\(auth)\\login\\page.tsx",
+    "text": "Sign in"
+  },
+  {
+    "file": "src\\app\\(auth)\\login\\page.tsx",
+    "text": "admin@demo.com"
+  },
+  {
+    "file": "src\\app\\(auth)\\login\\page.tsx",
+    "text": "••••••••"
+  },
+  {
+    "file": "src\\app\\(auth)\\login\\page.tsx",
+    "text": "platformowner@TracKasuwa.ng / demo1234"
+  },
+  {
+    "file": "src\\app\\(auth)\\login\\page.tsx",
+    "text": "owner@demo.com / demo1234"
+  },
+  {
+    "file": "src\\app\\(auth)\\login\\page.tsx",
+    "text": "admin@demo.com / demo1234"
+  },
+  {
+    "file": "src\\app\\(auth)\\login\\page.tsx",
+    "text": "cashier@demo.com / demo1234"
+  },
+  {
+    "file": "src\\app\\(auth)\\login\\page.tsx",
+    "text": "New to TracKasuwa?"
+  },
+  {
+    "file": "src\\app\\(auth)\\login\\page.tsx",
+    "text": "Create your merchant account"
+  },
+  {
+    "file": "src\\app\\(auth)\\signup\\page.tsx",
+    "text": "Create your merchant"
+  },
+  {
+    "file": "src\\app\\(auth)\\signup\\page.tsx",
+    "text": "Create your account"
+  },
+  {
+    "file": "src\\app\\(auth)\\signup\\page.tsx",
+    "text": "Business name"
+  },
+  {
+    "file": "src\\app\\(auth)\\signup\\page.tsx",
+    "text": "e.g. Adaeze General Stores"
+  },
+  {
+    "file": "src\\app\\(auth)\\signup\\page.tsx",
+    "text": "Your name"
+  },
+  {
+    "file": "src\\app\\(auth)\\signup\\page.tsx",
+    "text": "e.g. Adaeze Okonkwo"
+  },
+  {
+    "file": "src\\app\\(auth)\\signup\\page.tsx",
+    "text": "Email"
+  },
+  {
+    "file": "src\\app\\(auth)\\signup\\page.tsx",
+    "text": "you@business.com"
+  },
+  {
+    "file": "src\\app\\(auth)\\signup\\page.tsx",
+    "text": "Phone (optional)"
+  },
+  {
+    "file": "src\\app\\(auth)\\signup\\page.tsx",
+    "text": "080..."
+  },
+  {
+    "file": "src\\app\\(auth)\\signup\\page.tsx",
+    "text": "Password"
+  },
+  {
+    "file": "src\\app\\(auth)\\signup\\page.tsx",
+    "text": "At least 8 characters"
+  },
+  {
+    "file": "src\\app\\(auth)\\signup\\page.tsx",
+    "text": "Confirm password"
+  },
+  {
+    "file": "src\\app\\(auth)\\signup\\page.tsx",
+    "text": "Re-enter your password"
+  },
+  {
+    "file": "src\\app\\(auth)\\signup\\page.tsx",
+    "text": "Your selected plan will be applied to your new account automatically after signup."
+  },
+  {
+    "file": "src\\app\\(auth)\\signup\\page.tsx",
+    "text": "Creating account..."
+  },
+  {
+    "file": "src\\app\\(auth)\\signup\\page.tsx",
+    "text": "Already have an account?"
+  },
+  {
+    "file": "src\\app\\(auth)\\signup\\page.tsx",
+    "text": "Sign in"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\accounting\\page.tsx",
+    "text": "Accounting and reconciliation"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\accounting\\page.tsx",
+    "text": "Review sales, reconcile payments, and sign off cash-up periods."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\accounting\\page.tsx",
+    "text": "Audit trail and exports"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\accounting\\page.tsx",
+    "text": "Import business data"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\accounting\\page.tsx",
+    "text": "Include imported historical sales"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\accounting\\page.tsx",
+    "text": "Report"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\accounting\\page.tsx",
+    "text": "From"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\accounting\\page.tsx",
+    "text": "To"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\accounting\\page.tsx",
+    "text": "Export CSV"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\accounting\\page.tsx",
+    "text": "Export PDF"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\accounting\\page.tsx",
+    "text": "Loading…"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\accounting\\page.tsx",
+    "text": "Action"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\accounting\\page.tsx",
+    "text": "Review correction"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\accounting\\page.tsx",
+    "text": "Close a cash-up period"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\accounting\\page.tsx",
+    "text": "Owner/manager sign-off. Enter actual counted totals per payment method."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\accounting\\page.tsx",
+    "text": "Cashier ID"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\accounting\\page.tsx",
+    "text": "Opened"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\accounting\\page.tsx",
+    "text": "Preview close"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\accounting\\page.tsx",
+    "text": "No entries for this report"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\accounting\\page.tsx",
+    "text": "Choose another report or date range. New business activity will appear here."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\accounting\\page.tsx",
+    "text": "Review permanent accounting entry"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\accounting\\page.tsx",
+    "text": "Check the entry and enter a reason before confirming. This action is recorded in your audit trail."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\accounting\\page.tsx",
+    "text": "Reason"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\accounting\\page.tsx",
+    "text": "Cancel"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\admin\\page.tsx",
+    "text": "Platform overview"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\admin\\page.tsx",
+    "text": "Could not load platform data"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\admin\\page.tsx",
+    "text": "Platform overview"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\admin\\page.tsx",
+    "text": "Merchant operations, subscription collections, and platform activity."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\admin\\page.tsx",
+    "text": "Total merchants"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\admin\\page.tsx",
+    "text": "Active merchants"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\admin\\page.tsx",
+    "text": "Latest month collected"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\admin\\page.tsx",
+    "text": "Pending merchants"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\admin\\page.tsx",
+    "text": "Manage merchants"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\admin\\page.tsx",
+    "text": "Onboarding, verification, and account access"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\admin\\page.tsx",
+    "text": "Manage subscription plans"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\admin\\page.tsx",
+    "text": "Platform pricing, features, and usage limits"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\admin\\page.tsx",
+    "text": "Charts use up to 200 loaded records. Collections are paid invoice amounts, not recurring revenue. Service health is not monitored on this page."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\admin\\page.tsx",
+    "text": "recent records)"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\admin\\page.tsx",
+    "text": "Manage merchants"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\admin\\page.tsx",
+    "text": "Loaded invoice collections"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\admin\\page.tsx",
+    "text": "Latest month collected"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\admin\\page.tsx",
+    "text": "Annualized collection estimate"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\admin\\page.tsx",
+    "text": "User:"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\assistant\\page.tsx",
+    "text": "TracKasuwa assistant"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\assistant\\page.tsx",
+    "text": "Prepare product imports and review insights from your business data."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\assistant\\page.tsx",
+    "text": "Preview mode: this assistant uses fixed rules, with no live AI model or external market data. Review every proposed change before confirming."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\assistant\\page.tsx",
+    "text": "Business imports"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\assistant\\page.tsx",
+    "text": "Notifications"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\assistant\\page.tsx",
+    "text": "Working on your request?"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\assistant\\page.tsx",
+    "text": "Loading assistant preferences?"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\assistant\\page.tsx",
+    "text": "Bulk inventory draft"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\assistant\\page.tsx",
+    "text": "Paste product data only, without customer or staff details. Use column headers or “product quantity price”."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\assistant\\page.tsx",
+    "text": "Product CSV or Excel file"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\assistant\\page.tsx",
+    "text": "Messy product data"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\assistant\\page.tsx",
+    "text": "Propose mapped rows"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\assistant\\page.tsx",
+    "text": "Review inventory proposal"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\assistant\\page.tsx",
+    "text": "Business insights"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\assistant\\page.tsx",
+    "text": "Generate organization-only insights"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\assistant\\page.tsx",
+    "text": "Deliver this preview to your profile"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\assistant\\page.tsx",
+    "text": "Confirm and deliver displayed insights"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\assistant\\page.tsx",
+    "text": "Your delivery opt-ins"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\assistant\\page.tsx",
+    "text": "Confirm delivery preferences"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\assistant\\page.tsx",
+    "text": "Limits: 20 requests per hour; 5 deliveries per channel per hour. Each insight can be delivered once per channel."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\audit\\page.tsx",
+    "text": "Accounting, cash-up and reconciliation reports"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\audit\\page.tsx",
+    "text": "Could not load this page"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\audit\\page.tsx",
+    "text": "PDF"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\dashboard\\page.tsx",
+    "text": "Reports"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\dashboard\\page.tsx",
+    "text": "Open POS"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\dashboard\\page.tsx",
+    "text": "Sales overview"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\dashboard\\page.tsx",
+    "text": "No sales yet this week"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\dashboard\\page.tsx",
+    "text": "Once sales come in, your revenue trend will show up here."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\dashboard\\page.tsx",
+    "text": "Live activity"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\dashboard\\page.tsx",
+    "text": "Sales will appear here as soon as your team starts ringing them up."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\dashboard\\page.tsx",
+    "text": "Refresh"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\error.tsx",
+    "text": "This page could not be loaded"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\error.tsx",
+    "text": "Check your connection and try loading this page again."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\imports\\page.tsx",
+    "text": "Business-data import"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\imports\\page.tsx",
+    "text": "Draft product rows with the assistant"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\loading.tsx",
+    "text": "Loading page"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\merchants\\page.tsx",
+    "text": "Nigeria"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\merchants\\page.tsx",
+    "text": "Ghana"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\merchants\\page.tsx",
+    "text": "Kenya"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\merchants\\page.tsx",
+    "text": "South Africa"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\merchants\\page.tsx",
+    "text": "Open merchant page"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\merchants\\page.tsx",
+    "text": "Could not load this page"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\notifications\\page.tsx",
+    "text": "Notification filters"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\notifications\\page.tsx",
+    "text": "All ("
+  },
+  {
+    "file": "src\\app\\(dashboard)\\notifications\\page.tsx",
+    "text": "Unread ("
+  },
+  {
+    "file": "src\\app\\(dashboard)\\notifications\\page.tsx",
+    "text": "Inventory"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\notifications\\page.tsx",
+    "text": "Payments"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\notifications\\page.tsx",
+    "text": "Could not update notifications. Try again."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\notifications\\page.tsx",
+    "text": "Could not load notifications"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\pos\\page.tsx",
+    "text": "Loading cart…"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\pos\\page.tsx",
+    "text": "PDF"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\pos\\page.tsx",
+    "text": "Print to device"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\pos\\page.tsx",
+    "text": "USB"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\pos\\page.tsx",
+    "text": "Bluetooth"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\products\\page.tsx",
+    "text": "Could not load this page"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\lookup\\page.tsx",
+    "text": "Look up a receipt"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\lookup\\page.tsx",
+    "text": "Receipt number"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\lookup\\page.tsx",
+    "text": "OR"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\lookup\\page.tsx",
+    "text": "Scan barcode or QR"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\lookup\\page.tsx",
+    "text": "Receipt barcode photo"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\lookup\\page.tsx",
+    "text": "Use a receipt number or a connected barcode scanner. Photo scanning requires a supported browser."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\lookup\\page.tsx",
+    "text": "Recent lookups"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\lookup\\page.tsx",
+    "text": "Open"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\lookup\\page.tsx",
+    "text": "Your successful lookups in this session will appear here."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\lookup\\page.tsx",
+    "text": "Receipt preview"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\lookup\\page.tsx",
+    "text": "Look up a receipt to review its items, totals and payment details."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\lookup\\page.tsx",
+    "text": "Print receipt"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\lookup\\page.tsx",
+    "text": "Download PDF"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\page.tsx",
+    "text": "Receipts"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\page.tsx",
+    "text": "Find, review and reprint your recorded sales."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\page.tsx",
+    "text": "Receipt lookup"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\page.tsx",
+    "text": "Search receipt number"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\page.tsx",
+    "text": "Search receipt number…"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\page.tsx",
+    "text": "Payment method"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\page.tsx",
+    "text": "All payment methods"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\page.tsx",
+    "text": "Cash"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\page.tsx",
+    "text": "Transfer"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\page.tsx",
+    "text": "POS card"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\page.tsx",
+    "text": "No receipts found"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\page.tsx",
+    "text": "Completed sales will appear here. Try a different receipt number or payment method."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\page.tsx",
+    "text": "Receipt"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\page.tsx",
+    "text": "Date"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\page.tsx",
+    "text": "Customer"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\page.tsx",
+    "text": "Payment"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\page.tsx",
+    "text": "Total"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\page.tsx",
+    "text": "Open"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\page.tsx",
+    "text": "View"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\page.tsx",
+    "text": "receipts · Page"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\page.tsx",
+    "text": "Previous"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\receipts\\page.tsx",
+    "text": "Next"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "Reports & Analytics"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "Reports & Analytics"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "Business performance insights"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "Today"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "This Week"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "This Month"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "This Quarter"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "This Year"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "Export"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "PDF"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "Total transactions"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "Total revenue"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "Gross profit"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "Profit margin"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "Revenue by Day"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "Daily revenue breakdown"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "No revenue for this period"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "Choose another period or return after a completed sale."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "Payment Methods"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "Revenue by payment method"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "No payment data"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "Completed sales will show your payment-method mix here."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "Top Selling Products"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "Products by revenue for selected period"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "Product"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "Units Sold"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "Revenue"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "% of Total"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\reports\\page.tsx",
+    "text": "No products sold in this period"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\sales\\page.tsx",
+    "text": "Could not load this page"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\sales\\page.tsx",
+    "text": "PDF"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\settings\\page.tsx",
+    "text": "Settings sections"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\settings\\page.tsx",
+    "text": "Platform operations"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\settings\\page.tsx",
+    "text": "Localization"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\settings\\page.tsx",
+    "text": "Receipt template"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\settings\\page.tsx",
+    "text": "Devices & printers"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\settings\\page.tsx",
+    "text": "Offline sync"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\settings\\page.tsx",
+    "text": "Notifications"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\settings\\page.tsx",
+    "text": "Data & export"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\settings\\page.tsx",
+    "text": "Platform operations"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\settings\\page.tsx",
+    "text": "Manage TracKasuwa across merchants. Personal language and theme preferences are in Display."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\settings\\page.tsx",
+    "text": "+234 800 000 0000"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\settings\\page.tsx",
+    "text": "••••••••"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\settings\\page.tsx",
+    "text": "••••••••"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\subscriptions\\page.tsx",
+    "text": "5000"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\subscriptions\\page.tsx",
+    "text": "e.g. 3, -1 for unlimited"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\subscriptions\\page.tsx",
+    "text": "Current plan"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\subscriptions\\page.tsx",
+    "text": "Plan price"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\subscriptions\\page.tsx",
+    "text": "per"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\subscriptions\\page.tsx",
+    "text": "Valid until"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\subscriptions\\page.tsx",
+    "text": "Renewal"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\subscriptions\\page.tsx",
+    "text": "Manual payment"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\subscriptions\\page.tsx",
+    "text": "Change plan"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\subscriptions\\page.tsx",
+    "text": "Cancel subscription"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\subscriptions\\page.tsx",
+    "text": "Choose a plan to renew."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\subscriptions\\page.tsx",
+    "text": "Subscription sections"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\subscriptions\\page.tsx",
+    "text": "Payment methods"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\subscriptions\\page.tsx",
+    "text": "Usage"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\subscriptions\\page.tsx",
+    "text": "Cancel subscription?"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\subscriptions\\page.tsx",
+    "text": "This ends subscription access immediately. Existing sales and records are retained. This does not issue a refund."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\subscriptions\\page.tsx",
+    "text": "Keep subscription"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\suppliers\\page.tsx",
+    "text": "Suppliers"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\suppliers\\page.tsx",
+    "text": "Who supplies your products, what you ordered, and what arrived."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\suppliers\\page.tsx",
+    "text": "Add supplier"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\suppliers\\page.tsx",
+    "text": "Suppliers"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\suppliers\\page.tsx",
+    "text": "Products with suppliers"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\suppliers\\page.tsx",
+    "text": "Purchase orders"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\suppliers\\page.tsx",
+    "text": "Search suppliers"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\suppliers\\page.tsx",
+    "text": "Search supplier, phone or email…"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\suppliers\\page.tsx",
+    "text": "Could not load suppliers"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\suppliers\\page.tsx",
+    "text": "No suppliers found"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\suppliers\\page.tsx",
+    "text": "Add your first supplier or change your search."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\suppliers\\page.tsx",
+    "text": "Supplier"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\suppliers\\page.tsx",
+    "text": "Contact"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\suppliers\\page.tsx",
+    "text": "Products"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\suppliers\\page.tsx",
+    "text": "Details"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\suppliers\\page.tsx",
+    "text": "View"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\suppliers\\page.tsx",
+    "text": "Edit supplier"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\suppliers\\page.tsx",
+    "text": "Products supplied"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\suppliers\\page.tsx",
+    "text": "Product to link"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\suppliers\\page.tsx",
+    "text": "Choose a product"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\suppliers\\page.tsx",
+    "text": "Link product"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\suppliers\\page.tsx",
+    "text": "Primary"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\suppliers\\page.tsx",
+    "text": "Unlink"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\suppliers\\page.tsx",
+    "text": "Supply history"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\suppliers\\page.tsx",
+    "text": "New purchase order"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\suppliers\\page.tsx",
+    "text": "No purchase orders for this supplier yet."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\suppliers\\page.tsx",
+    "text": "Supplier details"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\suppliers\\page.tsx",
+    "text": "Select a supplier to manage its product catalog and see supply history."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\transfers\\page.tsx",
+    "text": "Could not load this page"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\transfers\\page.tsx",
+    "text": "&times;"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\transfers\\page.tsx",
+    "text": "PDF"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\transfers\\page.tsx",
+    "text": "Print to device"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\transfers\\page.tsx",
+    "text": "USB"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\transfers\\page.tsx",
+    "text": "Bluetooth"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\users\\page.tsx",
+    "text": "Could not load this page"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\users\\page.tsx",
+    "text": "John Doe"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\users\\page.tsx",
+    "text": "user@example.com"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\users\\page.tsx",
+    "text": "+234 800 000 0000"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\users\\page.tsx",
+    "text": "Min. 8 characters"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\users\\page.tsx",
+    "text": "Min. 8 characters"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\users\\page.tsx",
+    "text": "Repeat password"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\vendors\\page.tsx",
+    "text": "Vendor sales"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\vendors\\page.tsx",
+    "text": "Vendor transactions"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\vendors\\page.tsx",
+    "text": "Outstanding balance"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\vendors\\page.tsx",
+    "text": "Collected"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\vendors\\page.tsx",
+    "text": "Vendor sales status"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\vendors\\page.tsx",
+    "text": "All sales"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\vendors\\page.tsx",
+    "text": "Outstanding"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\vendors\\page.tsx",
+    "text": "Paid"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\vendors\\page.tsx",
+    "text": "Search vendor sales"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\vendors\\page.tsx",
+    "text": "Search vendor name or phone?"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\vendors\\page.tsx",
+    "text": "Record payment"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\vendors\\page.tsx",
+    "text": "Balance:"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\vendors\\page.tsx",
+    "text": "Amount paid"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\vendors\\page.tsx",
+    "text": "Remove"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\vendors\\page.tsx",
+    "text": "Cancel"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\vendors\\page.tsx",
+    "text": "Save payment"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\warehouses\\page.tsx",
+    "text": "Locations"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\warehouses\\page.tsx",
+    "text": "Main shops"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\warehouses\\page.tsx",
+    "text": "Stock units"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\warehouses\\page.tsx",
+    "text": "Add your first location"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\warehouses\\page.tsx",
+    "text": "Create your main shop or a warehouse, then assign its team."
+  },
+  {
+    "file": "src\\app\\(dashboard)\\warehouses\\page.tsx",
+    "text": "Add location"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\warehouses\\page.tsx",
+    "text": "Products stocked"
+  },
+  {
+    "file": "src\\app\\(dashboard)\\warehouses\\page.tsx",
+    "text": "View inventory"
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "We detected Android"
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "We detected Windows"
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Windows Desktop"
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Detected"
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Native desktop app (.exe installer)"
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Download for Windows"
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Download link not configured yet. Please check back soon."
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Download and run the installer."
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Windows SmartScreen may show"
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "\"Windows protected your PC\""
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "— this is expected for a new, unsigned app. Click"
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "\"More info\" → \"Run anyway\""
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "to continue."
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Follow the setup wizard to finish installing."
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Launch TracKasuwa from your Start Menu."
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "This warning appears because the installer isn't yet signed with a commercial code-signing certificate — it does not mean the app is unsafe."
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Android"
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Detected"
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Native Android app (.apk)"
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "or install as a PWA in Chrome"
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Install App (Chrome)"
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Already installed"
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Download APK"
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "APK download link not configured yet. Please check back soon."
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Download the APK file."
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Android will warn"
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "\"Install blocked\" / \"unknown sources\""
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "— this is expected since the app isn't distributed via the Play Store yet. Tap"
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Settings"
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "and allow installs from this source."
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Return to the download and tap Install."
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Open TracKasuwa from your app drawer."
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Need help enabling unknown sources?"
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Desktop Browser (Chrome/Edge)"
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Install TracKasuwa as an app directly from your browser"
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Install App"
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Already installed"
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Open this page in Chrome or Edge, then look for the install icon in your browser's address bar (or this button will appear automatically)."
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "iOS &amp; macOS"
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Coming Soon"
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Detected"
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "Native iOS and macOS apps are not available yet."
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "We don't have an iOS or macOS build to offer right now — we'd rather say that plainly than give you a link that doesn't work. In the meantime, you can use TracKasuwa directly in Safari at your usual web address."
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\download-client.tsx",
+    "text": "— showing the best option for your device below."
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\page.tsx",
+    "text": "Download"
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\page.tsx",
+    "text": "Get TracKasuwa on every device you sell from."
+  },
+  {
+    "file": "src\\app\\(marketing)\\download\\page.tsx",
+    "text": "Get TracKasuwa on the devices you already use — as an installed app on Windows and Android, or straight from your browser."
+  },
+  {
+    "file": "src\\app\\(marketing)\\features\\page.tsx",
+    "text": "Features"
+  },
+  {
+    "file": "src\\app\\(marketing)\\features\\page.tsx",
+    "text": "Every capability, honestly documented."
+  },
+  {
+    "file": "src\\app\\(marketing)\\features\\page.tsx",
+    "text": "We ship this list — not aspirational marketing. What&apos;s not built yet is either coming soon, or hidden until it is."
+  },
+  {
+    "file": "src\\app\\(marketing)\\features\\page.tsx",
+    "text": "AI Assistant"
+  },
+  {
+    "file": "src\\app\\(marketing)\\features\\page.tsx",
+    "text": "Coming Soon"
+  },
+  {
+    "file": "src\\app\\(marketing)\\features\\page.tsx",
+    "text": "We&apos;re exploring an AI assistant to help with things like restock suggestions and sales insights."
+  },
+  {
+    "file": "src\\app\\(marketing)\\features\\page.tsx",
+    "text": "This feature does not exist in the app yet. We&apos;d rather tell you that plainly than promise something that isn&apos;t built."
+  },
+  {
+    "file": "src\\app\\(marketing)\\features\\page.tsx",
+    "text": "Ready to try it?"
+  },
+  {
+    "file": "src\\app\\(marketing)\\features\\page.tsx",
+    "text": "Start Free"
+  },
+  {
+    "file": "src\\app\\(marketing)\\features\\page.tsx",
+    "text": "See Pricing"
+  },
+  {
+    "file": "src\\app\\(marketing)\\industries\\page.tsx",
+    "text": "TracKasuwa for your business"
+  },
+  {
+    "file": "src\\app\\(marketing)\\industries\\page.tsx",
+    "text": "Built for the way you trade."
+  },
+  {
+    "file": "src\\app\\(marketing)\\industries\\page.tsx",
+    "text": "From a neighbourhood shop to a growing retail operation, keep sales, stock and your team connected."
+  },
+  {
+    "file": "src\\app\\(marketing)\\pricing\\page.tsx",
+    "text": "Pricing"
+  },
+  {
+    "file": "src\\app\\(marketing)\\pricing\\page.tsx",
+    "text": "Pay in Naira. Grow when you grow."
+  },
+  {
+    "file": "src\\app\\(marketing)\\pricing\\page.tsx",
+    "text": "Start free. Upgrade only when you need more cashiers, products, or warehouses. No hidden fees."
+  },
+  {
+    "file": "src\\app\\(marketing)\\pricing\\page.tsx",
+    "text": "All plans include offline-first functionality, multi-device support, and automatic data sync. Prices are billed monthly in Nigerian Naira (₦). Enterprise pricing is custom — talk to sales."
+  },
+  {
+    "file": "src\\app\\change-password\\page.tsx",
+    "text": "Required · First-time login"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Upload → map columns → validate → preview → confirm. Offline previews are provisional; the server rechecks duplicates on sync."
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Upload and map your data"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Record type"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "CSV or Excel file"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Opening-stock warehouse"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Choose warehouse"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Duplicates"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Skip"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Update"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Create another record"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "rows loaded"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Unmapped"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Save mapping template"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Load saved mapping"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Validate and preview"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Download full validation report"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Row"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Result"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Values"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Errors"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Showing the first 200 rows; validation covers every row. Fix errors in the source file and upload again."
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Confirm"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "rows"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Processed"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "rows…"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Batch"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "row results."
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Download row-level report"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Import history and audited reversal"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "No import history loaded. Completed batches appear here when online."
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Results"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Review reversal"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Reverse batch"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": ". Changed or consumed records will require reconciliation first."
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Reason"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Confirm reversal"
+  },
+  {
+    "file": "src\\components\\imports\\import-workbench.tsx",
+    "text": "Cancel"
+  },
+  {
+    "file": "src\\components\\layout\\auth-carousel.tsx",
+    "text": ""
+  },
+  {
+    "file": "src\\components\\layout\\auth-shell.tsx",
+    "text": "TracKasuwa home"
+  },
+  {
+    "file": "src\\components\\layout\\auth-shell.tsx",
+    "text": "Toggle theme"
+  },
+  {
+    "file": "src\\components\\layout\\auth-shell.tsx",
+    "text": "TracKasuwa Nigeria · Powered by CAXiE Technologies Ltd"
+  },
+  {
+    "file": "src\\components\\layout\\command-palette.tsx",
+    "text": "No results found."
+  },
+  {
+    "file": "src\\components\\layout\\command-palette.tsx",
+    "text": "Light"
+  },
+  {
+    "file": "src\\components\\layout\\command-palette.tsx",
+    "text": "Active"
+  },
+  {
+    "file": "src\\components\\layout\\command-palette.tsx",
+    "text": "Dark"
+  },
+  {
+    "file": "src\\components\\layout\\command-palette.tsx",
+    "text": "Active"
+  },
+  {
+    "file": "src\\components\\layout\\command-palette.tsx",
+    "text": "System"
+  },
+  {
+    "file": "src\\components\\layout\\command-palette.tsx",
+    "text": "Active"
+  },
+  {
+    "file": "src\\components\\layout\\command-palette.tsx",
+    "text": "Settings"
+  },
+  {
+    "file": "src\\components\\layout\\header.tsx",
+    "text": "Toggle menu"
+  },
+  {
+    "file": "src\\components\\layout\\header.tsx",
+    "text": "Open search"
+  },
+  {
+    "file": "src\\components\\layout\\header.tsx",
+    "text": "Open search"
+  },
+  {
+    "file": "src\\components\\layout\\header.tsx",
+    "text": "Upload pending data"
+  },
+  {
+    "file": "src\\components\\layout\\logo.tsx",
+    "text": "TracKasuwa"
+  },
+  {
+    "file": "src\\components\\layout\\sidebar.tsx",
+    "text": "Collapse sidebar"
+  },
+  {
+    "file": "src\\components\\layout\\sidebar.tsx",
+    "text": "Expand sidebar"
+  },
+  {
+    "file": "src\\components\\marketing\\accountability-band.tsx",
+    "text": "Merchant portrait from the design photography collection"
+  },
+  {
+    "file": "src\\components\\marketing\\accountability-band.tsx",
+    "text": "Built for accountability"
+  },
+  {
+    "file": "src\\components\\marketing\\accountability-band.tsx",
+    "text": "Know exactly what happened in your shop."
+  },
+  {
+    "file": "src\\components\\marketing\\accountability-band.tsx",
+    "text": "Cash businesses lose money to more than theft — unrecorded sales, unexplained stock loss, and &quot;I forgot&quot; add up fast. TracKasuwa builds accountability into every action, so you can trust your numbers."
+  },
+  {
+    "file": "src\\components\\marketing\\cta-band.tsx",
+    "text": "Start selling smarter today."
+  },
+  {
+    "file": "src\\components\\marketing\\cta-band.tsx",
+    "text": "Free forever for one shop. Upgrade when your business does. No card required to start."
+  },
+  {
+    "file": "src\\components\\marketing\\cta-band.tsx",
+    "text": "Create your merchant account"
+  },
+  {
+    "file": "src\\components\\marketing\\cta-band.tsx",
+    "text": "See pricing"
+  },
+  {
+    "file": "src\\components\\marketing\\feature-grid.tsx",
+    "text": "Everything you need. Nothing you don&apos;t."
+  },
+  {
+    "file": "src\\components\\marketing\\feature-grid.tsx",
+    "text": "Built by shopkeepers, for shopkeepers."
+  },
+  {
+    "file": "src\\components\\marketing\\feature-grid.tsx",
+    "text": "Every feature earned its place by solving a real problem for a real trader. If it wasn&apos;t shipped, it isn&apos;t listed here — see"
+  },
+  {
+    "file": "src\\components\\marketing\\feature-grid.tsx",
+    "text": "the full feature list"
+  },
+  {
+    "file": "src\\components\\marketing\\feature-grid.tsx",
+    "text": "Flagship feature"
+  },
+  {
+    "file": "src\\components\\marketing\\feature-grid.tsx",
+    "text": "Offline-first, truly. Sell even when the network doesn&apos;t."
+  },
+  {
+    "file": "src\\components\\marketing\\feature-grid.tsx",
+    "text": "Every sale, price change and stock movement queues on-device. When your connection returns, we sync it — append-only for sales, last-write-wins for everything else. No lost transactions."
+  },
+  {
+    "file": "src\\components\\marketing\\feature-grid.tsx",
+    "text": "Women preparing produce at a market stall"
+  },
+  {
+    "file": "src\\components\\marketing\\feature-grid.tsx",
+    "text": "Offline"
+  },
+  {
+    "file": "src\\components\\marketing\\feature-grid.tsx",
+    "text": "4 queued"
+  },
+  {
+    "file": "src\\components\\marketing\\feature-grid.tsx",
+    "text": "Current sale"
+  },
+  {
+    "file": "src\\components\\marketing\\feature-grid.tsx",
+    "text": "Charge ₦14,500"
+  },
+  {
+    "file": "src\\components\\marketing\\hero.tsx",
+    "text": "Traders at a Nigerian market"
+  },
+  {
+    "file": "src\\components\\marketing\\hero.tsx",
+    "text": "TracKasuwa.ng"
+  },
+  {
+    "file": "src\\components\\marketing\\hero.tsx",
+    "text": "Today · Lagos HQ"
+  },
+  {
+    "file": "src\\components\\marketing\\hero.tsx",
+    "text": "+18% vs yesterday"
+  },
+  {
+    "file": "src\\components\\marketing\\hero.tsx",
+    "text": "Sale complete"
+  },
+  {
+    "file": "src\\components\\marketing\\hero.tsx",
+    "text": "₦14,500 · Cash · #A00248"
+  },
+  {
+    "file": "src\\components\\marketing\\hero.tsx",
+    "text": "147 sales today"
+  },
+  {
+    "file": "src\\components\\marketing\\hero.tsx",
+    "text": "Start free — no card"
+  },
+  {
+    "file": "src\\components\\marketing\\hero.tsx",
+    "text": "Download for Windows"
+  },
+  {
+    "file": "src\\components\\marketing\\hero.tsx",
+    "text": "Trusted by thousands of traders &amp; merchants across Nigeria"
+  },
+  {
+    "file": "src\\components\\marketing\\industries-band.tsx",
+    "text": "Industries · one platform"
+  },
+  {
+    "file": "src\\components\\marketing\\industries-band.tsx",
+    "text": "Retail today. Restaurants &amp; hotels are on the way."
+  },
+  {
+    "file": "src\\components\\marketing\\industries-band.tsx",
+    "text": "A Production &amp; Hospitality extension is planned on top of the core platform — same login, same audit trail. Not available yet."
+  },
+  {
+    "file": "src\\components\\marketing\\industries-band.tsx",
+    "text": "Available"
+  },
+  {
+    "file": "src\\components\\marketing\\industries-band.tsx",
+    "text": "Coming soon"
+  },
+  {
+    "file": "src\\components\\marketing\\marketing-footer.tsx",
+    "text": "Offline-first POS &amp; inventory management for Nigerian market traders. Made in Nigeria, deployed everywhere."
+  },
+  {
+    "file": "src\\components\\marketing\\marketing-footer.tsx",
+    "text": "TracKasuwa Nigeria Ltd | Powered by CAXiE Technologies Ltd"
+  },
+  {
+    "file": "src\\components\\marketing\\marketing-footer.tsx",
+    "text": "Made in Nigeria 🇳🇬"
+  },
+  {
+    "file": "src\\components\\marketing\\marketing-nav.tsx",
+    "text": "TracKasuwa home"
+  },
+  {
+    "file": "src\\components\\marketing\\marketing-nav.tsx",
+    "text": "Toggle theme"
+  },
+  {
+    "file": "src\\components\\marketing\\marketing-nav.tsx",
+    "text": "Sign in"
+  },
+  {
+    "file": "src\\components\\marketing\\marketing-nav.tsx",
+    "text": "Start free"
+  },
+  {
+    "file": "src\\components\\marketing\\marketing-nav.tsx",
+    "text": "Toggle menu"
+  },
+  {
+    "file": "src\\components\\marketing\\marketing-nav.tsx",
+    "text": "Sign in"
+  },
+  {
+    "file": "src\\components\\merchants\\merchant-detail.tsx",
+    "text": "Merchant unavailable"
+  },
+  {
+    "file": "src\\components\\merchants\\merchant-detail.tsx",
+    "text": "The merchant could not be loaded. Check your connection and platform access."
+  },
+  {
+    "file": "src\\components\\merchants\\merchant-detail.tsx",
+    "text": "Merchant directory"
+  },
+  {
+    "file": "src\\components\\merchants\\merchant-detail.tsx",
+    "text": "Business profile"
+  },
+  {
+    "file": "src\\components\\merchants\\merchant-detail.tsx",
+    "text": "Primary contact"
+  },
+  {
+    "file": "src\\components\\merchants\\merchant-detail.tsx",
+    "text": "Platform notes"
+  },
+  {
+    "file": "src\\components\\pos\\receipt.tsx",
+    "text": "Address:"
+  },
+  {
+    "file": "src\\components\\pos\\receipt.tsx",
+    "text": "Tel."
+  },
+  {
+    "file": "src\\components\\pos\\receipt.tsx",
+    "text": "Invoice"
+  },
+  {
+    "file": "src\\components\\pos\\receipt.tsx",
+    "text": "Current Bill"
+  },
+  {
+    "file": "src\\components\\pos\\receipt.tsx",
+    "text": "Invoice:"
+  },
+  {
+    "file": "src\\components\\pos\\receipt.tsx",
+    "text": "Date:"
+  },
+  {
+    "file": "src\\components\\pos\\receipt.tsx",
+    "text": "Phone:"
+  },
+  {
+    "file": "src\\components\\pos\\receipt.tsx",
+    "text": "Qty"
+  },
+  {
+    "file": "src\\components\\pos\\receipt.tsx",
+    "text": "Description"
+  },
+  {
+    "file": "src\\components\\pos\\receipt.tsx",
+    "text": "Amt"
+  },
+  {
+    "file": "src\\components\\pos\\receipt.tsx",
+    "text": "Description"
+  },
+  {
+    "file": "src\\components\\pos\\receipt.tsx",
+    "text": "Amount"
+  },
+  {
+    "file": "src\\components\\pos\\receipt.tsx",
+    "text": "Subtotal:"
+  },
+  {
+    "file": "src\\components\\pos\\receipt.tsx",
+    "text": "Discount:"
+  },
+  {
+    "file": "src\\components\\pos\\receipt.tsx",
+    "text": "Tax:"
+  },
+  {
+    "file": "src\\components\\pos\\receipt.tsx",
+    "text": "Total:"
+  },
+  {
+    "file": "src\\components\\pos\\receipt.tsx",
+    "text": "Change:"
+  },
+  {
+    "file": "src\\components\\pos\\receipt.tsx",
+    "text": "Payment:"
+  },
+  {
+    "file": "src\\components\\pos\\receipt.tsx",
+    "text": "Bank card:"
+  },
+  {
+    "file": "src\\components\\pos\\receipt.tsx",
+    "text": "Approval Code:"
+  },
+  {
+    "file": "src\\components\\products\\image-upload.tsx",
+    "text": "Product image"
+  },
+  {
+    "file": "src\\components\\products\\image-upload.tsx",
+    "text": "Replace image"
+  },
+  {
+    "file": "src\\components\\products\\image-upload.tsx",
+    "text": "Replace image"
+  },
+  {
+    "file": "src\\components\\products\\image-upload.tsx",
+    "text": "Remove image"
+  },
+  {
+    "file": "src\\components\\products\\image-upload.tsx",
+    "text": "Remove image"
+  },
+  {
+    "file": "src\\components\\products\\image-upload.tsx",
+    "text": "Product image and capture options"
+  },
+  {
+    "file": "src\\components\\products\\image-upload.tsx",
+    "text": "Photo, scan or import"
+  },
+  {
+    "file": "src\\components\\products\\image-upload.tsx",
+    "text": "JPG, PNG, WebP · Max"
+  },
+  {
+    "file": "src\\components\\products\\image-upload.tsx",
+    "text": "MB"
+  },
+  {
+    "file": "src\\components\\products\\image-upload.tsx",
+    "text": "Upload product photo"
+  },
+  {
+    "file": "src\\components\\products\\image-upload.tsx",
+    "text": "Take product photo"
+  },
+  {
+    "file": "src\\components\\products\\image-upload.tsx",
+    "text": "Photo, scan or import"
+  },
+  {
+    "file": "src\\components\\products\\image-upload.tsx",
+    "text": "Back to options"
+  },
+  {
+    "file": "src\\components\\products\\image-upload.tsx",
+    "text": "Take a photo"
+  },
+  {
+    "file": "src\\components\\products\\image-upload.tsx",
+    "text": "Open your camera · up to 2 MB"
+  },
+  {
+    "file": "src\\components\\products\\image-upload.tsx",
+    "text": "Scan barcode / QR"
+  },
+  {
+    "file": "src\\components\\products\\image-upload.tsx",
+    "text": "Find and prefill a product · manual entry available"
+  },
+  {
+    "file": "src\\components\\products\\image-upload.tsx",
+    "text": "Upload a photo"
+  },
+  {
+    "file": "src\\components\\products\\image-upload.tsx",
+    "text": "Choose an existing image from your device"
+  },
+  {
+    "file": "src\\components\\products\\image-upload.tsx",
+    "text": "Upload an inventory list"
+  },
+  {
+    "file": "src\\components\\products\\image-upload.tsx",
+    "text": "CSV / Excel · opens bulk import in a new tab"
+  },
+  {
+    "file": "src\\components\\products\\product-code-lookup.tsx",
+    "text": "Scan with a photo"
+  },
+  {
+    "file": "src\\components\\products\\product-code-lookup.tsx",
+    "text": "Barcode photo"
+  },
+  {
+    "file": "src\\components\\products\\product-code-lookup.tsx",
+    "text": "Barcode, QR value or SKU"
+  },
+  {
+    "file": "src\\components\\products\\product-code-lookup.tsx",
+    "text": "Use this product to replace the form fields. Saving will update this existing product, not create a duplicate."
+  },
+  {
+    "file": "src\\components\\products\\product-code-lookup.tsx",
+    "text": "Use this product"
+  },
+  {
+    "file": "src\\components\\products\\product-code-lookup.tsx",
+    "text": "Use code in form"
+  },
+  {
+    "file": "src\\components\\products\\product-edit.tsx",
+    "text": "Product unavailable"
+  },
+  {
+    "file": "src\\components\\products\\product-edit.tsx",
+    "text": "Check your connection and product access."
+  },
+  {
+    "file": "src\\components\\products\\product-edit.tsx",
+    "text": "Edit product"
+  },
+  {
+    "file": "src\\components\\products\\product-edit.tsx",
+    "text": "Update"
+  },
+  {
+    "file": "src\\components\\products\\product-edit.tsx",
+    "text": ", pricing and product details."
+  },
+  {
+    "file": "src\\components\\products\\product-form.tsx",
+    "text": "Product Image"
+  },
+  {
+    "file": "src\\components\\products\\product-form.tsx",
+    "text": "Editing existing product:"
+  },
+  {
+    "file": "src\\components\\products\\product-form.tsx",
+    "text": "Product Name *"
+  },
+  {
+    "file": "src\\components\\products\\product-form.tsx",
+    "text": "e.g., Rice (50kg bag)"
+  },
+  {
+    "file": "src\\components\\products\\product-form.tsx",
+    "text": "Make / Brand"
+  },
+  {
+    "file": "src\\components\\products\\product-form.tsx",
+    "text": "e.g., Samsung, Nike"
+  },
+  {
+    "file": "src\\components\\products\\product-form.tsx",
+    "text": "Description"
+  },
+  {
+    "file": "src\\components\\products\\product-form.tsx",
+    "text": "Optional product description"
+  },
+  {
+    "file": "src\\components\\products\\product-form.tsx",
+    "text": "SKU *"
+  },
+  {
+    "file": "src\\components\\products\\product-form.tsx",
+    "text": "PROD-001"
+  },
+  {
+    "file": "src\\components\\products\\product-form.tsx",
+    "text": "Barcode"
+  },
+  {
+    "file": "src\\components\\products\\product-form.tsx",
+    "text": "1234567890123"
+  },
+  {
+    "file": "src\\components\\products\\product-form.tsx",
+    "text": "Cost Price (₦) *"
+  },
+  {
+    "file": "src\\components\\products\\product-form.tsx",
+    "text": "Selling Price (₦) *"
+  },
+  {
+    "file": "src\\components\\products\\product-form.tsx",
+    "text": "Category"
+  },
+  {
+    "file": "src\\components\\products\\product-form.tsx",
+    "text": "Select category"
+  },
+  {
+    "file": "src\\components\\products\\product-form.tsx",
+    "text": "Status"
+  },
+  {
+    "file": "src\\components\\products\\product-form.tsx",
+    "text": "Active"
+  },
+  {
+    "file": "src\\components\\products\\product-form.tsx",
+    "text": "Inactive"
+  },
+  {
+    "file": "src\\components\\products\\product-form.tsx",
+    "text": "Discontinued"
+  },
+  {
+    "file": "src\\components\\products\\product-form.tsx",
+    "text": "Cancel"
+  },
+  {
+    "file": "src\\components\\sales\\sale-detail.tsx",
+    "text": "Sale unavailable"
+  },
+  {
+    "file": "src\\components\\sales\\sale-detail.tsx",
+    "text": "This sale could not be loaded. Check your connection and access, then try again."
+  },
+  {
+    "file": "src\\components\\sales\\sale-detail.tsx",
+    "text": "Back to sales"
+  },
+  {
+    "file": "src\\components\\sales\\sale-detail.tsx",
+    "text": "Items sold"
+  },
+  {
+    "file": "src\\components\\sales\\sale-detail.tsx",
+    "text": "Product"
+  },
+  {
+    "file": "src\\components\\sales\\sale-detail.tsx",
+    "text": "Qty"
+  },
+  {
+    "file": "src\\components\\sales\\sale-detail.tsx",
+    "text": "Price"
+  },
+  {
+    "file": "src\\components\\sales\\sale-detail.tsx",
+    "text": "Total"
+  },
+  {
+    "file": "src\\components\\sales\\sale-detail.tsx",
+    "text": "Payment summary"
+  },
+  {
+    "file": "src\\components\\settings\\business-settings.tsx",
+    "text": "Loading business settings"
+  },
+  {
+    "file": "src\\components\\settings\\business-settings.tsx",
+    "text": "Try again"
+  },
+  {
+    "file": "src\\components\\settings\\business-settings.tsx",
+    "text": "Business logo"
+  },
+  {
+    "file": "src\\components\\settings\\business-settings.tsx",
+    "text": "Business logo"
+  },
+  {
+    "file": "src\\components\\settings\\business-settings.tsx",
+    "text": "PNG, JPEG or WebP · up to 256 KB · saved with your business profile"
+  },
+  {
+    "file": "src\\components\\settings\\business-settings.tsx",
+    "text": "Upload"
+  },
+  {
+    "file": "src\\components\\settings\\business-settings.tsx",
+    "text": "Upload business logo"
+  },
+  {
+    "file": "src\\components\\settings\\business-settings.tsx",
+    "text": "Remove"
+  },
+  {
+    "file": "src\\components\\settings\\business-settings.tsx",
+    "text": "Language"
+  },
+  {
+    "file": "src\\components\\settings\\business-settings.tsx",
+    "text": "Currency"
+  },
+  {
+    "file": "src\\components\\settings\\business-settings.tsx",
+    "text": "Timezone"
+  },
+  {
+    "file": "src\\components\\settings\\business-settings.tsx",
+    "text": "Date format"
+  },
+  {
+    "file": "src\\components\\settings\\business-settings.tsx",
+    "text": "24 Aug 2026"
+  },
+  {
+    "file": "src\\components\\settings\\operations-settings.tsx",
+    "text": "Devices & printers"
+  },
+  {
+    "file": "src\\components\\settings\\operations-settings.tsx",
+    "text": "Pair a receipt printer with this browser. Connect it again from the receipt screen when you are ready to print."
+  },
+  {
+    "file": "src\\components\\settings\\operations-settings.tsx",
+    "text": "Connect USB"
+  },
+  {
+    "file": "src\\components\\settings\\operations-settings.tsx",
+    "text": "Connect Bluetooth"
+  },
+  {
+    "file": "src\\components\\settings\\operations-settings.tsx",
+    "text": "Disconnect"
+  },
+  {
+    "file": "src\\components\\settings\\operations-settings.tsx",
+    "text": "Browser printing and downloadable PDF receipts remain available when USB or Bluetooth is unsupported."
+  },
+  {
+    "file": "src\\components\\settings\\operations-settings.tsx",
+    "text": "Offline sync"
+  },
+  {
+    "file": "src\\components\\settings\\operations-settings.tsx",
+    "text": "Your sales and stock changes stay on this device until they sync."
+  },
+  {
+    "file": "src\\components\\settings\\operations-settings.tsx",
+    "text": "Keep this tab open while syncing. Clearing browser storage removes changes that have not reached the server."
+  },
+  {
+    "file": "src\\components\\settings\\operations-settings.tsx",
+    "text": "Receipt template"
+  },
+  {
+    "file": "src\\components\\settings\\operations-settings.tsx",
+    "text": "Your business profile supplies the receipt header. Saved sales retain their original totals and payment details."
+  },
+  {
+    "file": "src\\components\\settings\\operations-settings.tsx",
+    "text": "The standard invoice includes item quantities, prices, discount, tax, payment, change and a scannable receipt code."
+  },
+  {
+    "file": "src\\components\\settings\\operations-settings.tsx",
+    "text": "View & print receipts"
+  },
+  {
+    "file": "src\\components\\settings\\operations-settings.tsx",
+    "text": "RECEIPT PREVIEW"
+  },
+  {
+    "file": "src\\components\\settings\\operations-settings.tsx",
+    "text": "Item × 1"
+  },
+  {
+    "file": "src\\components\\settings\\operations-settings.tsx",
+    "text": "Total"
+  },
+  {
+    "file": "src\\components\\settings\\operations-settings.tsx",
+    "text": "Thank you for your purchase"
+  },
+  {
+    "file": "src\\components\\settings\\operations-settings.tsx",
+    "text": "Notifications"
+  },
+  {
+    "file": "src\\components\\settings\\operations-settings.tsx",
+    "text": "Review stock alerts, subscription updates and team activity in one place."
+  },
+  {
+    "file": "src\\components\\settings\\operations-settings.tsx",
+    "text": "Manage notifications"
+  },
+  {
+    "file": "src\\components\\settings\\operations-settings.tsx",
+    "text": "Data & export"
+  },
+  {
+    "file": "src\\components\\settings\\operations-settings.tsx",
+    "text": "Download your business records using the filters on each report."
+  },
+  {
+    "file": "src\\components\\shared\\sync-provider.tsx",
+    "text": "Sign in"
+  },
+  {
+    "file": "src\\components\\subscriptions\\account-panels.tsx",
+    "text": "Your Zainpay Naira account"
+  },
+  {
+    "file": "src\\components\\subscriptions\\account-panels.tsx",
+    "text": "Account unavailable"
+  },
+  {
+    "file": "src\\components\\subscriptions\\account-panels.tsx",
+    "text": "Could not load your bank account."
+  },
+  {
+    "file": "src\\components\\subscriptions\\account-panels.tsx",
+    "text": "Bank"
+  },
+  {
+    "file": "src\\components\\subscriptions\\account-panels.tsx",
+    "text": "Account number (NUBAN)"
+  },
+  {
+    "file": "src\\components\\subscriptions\\account-panels.tsx",
+    "text": "Copy account number"
+  },
+  {
+    "file": "src\\components\\subscriptions\\account-panels.tsx",
+    "text": "Account name"
+  },
+  {
+    "file": "src\\components\\subscriptions\\account-panels.tsx",
+    "text": "Payments appear in billing history after confirmation."
+  },
+  {
+    "file": "src\\components\\subscriptions\\account-panels.tsx",
+    "text": "No account assigned yet"
+  },
+  {
+    "file": "src\\components\\subscriptions\\account-panels.tsx",
+    "text": "Your payment account will appear here after merchant onboarding is complete."
+  },
+  {
+    "file": "src\\components\\subscriptions\\account-panels.tsx",
+    "text": "Check again"
+  },
+  {
+    "file": "src\\components\\subscriptions\\account-panels.tsx",
+    "text": "Usage unavailable"
+  },
+  {
+    "file": "src\\components\\subscriptions\\plan-card.tsx",
+    "text": "Current"
+  },
+  {
+    "file": "src\\components\\subscriptions\\plan-card.tsx",
+    "text": "Talk to sales"
+  },
+  {
+    "file": "src\\components\\transfers\\transfer-receipt.tsx",
+    "text": "Address:"
+  },
+  {
+    "file": "src\\components\\transfers\\transfer-receipt.tsx",
+    "text": "Telp."
+  },
+  {
+    "file": "src\\components\\transfers\\transfer-receipt.tsx",
+    "text": "Stock Transfer Note"
+  },
+  {
+    "file": "src\\components\\transfers\\transfer-receipt.tsx",
+    "text": "Ref:"
+  },
+  {
+    "file": "src\\components\\transfers\\transfer-receipt.tsx",
+    "text": "Date:"
+  },
+  {
+    "file": "src\\components\\transfers\\transfer-receipt.tsx",
+    "text": "Status:"
+  },
+  {
+    "file": "src\\components\\transfers\\transfer-receipt.tsx",
+    "text": "From:"
+  },
+  {
+    "file": "src\\components\\transfers\\transfer-receipt.tsx",
+    "text": "To:"
+  },
+  {
+    "file": "src\\components\\transfers\\transfer-receipt.tsx",
+    "text": "Description"
+  },
+  {
+    "file": "src\\components\\transfers\\transfer-receipt.tsx",
+    "text": "Qty"
+  },
+  {
+    "file": "src\\components\\transfers\\transfer-receipt.tsx",
+    "text": "Initiated by"
+  },
+  {
+    "file": "src\\components\\transfers\\transfer-receipt.tsx",
+    "text": "Approved by"
+  },
+  {
+    "file": "src\\components\\transfers\\transfer-receipt.tsx",
+    "text": "Coordinated by"
+  },
+  {
+    "file": "src\\components\\transfers\\transfer-receipt.tsx",
+    "text": "Sent by"
+  },
+  {
+    "file": "src\\components\\transfers\\transfer-receipt.tsx",
+    "text": "Received by"
+  },
+  {
+    "file": "src\\components\\transfers\\transfer-receipt.tsx",
+    "text": "Thank you!"
+  },
+  {
+    "file": "src\\components\\transfers\\transfer-receipt.tsx",
+    "text": "Powered by TracKasuwa"
+  },
+  {
+    "file": "src\\components\\ui\\app-screen.tsx",
+    "text": "Loading workspace"
+  },
+  {
+    "file": "src\\components\\ui\\dialog.tsx",
+    "text": "Close"
+  },
+  {
+    "file": "src\\components\\warehouses\\staff-assignments.tsx",
+    "text": "Assign staff"
+  },
+  {
+    "file": "src\\components\\warehouses\\staff-assignments.tsx",
+    "text": "Could not load assignments. Retry"
+  },
+  {
+    "file": "src\\components\\warehouses\\staff-assignments.tsx",
+    "text": "Team at"
+  },
+  {
+    "file": "src\\components\\warehouses\\staff-assignments.tsx",
+    "text": "Assign existing managers and cashiers to this location. Managers use the Admin account role. Assignments record responsibility; account permissions remain unchanged."
+  },
+  {
+    "file": "src\\components\\warehouses\\staff-assignments.tsx",
+    "text": "Manager or cashier"
+  },
+  {
+    "file": "src\\components\\warehouses\\staff-assignments.tsx",
+    "text": "Select team member"
+  },
+  {
+    "file": "src\\components\\warehouses\\staff-assignments.tsx",
+    "text": "Assign to location"
+  },
+  {
+    "file": "src\\components\\warehouses\\staff-assignments.tsx",
+    "text": "Need a new account?"
+  },
+  {
+    "file": "src\\components\\warehouses\\staff-assignments.tsx",
+    "text": "Add a team member"
+  },
+  {
+    "file": "src\\components\\warehouses\\staff-assignments.tsx",
+    "text": "first. A person can work at more than one location."
+  }
+]

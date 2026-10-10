@@ -1,4 +1,6 @@
 'use client';
+import { TranslatedText } from '@/i18n/text';
+
 
 import * as React from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
@@ -45,7 +47,7 @@ const DialogContent = React.forwardRef<
       {children}
       <DialogPrimitive.Close className="absolute right-4 top-4 rounded-md opacity-70 ring-offset-background transition-opacity hover:opacity-100 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground p-1">
         <X className="h-4 w-4" strokeWidth={1.75} />
-        <span className="sr-only">Close</span>
+        <span className="sr-only"><TranslatedText text={"Close"} /></span>
       </DialogPrimitive.Close>
     </DialogPrimitive.Content>
   </DialogPortal>

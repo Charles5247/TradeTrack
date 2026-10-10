@@ -1,3 +1,5 @@
+
+import { TranslatedLabel, TranslatedText } from '@/i18n/text';
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -59,13 +61,9 @@ export function FeatureGrid() {
     <section style={{ padding: "100px 0", background: "var(--c-bgAlt)" }}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <Reveal>
-          <div className="tt-eyebrow mb-3">Everything you need. Nothing you don&apos;t.</div>
-          <h2 className="tt-head" style={{ fontSize: "clamp(32px, 4vw, 48px)", margin: "0 0 12px", maxWidth: 780, lineHeight: 1.05 }}>
-            Built by shopkeepers, for shopkeepers.
-          </h2>
-          <p className="mb-14" style={{ fontSize: 17, color: "var(--c-textMuted)", maxWidth: 620 }}>
-            Every feature earned its place by solving a real problem for a real trader. If it
-            wasn&apos;t shipped, it isn&apos;t listed here — see <Link href="/features" className="underline">the full feature list</Link>.
+          <div className="tt-eyebrow mb-3"><TranslatedText text={"Everything you need. Nothing you don't."} /></div>
+          <h2 className="tt-head" style={{ fontSize: "clamp(32px, 4vw, 48px)", margin: "0 0 12px", maxWidth: 780, lineHeight: 1.05 }}><TranslatedText text={"Built by shopkeepers, for shopkeepers."} /></h2>
+          <p className="mb-14" style={{ fontSize: 17, color: "var(--c-textMuted)", maxWidth: 620 }}><TranslatedText text={"Every feature earned its place by solving a real problem for a real trader. If it wasn't shipped, it isn't listed here — see"} />{" "}<Link href="/features" className="underline"><TranslatedText text={"the full feature list"} /></Link>.
           </p>
         </Reveal>
 
@@ -73,16 +71,9 @@ export function FeatureGrid() {
         <Reveal delay={100}>
           <div className="rounded-xl border border-border overflow-hidden mb-6 grid md:grid-cols-2" style={{ background: "var(--c-surface)" }}>
             <div className="p-8 md:p-14 flex flex-col justify-center">
-              <Badge className="self-start mb-5">Flagship feature</Badge>
-              <h3 className="tt-head" style={{ fontSize: "clamp(24px, 3vw, 36px)", margin: "0 0 16px", lineHeight: 1.1 }}>
-                Offline-first, truly. Sell even when the network doesn&apos;t.
-              </h3>
-              <p className="mb-7" style={{ fontSize: 15, color: "var(--c-textMuted)", lineHeight: 1.6 }}>
-                Every sale, price change and stock movement queues on-device.
-                When your connection returns, we sync it — append-only for
-                sales, last-write-wins for everything else. No lost
-                transactions.
-              </p>
+              <Badge className="self-start mb-5"><TranslatedText text={"Flagship feature"} /></Badge>
+              <h3 className="tt-head" style={{ fontSize: "clamp(24px, 3vw, 36px)", margin: "0 0 16px", lineHeight: 1.1 }}><TranslatedText text={"Offline-first, truly. Sell even when the network doesn't."} /></h3>
+              <p className="mb-7" style={{ fontSize: 15, color: "var(--c-textMuted)", lineHeight: 1.6 }}><TranslatedText text={"Every sale, price change and stock movement queues on-device. When your connection returns, we sync it — append-only for sales, last-write-wins for everything else. No lost transactions."} /></p>
               <div className="flex gap-8">
                 {[
                   { n: "0", l: "Sales lost" },
@@ -91,7 +82,7 @@ export function FeatureGrid() {
                 ].map((s) => (
                   <div key={s.l}>
                     <div className="tt-head" style={{ fontSize: 22, color: "var(--c-primary)" }}>{s.n}</div>
-                    <div className="tt-muted text-[11px]">{s.l}</div>
+                    <div className="tt-muted text-[11px]"><TranslatedLabel>{s.l}</TranslatedLabel></div>
                   </div>
                 ))}
               </div>
@@ -104,13 +95,12 @@ export function FeatureGrid() {
               >
                 <div className="flex items-center gap-2 mb-2.5">
                   <Badge variant="warning" className="gap-1">
-                    <WifiOff className="h-2.5 w-2.5" strokeWidth={1.75} /> Offline
-                  </Badge>
-                  <span className="tt-mono tt-muted text-[10px]">4 queued</span>
+                    <WifiOff className="h-2.5 w-2.5" strokeWidth={1.75} />{" "}<TranslatedText text={"Offline"} /></Badge>
+                  <span className="tt-mono tt-muted text-[10px]"><TranslatedText text={"4 queued"} /></span>
                 </div>
-                <div className="text-[11px]" style={{ color: "var(--c-textMuted)" }}>Current sale</div>
+                <div className="text-[11px]" style={{ color: "var(--c-textMuted)" }}><TranslatedText text={"Current sale"} /></div>
                 <div className="tt-head text-[26px] mt-0.5 tt-tabular">₦14,500</div>
-                <Button className="w-full mt-2.5" size="sm">Charge ₦14,500</Button>
+                <Button className="w-full mt-2.5" size="sm"><TranslatedText text={"Charge ₦14,500"} /></Button>
               </div>
             </div>
           </div>
@@ -126,8 +116,8 @@ export function FeatureGrid() {
                 >
                   <f.Icon className="h-5 w-5" strokeWidth={1.75} />
                 </div>
-                <div className="tt-head text-lg mb-2">{f.title}</div>
-                <div className="text-sm" style={{ color: "var(--c-textMuted)", lineHeight: 1.55 }}>{f.desc}</div>
+                <div className="tt-head text-lg mb-2"><TranslatedLabel>{f.title}</TranslatedLabel></div>
+                <div className="text-sm" style={{ color: "var(--c-textMuted)", lineHeight: 1.55 }}><TranslatedLabel>{f.desc}</TranslatedLabel></div>
               </div>
             </Reveal>
           ))}

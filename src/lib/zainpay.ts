@@ -18,10 +18,7 @@
  *     instead of parsing free-text transfer narrations.
  */
 
-const ZAINPAY_BASE_URL =
-  process.env.ZAINPAY_BASE_URL ?? "https://sandbox.zainpay.ng";
-const ZAINPAY_SECRET_KEY = process.env.ZAINPAY_SECRET_KEY ?? "";
-const ZAINPAY_ZAINBOX_CODE = process.env.ZAINPAY_ZAINBOX_CODE ?? "";
+import { getZainpayConfig } from "@/lib/zainpay-config";
 
 export interface ZainpayVirtualAccount {
   accountNumber: string;
@@ -33,7 +30,7 @@ export interface ZainpayVirtualAccount {
 export class ZainpayNotConfiguredError extends Error {
   constructor() {
     super(
-      "Zainpay is not configured (ZAINPAY_SECRET_KEY / ZAINPAY_ZAINBOX_CODE " +
+      "Zainpay is not configured (the selected mode's secret key / Zainbox code " +
         "missing). Merchant onboarding will proceed WITHOUT a dedicated " +
         "virtual account — it can be created later once Zainpay credentials " +
         "are added.",
@@ -44,7 +41,8 @@ export class ZainpayNotConfiguredError extends Error {
 
 /** Whether Zainpay credentials are present in the environment. */
 export function isZainpayConfigured(): boolean {
-  return Boolean(ZAINPAY_SECRET_KEY && ZAINPAY_ZAINBOX_CODE);
+  const config = getZainpayConfig();
+  return Boolean(config.secretKey && config.zainboxCode);
 }
 
 /**
@@ -60,7 +58,8 @@ export async function createMerchantVirtualAccount(params: {
   contactEmail: string;
   contactPhone?: string | null;
 }): Promise<ZainpayVirtualAccount> {
-  if (!isZainpayConfigured()) {
+  const config = getZainpayConfig();
+  if (!config.secretKey || !config.zainboxCode) {
     throw new ZainpayNotConfiguredError();
   }
 
@@ -68,18 +67,18 @@ export async function createMerchantVirtualAccount(params: {
   // onboarding logic (e.g. a retry) doesn't create duplicate accounts.
   const customerRef = `tt-org-${params.organizationId}`;
 
-  const res = await fetch(`${ZAINPAY_BASE_URL}/virtual-account/customer`, {
+  const res = await fetch(`${config.baseUrl}/virtual-account/customer`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${ZAINPAY_SECRET_KEY}`,
+      Authorization: `Bearer ${config.secretKey}`,
     },
     body: JSON.stringify({
       firstName: params.businessName,
       lastName: "Merchant",
       email: params.contactEmail,
       mobileNumber: params.contactPhone ?? "",
-      zainboxCode: ZAINPAY_ZAINBOX_CODE,
+      zainboxCode: config.zainboxCode,
       customerRef,
       title: params.businessName,
     }),

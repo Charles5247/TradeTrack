@@ -1,4 +1,6 @@
 "use client";
+import { TranslatedText, useCopy } from '@/i18n/text';
+
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -8,6 +10,7 @@ import { useState } from "react";
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
 import { useScrollY } from "@/hooks/use-scroll-y";
+import { LanguageSelect } from '@/components/shared/language-select';
 
 const NAV_ITEMS = [
   { href: "/", label: "Home" },
@@ -25,6 +28,7 @@ const NAV_ITEMS = [
  * `bg-background/80 backdrop-blur` header in layout.tsx.
  */
 export function MarketingNav() {
+  const copy = useCopy();
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const scrollY = useScrollY();
@@ -45,7 +49,7 @@ export function MarketingNav() {
       }}
     >
       <div className="mx-auto flex h-[72px] max-w-6xl items-center gap-6 px-4 sm:px-6">
-        <Link href="/" aria-label="TracKasuwa home">
+        <Link href="/" aria-label={copy("TracKasuwa home")}>
           <Logo size={30} />
         </Link>
 
@@ -62,19 +66,20 @@ export function MarketingNav() {
                   fontWeight: active ? 600 : 500,
                 }}
               >
-                {item.label}
+                <TranslatedText text={item.label} />
               </Link>
             );
           })}
         </div>
         <div className="hidden md:block flex-1" />
+        <LanguageSelect />
 
         <Button
           variant="ghost"
           size="icon"
           className="hidden sm:inline-flex"
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          aria-label="Toggle theme"
+          aria-label={copy("Toggle theme")}
         >
           <Sun
             className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
@@ -91,11 +96,10 @@ export function MarketingNav() {
           className="hidden sm:inline-flex"
           asChild
         >
-          <Link href="/login">Sign in</Link>
+          <Link href="/login"><TranslatedText text={"Sign in"} /></Link>
         </Button>
         <Button size="sm" asChild>
-          <Link href="/signup">
-            Start free <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.75} />
+          <Link href="/signup"><TranslatedText text={"Start free"} />{" "}<ArrowRight className="h-3.5 w-3.5" strokeWidth={1.75} />
           </Link>
         </Button>
 
@@ -104,7 +108,7 @@ export function MarketingNav() {
           size="icon"
           className="md:hidden"
           onClick={() => setMobileOpen((v) => !v)}
-          aria-label="Toggle menu"
+          aria-label={copy("Toggle menu")}
         >
           {mobileOpen ? (
             <X className="h-5 w-5" strokeWidth={1.75} />
@@ -124,16 +128,14 @@ export function MarketingNav() {
                 onClick={() => setMobileOpen(false)}
                 className="rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--c-textMuted)] hover:text-[var(--c-text)] hover:bg-[var(--c-surfaceAlt)]"
               >
-                {item.label}
+                <TranslatedText text={item.label} />
               </Link>
             ))}
             <Link
               href="/login"
               onClick={() => setMobileOpen(false)}
               className="rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--c-textMuted)] hover:text-[var(--c-text)] hover:bg-[var(--c-surfaceAlt)]"
-            >
-              Sign in
-            </Link>
+            ><TranslatedText text={"Sign in"} /></Link>
           </div>
         </div>
       )}

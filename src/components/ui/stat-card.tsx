@@ -1,4 +1,6 @@
 "use client";
+import { TranslatedLabel } from '@/i18n/text';
+
 
 import * as React from "react";
 import { ArrowUp, ArrowDown } from "lucide-react";
@@ -60,7 +62,7 @@ export function StatCard({
       onKeyDown={onClick ? (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onClick(); } } : undefined}
     >
       <div className="flex items-start justify-between">
-        <div className="tt-stat-label">{label}</div>
+        <div className="tt-stat-label"><TranslatedLabel>{label}</TranslatedLabel></div>
         {Icon && (
           <div
             className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius)]"
@@ -85,7 +87,7 @@ export function StatCard({
             {delta}
           </div>
         )}
-        {sub && <div className="tt-muted text-xs">{sub}</div>}
+        {sub && <div className="tt-muted text-xs"><TranslatedLabel>{sub}</TranslatedLabel></div>}
       </div>
     </div>
   );

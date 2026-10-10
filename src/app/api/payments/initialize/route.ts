@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
+import { getZainpayConfig } from "@/lib/zainpay-config";
 
-// ─── Zainpay configuration ──────────────────────────────────────────────────
-const ZAINPAY_PUBLIC_KEY = process.env.ZAINPAY_PUBLIC_KEY ?? "";
-const ZAINPAY_PRIVATE_KEY = process.env.ZAINPAY_PRIVATE_KEY ?? "";
-const ZAINPAY_BASE_URL =
-  process.env.ZAINPAY_BASE_URL ?? "https://sandbox.zainpay.ng";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3008";
 
 // ─── Supabase service-role client ────────────────────────────────────────────
@@ -49,6 +45,8 @@ interface ZainpayInitResponse {
 // ─── POST /api/payments/initialize ───────────────────────────────────────────
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    const zainpayConfig = getZainpayConfig();
+
     // ── 1. Auth check ──────────────────────────────────────────────────────
     const authHeader = request.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
@@ -64,8 +62,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     // ── 2. Validate environment ────────────────────────────────────────────
-    if (!ZAINPAY_PUBLIC_KEY) {
-      console.error("[Zainpay] ZAINPAY_PUBLIC_KEY is not configured");
+    if (!zainpayConfig.publicKey) {
+      console.error(`[Zainpay] No ${zainpayConfig.mode} public key is configured`);
       return NextResponse.json(
         { error: "Payment gateway not configured" },
         { status: 503 },
@@ -129,7 +127,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       amount: String(amount), // ← required as string
       txnRef,
       mobileNumber: mobile ?? "",
-      zainboxCode: zainboxCode ?? process.env.ZAINPAY_DEFAULT_ZAINBOX ?? "",
+      zainboxCode: zainboxCode ?? zainpayConfig.defaultZainbox,
       emailAddress: email,
       callbackUrl,
       name: name || profile.full_name || email,
@@ -137,12 +135,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // ── 7. Call Zainpay initialization endpoint ────────────────────────────
     const zainpayRes = await fetch(
-      `${ZAINPAY_BASE_URL}/zainbox/card/initialize/payment`,
+      `${zainpayConfig.baseUrl}/zainbox/card/initialize/payment`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${ZAINPAY_PUBLIC_KEY}`,
+          Authorization: `Bearer ${zainpayConfig.publicKey}`,
         },
         body: JSON.stringify(zainpayPayload),
       },
@@ -217,10 +215,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
 // ─── GET — health probe ───────────────────────────────────────────────────────
 export async function GET(): Promise<NextResponse> {
+  const zainpayConfig = getZainpayConfig();
   return NextResponse.json({
     endpoint: "POST /api/payments/initialize",
     gateway: "Zainpay",
-    environment: ZAINPAY_BASE_URL.includes("sandbox") ? "sandbox" : "live",
-    configured: Boolean(ZAINPAY_PUBLIC_KEY && ZAINPAY_PRIVATE_KEY),
+    environment: zainpayConfig.mode,
+    configured: Boolean(zainpayConfig.publicKey),
   });
 }

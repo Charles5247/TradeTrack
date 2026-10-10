@@ -1,3 +1,5 @@
+
+import { TranslatedLabel, TranslatedText } from '@/i18n/text';
 import Link from "next/link";
 import type { Metadata } from "next";
 import {
@@ -149,7 +151,7 @@ export default function FeaturesPage() {
       <section style={{ padding: "100px 0 40px" }}>
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <Reveal>
-            <div className="tt-eyebrow mb-3">Features</div>
+            <div className="tt-eyebrow mb-3"><TranslatedText text={"Features"} /></div>
           </Reveal>
           <Reveal delay={100}>
             <h1
@@ -160,9 +162,7 @@ export default function FeaturesPage() {
                 maxWidth: 900,
                 lineHeight: 1.05,
               }}
-            >
-              Every capability, honestly documented.
-            </h1>
+            ><TranslatedText text={"Every capability, honestly documented."} /></h1>
           </Reveal>
           <Reveal delay={200}>
             <p
@@ -171,10 +171,7 @@ export default function FeaturesPage() {
                 color: "var(--c-textMuted)",
                 maxWidth: 620,
               }}
-            >
-              We ship this list — not aspirational marketing. What&apos;s not
-              built yet is either coming soon, or hidden until it is.
-            </p>
+            ><TranslatedText text={"We ship this list — not aspirational marketing. What's not built yet is either coming soon, or hidden until it is."} /></p>
           </Reveal>
         </div>
       </section>
@@ -198,12 +195,12 @@ export default function FeaturesPage() {
                   >
                     <section.icon className="h-5 w-5" strokeWidth={1.75} />
                   </div>
-                  <div className="tt-head text-lg mb-1.5">{section.title}</div>
+                  <div className="tt-head text-lg mb-1.5"><TranslatedText text={section.title} /></div>
                   <div
                     className="text-sm mb-4"
                     style={{ color: "var(--c-textMuted)" }}
                   >
-                    {section.description}
+                    <TranslatedText text={section.description} />
                   </div>
                   <ul className="space-y-2 text-sm">
                     {section.points.map((point) => (
@@ -214,7 +211,7 @@ export default function FeaturesPage() {
                           strokeWidth={1.75}
                         />
                         <span style={{ color: "var(--c-textMuted)" }}>
-                          {point}
+                          <TranslatedLabel>{point}</TranslatedLabel>
                         </span>
                       </li>
                     ))}
@@ -242,27 +239,20 @@ export default function FeaturesPage() {
                   <Sparkles className="h-5 w-5" strokeWidth={1.75} />
                 </div>
                 <div className="flex items-center gap-2 mb-1.5">
-                  <div className="tt-head text-lg">AI Assistant</div>
-                  <Badge variant="outline">Coming Soon</Badge>
+                  <div className="tt-head text-lg"><TranslatedText text={"AI Assistant"} /></div>
+                  <Badge variant="outline"><TranslatedText text={"Coming Soon"} /></Badge>
                 </div>
                 <div
                   className="text-sm mb-4"
                   style={{ color: "var(--c-textMuted)" }}
-                >
-                  We&apos;re exploring an AI assistant to help with things like
-                  restock suggestions and sales insights.
-                </div>
-                <p className="text-sm" style={{ color: "var(--c-textMuted)" }}>
-                  This feature does not exist in the app yet. We&apos;d rather
-                  tell you that plainly than promise something that isn&apos;t
-                  built.
-                </p>
+                ><TranslatedText text={"We're exploring an AI assistant to help with things like restock suggestions and sales insights."} /></div>
+                <p className="text-sm" style={{ color: "var(--c-textMuted)" }}><TranslatedText text={"This feature does not exist in the app yet. We'd rather tell you that plainly than promise something that isn't built."} /></p>
               </div>
             </Reveal>
           </div>
 
           <div className="text-center mt-16">
-            <h2 className="tt-head text-2xl mb-4">Ready to try it?</h2>
+            <h2 className="tt-head text-2xl mb-4"><TranslatedText text={"Ready to try it?"} /></h2>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 href="/signup"
@@ -271,16 +261,13 @@ export default function FeaturesPage() {
                   background: "var(--c-primary)",
                   color: "var(--c-primaryFg)",
                 }}
-              >
-                Start Free <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
+              ><TranslatedText text={"Start Free"} />{" "}<ArrowRight className="h-4 w-4" strokeWidth={1.75} />
               </Link>
               <Link
                 href="/pricing"
                 className="inline-flex items-center gap-2 rounded-lg h-11 px-6 text-sm font-medium border"
                 style={{ borderColor: "var(--c-border)" }}
-              >
-                See Pricing
-              </Link>
+              ><TranslatedText text={"See Pricing"} /></Link>
             </div>
           </div>
         </div>

@@ -1,4 +1,6 @@
 "use client";
+import { TranslatedText, useCopy } from '@/i18n/text';
+
 
 import { BankAccountPanel, UsagePanel } from "@/components/subscriptions/account-panels";
 import { requireOrganization } from "@/lib/auth/organization";
@@ -239,6 +241,7 @@ function PlanFormDialog({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const copy = useCopy();
   const { t } = useI18n();
   const [form, setForm] = useState<PlanFormData>(EMPTY_PLAN_FORM);
   const [saving, setSaving] = useState(false);
@@ -368,7 +371,7 @@ function PlanFormDialog({
                 type="number"
                 value={form.max_cashiers}
                 onChange={(e) => update("max_cashiers", e.target.value)}
-                placeholder="e.g. 3, -1 for unlimited"
+                placeholder={copy("e.g. 3, -1 for unlimited")}
               />
             </div>
             <div>
@@ -443,6 +446,7 @@ function PlanFormDialog({
 
 // ── Main Page ─────────────────────────────────────────────────
 export default function SubscriptionsPage() {
+  const copy = useCopy();
   const { t } = useI18n();
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
@@ -631,20 +635,20 @@ export default function SubscriptionsPage() {
           <Card className="relative overflow-hidden border-transparent bg-primary p-6 text-primary-foreground sm:p-8">
             <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-[var(--c-accent)] opacity-20 blur-3xl" />
             {isLoading ? <Skeleton className="h-64" /> : <div className="relative space-y-6">
-              <div><span className="rounded-full bg-primary-foreground/10 px-3 py-1 text-xs">Current plan</span><h2 className="mt-4 font-[family-name:var(--font-head)] text-4xl font-bold tracking-tight sm:text-5xl">{subscription?.plan?.name || 'Choose your plan'}</h2><p className="mt-2 text-sm opacity-80">{subscription ? 'Status: ' + subscription.status : 'Find the right fit for your business.'}</p></div>
-              <dl className="flex flex-wrap items-end gap-x-8 gap-y-4"><div><dt className="sr-only">Plan price</dt><dd className="text-3xl font-bold">{formatCurrency(subscription?.plan?.price || 0, 'NGN')}</dd><p className="text-xs opacity-75">per {subscription?.plan?.billing_cycle === 'yearly' ? 'year' : 'month'}</p></div><div><dt className="text-xs opacity-75">Valid until</dt><dd className="mt-1 font-semibold">{subscription?.expires_at ? formatDate(subscription.expires_at) : 'No active period'}</dd></div><div><dt className="text-xs opacity-75">Renewal</dt><dd className="mt-1 font-semibold">Manual payment</dd></div></dl>
-              <div className="flex flex-wrap gap-3"><Button className="bg-primary-foreground text-primary hover:bg-primary-foreground/90" onClick={() => { setActiveTab('plans'); }}>Change plan</Button>{subscription && ['active','trial'].includes(subscription.status) && <Button variant="outline" className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10" onClick={() => setCancelOpen(true)}>Cancel subscription</Button>}</div>
+              <div><span className="rounded-full bg-primary-foreground/10 px-3 py-1 text-xs"><TranslatedText text={"Current plan"} /></span><h2 className="mt-4 font-[family-name:var(--font-head)] text-4xl font-bold tracking-tight sm:text-5xl">{subscription?.plan?.name || 'Choose your plan'}</h2><p className="mt-2 text-sm opacity-80">{subscription ? 'Status: ' + subscription.status : 'Find the right fit for your business.'}</p></div>
+              <dl className="flex flex-wrap items-end gap-x-8 gap-y-4"><div><dt className="sr-only"><TranslatedText text={"Plan price"} /></dt><dd className="text-3xl font-bold">{formatCurrency(subscription?.plan?.price || 0, 'NGN')}</dd><p className="text-xs opacity-75"><TranslatedText text={"per"} />{" "}<TranslatedText text={subscription?.plan?.billing_cycle === 'yearly' ? 'year' : 'month'} /></p></div><div><dt className="text-xs opacity-75"><TranslatedText text={"Valid until"} /></dt><dd className="mt-1 font-semibold">{subscription?.expires_at ? formatDate(subscription.expires_at) : 'No active period'}</dd></div><div><dt className="text-xs opacity-75"><TranslatedText text={"Renewal"} /></dt><dd className="mt-1 font-semibold"><TranslatedText text={"Manual payment"} /></dd></div></dl>
+              <div className="flex flex-wrap gap-3"><Button className="bg-primary-foreground text-primary hover:bg-primary-foreground/90" onClick={() => { setActiveTab('plans'); }}><TranslatedText text={"Change plan"} /></Button>{subscription && ['active','trial'].includes(subscription.status) && <Button variant="outline" className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10" onClick={() => setCancelOpen(true)}><TranslatedText text={"Cancel subscription"} /></Button>}</div>
             </div>}
           </Card>
           <BankAccountPanel organizationId={user?.organization_id} />
         </div>
-        {daysRemaining !== null && daysRemaining <= 14 && subscription?.status !== 'cancelled' && <p role="status" className="rounded-lg border border-[var(--c-warn)]/30 bg-[var(--c-warn)]/10 p-4 text-sm">{daysRemaining > 0 ? 'Your subscription expires in ' + daysRemaining + ' days.' : 'Your subscription has expired.'} Choose a plan to renew.</p>}
+        {daysRemaining !== null && daysRemaining <= 14 && subscription?.status !== 'cancelled' && <p role="status" className="rounded-lg border border-[var(--c-warn)]/30 bg-[var(--c-warn)]/10 p-4 text-sm">{daysRemaining > 0 ? 'Your subscription expires in ' + daysRemaining + ' days.' : 'Your subscription has expired.'}{" "}<TranslatedText text={"Choose a plan to renew."} /></p>}
         <Tabs value={activeTab} onValueChange={v => setActiveTab(v as typeof activeTab)}>
-          <TabsList aria-label="Subscription sections"><TabsTrigger value="plans">{t.subscriptions.tab_plans}</TabsTrigger><TabsTrigger value="billing">{t.subscriptions.tab_billing}</TabsTrigger><TabsTrigger value="methods">Payment methods</TabsTrigger><TabsTrigger value="usage">Usage</TabsTrigger></TabsList>
+          <TabsList aria-label={copy("Subscription sections")}><TabsTrigger value="plans">{t.subscriptions.tab_plans}</TabsTrigger><TabsTrigger value="billing">{t.subscriptions.tab_billing}</TabsTrigger><TabsTrigger value="methods"><TranslatedText text={"Payment methods"} /></TabsTrigger><TabsTrigger value="usage"><TranslatedText text={"Usage"} /></TabsTrigger></TabsList>
         </Tabs>
         {activeTab === 'methods' && <div className="max-w-2xl"><BankAccountPanel organizationId={user?.organization_id} /></div>}
         {activeTab === 'usage' && <UsagePanel organizationId={user?.organization_id} plan={subscription?.plan} />}
-        <Dialog open={cancelOpen} onOpenChange={setCancelOpen}><DialogContent><DialogHeader><DialogTitle>Cancel subscription?</DialogTitle><DialogDescription>This ends subscription access immediately. Existing sales and records are retained. This does not issue a refund.</DialogDescription></DialogHeader><DialogFooter><Button variant="ghost" onClick={() => setCancelOpen(false)}>Keep subscription</Button><Button variant="destructive" disabled={cancelMutation.isPending} onClick={() => cancelMutation.mutate()}>{cancelMutation.isPending ? 'Cancelling?' : 'Confirm cancellation'}</Button></DialogFooter></DialogContent></Dialog>
+        <Dialog open={cancelOpen} onOpenChange={setCancelOpen}><DialogContent><DialogHeader><DialogTitle><TranslatedText text={"Cancel subscription?"} /></DialogTitle><DialogDescription><TranslatedText text={"This ends subscription access immediately. Existing sales and records are retained. This does not issue a refund."} /></DialogDescription></DialogHeader><DialogFooter><Button variant="ghost" onClick={() => setCancelOpen(false)}><TranslatedText text={"Keep subscription"} /></Button><Button variant="destructive" disabled={cancelMutation.isPending} onClick={() => cancelMutation.mutate()}><TranslatedText text={cancelMutation.isPending ? 'Cancelling?' : 'Confirm cancellation'} /></Button></DialogFooter></DialogContent></Dialog>
       </>}
 
       {/* Plans Tab */}

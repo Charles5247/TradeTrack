@@ -1,4 +1,6 @@
 "use client";
+import { useCopy } from '@/i18n/text';
+
 
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -151,6 +153,7 @@ const defaultForm = {
 // ── Main Component ────────────────────────────────────────────
 
 export default function UsersPage() {
+  const copy = useCopy();
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const { user: currentUser } = useAuthStore();
@@ -265,7 +268,7 @@ export default function UsersPage() {
 
   return (
     <div className="min-w-0 space-y-6">
-      {pageError && <ErrorState title="Could not load this page" body={pageError.message} onRetry={() => retryPage()} />}
+      {pageError && <ErrorState title={copy("Could not load this page")} body={pageError.message} onRetry={() => retryPage()} />}
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -443,7 +446,7 @@ export default function UsersPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, full_name: e.target.value })
                 }
-                placeholder="John Doe"
+                placeholder={copy("John Doe")}
               />
             </div>
             <div className="space-y-2">
@@ -493,7 +496,7 @@ export default function UsersPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, password: e.target.value })
                 }
-                placeholder="Min. 8 characters"
+                placeholder={copy("Min. 8 characters")}
               />
             </div>
             <div className="flex gap-3 pt-2">
@@ -616,7 +619,7 @@ export default function UsersPage() {
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Min. 8 characters"
+                placeholder={copy("Min. 8 characters")}
               />
             </div>
             <div className="space-y-2">
@@ -625,7 +628,7 @@ export default function UsersPage() {
                 type="password"
                 value={confirmNewPassword}
                 onChange={(e) => setConfirmNewPassword(e.target.value)}
-                placeholder="Repeat password"
+                placeholder={copy("Repeat password")}
                 error={
                   confirmNewPassword && newPassword !== confirmNewPassword
                     ? t.users.passwords_do_not_match

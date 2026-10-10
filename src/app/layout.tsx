@@ -8,6 +8,7 @@ import { AuthProvider } from "@/components/auth/auth-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider } from "@/i18n";
 import { cookies } from "next/headers";
+import { isLocale } from '@/i18n/locale';
 import "./fonts.css";
 import "./globals.css";
 
@@ -60,13 +61,8 @@ export default async function RootLayout({
 }) {
   // Determine the initial locale from a cookie (default to English)
   const cookieStore = await cookies();
-  const locale =
-    (cookieStore.get("NEXT_LOCALE")?.value as
-      | "en"
-      | "ha"
-      | "yo"
-      | "ig"
-      | "pcm") || "en";
+  const requestedLocale = cookieStore.get('NEXT_LOCALE')?.value;
+  const locale = isLocale(requestedLocale) ? requestedLocale : 'en';
 
   return (
     <html lang={locale} suppressHydrationWarning>

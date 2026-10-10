@@ -1,4 +1,6 @@
 'use client';
+import { TranslatedText, useCopy } from '@/i18n/text';
+
 
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -16,6 +18,7 @@ export function ProductEdit({ id }: { id: string }) {
 }
 
 function ProductRecord({ id }: { id: string }) {
+  const copy = useCopy();
   const user = useAuthStore(s => s.user);
   const router = useRouter();
   const cache = useQueryClient();
@@ -34,6 +37,6 @@ function ProductRecord({ id }: { id: string }) {
     },
   });
   if (query.isPending) return <LoadingState />;
-  if (query.isError || !query.data) return <ErrorState title="Product unavailable" body="Check your connection and product access." onRetry={() => void query.refetch()} />;
-  return <div className="space-y-6"><div><h1 className="tt-page-title">Edit product</h1><p className="tt-muted mt-2">Update {query.data.product.name}, pricing and product details.</p></div><FormTemplate sections={[{ title: 'Product information', fields: <ProductForm product={query.data.product} categories={query.data.categories} onCancel={() => router.push('/products')} onSuccess={() => { void cache.invalidateQueries({ queryKey: ['products'] }); router.push('/products'); }} /> }]} /></div>;
+  if (query.isError || !query.data) return <ErrorState title={copy("Product unavailable")} body={copy("Check your connection and product access.")} onRetry={() => void query.refetch()} />;
+  return <div className="space-y-6"><div><h1 className="tt-page-title"><TranslatedText text={"Edit product"} /></h1><p className="tt-muted mt-2"><TranslatedText text={"Update"} />{" "}{query.data.product.name}<TranslatedText text={", pricing and product details."} /></p></div><FormTemplate sections={[{ title: 'Product information', fields: <ProductForm product={query.data.product} categories={query.data.categories} onCancel={() => router.push('/products')} onSuccess={() => { void cache.invalidateQueries({ queryKey: ['products'] }); router.push('/products'); }} /> }]} /></div>;
 }

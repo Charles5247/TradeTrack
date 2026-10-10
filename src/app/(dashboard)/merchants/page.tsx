@@ -1,4 +1,6 @@
 "use client";
+import { TranslatedText, useCopy } from '@/i18n/text';
+
 
 import React, { useState } from "react";
 import Link from "next/link";
@@ -526,10 +528,10 @@ function CreateMerchantDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Nigeria">Nigeria</SelectItem>
-                    <SelectItem value="Ghana">Ghana</SelectItem>
-                    <SelectItem value="Kenya">Kenya</SelectItem>
-                    <SelectItem value="South Africa">South Africa</SelectItem>
+                    <SelectItem value="Nigeria"><TranslatedText text={"Nigeria"} /></SelectItem>
+                    <SelectItem value="Ghana"><TranslatedText text={"Ghana"} /></SelectItem>
+                    <SelectItem value="Kenya"><TranslatedText text={"Kenya"} /></SelectItem>
+                    <SelectItem value="South Africa"><TranslatedText text={"South Africa"} /></SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -847,7 +849,7 @@ function ViewMerchantDialog({
             {merchant.business_name}
           </DialogTitle>
           <DialogDescription className="flex flex-wrap items-center gap-2">
-            <Link href={`/merchants/${merchant.id}`} className="text-primary underline">Open merchant page</Link>
+            <Link href={`/merchants/${merchant.id}`} className="text-primary underline"><TranslatedText text={"Open merchant page"} /></Link>
             <MerchantStatusBadge status={merchant.status} />
             <Badge
               variant={
@@ -1152,6 +1154,7 @@ function ConfirmDialog({
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function MerchantsPage() {
+  const copy = useCopy();
   const { t } = useI18n();
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
@@ -1279,7 +1282,7 @@ export default function MerchantsPage() {
 
   return (
     <div className="min-w-0 space-y-6">
-      {pageError && <ErrorState title="Could not load this page" body={pageError.message} onRetry={() => retryPage()} />}
+      {pageError && <ErrorState title={copy("Could not load this page")} body={pageError.message} onRetry={() => retryPage()} />}
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>

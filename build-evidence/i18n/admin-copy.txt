@@ -1,0 +1,134 @@
+Accounting and reconciliation|Accounts and payment matching|Lissafi da daidaita kuɗi|Ìṣirò àti ìmúdọ́gba owó|Akaụntụ na imekọrịta ego
+Accounting, cash-up and reconciliation reports|Accounts, cash-up and payment matching reports|Rahoton lissafi, rufe kuɗi da daidaitawa|Ìròyìn ìṣirò, pípa àpò owó àti ìmúdọ́gba|Akụkọ akaụntụ, mkpokọta ego na imekọrịta
+Review sales, reconcile payments, and sign off cash-up periods.|Check sales, match payments and sign off cash-up periods.|Duba sayarwa, daidaita biya, amince da lokacin rufe kuɗi.|Ṣàyẹ̀wò títà, mú ìsanwó dọ́gba, fọwọ́ sí àkókò àkójọ owó.|Nyochaa ahịa, mekọrịta ụgwọ ma kwado oge nchịkọta ego.
+Audit trail and exports|Audit records and downloads|Tarihin bincike da fitarwa|Àkọsílẹ̀ àyẹ̀wò àti gbígbé jáde|Ndekọ nyocha na mbupụ
+Import business data|Import business records|Shigo da bayanan kasuwanci|Gbé dátà iṣẹ́ wọlé|Bubata data azụmahịa
+Include imported historical sales|Include old sales wey you import|Haɗa tsohuwar sayarwar da aka shigo da ita|Fi títà àtijọ́ tí a gbé wọlé kún|Tinye ahịa ochie e bubatara
+Report|Report|Rahoto|Ìròyìn|Akụkọ
+Review correction|Check correction|Duba gyara|Ṣàyẹ̀wò àtúnṣe|Nyochaa mmezi
+Close a cash-up period|Close cash-up period|Rufe lokacin lissafin kuɗi|Pa àkókò àkójọ owó|Mechie oge nchịkọta ego
+Owner/manager sign-off. Enter actual counted totals per payment method.|Owner or manager must sign off. Enter real money wey you count for each payment method.|Amincewar mai shago ko manaja. Shigar da kuɗin da aka ƙirga ga kowace hanyar biya.|Ìfọwọ́sí oníṣẹ́ tàbí alákòóso. Tẹ àpapọ̀ gidi tí a kà fún ọ̀nà ìsanwó kọ̀ọ̀kan.|Nkwado onye nwe ma ọ bụ njikwa. Tinye ego ị gụrụ n'ezie maka ụzọ ịkwụ ụgwọ ọ bụla.
+Cashier ID|Cashier ID|Lambar mai karɓar kuɗi|ID olùgbà owó|ID onye na-anata ego
+Opened|When e open|An buɗe|A ṣí|E meghere
+Preview close|Check before close|Duba kafin rufewa|Ṣàyẹ̀wò kí o tó pa|Lelee tupu imechie
+No entries for this report|No records for this report|Babu bayanai ga wannan rahoto|Kò sí àkọsílẹ̀ fún ìròyìn yìí|Enweghị ndekọ maka akụkọ a
+Choose another report or date range. New business activity will appear here.|Choose another report or date. New business activity go show here.|Zaɓi wani rahoto ko lokaci. Sabon aikin kasuwanci zai bayyana a nan.|Yan ìròyìn tàbí àkókò mìíràn. Iṣẹ́ tuntun yóò hàn níbí.|Họrọ akụkọ ma ọ bụ oge ọzọ. Ọrụ azụmahịa ọhụrụ ga-apụta ebe a.
+Review permanent accounting entry|Check permanent account record|Duba rubutun lissafi na dindindin|Ṣàyẹ̀wò àkọsílẹ̀ ìṣirò títí láé|Nyochaa ndekọ akaụntụ na-adịgide
+Check the entry and enter a reason before confirming. This action is recorded in your audit trail.|Check record and enter reason before you confirm. This action go enter audit record.|Duba rubutun ka ba da dalili kafin tabbatarwa. Za a rubuta wannan aiki a tarihi.|Ṣàyẹ̀wò àkọsílẹ̀, tẹ ìdí kí o tó fìdí múlẹ̀. A ó kọ iṣẹ́ yìí sílẹ̀.|Nyochaa ndekọ ma tinye ihe kpatara ya tupu nkwenye. A na-edekọ omume a n'akụkọ nyocha.
+Confirm and sign|Confirm and sign|Tabbatar ka sa hannu|Fìdí múlẹ̀ kí o fọwọ́ sí|Kwenye ma bịanye aka
+Platform overview|Platform overview|Bayanin dandali|Àkópọ̀ ètò|Nchịkọta nyiwe
+Could not load platform data|We no fit load platform records|An kasa loda bayanan dandali|Kò ṣeé gbé dátà ètò wọlé|Enweghị ike ibunye data nyiwe
+Merchant operations, subscription collections, and platform activity.|Business operations, subscription money and platform activity.|Ayyukan kasuwanci, kuɗin rajista da ayyukan dandali.|Iṣẹ́ àwọn oníṣòwò, owó ètò àti iṣẹ́ pẹpẹ.|Ọrụ azụmahịa, ego ndebanye na ọrụ nyiwe.
+Active merchants|Businesses wey dey active|Kasuwanci masu aiki|Oníṣòwò tó ń ṣiṣẹ́|Ndị ahịa na-arụ ọrụ
+Pending merchants|Businesses wey never finish setup|Kasuwanci masu jira|Oníṣòwò tó ń dúró|Ndị ahịa na-eche
+Latest month collected|Money wey come last month|Kuɗin watan ƙarshe|Owó tí a gbà ní oṣù tó ṣẹ̀ṣẹ̀ kọjá|Ego anakọtara n'ọnwa ikpeazụ
+Manage merchants|Manage businesses|Sarrafa kasuwanci|Ṣàkóso oníṣòwò|Jikwaa ndị ahịa
+Onboarding, verification, and account access|Setup, verification and account access|Saiti, tabbatarwa da damar asusu|Ìṣètò, ìmúdájú àti àṣẹ àkọọ́lẹ̀|Nhazi, nkwenye na ohere akaụntụ
+Manage subscription plans|Manage subscription plans|Sarrafa tsarin rajista|Ṣàkóso ètò alábápín|Jikwaa atụmatụ ndebanye
+Platform pricing, features, and usage limits|Platform prices, features and usage limits|Farashi, fasaloli da iyakokin amfani|Iye owó, iṣẹ́ àti ààlà ìlò ètò|Ọnụahịa, atụmatụ na oke ojiji
+Charts use up to 200 loaded records. Collections are paid invoice amounts, not recurring revenue. Service health is not monitored on this page.|Charts use up to 200 records wey load. Collections na paid invoice money, no be recurring revenue. This page no dey monitor service health.|Jadawali suna amfani da bayanai har 200. Kuɗin da aka tara daga invoice ne, ba kuɗin maimaituwa ba. Ba a sa ido kan lafiyar sabis a nan.|Àwòrán ń lo àkọsílẹ̀ tó 200. Owó tí a gbà jẹ́ owó ìwé owó, kì í ṣe owó tó ń tún wá. A kò ṣàyẹ̀wò ìlera iṣẹ́ níbí.|Eserese na-eji ndekọ ruru 200. Ego anakọtara bụ nke akwụkwọ ụgwọ akwụgoro, ọ bụghị ego na-alọghachi. A naghị enyocha ahụike ọrụ n'ebe a.
+Loaded invoice collections|Invoice money wey load|Kuɗin invoice da aka loda|Owó ìwé owó tí a gbé wọlé|Ego akwụkwọ ụgwọ e bunyere
+Annualized collection estimate|Estimate of yearly collections|Kiyasin kuɗin shekara|Ìdíwọ̀n owó ọdún|Atụmatụ nchịkọta kwa afọ
+Merchant access|Business access|Damar kasuwanci|Àṣẹ oníṣòwò|Ohere onye ahịa
+Merchant directory|Business list|Jerin kasuwanci|Àtòjọ oníṣòwò|Ndepụta ndị ahịa
+Merchant unavailable|Business no dey available|Kasuwanci bai samu ba|Oníṣòwò kò sí|Onye ahịa adịghị
+The merchant could not be loaded. Check your connection and platform access.|We no fit load business. Check internet and platform access.|An kasa loda kasuwanci. Duba haɗi da damar dandali.|Kò ṣeé gbé oníṣòwò wọlé. Ṣàyẹ̀wò ìsopọ̀ àti àṣẹ ètò.|Enweghị ike ibunye onye ahịa. Lelee njikọ na ohere nyiwe.
+Open merchant page|Open business page|Buɗe shafin kasuwanci|Ṣí ojú-ewé oníṣòwò|Mepee ibe onye ahịa
+Primary contact|Main contact|Babban mai tuntuɓa|Olùbáṣepọ̀ pàtàkì|Isi kọntaktị
+Platform notes|Platform notes|Bayanan dandali|Àkọsílẹ̀ ètò|Ihe ndetu nyiwe
+Platform operations|Platform operations|Ayyukan dandali|Iṣẹ́ ètò|Ọrụ nyiwe
+Manage TracKasuwa across merchants. Personal language and theme preferences are in Display.|Manage TracKasuwa for all businesses. Your language and theme settings dey Display.|Sarrafa TracKasuwa ga kasuwanci. Zaɓin harshe da jigo na cikin Display.|Ṣàkóso TracKasuwa fún oníṣòwò. Èdè àti àwọ̀ rẹ wà ní Display.|Jikwaa TracKasuwa n'etiti ndị ahịa. Asụsụ na isiokwu gị dị na Display.
+Manage the plans available to merchants and review subscriptions.|Manage plans wey businesses fit use and check subscriptions.|Sarrafa tsarin da kasuwanci za su iya amfani da shi, duba rajista.|Ṣàkóso ètò fún oníṣòwò kí o ṣàyẹ̀wò alábápín.|Jikwaa atụmatụ ndị ahịa nwere ma nyochaa ndebanye.
+Plans and subscriptions|Plans and subscriptions|Tsare-tsare da rajista|Ètò àti ṣíṣe-alábápín|Atụmatụ na ndebanye
+Monitor platform activity and merchant growth.|Check platform activity and business growth.|Bi ayyukan dandali da haɓakar kasuwanci.|Ṣàyẹ̀wò iṣẹ́ ètò àti ìdàgbàsókè oníṣòwò.|Nyochaa ọrụ nyiwe na uto ndị ahịa.
+Review onboarding, verification, account status and device limits.|Check setup, verification, account status and device limits.|Duba saiti, tabbatarwa, halin asusu da iyakokin na'ura.|Ṣàyẹ̀wò ìṣètò, ìmúdájú, ipò àkọọ́lẹ̀ àti ààlà ẹ̀rọ.|Nyochaa nhazi, nkwenye, ọnọdụ akaụntụ na oke igwe.
+Business-data import|Import business records|Shigo da bayanan kasuwanci|Gbígbé dátà iṣẹ́ wọlé|Mbubata data azụmahịa
+Upload → map columns → validate → preview → confirm. Offline previews are provisional; the server rechecks duplicates on sync.|Upload → match columns → validate → preview → confirm. Offline preview na temporary; server go check duplicates again when e sync.|Loda → daidaita ginshiƙai → tantance → duba → tabbatar. Duban ba intanet na wucin gadi ne; uwar garke ta sake duba maimaitawa lokacin daidaitawa.|Gbé sókè → so ọwọ̀n → ṣàyẹ̀wò → wo àwòkọ́ṣe → fìdí múlẹ̀. Àwòkọ́ṣe láìsí intanẹẹti jẹ́ fún ìgbà díẹ̀; olupin yóò tún ṣàyẹ̀wò àdàkọ.|Bulite → jikọta kọlụm → nyochaa → lelee → kwenye. Nlele na-enweghị ịntanetị bụ nwa oge; sava na-enyocha oyiri ọzọ mgbe e mekọrịtara.
+Upload and map your data|Upload records and match columns|Loda ka daidaita bayananka|Gbé dátà sókè kí o so wọ́n|Bulite ma jikọta data gị
+CSV or Excel file|CSV or Excel file|Fayil CSV ko Excel|Fáìlì CSV tàbí Excel|Faịlụ CSV ma ọ bụ Excel
+Record type|Type of record|Nau'in bayanai|Irú àkọsílẹ̀|Ụdị ndekọ
+Opening-stock warehouse|Warehouse for starting stock|Ma'ajiyar hajar farko|Ilé ìpamọ́ ọjà àkọ́kọ́|Ụlọ nkwakọba ngwaahịa mbido
+Choose warehouse|Choose warehouse|Zaɓi ma'ajiya|Yan ilé ìpamọ́|Họrọ ụlọ nkwakọba
+Load saved mapping|Load column matching wey save|Loda tsarin haɗin da aka ajiye|Gbé ìsopọ̀ tí a fipamọ́ wọlé|Bunye njikọ echekwara
+Save mapping template|Save column matching template|Ajiye tsarin haɗin|Fi àpẹẹrẹ ìsopọ̀ pamọ́|Chekwaa ụdị njikọ
+Validate and preview|Check and preview|Tantance ka duba|Ṣàyẹ̀wò kí o wo àwòkọ́ṣe|Nyochaa ma lelee
+Download full validation report|Download full checking report|Sauke cikakken rahoton tantancewa|Gba gbogbo ìròyìn àyẹ̀wò|Budata akụkọ nyocha niile
+Download row-level report|Download report for each row|Sauke rahoton kowane layi|Gba ìròyìn ìlà kọ̀ọ̀kan|Budata akụkọ ahịrị ọ bụla
+Showing the first 200 rows; validation covers every row. Fix errors in the source file and upload again.|We show first 200 rows; validation check every row. Fix errors for original file and upload again.|Ana nuna layuka 200 na farko; an tantance duka. Gyara kurakurai a asalin fayil ka sake loda.|A fi ìlà 200 àkọ́kọ́ hàn; àyẹ̀wò kan gbogbo ìlà. Ṣàtúnṣe aṣìṣe nínú fáìlì kí o tún gbé sókè.|A na-egosi ahịrị 200 mbụ; nyocha gụnyere niile. Dezie njehie na faịlụ mbụ ma bulite ọzọ.
+Import history and audited reversal|Import history and recorded reversal|Tarihin shigowa da juyawa mai bincike|Ìtàn gbígbé wọlé àti ìyípadà tí a kọ|Akụkọ mbubata na ntụgharị e dekọrọ
+No import history loaded. Completed batches appear here when online.|No import history load. Batches wey finish go show when internet dey.|Babu tarihin shigowa da aka loda. Rukunin da ya kammala zai bayyana idan intanet ta dawo.|Kò sí ìtàn gbígbé wọlé. Ìpele tó parí yóò hàn nígbà ìsopọ̀.|Ebughị akụkọ mbubata. Otu agwụchara ga-apụta mgbe ịntanetị dị.
+Reverse batch|Reverse this batch|Juya rukuni|Yí ìpele padà|Tụgharịa otu
+Review reversal|Check reversal|Duba juyawa|Ṣàyẹ̀wò ìyípadà|Nyochaa ntụgharị
+Confirm reversal|Confirm reversal|Tabbatar da juyawa|Fìdí ìyípadà múlẹ̀|Kwenye ntụgharị
+. Changed or consumed records will require reconciliation first.|. Records wey change or dem don use need reconciliation first.|. Bayanai da aka canja ko amfani da su suna buƙatar daidaitawa da farko.|. Àkọsílẹ̀ tí a yí tàbí lò nílò ìmúdọ́gba kọ́kọ́.|. Ndekọ gbanwere ma ọ bụ ejirila chọrọ imekọrịta mbụ.
+Upload pending data|Upload records wey dey wait|Loda bayanan da ke jira|Gbé dátà tó ń dúró sókè|Bulite data na-eche
+Duplicates|Duplicates|Maimaitawa|Àwọn àdàkọ|Oyiri
+Errors|Errors|Kurakurai|Àwọn aṣìṣe|Njehie
+Unmapped|Never match|Ba a haɗa ba|A kò tíì so pọ̀|Ejikọtaghị
+Batch|Batch|Rukuni|Ìpele|Otu
+Row|Row|Layi|Ìlà|Ahịrị
+rows|rows|layuka|àwọn ìlà|ahịrị
+rows loaded|rows don load|layuka sun loda|ìlà ti wọlé|ahịrị e bunyere
+rows…|rows…|layuka…|àwọn ìlà…|ahịrị…
+row results.|results for rows.|sakamakon layi.|èsì ìlà.|nsonaazụ ahịrị.
+Processed|Don process|An sarrafa|A ti ṣe|E meela
+Rejected|Dem reject am|An ƙi|A kọ̀ ọ́|Ajụrụ
+Values|Values|Ƙimomi|Àwọn iye|Uru
+Result|Result|Sakamako|Èsì|Nsonaazụ
+Results|Results|Sakamako|Àwọn èsì|Nsonaazụ
+TracKasuwa assistant|TracKasuwa assistant|Mataimakin TracKasuwa|Olùrànlọ́wọ́ TracKasuwa|Onye enyemaka TracKasuwa
+AI Assistant|AI assistant|Mataimakin AI|Olùrànlọ́wọ́ AI|Onye enyemaka AI
+Prepare product imports and review insights from your business data.|Prepare products to import and check insights from your business records.|Shirya shigo da kaya, duba nazarin bayanan kasuwanci.|Ṣètò gbígbé ọjà wọlé, ṣàyẹ̀wò ìmọ̀ látinú dátà iṣẹ́ rẹ.|Kwadebe mbubata ngwaahịa ma nyochaa nghọta data azụmahịa gị.
+Preview mode: this assistant uses fixed rules, with no live AI model or external market data. Review every proposed change before confirming.|Preview mode: this assistant use fixed rules; no live AI or outside market data. Check every proposed change before you confirm.|Yanayin dubawa: mataimakin yana amfani da ƙa'idoji tsayayyu, ba AI kai tsaye ko bayanan kasuwa na waje ba. Duba kowane canji kafin tabbatarwa.|Àwòkọ́ṣe: olùrànlọ́wọ́ yìí ń lo ìlànà tó dúró, kò lo AI alààyè tàbí dátà ọjà òde. Ṣàyẹ̀wò gbogbo ìyípadà kí o tó fìdí múlẹ̀.|Ụdị nlele: onye enyemaka a na-eji iwu edobere, enweghị AI dị ndụ ma ọ bụ data ahịa mpụga. Nyochaa mgbanwe niile tupu nkwenye.
+Business imports|Business imports|Shigo da bayanan kasuwanci|Gbígbé dátà iṣẹ́ wọlé|Mbubata azụmahịa
+Business insights|Business insights|Nazarin kasuwanci|Ìmọ̀ nípa iṣẹ́|Nghọta azụmahịa
+Working on your request?|We dey work on your request…|Ana aiki kan buƙatarka…|A ń ṣiṣẹ́ lórí ìbéèrè rẹ…|A na-arụ ọrụ na arịrịọ gị…
+Loading assistant preferences?|Assistant settings dey load…|Ana loda saitin mataimaki…|A ń gbé ètò olùrànlọ́wọ́ wọlé…|A na-ebunye ntọala enyemaka…
+Bulk inventory draft|Draft for plenty stock|Daftarin haja mai yawa|Àkọ́kọ́ ọjà púpọ̀|Ndetu ọtụtụ ngwaahịa
+Paste product data only, without customer or staff details. Use column headers or “product quantity price”.|Paste only product data, no customer or staff details. Use column headers or “product quantity price”.|Manna bayanan kaya kawai, ba na abokan ciniki ko ma'aikata ba. Yi amfani da kanun ginshiƙai ko “product quantity price”.|Lẹ dátà ọjà nìkan, láìsí àlàyé oníbàárà tàbí òṣìṣẹ́. Lo orí ọwọ̀n tàbí “product quantity price”.|Tapawa naanị data ngwaahịa, enweghị nkọwa ndị ahịa ma ọ bụ ọrụ. Jiri aha kọlụm ma ọ bụ “product quantity price”.
+Product CSV or Excel file|Product CSV or Excel file|Fayil kayan CSV ko Excel|Fáìlì ọjà CSV tàbí Excel|Faịlụ ngwaahịa CSV ma ọ bụ Excel
+Messy product data|Product data wey never arrange|Bayanan kaya marasa tsari|Dátà ọjà tí kò ṣètò|Data ngwaahịa ahazighị
+Propose mapped rows|Suggest matched rows|Ba da shawarar layukan haɗi|Dábàá ìlà tí a so pọ̀|Tụọ aro ahịrị ejikọrọ
+Review inventory proposal|Check proposed stock changes|Duba shawarar haja|Ṣàyẹ̀wò àbá ọjà|Nyochaa aro ngwaahịa
+Generate organization-only insights|Create insights from only this business|Ƙirƙiri nazarin wannan kasuwanci kawai|Ṣẹ̀dá ìmọ̀ fún iṣẹ́ yìí nìkan|Mepụta nghọta naanị azụmahịa a
+Deliver this preview to your profile|Send this preview to your profile|Aika wannan duban zuwa bayananka|Rán àwòkọ́ṣe yìí sí àkọọ́lẹ̀ rẹ|Zipu nlele a na profaịlụ gị
+Confirm and deliver displayed insights|Confirm and send insights wey show|Tabbatar ka aika nazarin da aka nuna|Fìdí múlẹ̀ kí o rán ìmọ̀ tí a fihàn|Kwenye ma zipu nghọta egosiri
+Your delivery opt-ins|Where you agree to receive updates|Zaɓin karɓar saƙonni|Ìyọ̀ǹda gbígba rẹ|Nhọrọ nnata gị
+Confirm delivery preferences|Confirm where to send updates|Tabbatar da zaɓin aika saƙonni|Fìdí ètò gbígba múlẹ̀|Kwenye nhọrọ nnyefe
+Limits: 20 requests per hour; 5 deliveries per channel per hour. Each insight can be delivered once per channel.|Limits: 20 requests each hour; 5 deliveries per channel each hour. Each insight fit send once per channel.|Iyaka: buƙatu 20 a awa; aika 5 ga kowane tashar a awa. Nazari ɗaya za a aika sau ɗaya ga tashar.|Ààlà: ìbéèrè 20 lójú wákàtí; ìfijiṣẹ́ 5 fún ikanni kọ̀ọ̀kan. A lè fi ìmọ̀ kọ̀ọ̀kan ránṣẹ́ lẹ́ẹ̀kan fún ikanni.|Oke: arịrịọ 20 kwa elekere; nnyefe 5 kwa ọwa kwa elekere. A na-ezipụ nghọta ọ bụla otu ugboro kwa ọwa.
+Draft product rows with the assistant|Use assistant draft product rows|Yi daftarin layin kaya da mataimaki|Lo olùrànlọ́wọ́ ṣe àkọ́kọ́ ìlà ọjà|Jiri onye enyemaka detuo ahịrị ngwaahịa
+Business performance insights|How business dey perform|Nazarin aikin kasuwanci|Ìmọ̀ ìṣiṣẹ́ iṣẹ́|Nghọta arụmọrụ azụmahịa
+Sales overview|Sales overview|Bayanin sayarwa|Àkópọ̀ títà|Nchịkọta ahịa
+No sales yet this week|No sale yet this week|Babu sayarwa wannan makon tukuna|Kò sí títà lọ́sẹ̀ yìí síbẹ̀|Enweghị ahịa n'izu a
+Once sales come in, your revenue trend will show up here.|When sales start, how money dey come go show here.|Da zarar an fara sayarwa, yanayin kuɗinka zai bayyana a nan.|Nígbà tí títà bá bẹ̀rẹ̀, ìṣàn owó yóò hàn níbí.|Mgbe ahịa malitere, usoro ego gị ga-apụta ebe a.
+Live activity|Wetin dey happen now|Ayyuka kai tsaye|Iṣẹ́ lọ́wọ́lọ́wọ́|Ọrụ dị ugbu a
+Sales will appear here as soon as your team starts ringing them up.|Sales go show here as your team start to record them.|Sayarwa za ta bayyana da zarar ma'aikatanka suka fara rubutawa.|Títà yóò hàn bí ẹgbẹ́ rẹ bá bẹ̀rẹ̀ sí í kọ ọ́ sílẹ̀.|Ahịa ga-apụta ebe a mgbe otu gị malitere idekọ ha.
+Open POS|Open selling screen|Buɗe POS|Ṣí POS|Mepee POS
+All sales|All sales|Duk sayarwa|Gbogbo títà|Ahịa niile
+Daily revenue breakdown|Sales money for each day|Cikakken kuɗin kullum|Àlàyé owó ojoojúmọ́|Nkọwa ego kwa ụbọchị
+Revenue by Day|Sales money by day|Kuɗi bisa rana|Owó ní ọjọ́ kọ̀ọ̀kan|Ego kwa ụbọchị
+Revenue by payment method|Sales money by payment method|Kuɗi bisa hanyar biya|Owó ní ọ̀nà ìsanwó kọ̀ọ̀kan|Ego site n'ụzọ ịkwụ ụgwọ
+No revenue for this period|No sales money for this period|Babu kuɗi a wannan lokacin|Kò sí owó ní àkókò yìí|Enweghị ego n'oge a
+Choose another period or return after a completed sale.|Choose another period or come back after sale finish.|Zaɓi wani lokaci ko dawo bayan an kammala sayarwa.|Yan àkókò mìíràn tàbí padà lẹ́yìn títà tó parí.|Họrọ oge ọzọ ma ọ bụ laghachi mgbe ahịa gwụchara.
+No payment data|No payment record|Babu bayanan biya|Kò sí dátà ìsanwó|Enweghị data ịkwụ ụgwọ
+Completed sales will show your payment-method mix here.|Sales wey finish go show different payment methods here.|Sayarwar da ta kammala za ta nuna hanyoyin biyanka a nan.|Títà tó parí yóò fi ọ̀nà ìsanwó rẹ hàn níbí.|Ahịa agwụchara ga-egosi ụzọ ịkwụ ụgwọ ebe a.
+No products sold in this period|No product sell for this period|Ba a sayar da kaya a wannan lokacin ba|A kò ta ọjà ní àkókò yìí|E rereghị ngwaahịa n'oge a
+Products by revenue for selected period|Products by sales money for selected period|Kaya bisa kuɗi a lokacin da aka zaɓa|Ọjà nípa owó fún àkókò tí a yàn|Ngwaahịa site n'ego n'oge ahọpụtara
+Items sold|Items wey sell|Kayan da aka sayar|Ọjà tí a tà|Ngwaahịa e rere
+Units Sold|How many sell|Adadin da aka sayar|Iye tí a tà|Ọnụọgụ e rere
+Total transactions|All transactions|Jimillar ciniki|Àpapọ̀ ìṣòwò|Ngụkọta azụmahịa
+Payment summary|Payment summary|Taƙaitaccen biya|Àkópọ̀ ìsanwó|Nchịkọta ịkwụ ụgwọ
+This Week|This week|Wannan makon|Ọ̀sẹ̀ yìí|Izu a
+This Month|This month|Wannan watan|Oṣù yìí|Ọnwa a
+This Quarter|This 3 months|Wannan kwatar|Mẹ́ẹ̀dogún yìí|Ọnwa atọ a
+This Year|This year|Wannan shekarar|Ọdún yìí|Afọ a
+Today|Today|Yau|Lónìí|Taa
+Back to sales|Back to sales|Koma sayarwa|Padà sí títà|Laghachi n'ahịa
+Sale unavailable|Sale no dey available|Sayarwa ba ta samu ba|Títà kò sí|Ahịa adịghị
+This sale could not be loaded. Check your connection and access, then try again.|We no fit load this sale. Check internet and access, then try again.|An kasa loda sayarwar. Duba haɗi da izini, sake gwadawa.|Kò ṣeé gbé títà wọlé. Ṣàyẹ̀wò ìsopọ̀ àti àṣẹ, tún gbìyànjú.|Enweghị ike ibunye ahịa a. Lelee njikọ na ikike, nwaa ọzọ.
+Prepare your purchase order. Drafts are saved on this device when offline.|Prepare supplier order. Drafts go save for this device when internet no dey.|Shirya odar saye. Ana ajiye daftari a na'ura idan ba intanet.|Ṣètò àṣẹ rírà. Àkọ́kọ́ yóò fipamọ́ lórí ẹ̀rọ nígbà tí kò sí intanẹẹti.|Kwadebe oda ịzụta. A na-echekwa ndetu n'igwe a mgbe ịntanetị adịghị.
+Supplier and order items|Supplier and order items|Mai kaya da kayan oda|Olùpèsè àti ọjà àṣẹ|Onye na-ebunye na ngwaahịa oda
+Waiting for this order and all items to sync.|We dey wait make this order and items sync.|Ana jiran oda da kayanta su daidaita.|A ń dúró kí àṣẹ àti ọjà rẹ̀ dọ́gba.|A na-eche ka oda na ngwaahịa niile mekọrịta.
+Waiting for this transaction, its items and linked sale to sync.|We dey wait make this transaction, items and linked sale sync.|Ana jiran ciniki, kayansa da sayarwar da aka haɗa su daidaita.|A ń dúró kí ìṣòwò, ọjà rẹ̀ àti títà tó sopọ̀ dọ́gba.|A na-eche ka azụmahịa, ngwaahịa na ahịa ejikọrọ mekọrịta.
+Reconnect to send, cancel or receive.|Connect internet to send, cancel or receive.|Sake haɗawa don aika, soke ko karɓa.|Tún sopọ̀ láti ránṣẹ́, fagilé tàbí gbà.|Jikọọ ọzọ iji zipu, kagbuo ma ọ bụ nata.
+Saved offline — will sync automatically once you’re back online.|E don save for device — e go sync when internet return.|An ajiye ba intanet — zai daidaita idan ka sake haɗawa.|A fipamọ́ láìsí intanẹẹti — yóò dọ́gba nígbà ìsopọ̀.|Echekwara na-enweghị ịntanetị — ọ ga-emekọrịta mgbe njikọ lọghachiri.

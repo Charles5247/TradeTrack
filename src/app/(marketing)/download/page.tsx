@@ -1,3 +1,5 @@
+
+import { TranslatedText } from '@/i18n/text';
 import type { Metadata } from "next";
 import { DownloadClient } from "./download-client";
 import { Reveal } from "@/components/marketing/reveal";
@@ -56,7 +58,7 @@ export default async function DownloadPage() {
       <section style={{ padding: "100px 0 40px", textAlign: "center" }}>
         <div className="mx-auto max-w-3xl px-4 sm:px-6">
           <Reveal>
-            <div className="tt-eyebrow mb-3">Download</div>
+            <div className="tt-eyebrow mb-3"><TranslatedText text={"Download"} /></div>
           </Reveal>
           <Reveal delay={100}>
             <h1
@@ -66,9 +68,7 @@ export default async function DownloadPage() {
                 margin: "0 0 20px",
                 lineHeight: 1.05,
               }}
-            >
-              Get TracKasuwa on every device you sell from.
-            </h1>
+            ><TranslatedText text={"Get TracKasuwa on every device you sell from."} /></h1>
           </Reveal>
           <Reveal delay={200}>
             <p
@@ -78,10 +78,7 @@ export default async function DownloadPage() {
                 maxWidth: 620,
                 margin: "0 auto",
               }}
-            >
-              Get TracKasuwa on the devices you already use — as an installed
-              app on Windows and Android, or straight from your browser.
-            </p>
+            ><TranslatedText text={"Get TracKasuwa on the devices you already use — as an installed app on Windows and Android, or straight from your browser."} /></p>
           </Reveal>
         </div>
       </section>

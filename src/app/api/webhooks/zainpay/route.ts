@@ -2,11 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/supabase/types';
 import crypto from 'crypto';
-
-// ─── Configuration ────────────────────────────────────────────────────────────
-const ZAINPAY_WEBHOOK_SECRET = process.env.ZAINPAY_WEBHOOK_SECRET ?? '';
-const ZAINPAY_PUBLIC_KEY     = process.env.ZAINPAY_PUBLIC_KEY     ?? '';
-const ZAINPAY_BASE_URL       = process.env.ZAINPAY_BASE_URL       ?? 'https://sandbox.zainpay.ng';
+import { getZainpayConfig } from '@/lib/zainpay-config';
 
 // ─── Supabase admin client ────────────────────────────────────────────────────
 const supabaseAdmin = createClient<Database>(
@@ -47,10 +43,10 @@ interface ZainpayWebhookPayload {
 
 /** Validate webhook signature — HMAC-SHA512 if secret is configured */
 function validateSignature(rawBody: string, headers: Headers): boolean {
-  if (!ZAINPAY_WEBHOOK_SECRET) {
-    // If no secret is configured, skip validation in dev (log warning)
-    console.warn('[Webhook] ZAINPAY_WEBHOOK_SECRET not set — skipping signature validation');
-    return true;
+  const { webhookSecret, mode } = getZainpayConfig();
+  if (!webhookSecret) {
+    console.error(`[Webhook] No ${mode} webhook secret is configured`);
+    return mode === 'test';
   }
 
   const signature = headers.get('x-zainpay-signature')
@@ -64,7 +60,7 @@ function validateSignature(rawBody: string, headers: Headers): boolean {
   }
 
   const expected = crypto
-    .createHmac('sha512', ZAINPAY_WEBHOOK_SECRET)
+    .createHmac('sha512', webhookSecret)
     .update(rawBody)
     .digest('hex');
 
@@ -372,13 +368,14 @@ async function handleSuccessfulPayment(
     } as any);
 
   // ── 5. Re-verify with Zainpay API for confirmation ────────────────────────
-  if (ZAINPAY_PUBLIC_KEY) {
+  const zainpayConfig = getZainpayConfig();
+  if (zainpayConfig.publicKey) {
     try {
       const verifyRes = await fetch(
-        `${ZAINPAY_BASE_URL}/virtual-account/wallet/deposit/verify/${txnRef}`,
+        `${zainpayConfig.baseUrl}/virtual-account/wallet/deposit/verify/${txnRef}`,
         {
           method:  'GET',
-          headers: { 'Authorization': `Bearer ${ZAINPAY_PUBLIC_KEY}` },
+          headers: { 'Authorization': `Bearer ${zainpayConfig.publicKey}` },
         }
       );
       if (verifyRes.ok) {
@@ -437,10 +434,12 @@ async function handleFailedPayment(
 
 // ─── GET — health probe ───────────────────────────────────────────────────────
 export async function GET(): Promise<NextResponse> {
+  const zainpayConfig = getZainpayConfig();
   return NextResponse.json({
     endpoint:       'POST /api/webhooks/zainpay',
     status:         'active',
-    signatureCheck: Boolean(ZAINPAY_WEBHOOK_SECRET),
+    environment:    zainpayConfig.mode,
+    signatureCheck: Boolean(zainpayConfig.webhookSecret),
     idempotency:    true,
     events:         ['deposit.successful', 'deposit.failed', 'card.payment'],
   });

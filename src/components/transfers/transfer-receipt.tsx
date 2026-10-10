@@ -1,3 +1,5 @@
+
+import { TranslatedText } from '@/i18n/text';
 import React from "react";
 import type { TransferReceiptData } from "@/lib/receipt/build-transfer-receipt";
 import { BarcodeImage } from "@/components/receipts/barcode-image";
@@ -17,49 +19,47 @@ export function TransferReceipt({ data }: { data: TransferReceiptData }) {
           {data.orgName}
         </div>
         {data.orgAddress && (
-          <div className="receipt-center receipt-small">
-            Address: {data.orgAddress}
+          <div className="receipt-center receipt-small"><TranslatedText text={"Address:"} />{" "}{data.orgAddress}
           </div>
         )}
         {data.orgPhone && (
-          <div className="receipt-center receipt-small">
-            Telp. {data.orgPhone}
+          <div className="receipt-center receipt-small"><TranslatedText text={"Telp."} />{" "}{data.orgPhone}
           </div>
         )}
 
         <div className="receipt-divider" />
-        <div className="receipt-title">Stock Transfer Note</div>
+        <div className="receipt-title"><TranslatedText text={"Stock Transfer Note"} /></div>
         <div className="receipt-divider" />
 
         <div className="receipt-row">
-          <span>Ref:</span>
+          <span><TranslatedText text={"Ref:"} /></span>
           <span className="receipt-bold">{data.transferRef}</span>
         </div>
         <div className="receipt-row">
-          <span>Date:</span>
+          <span><TranslatedText text={"Date:"} /></span>
           <span>{new Date(data.dateISO).toLocaleString()}</span>
         </div>
         <div className="receipt-row">
-          <span>Status:</span>
+          <span><TranslatedText text={"Status:"} /></span>
           <span className="receipt-bold">{data.status.toUpperCase()}</span>
         </div>
 
         <div className="receipt-divider" />
 
         <div className="receipt-row">
-          <span>From:</span>
+          <span><TranslatedText text={"From:"} /></span>
           <span>{data.fromWarehouse}</span>
         </div>
         <div className="receipt-row">
-          <span>To:</span>
+          <span><TranslatedText text={"To:"} /></span>
           <span>{data.toWarehouse}</span>
         </div>
 
         <div className="receipt-divider" />
 
         <div className="receipt-table-head">
-          <span>Description</span>
-          <span>Qty</span>
+          <span><TranslatedText text={"Description"} /></span>
+          <span><TranslatedText text={"Qty"} /></span>
         </div>
         <div className="receipt-item">
           <span>
@@ -76,31 +76,31 @@ export function TransferReceipt({ data }: { data: TransferReceiptData }) {
         <div className="receipt-payment-details">
           {data.initiatedBy && (
             <div className="receipt-row">
-              <span>Initiated by</span>
+              <span><TranslatedText text={"Initiated by"} /></span>
               <span>{data.initiatedBy}</span>
             </div>
           )}
           {data.approvedBy && (
             <div className="receipt-row">
-              <span>Approved by</span>
+              <span><TranslatedText text={"Approved by"} /></span>
               <span>{data.approvedBy}</span>
             </div>
           )}
           {data.coordinatedBy && (
             <div className="receipt-row">
-              <span>Coordinated by</span>
+              <span><TranslatedText text={"Coordinated by"} /></span>
               <span>{data.coordinatedBy}</span>
             </div>
           )}
           {data.sentBy && (
             <div className="receipt-row">
-              <span>Sent by</span>
+              <span><TranslatedText text={"Sent by"} /></span>
               <span>{data.sentBy}</span>
             </div>
           )}
           {data.receivedBy && (
             <div className="receipt-row">
-              <span>Received by</span>
+              <span><TranslatedText text={"Received by"} /></span>
               <span>{data.receivedBy}</span>
             </div>
           )}
@@ -111,12 +111,8 @@ export function TransferReceipt({ data }: { data: TransferReceiptData }) {
         )}
 
         <div className="receipt-divider" />
-        <div className="receipt-center receipt-bold receipt-uppercase">
-          Thank you!
-        </div>
-        <div className="receipt-center receipt-small">
-          Powered by TracKasuwa
-        </div>
+        <div className="receipt-center receipt-bold receipt-uppercase"><TranslatedText text={"Thank you!"} /></div>
+        <div className="receipt-center receipt-small"><TranslatedText text={"Powered by TracKasuwa"} /></div>
 
         {data.barcodeValue && (
           <div className="receipt-barcode">

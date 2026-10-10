@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/supabase/types';
-
-// ─── Zainpay configuration ──────────────────────────────────────────────────
-const ZAINPAY_PUBLIC_KEY = process.env.ZAINPAY_PUBLIC_KEY  ?? '';
-const ZAINPAY_BASE_URL   = process.env.ZAINPAY_BASE_URL    ?? 'https://sandbox.zainpay.ng';
+import { getZainpayConfig } from '@/lib/zainpay-config';
 
 // ─── Supabase admin client ────────────────────────────────────────────────────
 const supabaseAdmin = createClient<Database>(
@@ -61,6 +58,7 @@ function generateInvoiceNumber(): string {
 // ─── GET /api/payments/verify ─────────────────────────────────────────────────
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
+    const zainpayConfig = getZainpayConfig();
     const { searchParams } = new URL(request.url);
     const txnRef  = searchParams.get('txnRef');
     const planId  = searchParams.get('planId');
@@ -91,11 +89,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     // ── 3. Call Zainpay verify endpoint ────────────────────────────────────
     // Pattern: GET /virtual-account/wallet/deposit/verify/${txnRef}
-    const verifyUrl = `${ZAINPAY_BASE_URL}/virtual-account/wallet/deposit/verify/${txnRef}`;
+    const verifyUrl = `${zainpayConfig.baseUrl}/virtual-account/wallet/deposit/verify/${txnRef}`;
     const zainpayRes = await fetch(verifyUrl, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${ZAINPAY_PUBLIC_KEY}`,
+        'Authorization': `Bearer ${zainpayConfig.publicKey}`,
         'Content-Type':  'application/json',
       },
     });

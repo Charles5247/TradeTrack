@@ -1,4 +1,6 @@
 'use client';
+import { TranslatedText, useCopy } from '@/i18n/text';
+
 
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -123,6 +125,7 @@ export default function ReportsPage() {
 }
 
 function ReportsPageInner() {
+  const copy = useCopy();
   const [period, setPeriod] = useState<ReportPeriod>('monthly');
 
   const { data, isLoading, error, refetch } = useQuery({
@@ -161,14 +164,14 @@ function ReportsPageInner() {
   };
 
   const summary = data?.summary;
-  if (error) return <div className="space-y-6"><h1 className="tt-page-title">Reports & Analytics</h1><ErrorState body={error.message} onRetry={() => refetch()} /></div>;
+  if (error) return <div className="space-y-6"><h1 className="tt-page-title"><TranslatedText text={"Reports & Analytics"} /></h1><ErrorState body={error.message} onRetry={() => refetch()} /></div>;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="tt-page-title">Reports & Analytics</h1>
-          <p className="tt-muted text-sm">Business performance insights</p>
+          <h1 className="tt-page-title"><TranslatedText text={"Reports & Analytics"} /></h1>
+          <p className="tt-muted text-sm"><TranslatedText text={"Business performance insights"} /></p>
         </div>
         <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
           <Select value={period} onValueChange={(v) => setPeriod(v as ReportPeriod)}>
@@ -176,41 +179,37 @@ function ReportsPageInner() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="daily">Today</SelectItem>
-              <SelectItem value="weekly">This Week</SelectItem>
-              <SelectItem value="monthly">This Month</SelectItem>
-              <SelectItem value="quarterly">This Quarter</SelectItem>
-              <SelectItem value="yearly">This Year</SelectItem>
+              <SelectItem value="daily"><TranslatedText text={"Today"} /></SelectItem>
+              <SelectItem value="weekly"><TranslatedText text={"This Week"} /></SelectItem>
+              <SelectItem value="monthly"><TranslatedText text={"This Month"} /></SelectItem>
+              <SelectItem value="quarterly"><TranslatedText text={"This Quarter"} /></SelectItem>
+              <SelectItem value="yearly"><TranslatedText text={"This Year"} /></SelectItem>
             </SelectContent>
           </Select>
           <Button variant="outline" onClick={exportCSV}>
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
+            <Download className="h-4 w-4 mr-2" /><TranslatedText text={"Export"} /></Button>
           <Button variant="outline" onClick={exportPDF}>
-            <Download className="h-4 w-4 mr-2" />
-            PDF
-          </Button>
+            <Download className="h-4 w-4 mr-2" /><TranslatedText text={"PDF"} /></Button>
         </div>
       </div>
 
       {/* Summary Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Total transactions" value={summary?.total_transactions || 0} icon={BarChart3} loading={isLoading} />
-        <StatCard label="Total revenue" value={formatCurrency(summary?.total_revenue || 0)} icon={DollarSign} loading={isLoading} />
-        <StatCard label="Gross profit" value={formatCurrency(summary?.gross_profit || 0)} icon={TrendingUp} loading={isLoading} />
-        <StatCard label="Profit margin" value={`${(summary?.profit_margin || 0).toFixed(1)}%`} icon={Package} loading={isLoading} />
+        <StatCard label={copy("Total transactions")} value={summary?.total_transactions || 0} icon={BarChart3} loading={isLoading} />
+        <StatCard label={copy("Total revenue")} value={formatCurrency(summary?.total_revenue || 0)} icon={DollarSign} loading={isLoading} />
+        <StatCard label={copy("Gross profit")} value={formatCurrency(summary?.gross_profit || 0)} icon={TrendingUp} loading={isLoading} />
+        <StatCard label={copy("Profit margin")} value={`${(summary?.profit_margin || 0).toFixed(1)}%`} icon={Package} loading={isLoading} />
       </div>
 
       {/* Charts */}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="tt-section-title">Revenue by Day</CardTitle>
-            <CardDescription>Daily revenue breakdown</CardDescription>
+            <CardTitle className="tt-section-title"><TranslatedText text={"Revenue by Day"} /></CardTitle>
+            <CardDescription><TranslatedText text={"Daily revenue breakdown"} /></CardDescription>
           </CardHeader>
           <CardContent>
-            {isLoading ? <Skeleton className="h-48 w-full" /> : !data?.dailyChart.length ? <EmptyState icon={BarChart3} title="No revenue for this period" body="Choose another period or return after a completed sale." /> : (
+            {isLoading ? <Skeleton className="h-48 w-full" /> : !data?.dailyChart.length ? <EmptyState icon={BarChart3} title={copy("No revenue for this period")} body={copy("Choose another period or return after a completed sale.")} /> : (
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={data?.dailyChart || []}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -226,11 +225,11 @@ function ReportsPageInner() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="tt-section-title">Payment Methods</CardTitle>
-            <CardDescription>Revenue by payment method</CardDescription>
+            <CardTitle className="tt-section-title"><TranslatedText text={"Payment Methods"} /></CardTitle>
+            <CardDescription><TranslatedText text={"Revenue by payment method"} /></CardDescription>
           </CardHeader>
           <CardContent>
-            {isLoading ? <Skeleton className="h-48 w-full" /> : !data?.pmChartData.length ? <EmptyState icon={DollarSign} title="No payment data" body="Completed sales will show your payment-method mix here." /> : (
+            {isLoading ? <Skeleton className="h-48 w-full" /> : !data?.pmChartData.length ? <EmptyState icon={DollarSign} title={copy("No payment data")} body={copy("Completed sales will show your payment-method mix here.")} /> : (
               <ResponsiveContainer width="100%" height={220}>
                 <PieChart>
                   <Pie
@@ -260,18 +259,18 @@ function ReportsPageInner() {
       {/* Top Products */}
       <Card>
         <CardHeader>
-          <CardTitle className="tt-section-title">Top Selling Products</CardTitle>
-          <CardDescription>Products by revenue for selected period</CardDescription>
+          <CardTitle className="tt-section-title"><TranslatedText text={"Top Selling Products"} /></CardTitle>
+          <CardDescription><TranslatedText text={"Products by revenue for selected period"} /></CardDescription>
         </CardHeader>
         <CardContent className="min-w-0 overflow-hidden p-0">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>#</TableHead>
-                <TableHead>Product</TableHead>
-                <TableHead>Units Sold</TableHead>
-                <TableHead>Revenue</TableHead>
-                <TableHead>% of Total</TableHead>
+                <TableHead><TranslatedText text={"Product"} /></TableHead>
+                <TableHead><TranslatedText text={"Units Sold"} /></TableHead>
+                <TableHead><TranslatedText text={"Revenue"} /></TableHead>
+                <TableHead><TranslatedText text={"% of Total"} /></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -281,7 +280,7 @@ function ReportsPageInner() {
                     {[...Array(5)].map((_, j) => <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>)}
                   </TableRow>
                 ))
-              ) : !data?.topProducts.length ? <TableRow><TableCell colSpan={5}><EmptyState icon={Package} title="No products sold in this period" /></TableCell></TableRow> : (data?.topProducts || []).map((p, i) => (
+              ) : !data?.topProducts.length ? <TableRow><TableCell colSpan={5}><EmptyState icon={Package} title={copy("No products sold in this period")} /></TableCell></TableRow> : (data?.topProducts || []).map((p, i) => (
                 <TableRow key={i}>
                   <TableCell className="font-bold tt-muted">{i + 1}</TableCell>
                   <TableCell className="font-medium">{p.name}</TableCell>

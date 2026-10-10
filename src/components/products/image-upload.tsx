@@ -1,4 +1,6 @@
 'use client';
+import { TranslatedText, useCopy } from '@/i18n/text';
+
 
 import { withTimeout, AUTH_CHECK_TIMEOUT_MS } from "@/lib/utils/timeout";
 import React, { useState, useRef, useCallback, useEffect } from 'react';
@@ -78,6 +80,7 @@ export function ImageUpload({
   onProductMatched,
   onCodeSelected,
 }: ImageUploadProps) {
+  const copy = useCopy();
   const [isUploading, setIsUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(currentImageUrl ?? null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -196,7 +199,7 @@ export function ImageUpload({
         <div className="relative group rounded-lg overflow-hidden border border-border bg-muted w-full aspect-square max-w-48">
           <Image
             src={preview}
-            alt="Product image"
+            alt={copy("Product image")}
             fill
             className="object-cover"
             sizes="192px"
@@ -214,9 +217,9 @@ export function ImageUpload({
                 size="icon-sm"
                 variant="secondary"
                 onClick={openMenu}
-                aria-label="Replace image"
+                aria-label={copy("Replace image")}
                 className="min-h-11 min-w-11"
-                title="Replace image"
+                title={copy("Replace image")}
               >
                 <Upload className="h-3 w-3" />
               </Button>
@@ -225,9 +228,9 @@ export function ImageUpload({
                 size="icon-sm"
                 variant="destructive"
                 onClick={handleRemove}
-                aria-label="Remove image"
+                aria-label={copy("Remove image")}
                 className="min-h-11 min-w-11"
-                title="Remove image"
+                title={copy("Remove image")}
               >
                 <X className="h-3 w-3" />
               </Button>
@@ -239,7 +242,7 @@ export function ImageUpload({
         <div
           role="button"
           tabIndex={isUploading ? -1 : 0}
-          aria-label="Product image and capture options"
+          aria-label={copy("Product image and capture options")}
           aria-disabled={isUploading}
           className={cn(
             'border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-3 cursor-pointer transition-colors w-full max-w-48 aspect-square focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
@@ -261,12 +264,8 @@ export function ImageUpload({
                 <ImageOff className="h-5 w-5 text-muted-foreground" />
               </div>
               <div className="text-center">
-                <p className="text-xs font-medium text-muted-foreground">
-                  Photo, scan or import
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  JPG, PNG, WebP · Max {MAX_SIZE_MB}MB
-                </p>
+                <p className="text-xs font-medium text-muted-foreground"><TranslatedText text={"Photo, scan or import"} /></p>
+                <p className="text-xs text-muted-foreground mt-0.5"><TranslatedText text={"JPG, PNG, WebP · Max"} />{" "}{MAX_SIZE_MB}<TranslatedText text={"MB"} /></p>
               </div>
             </>
           )}
@@ -279,18 +278,18 @@ export function ImageUpload({
         accept={ALLOWED_TYPES.join(',')}
         onChange={handleFileChange}
         className="hidden"
-        aria-label="Upload product photo"
+        aria-label={copy("Upload product photo")}
       />
-      <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={handleFileChange} className="hidden" aria-label="Take product photo" />
-      {preview && <Button type="button" variant="outline" className="min-h-11 w-full sm:w-auto" disabled={isUploading} onClick={openMenu}>Photo, scan or import</Button>}
+      <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={handleFileChange} className="hidden" aria-label={copy("Take product photo")} />
+      {preview && <Button type="button" variant="outline" className="min-h-11 w-full sm:w-auto" disabled={isUploading} onClick={openMenu}><TranslatedText text={"Photo, scan or import"} /></Button>}
       <Dialog open={menuOpen} onOpenChange={setMenuOpen}>
         <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[90dvh] overflow-y-auto">
-          <DialogHeader><DialogTitle>{scanning ? 'Find a product by code' : 'Add a photo or product data'}</DialogTitle><DialogDescription>{scanning ? 'Look up an existing product before filling the form.' : 'Choose one option. Camera access depends on your device; desktop may open the file picker.'}</DialogDescription></DialogHeader>
-          {scanning ? <><ProductCodeLookup onMatch={(match, cached) => { onProductMatched(match, cached); setMenuOpen(false); }} onCode={code => { onCodeSelected(code); setMenuOpen(false); }} /><Button type="button" variant="ghost" onClick={() => setScanning(false)}>Back to options</Button></> : <div className="grid gap-2">
-            <Button type="button" variant="outline" className="h-auto min-h-14 justify-start whitespace-normal px-4 py-3 text-left" onClick={() => { cameraRef.current?.click(); setMenuOpen(false); }}><Camera className="h-5 w-5 shrink-0" strokeWidth={1.75} /><span>Take a photo<span className="block text-xs font-normal tt-muted">Open your camera · up to 2 MB</span></span></Button>
-            <Button type="button" variant="outline" className="h-auto min-h-14 justify-start whitespace-normal px-4 py-3 text-left" onClick={() => setScanning(true)}><ScanLine className="h-5 w-5 shrink-0" strokeWidth={1.75} /><span>Scan barcode / QR<span className="block text-xs font-normal tt-muted">Find and prefill a product · manual entry available</span></span></Button>
-            <Button type="button" variant="outline" className="h-auto min-h-14 justify-start whitespace-normal px-4 py-3 text-left" onClick={() => { inputRef.current?.click(); setMenuOpen(false); }}><Upload className="h-5 w-5 shrink-0" strokeWidth={1.75} /><span>Upload a photo<span className="block text-xs font-normal tt-muted">Choose an existing image from your device</span></span></Button>
-            <Button asChild variant="outline" className="h-auto min-h-14 justify-start whitespace-normal px-4 py-3 text-left"><Link href="/imports" target="_blank" rel="noopener noreferrer" prefetch={false}><FileSpreadsheet className="h-5 w-5 shrink-0" strokeWidth={1.75} /><span>Upload an inventory list<span className="block text-xs font-normal tt-muted">CSV / Excel · opens bulk import in a new tab</span></span></Link></Button>
+          <DialogHeader><DialogTitle><TranslatedText text={scanning ? 'Find a product by code' : 'Add a photo or product data'} /></DialogTitle><DialogDescription><TranslatedText text={scanning ? 'Look up an existing product before filling the form.' : 'Choose one option. Camera access depends on your device; desktop may open the file picker.'} /></DialogDescription></DialogHeader>
+          {scanning ? <><ProductCodeLookup onMatch={(match, cached) => { onProductMatched(match, cached); setMenuOpen(false); }} onCode={code => { onCodeSelected(code); setMenuOpen(false); }} /><Button type="button" variant="ghost" onClick={() => setScanning(false)}><TranslatedText text={"Back to options"} /></Button></> : <div className="grid gap-2">
+            <Button type="button" variant="outline" className="h-auto min-h-14 justify-start whitespace-normal px-4 py-3 text-left" onClick={() => { cameraRef.current?.click(); setMenuOpen(false); }}><Camera className="h-5 w-5 shrink-0" strokeWidth={1.75} /><span><TranslatedText text={"Take a photo"} /><span className="block text-xs font-normal tt-muted"><TranslatedText text={"Open your camera · up to 2 MB"} /></span></span></Button>
+            <Button type="button" variant="outline" className="h-auto min-h-14 justify-start whitespace-normal px-4 py-3 text-left" onClick={() => setScanning(true)}><ScanLine className="h-5 w-5 shrink-0" strokeWidth={1.75} /><span><TranslatedText text={"Scan barcode / QR"} /><span className="block text-xs font-normal tt-muted"><TranslatedText text={"Find and prefill a product · manual entry available"} /></span></span></Button>
+            <Button type="button" variant="outline" className="h-auto min-h-14 justify-start whitespace-normal px-4 py-3 text-left" onClick={() => { inputRef.current?.click(); setMenuOpen(false); }}><Upload className="h-5 w-5 shrink-0" strokeWidth={1.75} /><span><TranslatedText text={"Upload a photo"} /><span className="block text-xs font-normal tt-muted"><TranslatedText text={"Choose an existing image from your device"} /></span></span></Button>
+            <Button asChild variant="outline" className="h-auto min-h-14 justify-start whitespace-normal px-4 py-3 text-left"><Link href="/imports" target="_blank" rel="noopener noreferrer" prefetch={false}><FileSpreadsheet className="h-5 w-5 shrink-0" strokeWidth={1.75} /><span><TranslatedText text={"Upload an inventory list"} /><span className="block text-xs font-normal tt-muted"><TranslatedText text={"CSV / Excel · opens bulk import in a new tab"} /></span></span></Link></Button>
           </div>}
         </DialogContent>
       </Dialog>

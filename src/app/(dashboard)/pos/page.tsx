@@ -1,4 +1,6 @@
 "use client";
+import { TranslatedText } from '@/i18n/text';
+
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -584,7 +586,7 @@ function POSPageInner() {
           {!isHydrated ? (
             <div className="flex h-32 flex-col items-center justify-center tt-muted">
               <Loader2 className="mb-2 h-8 w-8 animate-spin opacity-30" />
-              <p className="text-sm">Loading cart…</p>
+              <p className="text-sm"><TranslatedText text={"Loading cart…"} /></p>
             </div>
           ) : cart.items.length === 0 ? (
             <div className="flex h-32 flex-col items-center justify-center tt-muted">
@@ -879,9 +881,7 @@ function POSPageInner() {
                 className="flex-1"
                 onClick={handleDownloadPDF}
               >
-                <Download className="h-4 w-4 mr-2" />
-                PDF
-              </Button>
+                <Download className="h-4 w-4 mr-2" /><TranslatedText text={"PDF"} /></Button>
             </div>
 
             {/* Hardware thermal-printer options — only shown when a printer
@@ -921,9 +921,7 @@ function POSPageInner() {
                         <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
                       ) : (
                         <Printer className="h-4 w-4 mr-1.5" />
-                      )}
-                      Print to device
-                    </Button>
+                      )}<TranslatedText text={"Print to device"} /></Button>
                   </div>
                 ) : (
                   <div>
@@ -932,9 +930,9 @@ function POSPageInner() {
                       className="text-xs text-muted-foreground underline w-full text-left"
                       onClick={() => setShowPrinterMenu((v) => !v)}
                     >
-                      {printer.status === "connecting"
+                      <TranslatedText text={printer.status === "connecting"
                         ? "Connecting…"
-                        : "Connect a receipt printer (USB / Bluetooth)"}
+                        : "Connect a receipt printer (USB / Bluetooth)"} />
                     </button>
                     {showPrinterMenu && (
                       <div className="flex gap-2 mt-2">
@@ -946,9 +944,7 @@ function POSPageInner() {
                             onClick={printer.connectUsb}
                             disabled={printer.status === "connecting"}
                           >
-                            <Usb className="h-4 w-4 mr-1.5" />
-                            USB
-                          </Button>
+                            <Usb className="h-4 w-4 mr-1.5" /><TranslatedText text={"USB"} /></Button>
                         )}
                         {printer.bluetoothSupported && (
                           <Button
@@ -958,9 +954,7 @@ function POSPageInner() {
                             onClick={printer.connectBluetooth}
                             disabled={printer.status === "connecting"}
                           >
-                            <Bluetooth className="h-4 w-4 mr-1.5" />
-                            Bluetooth
-                          </Button>
+                            <Bluetooth className="h-4 w-4 mr-1.5" /><TranslatedText text={"Bluetooth"} /></Button>
                         )}
                       </div>
                     )}

@@ -1,4 +1,6 @@
 "use client";
+import { TranslatedLabel, useCopy } from '@/i18n/text';
+
 
 import React from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -42,6 +44,7 @@ import { clearCachedSession } from "@/lib/offline/db";
 import { requireOnline } from "@/lib/utils/network";
 import { useI18n } from "@/i18n";
 import { getBreadcrumbForPath } from "@/components/layout/nav-config";
+import { LanguageSelect } from '@/components/shared/language-select';
 import type { UserRole } from "@/types";
 
 /**
@@ -67,6 +70,7 @@ import type { UserRole } from "@/types";
  * sync button, sign-out flow) is preserved unchanged.
  */
 export function Header() {
+  const copy = useCopy();
   const router = useRouter();
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
@@ -117,7 +121,7 @@ export function Header() {
         size="icon"
         className="lg:hidden"
         onClick={toggleSidebar}
-        aria-label="Toggle menu"
+        aria-label={copy("Toggle menu")}
       >
         <Menu className="h-5 w-5" strokeWidth={1.75} />
       </Button>
@@ -128,7 +132,7 @@ export function Header() {
           <div className="flex items-center gap-1.5 text-xs tt-muted mb-0.5">
             {breadcrumb.map((b, i) => (
               <React.Fragment key={i}>
-                <span>{b}</span>
+                <span><TranslatedLabel>{b}</TranslatedLabel></span>
                 {i < breadcrumb.length - 1 && (
                   <ChevronRight className="h-3 w-3" strokeWidth={1.75} />
                 )}
@@ -137,7 +141,7 @@ export function Header() {
           </div>
         )}
         <div className="tt-head text-[18px] leading-none truncate">
-          {title}
+          <TranslatedLabel>{title}</TranslatedLabel>
         </div>
       </div>
 
@@ -146,11 +150,11 @@ export function Header() {
         type="button"
         onClick={() => setCommandPaletteOpen(true)}
         className="hidden md:flex items-center gap-2 min-w-[240px] max-w-xs h-9 rounded-lg border border-border bg-card px-3 text-sm text-muted-foreground hover:border-[var(--c-borderStrong)] transition-colors"
-        aria-label="Open search"
+        aria-label={copy("Open search")}
       >
         <Search className="h-4 w-4 shrink-0" strokeWidth={1.75} />
         <span className="flex-1 text-left truncate">
-          {user?.role === "platform_owner" ? "Search platform navigation…" : t.header.search_placeholder}
+          {user?.role === "platform_owner" ? copy("Search platform navigation…") : t.header.search_placeholder}
         </span>
         <Kbd>⌘K</Kbd>
       </button>
@@ -159,12 +163,13 @@ export function Header() {
         size="icon"
         className="md:hidden"
         onClick={() => setCommandPaletteOpen(true)}
-        aria-label="Open search"
+        aria-label={copy("Open search")}
       >
         <Search className="h-4 w-4" strokeWidth={1.75} />
       </Button>
 
       <div className="ml-auto flex items-center gap-2">
+        <LanguageSelect />
         <div
           className={cn(
             "hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors",
@@ -222,7 +227,7 @@ export function Header() {
                 ? `Upload ${pendingCount} pending sale${pendingCount === 1 ? "" : "s"} now`
                 : "Upload / sync now"
             }
-            aria-label="Upload pending data"
+            aria-label={copy("Upload pending data")}
           >
             <Upload className="h-4 w-4" strokeWidth={1.75} />
             {pendingCount > 0 && (

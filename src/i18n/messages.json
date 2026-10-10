@@ -1,0 +1,3764 @@
+{
+  "Home": {
+    "pcm": "Home",
+    "ha": "Gida",
+    "yo": "Ilé",
+    "ig": "Ụlọ"
+  },
+  "Features": {
+    "pcm": "Wetin app fit do",
+    "ha": "Fasaloli",
+    "yo": "Àwọn iṣẹ́",
+    "ig": "Ihe ngwa na-eme"
+  },
+  "Industries": {
+    "pcm": "Types of business",
+    "ha": "Fannonin kasuwanci",
+    "yo": "Àwọn ẹ̀ka iṣẹ́",
+    "ig": "Ụdị azụmahịa"
+  },
+  "Pricing": {
+    "pcm": "Prices",
+    "ha": "Farashi",
+    "yo": "Iye owó",
+    "ig": "Ọnụahịa"
+  },
+  "Download": {
+    "pcm": "Download",
+    "ha": "Sauke",
+    "yo": "Ṣe ìgbàsílẹ̀",
+    "ig": "Budata"
+  },
+  "Get started": {
+    "pcm": "Start now",
+    "ha": "Fara yanzu",
+    "yo": "Bẹ̀rẹ̀ nísinsìnyí",
+    "ig": "Malite ugbu a"
+  },
+  "Start free": {
+    "pcm": "Start for free",
+    "ha": "Fara kyauta",
+    "yo": "Bẹ̀rẹ̀ lọ́fẹ̀ẹ́",
+    "ig": "Malite n'efu"
+  },
+  "Start free — no card": {
+    "pcm": "Start free — no card needed",
+    "ha": "Fara kyauta — ba sai kati ba",
+    "yo": "Bẹ̀rẹ̀ lọ́fẹ̀ẹ́ — kò nílò káàdì",
+    "ig": "Malite n'efu — kaadị adịghị mkpa"
+  },
+  "Start free — no card required.": {
+    "pcm": "Start free — you no need card.",
+    "ha": "Fara kyauta — ba a buƙatar kati.",
+    "yo": "Bẹ̀rẹ̀ lọ́fẹ̀ẹ́ — kò nílò káàdì.",
+    "ig": "Malite n'efu — kaadị adịghị mkpa."
+  },
+  "See pricing": {
+    "pcm": "See prices",
+    "ha": "Duba farashi",
+    "yo": "Wo iye owó",
+    "ig": "Lee ọnụahịa"
+  },
+  "See Pricing": {
+    "pcm": "See prices",
+    "ha": "Duba farashi",
+    "yo": "Wo iye owó",
+    "ig": "Lee ọnụahịa"
+  },
+  "Sign up": {
+    "pcm": "Open account",
+    "ha": "Buɗe asusu",
+    "yo": "Ṣí àkọọ́lẹ̀",
+    "ig": "Mepee akaụntụ"
+  },
+  "Point of Sale · Nigeria": {
+    "pcm": "Where you sell · Nigeria",
+    "ha": "Wurin sayarwa · Najeriya",
+    "yo": "Ibi ìtajà · Nàìjíríà",
+    "ig": "Ebe ahịa · Naịjirịa"
+  },
+  "Sell faster. Restock smarter. Never lose a sale.": {
+    "pcm": "Sell quick. Restock with sense. No lose any sale.",
+    "ha": "Sayar da sauri. Cika haja da basira. Kada ka rasa ciniki.",
+    "yo": "Tà ní kíákíá. Tún kún ọjà pẹ̀lú ọgbọ́n. Má pàdánù títà.",
+    "ig": "Ree ngwa ngwa. Jupụta ngwaahịa n'amamihe. Efula ahịa."
+  },
+  "Barcode-scan checkout, split payments, offline-ready — plus a dedicated Naira account for every merchant. TracKasuwa is retail, unlocked.": {
+    "pcm": "Scan barcode, split payment, sell without internet — plus Naira account for each business. TracKasuwa make selling easy.",
+    "ha": "Biyan kuɗi da barcode, raba biyan kuɗi da aiki ba intanet — tare da asusun Naira na kowane ɗan kasuwa. TracKasuwa na sauƙaƙa ciniki.",
+    "yo": "Ṣe ìsanwó pẹ̀lú barcode, pín ìsanwó, ṣiṣẹ́ láìsí intanẹẹti — pẹ̀lú àkọọ́lẹ̀ Naira fún oníṣòwò kọ̀ọ̀kan. TracKasuwa mú ìtajà rọrùn.",
+    "ig": "Nyochaa barcode, kewaa ịkwụ ụgwọ, rụọ ọrụ na-enweghị ịntanetị — yana akaụntụ Naira maka onye ahịa ọ bụla. TracKasuwa na-eme ka ahịa dị mfe."
+  },
+  "Your entire shop. In every pocket. Even offline.": {
+    "pcm": "Your whole shop dey your pocket. Even without internet.",
+    "ha": "Duk shagonka a aljihunka. Ko ba intanet.",
+    "yo": "Gbogbo ṣọ́ọ̀bù rẹ nínú àpò rẹ. Kódà láìsí intanẹẹti.",
+    "ig": "Ụlọ ahịa gị niile n'akpa gị. Ọbụna na-enweghị ịntanetị."
+  },
+  "Nigerian retail, unlocked": {
+    "pcm": "Selling for Naija don easy",
+    "ha": "An sauƙaƙa cinikin Najeriya",
+    "yo": "Ìtajà Nàìjíríà di rọrùn",
+    "ig": "Ahịa Naịjirịa dị mfe"
+  },
+  "Barcode-scan checkout, even with no signal.": {
+    "pcm": "Scan barcode sell, even when network no dey.",
+    "ha": "Sayarwa da barcode, ko ba sigina.",
+    "yo": "Ṣe ìtajà pẹ̀lú barcode, kódà láìsí nẹ́tíwọ́ọ̀kì.",
+    "ig": "Jiri barcode ree, ọbụna na-enweghị netwọkụ."
+  },
+  "Every sale recorded, every receipt traceable.": {
+    "pcm": "Every sale get record, every receipt fit trace.",
+    "ha": "An rubuta kowace sayarwa, ana iya bin kowace rasit.",
+    "yo": "A kọ gbogbo títà sílẹ̀, a lè tọpasẹ̀ gbogbo rísíìtì.",
+    "ig": "A na-edekọ ahịa niile, a pụkwara ịchọta risit ọ bụla."
+  },
+  "Multi-warehouse inventory, always in sync.": {
+    "pcm": "Stock for all warehouses dey match.",
+    "ha": "Hajar ma'ajiyoyi da yawa, koyaushe tana daidaita.",
+    "yo": "Ọjà inú ilé ìpamọ́ púpọ̀ ń bá ara wọn mu.",
+    "ig": "Ngwaahịa n'ọtụtụ ụlọ nkwakọba na-adakọ mgbe niile."
+  },
+  "Trusted by thousands of traders & merchants across Nigeria": {
+    "pcm": "Traders and business owners across Nigeria trust am",
+    "ha": "Dubban 'yan kasuwa a Najeriya sun amince da shi",
+    "yo": "Ẹgbẹẹgbẹ̀rún oníṣòwò ní Nàìjíríà gbẹ́kẹ̀ lé e",
+    "ig": "Ọtụtụ puku ndị ahịa na Naịjirịa tụkwasịrị ya obi"
+  },
+  "Everything you need. Nothing you don't.": {
+    "pcm": "Everything wey you need. No extra wahala.",
+    "ha": "Duk abin da kake buƙata. Babu abin da ba ka buƙata.",
+    "yo": "Gbogbo ohun tí o nílò. Kò sí àfikún tí o kò nílò.",
+    "ig": "Ihe niile ị chọrọ. Enweghị ihe ị chọghị."
+  },
+  "Fast checkout POS": {
+    "pcm": "POS wey fast",
+    "ha": "POS mai saurin sayarwa",
+    "yo": "POS tó yára",
+    "ig": "POS na-ere ngwa ngwa"
+  },
+  "Barcode scanning, split payments, discounts and receipts — built for a busy counter, not a boardroom.": {
+    "pcm": "Scan barcode, split payment, reduce price and print receipt — built for busy shop.",
+    "ha": "Duba barcode, raba biyan kuɗi, rangwame da rasit — an gina don shago mai cunkoso.",
+    "yo": "Ṣàyẹ̀wò barcode, pín ìsanwó, dín iye kù, tẹ rísíìtì — fún ṣọ́ọ̀bù tó ń ṣiṣẹ́ púpọ̀.",
+    "ig": "Nyochaa barcode, kewaa ụgwọ, belata ọnụahịa ma nye risit — maka ụlọ ahịa na-arụsi ọrụ ike."
+  },
+  "Low-stock alerts": {
+    "pcm": "Alert when stock remain small",
+    "ha": "Faɗakarwar ƙarancin haja",
+    "yo": "Ìkìlọ̀ ọjà tó ń tán",
+    "ig": "Ịdọ aka ná ntị ngwaahịa dị ntakịrị"
+  },
+  "Set a reorder threshold per product and get notified before a shelf goes empty.": {
+    "pcm": "Set stock limit for each product; we go alert you before e finish.",
+    "ha": "Saita iyakar sake oda ga kowace haja, a sanar da kai kafin ta ƙare.",
+    "yo": "Ṣètò ààlà àtúnrà fún ọjà kọ̀ọ̀kan; gba ìkìlọ̀ kí ó tó tán.",
+    "ig": "Tọọ oke ịzụta ọzọ maka ngwaahịa ọ bụla; nata ozi tupu ọ gwụ."
+  },
+  "Purchase orders": {
+    "pcm": "Orders to suppliers",
+    "ha": "Odar saye",
+    "yo": "Àwọn àṣẹ rírà",
+    "ig": "Oda ịzụta"
+  },
+  "Create, send and receive POs. Inventory updates the moment you receive — full paper trail for suppliers.": {
+    "pcm": "Create, send and receive supplier orders. Stock go update when goods arrive — full record dey.",
+    "ha": "Ƙirƙiri, aika da karɓi odar saye. Haja tana sabuntawa da zarar ka karɓa — cikakken tarihin masu kaya.",
+    "yo": "Ṣẹ̀dá, ránṣẹ́, gba àṣẹ rírà. Ọjà á ṣe àtúnṣe nígbà tí o bá gbà á — pẹ̀lú àkọsílẹ̀ olùpèsè.",
+    "ig": "Mepụta, zipu ma nata oda. Ngwaahịa na-emelite mgbe ị natara ya — ndekọ ndị na-ebunye zuru ezu."
+  },
+  "Multi-warehouse inventory": {
+    "pcm": "Stock for all warehouses",
+    "ha": "Hajar ma'ajiyoyi da yawa",
+    "yo": "Ọjà ilé ìpamọ́ púpọ̀",
+    "ig": "Ngwaahịa n'ọtụtụ ụlọ nkwakọba"
+  },
+  "Track stock across every location. Transfer between warehouses with a full, signed trail.": {
+    "pcm": "Track stock for every location. Move stock between warehouses with signed record.",
+    "ha": "Bi diddigin haja a kowane wuri. Canja tsakanin ma'ajiyoyi da cikakken sa hannun tarihi.",
+    "yo": "Tọpasẹ̀ ọjà ní gbogbo ibi. Gbé ọjà láàárín ilé ìpamọ́ pẹ̀lú àkọsílẹ̀ tí a fọwọ́ sí.",
+    "ig": "Soro ngwaahịa n'ebe niile. Bufee ya n'etiti ụlọ nkwakọba na ndekọ a bịanyere aka."
+  },
+  "Reports that decide": {
+    "pcm": "Reports wey help you decide",
+    "ha": "Rahotannin taimakon yanke shawara",
+    "yo": "Ìròyìn tó ń ran ìpinnu lọ́wọ́",
+    "ig": "Akụkọ na-enyere mkpebi aka"
+  },
+  "Daily, weekly, monthly, quarterly and yearly. Export PDF, Excel or CSV — data you can bring to your bank.": {
+    "pcm": "Daily, weekly, monthly, every 3 months or yearly. Download PDF, Excel or CSV — records wey you fit show bank.",
+    "ha": "Na kullum, mako, wata, kwata da shekara. Fitar da PDF, Excel ko CSV — bayanan da za ka kai banki.",
+    "yo": "Ojoojúmọ́, ọ̀sẹ̀, oṣù, mẹ́ẹ̀dogún àti ọdún. Gbé PDF, Excel tàbí CSV jáde — àkọsílẹ̀ fún báńkì rẹ.",
+    "ig": "Kwa ụbọchị, izu, ọnwa, ọnwa atọ na afọ. Wepụ PDF, Excel ma ọ bụ CSV — ndekọ ị ga-egosi ụlọ akụ."
+  },
+  "Zainpay Naira accounts": {
+    "pcm": "Zainpay Naira accounts",
+    "ha": "Asusun Naira na Zainpay",
+    "yo": "Àkọọ́lẹ̀ Naira Zainpay",
+    "ig": "Akaụntụ Naira Zainpay"
+  },
+  "Every merchant gets a dedicated NUBAN. Subscription payments auto-reconcile via secure webhooks.": {
+    "pcm": "Every business get im own NUBAN. Subscription payments dey match automatically through secure webhooks.",
+    "ha": "Kowane ɗan kasuwa yana samun NUBAN na kansa. Ana daidaita biyan rajista ta webhooks masu tsaro.",
+    "yo": "Oníṣòwò kọ̀ọ̀kan ní NUBAN tirẹ̀. Ìsanwó ṣíṣe-alábápín ń dọ́gba nípasẹ̀ webhooks ààbò.",
+    "ig": "Onye ahịa ọ bụla nwere NUBAN nke ya. Ụgwọ ndebanye na-adakọ na-akpaghị aka site na webhooks echekwara."
+  },
+  "Flagship feature": {
+    "pcm": "Main feature",
+    "ha": "Babban fasali",
+    "yo": "Iṣẹ́ pàtàkì",
+    "ig": "Isi atụmatụ"
+  },
+  "Offline-first, truly. Sell even when the network doesn't.": {
+    "pcm": "E really work without internet. Sell even when network no gree.",
+    "ha": "Aiki ba intanet da gaske. Sayar ko cibiyar sadarwa ta tsaya.",
+    "yo": "Ó ṣiṣẹ́ láìsí intanẹẹti. Tà kódà bí nẹ́tíwọ́ọ̀kì kò bá ṣiṣẹ́.",
+    "ig": "Ọ na-arụ ọrụ na-enweghị ịntanetị n'ezie. Ree ọbụna mgbe netwọkụ anaghị arụ ọrụ."
+  },
+  "Every sale, price change and stock movement queues on-device. When your connection returns, we sync it — append-only for sales, last-write-wins for everything else. No lost transactions.": {
+    "pcm": "Every sale, price change and stock movement save for device. When internet return, we sync am — sales records no overwrite; latest change apply for other records. No transaction go miss.",
+    "ha": "Ana ajiye sayarwa, sauyin farashi da motsin haja a na'ura. Idan intanet ta dawo, ana daidaita su — ba a goge sayarwa, sabon canji ya fi ga sauran bayanai. Babu rasa ciniki.",
+    "yo": "Gbogbo títà, ìyípadà iye àti ìgbé ọjà dúró lórí ẹ̀rọ. Nígbà tí ìsopọ̀ bá padà, a mú wọn dọ́gba — a fi kún títà nìkan, ìyípadà tuntun sì ni a lò fún àwọn mìíràn. Kò sí ìṣòwò tó sọnù.",
+    "ig": "Ahịa, mgbanwe ọnụahịa na mmegharị ngwaahịa na-echekwa n'igwe. Mgbe ịntanetị lọghachiri, anyị na-emekọrịta ha — a na-agbakwunye ahịa; mgbanwe ikpeazụ na-emeri maka ndị ọzọ. Azụmahịa anaghị efu."
+  },
+  "Built for accountability": {
+    "pcm": "Built so you fit know who do wetin",
+    "ha": "An gina don riƙon amana",
+    "yo": "A kọ́ ọ fún jíjíhìn",
+    "ig": "E wuru maka ịza ajụjụ"
+  },
+  "Know exactly what happened in your shop.": {
+    "pcm": "Know exactly wetin happen for your shop.",
+    "ha": "San ainihin abin da ya faru a shagonka.",
+    "yo": "Mọ ohun tó ṣẹlẹ̀ gan-an ní ṣọ́ọ̀bù rẹ.",
+    "ig": "Mara kpọmkwem ihe mere n'ụlọ ahịa gị."
+  },
+  "Cash businesses lose money to more than theft — unrecorded sales, unexplained stock loss, and \"I forgot\" add up fast. TracKasuwa builds accountability into every action, so you can trust your numbers.": {
+    "pcm": "No be only stealing dey make business lose money — sales wey nobody record, stock wey disappear and \"I forget\" dey add up. TracKasuwa record every action so you fit trust your figures.",
+    "ha": "Ba sata kaɗai ke jawo asara ba — sayarwar da ba a rubuta ba, ɓacewar haja da mantuwa suna taruwa. TracKasuwa yana rubuta kowace aiki don ka amince da alkalummanka.",
+    "yo": "Kì í ṣe olè nìkan ló ń fa àdánù — títà tí a kò kọ, ọjà tó sọnù àti ìgbàgbé ń kó jọ. TracKasuwa ń kọ gbogbo iṣẹ́ sílẹ̀ kí o lè gbẹ́kẹ̀ lé ìṣirò rẹ.",
+    "ig": "Ọ bụghị naanị ohi na-efu ego — ahịa a na-edekọghị, ngwaahịa furu efu na nchefu na-agbakọta. TracKasuwa na-edekọ ihe ọ bụla ka ị tụkwasị ọnụ ọgụgụ gị obi."
+  },
+  "Built by shopkeepers, for shopkeepers.": {
+    "pcm": "Shop people build am for shop people.",
+    "ha": "Masu shago ne suka gina wa masu shago.",
+    "yo": "Àwọn oníṣòwò ló kọ́ ọ fún oníṣòwò.",
+    "ig": "Ndị nwe ụlọ ahịa wuru ya maka ndị nwe ụlọ ahịa."
+  },
+  "Built for the way you trade.": {
+    "pcm": "Built for how you dey do business.",
+    "ha": "An gina don yadda kake ciniki.",
+    "yo": "A kọ́ ọ fún ọ̀nà tí o fi ń ṣòwò.",
+    "ig": "E wuru maka otu i si azụ ahịa."
+  },
+  "Retail today. Restaurants & hotels are on the way.": {
+    "pcm": "Retail dey ready. Restaurant and hotel own dey come.",
+    "ha": "Retail a yau. Na gidajen abinci da otel suna zuwa.",
+    "yo": "Ìtajà lónìí. Ti ilé oúnjẹ àti òtẹ́ẹ̀lì ń bọ̀.",
+    "ig": "Ahịa taa. Ụlọ nri na họtel na-abịa."
+  },
+  "A Production & Hospitality extension is planned on top of the core platform — same login, same audit trail. Not available yet.": {
+    "pcm": "We plan production and hospitality extension — same login and audit record. E never ready yet.",
+    "ha": "An shirya ƙarin samarwa da karɓar baƙi — shiga ɗaya, tarihi ɗaya. Bai samu ba tukuna.",
+    "yo": "A ń gbero àfikún iṣelọpọ àti iṣẹ́ àlejò — ìwọlé kan, àkọsílẹ̀ kan. Kò tíì wà.",
+    "ig": "A na-eme atụmatụ mgbakwunye mmepụta na ile ọbịa — otu nbanye na ndekọ. Ọ dịghị ugbu a."
+  },
+  "Retail & wholesale": {
+    "pcm": "Retail and wholesale",
+    "ha": "Retail da wholesale",
+    "yo": "Ìtajà kékeré àti àgbà",
+    "ig": "Ahịa nta na ahịa ukwu"
+  },
+  "Provision stores, textiles, auto parts, electronics.": {
+    "pcm": "Provision shops, cloth, car parts and electronics.",
+    "ha": "Shagunan kayan masarufi, yadi, kayan mota da lantarki.",
+    "yo": "Ṣọ́ọ̀bù oúnjẹ, aṣọ, ẹ̀yà ọkọ̀ àti ẹ̀rọ itanna.",
+    "ig": "Ụlọ ahịa ihe oriri, akwa, akụkụ ụgbọala na eletrọnịkị."
+  },
+  "Grocery stores": {
+    "pcm": "Grocery shops",
+    "ha": "Shagunan kayan abinci",
+    "yo": "Ṣọ́ọ̀bù oúnjẹ",
+    "ig": "Ụlọ ahịa ihe oriri"
+  },
+  "SKU velocity, low-stock alerts, multi-warehouse tracking.": {
+    "pcm": "How fast products sell, low-stock alerts and warehouse tracking.",
+    "ha": "Saurin sayar da SKU, faɗakarwar ƙarancin haja da bin ma'ajiyoyi.",
+    "yo": "Ìyára títà SKU, ìkìlọ̀ ọjà tó ń tán àti títọpasẹ̀ ilé ìpamọ́.",
+    "ig": "Ọsọ ire SKU, ịdọ aka ná ntị ngwaahịa na nsuso ụlọ nkwakọba."
+  },
+  "Restaurants & lounges": {
+    "pcm": "Restaurants and lounges",
+    "ha": "Gidajen abinci da shakatawa",
+    "yo": "Ilé oúnjẹ àti ibi ìsinmi",
+    "ig": "Ụlọ nri na ebe ezumike"
+  },
+  "Menu, kitchen display, table-side ordering.": {
+    "pcm": "Menu, kitchen screen and order from table.",
+    "ha": "Jerin abinci, allon kicin da oda daga tebur.",
+    "yo": "Àtòjọ oúnjẹ, ìfihàn ilé ìdáná àti àṣẹ láti tábìlì.",
+    "ig": "Ndepụta nri, ihuenyo kichin na ịtụ nri n'akụkụ tebụl."
+  },
+  "Bakeries": {
+    "pcm": "Bakeries",
+    "ha": "Gidajen burodi",
+    "yo": "Ilé búrẹ́dì",
+    "ig": "Ụlọ achịcha"
+  },
+  "Recipes, batches and production planning.": {
+    "pcm": "Recipes, batches and how to plan production.",
+    "ha": "Girke-girke, rukuni da tsarin samarwa.",
+    "yo": "Ọ̀nà sísè, ìpele àti ètò iṣelọpọ.",
+    "ig": "Usoro nri, otu mmepụta na atụmatụ mmepụta."
+  },
+  "Hotels & hospitality": {
+    "pcm": "Hotels and hospitality",
+    "ha": "Otel da karɓar baƙi",
+    "yo": "Òtẹ́ẹ̀lì àti iṣẹ́ àlejò",
+    "ig": "Họtel na ile ọbịa"
+  },
+  "Rooms, check-in, folios, restaurant rollup.": {
+    "pcm": "Rooms, check-in, guest bills and restaurant summary.",
+    "ha": "Ɗakuna, shiga, lissafin baƙi da taƙaitaccen gidan abinci.",
+    "yo": "Yàrá, ìforúkọsílẹ̀ àlejò, ìwé owó àti àkópọ̀ ilé oúnjẹ.",
+    "ig": "Ime ụlọ, nbanye ọbịa, ụgwọ ọbịa na nchịkọta ụlọ nri."
+  },
+  "Shopping malls": {
+    "pcm": "Shopping malls",
+    "ha": "Manyan kasuwanni",
+    "yo": "Ilé ìtajà ńlá",
+    "ig": "Nnukwu ụlọ ahịa"
+  },
+  "Tenants, leases and shared utilities.": {
+    "pcm": "Tenants, rent agreements and shared services.",
+    "ha": "Masu haya, yarjejeniyar haya da ayyukan haɗin gwiwa.",
+    "yo": "Ayálégbé, àdéhùn ilé àti ohun èlò àjọlò.",
+    "ig": "Ndị mgbazinye, nkwekọrịta na ọrụ e jikọtara ọnụ."
+  },
+  "Start selling smarter today.": {
+    "pcm": "Start to sell with sense today.",
+    "ha": "Fara sayarwa da basira yau.",
+    "yo": "Bẹ̀rẹ̀ sí í tà pẹ̀lú ọgbọ́n lónìí.",
+    "ig": "Malite ire n'amamihe taa."
+  },
+  "Set up your shop in minutes — no card required.": {
+    "pcm": "Set up your shop in few minutes — you no need card.",
+    "ha": "Kafa shagonka cikin mintuna — ba sai kati ba.",
+    "yo": "Ṣètò ṣọ́ọ̀bù rẹ láàárín ìṣẹ́jú — kò nílò káàdì.",
+    "ig": "Hazie ụlọ ahịa gị n'ime nkeji — kaadị adịghị mkpa."
+  },
+  "Free forever for one shop. Upgrade when your business does. No card required to start.": {
+    "pcm": "Free forever for one shop. Upgrade when business grow. No card needed to start.",
+    "ha": "Kyauta har abada ga shago ɗaya. Ɗaukaka idan kasuwanci ya girma. Ba sai kati don farawa ba.",
+    "yo": "Lọ́fẹ̀ẹ́ títí láé fún ṣọ́ọ̀bù kan. Gbé ètò ga bí iṣẹ́ rẹ ṣe ń dàgbà. Kò nílò káàdì láti bẹ̀rẹ̀.",
+    "ig": "N'efu ruo mgbe ebighị ebi maka otu ụlọ ahịa. Bulie atụmatụ mgbe azụmahịa toro. Kaadị adịghị mkpa iji malite."
+  },
+  "Product": {
+    "pcm": "Product",
+    "ha": "Kaya",
+    "yo": "Ọjà",
+    "ig": "Ngwaahịa"
+  },
+  "Legal": {
+    "pcm": "Legal matter",
+    "ha": "Doka",
+    "yo": "Òfin",
+    "ig": "Iwu"
+  },
+  "Privacy": {
+    "pcm": "Privacy",
+    "ha": "Sirri",
+    "yo": "Àṣírí",
+    "ig": "Nzuzo"
+  },
+  "Terms": {
+    "pcm": "Terms",
+    "ha": "Sharuɗɗa",
+    "yo": "Àwọn ìlànà",
+    "ig": "Usoro"
+  },
+  "Contact sales": {
+    "pcm": "Talk to sales team",
+    "ha": "Tuntuɓi sashen sayarwa",
+    "yo": "Kàn sí ẹgbẹ́ títà",
+    "ig": "Kpọtụrụ ndị ahịa"
+  },
+  "Made in Nigeria 🇳🇬": {
+    "pcm": "Made for Naija 🇳🇬",
+    "ha": "An yi a Najeriya 🇳🇬",
+    "yo": "A ṣe ní Nàìjíríà 🇳🇬",
+    "ig": "E mere na Naịjirịa 🇳🇬"
+  },
+  "Offline-first POS & inventory management for Nigerian market traders. Made in Nigeria, deployed everywhere.": {
+    "pcm": "Sales and stock app wey fit work without internet for Naija traders. Made for Nigeria, fit work everywhere.",
+    "ha": "POS da sarrafa haja ba intanet ga 'yan kasuwar Najeriya. An yi a Najeriya, ana amfani ko'ina.",
+    "yo": "POS àti ìṣàkóso ọjà láìsí intanẹẹti fún oníṣòwò Nàìjíríà. A ṣe ní Nàìjíríà, ó ṣiṣẹ́ níbi gbogbo.",
+    "ig": "POS na njikwa ngwaahịa na-enweghị ịntanetị maka ndị ahịa Naịjirịa. E mere na Naịjirịa, a na-eji ya ebe niile."
+  },
+  "Every capability, honestly documented.": {
+    "pcm": "Every thing wey app fit do, we explain am true true.",
+    "ha": "An bayyana kowace damar aiki da gaskiya.",
+    "yo": "A ṣàlàyé gbogbo iṣẹ́ ní òtítọ́.",
+    "ig": "A kọwara ihe ngwa na-eme n'eziokwu."
+  },
+  "Every feature earned its place by solving a real problem for a real trader. If it wasn't shipped, it isn't listed here — see": {
+    "pcm": "Every feature solve real trader problem. If e never ready, we no list am here — see",
+    "ha": "Kowane fasali yana magance matsalar ɗan kasuwa. Abin da bai shirya ba ba ya nan — duba",
+    "yo": "Gbogbo iṣẹ́ ń yanjú ìṣòro oníṣòwò. Ohun tí kò tíì jáde kò sí níbí — wo",
+    "ig": "Atụmatụ ọ bụla na-edozi nsogbu onye ahịa. Ihe na-adịbeghị njikere adịghị ebe a — lee"
+  },
+  "the full feature list": {
+    "pcm": "the full list of features",
+    "ha": "cikakken jerin fasaloli",
+    "yo": "àtòjọ gbogbo iṣẹ́",
+    "ig": "ndepụta atụmatụ niile"
+  },
+  "Coming soon": {
+    "pcm": "E dey come soon",
+    "ha": "Yana zuwa nan ba da jimawa ba",
+    "yo": "Ó ń bọ̀ láìpẹ́",
+    "ig": "Ọ na-abịa n'oge na-adịghị anya"
+  },
+  "Ready to try it?": {
+    "pcm": "You ready to try am?",
+    "ha": "Ka shirya gwadawa?",
+    "yo": "Ṣé o ti ṣetán láti dán an wò?",
+    "ig": "Ị dị njikere ịnwale ya?"
+  },
+  "Pay in Naira. Grow when you grow.": {
+    "pcm": "Pay with Naira. Upgrade as business grow.",
+    "ha": "Biya da Naira. Ɗaukaka yayin da ka girma.",
+    "yo": "San ní Naira. Gbé ètò ga bí o ṣe ń dàgbà.",
+    "ig": "Kwụọ na Naira. Bulie atụmatụ ka ị na-eto."
+  },
+  "Start free. Upgrade only when you need more cashiers, products, or warehouses. No hidden fees.": {
+    "pcm": "Start free. Upgrade only when you need more cashiers, products or warehouses. No hidden charge.",
+    "ha": "Fara kyauta. Ɗaukaka idan kana buƙatar ƙarin masu karɓar kuɗi, kaya ko ma'ajiyoyi. Babu kuɗin ɓoye.",
+    "yo": "Bẹ̀rẹ̀ lọ́fẹ̀ẹ́. Gbé ètò ga nígbà tí o nílò olùgbà owó, ọjà tàbí ilé ìpamọ́ sí i. Kò sí owó ìkọ̀kọ̀.",
+    "ig": "Malite n'efu. Bulie naanị mgbe ị chọrọ ndị na-anata ego, ngwaahịa ma ọ bụ ụlọ nkwakọba ọzọ. Enweghị ụgwọ zoro ezo."
+  },
+  "TracKasuwa for your business": {
+    "pcm": "TracKasuwa for your business",
+    "ha": "TracKasuwa don kasuwancinka",
+    "yo": "TracKasuwa fún iṣẹ́ rẹ",
+    "ig": "TracKasuwa maka azụmahịa gị"
+  },
+  "Every retail counter, tracked from one dashboard.": {
+    "pcm": "Track every selling point from one dashboard.",
+    "ha": "Bi diddigin duk wuraren sayarwa daga allo ɗaya.",
+    "yo": "Tọpasẹ̀ gbogbo ibi ìtajà láti ojú ìṣàkóso kan.",
+    "ig": "Soro ebe ire ahịa niile site n'otu ihuenyo."
+  },
+  "From a neighbourhood shop to a growing retail operation, keep sales, stock and your team connected.": {
+    "pcm": "From small street shop to big business, keep sales, stock and team together.",
+    "ha": "Daga ƙaramin shago zuwa babban kasuwanci, haɗa sayarwa, haja da ma'aikata.",
+    "yo": "Láti ṣọ́ọ̀bù kékeré sí iṣẹ́ ńlá, so títà, ọjà àti ẹgbẹ́ rẹ pọ̀.",
+    "ig": "Site na obere ụlọ ahịa ruo azụmahịa na-eto eto, jikọta ahịa, ngwaahịa na otu gị."
+  },
+  "Industries · one platform": {
+    "pcm": "Different businesses · one platform",
+    "ha": "Fannonin kasuwanci · dandali ɗaya",
+    "yo": "Ẹ̀ka iṣẹ́ · ètò kan",
+    "ig": "Ụdị azụmahịa · otu nyiwe"
+  },
+  "Get TracKasuwa on every device you sell from.": {
+    "pcm": "Put TracKasuwa for every device wey you use sell.",
+    "ha": "Samu TracKasuwa a duk na'urorin sayarwarka.",
+    "yo": "Gba TracKasuwa sórí gbogbo ẹ̀rọ tí o fi ń tà.",
+    "ig": "Nweta TracKasuwa n'igwe niile i ji ere."
+  },
+  "Get TracKasuwa on the devices you already use — as an installed app on Windows and Android, or straight from your browser.": {
+    "pcm": "Use TracKasuwa for devices wey you already get — install for Windows or Android, or use browser.",
+    "ha": "Yi amfani da TracKasuwa a na'urorinka — shigar a Windows da Android ko amfani daga burauza.",
+    "yo": "Lo TracKasuwa lórí ẹ̀rọ rẹ — fi sí Windows àti Android tàbí lò ó nínú ẹ̀rọ aṣàwákiri.",
+    "ig": "Jiri TracKasuwa n'igwe ị nwere — wụnye na Windows na Android ma ọ bụ jiri ihe nchọgharị."
+  },
+  "Use TracKasuwa like a native app, on the devices you already have.": {
+    "pcm": "Use TracKasuwa like normal app for devices wey you already get.",
+    "ha": "Yi amfani da TracKasuwa kamar app a na'urorin da kake da su.",
+    "yo": "Lo TracKasuwa bí app lórí àwọn ẹ̀rọ tí o ní.",
+    "ig": "Jiri TracKasuwa dịka ngwa n'igwe ị nwere."
+  },
+  "Windows Desktop": {
+    "pcm": "Windows computer",
+    "ha": "Kwamfutar Windows",
+    "yo": "Kọ̀ǹpútà Windows",
+    "ig": "Kọmputa Windows"
+  },
+  "Install App": {
+    "pcm": "Install app",
+    "ha": "Shigar da app",
+    "yo": "Fi app sí ẹ̀rọ",
+    "ig": "Wụnye ngwa"
+  },
+  "Install as an App": {
+    "pcm": "Install am as app",
+    "ha": "Shigar a matsayin app",
+    "yo": "Fi sí ẹ̀rọ bí app",
+    "ig": "Wụnye dịka ngwa"
+  },
+  "Download for Windows": {
+    "pcm": "Download for Windows",
+    "ha": "Sauke don Windows",
+    "yo": "Ṣe ìgbàsílẹ̀ fún Windows",
+    "ig": "Budata maka Windows"
+  },
+  "Already installed": {
+    "pcm": "E don install",
+    "ha": "An riga an shigar",
+    "yo": "A ti fi sí ẹ̀rọ",
+    "ig": "E tinyelarị ya"
+  },
+  "Download APK": {
+    "pcm": "Download APK",
+    "ha": "Sauke APK",
+    "yo": "Ṣe ìgbàsílẹ̀ APK",
+    "ig": "Budata APK"
+  },
+  "Native desktop app (.exe installer)": {
+    "pcm": "Desktop app (.exe installer)",
+    "ha": "App na kwamfuta (.exe)",
+    "yo": "App kọ̀ǹpútà (.exe)",
+    "ig": "Ngwa kọmputa (.exe)"
+  },
+  "Native Android app (.apk)": {
+    "pcm": "Android app (.apk)",
+    "ha": "App na Android (.apk)",
+    "yo": "App Android (.apk)",
+    "ig": "Ngwa Android (.apk)"
+  },
+  "Desktop Browser (Chrome/Edge)": {
+    "pcm": "Computer browser (Chrome/Edge)",
+    "ha": "Burauzar kwamfuta (Chrome/Edge)",
+    "yo": "Ẹ̀rọ aṣàwákiri kọ̀ǹpútà (Chrome/Edge)",
+    "ig": "Ihe nchọgharị kọmputa (Chrome/Edge)"
+  },
+  "Install App (Chrome)": {
+    "pcm": "Install app (Chrome)",
+    "ha": "Shigar da app (Chrome)",
+    "yo": "Fi app sí ẹ̀rọ (Chrome)",
+    "ig": "Wụnye ngwa (Chrome)"
+  },
+  "or install as a PWA in Chrome": {
+    "pcm": "or install as PWA for Chrome",
+    "ha": "ko shigar a matsayin PWA a Chrome",
+    "yo": "tàbí fi sí ẹ̀rọ bí PWA nínú Chrome",
+    "ig": "ma ọ bụ wụnye dịka PWA na Chrome"
+  },
+  "Install TracKasuwa as an app directly from your browser": {
+    "pcm": "Install TracKasuwa app straight from your browser",
+    "ha": "Shigar da TracKasuwa kai tsaye daga burauzarka",
+    "yo": "Fi TracKasuwa sí ẹ̀rọ láti inú ẹ̀rọ aṣàwákiri rẹ",
+    "ig": "Wụnye TracKasuwa ozugbo site n'ihe nchọgharị gị"
+  },
+  "Download link not configured yet. Please check back soon.": {
+    "pcm": "Download link never ready. Abeg check again later.",
+    "ha": "Ba a saita mahaɗin saukewa ba tukuna. Sake dubawa daga baya.",
+    "yo": "A kò tíì ṣètò ọ̀nà ìgbàsílẹ̀. Jọ̀wọ́ tún padà wá.",
+    "ig": "A haziebeghị njikọ nbudata. Biko lelee ọzọ ma emechaa."
+  },
+  "APK download link not configured yet. Please check back soon.": {
+    "pcm": "APK download link never ready. Abeg check again later.",
+    "ha": "Ba a saita mahaɗin APK ba tukuna. Sake dubawa daga baya.",
+    "yo": "A kò tíì ṣètò ọ̀nà APK. Jọ̀wọ́ tún padà wá.",
+    "ig": "A haziebeghị njikọ APK. Biko lelee ọzọ ma emechaa."
+  },
+  "Download and run the installer.": {
+    "pcm": "Download installer and run am.",
+    "ha": "Sauke ka kunna mai shigarwa.",
+    "yo": "Ṣe ìgbàsílẹ̀ kí o sì ṣiṣẹ́ fáìlì ìfisí.",
+    "ig": "Budata ma mee ka ihe nrụnye rụọ ọrụ."
+  },
+  "Follow the setup wizard to finish installing.": {
+    "pcm": "Follow setup steps to finish installation.",
+    "ha": "Bi matakan saitin don kammala shigarwa.",
+    "yo": "Tẹ̀lé àwọn ìgbésẹ̀ láti parí ìfisí.",
+    "ig": "Soro usoro iji mechaa nrụnye."
+  },
+  "Launch TracKasuwa from your Start Menu.": {
+    "pcm": "Open TracKasuwa from Start Menu.",
+    "ha": "Buɗe TracKasuwa daga Start Menu.",
+    "yo": "Ṣí TracKasuwa láti Start Menu.",
+    "ig": "Mepee TracKasuwa site na Start Menu."
+  },
+  "Download the APK file.": {
+    "pcm": "Download the APK file.",
+    "ha": "Sauke fayil ɗin APK.",
+    "yo": "Ṣe ìgbàsílẹ̀ fáìlì APK.",
+    "ig": "Budata faịlụ APK."
+  },
+  "Return to the download and tap Install.": {
+    "pcm": "Go back to download and tap Install.",
+    "ha": "Koma zuwa saukewa ka danna Install.",
+    "yo": "Padà sí ìgbàsílẹ̀ kí o tẹ Install.",
+    "ig": "Laghachi na nbudata ma pịa Install."
+  },
+  "Open TracKasuwa from your app drawer.": {
+    "pcm": "Open TracKasuwa from your app list.",
+    "ha": "Buɗe TracKasuwa daga jerin apps.",
+    "yo": "Ṣí TracKasuwa láti àtòjọ app rẹ.",
+    "ig": "Mepee TracKasuwa site na ndepụta ngwa gị."
+  },
+  "Need help enabling unknown sources?": {
+    "pcm": "You need help to allow unknown sources?",
+    "ha": "Kana buƙatar taimako wajen kunna unknown sources?",
+    "yo": "Ṣé o nílò ìrànlọ́wọ́ láti gba unknown sources láàyè?",
+    "ig": "Ị chọrọ enyemaka iji kwe unknown sources?"
+  },
+  "We detected Android": {
+    "pcm": "We see say na Android",
+    "ha": "Mun gano Android",
+    "yo": "A rí Android",
+    "ig": "Anyị chọpụtara Android"
+  },
+  "We detected Windows": {
+    "pcm": "We see say na Windows",
+    "ha": "Mun gano Windows",
+    "yo": "A rí Windows",
+    "ig": "Anyị chọpụtara Windows"
+  },
+  "Native iOS and macOS apps are not available yet.": {
+    "pcm": "iOS and macOS apps never ready.",
+    "ha": "Apps na iOS da macOS ba su samu ba tukuna.",
+    "yo": "App iOS àti macOS kò tíì wà.",
+    "ig": "Ngwa iOS na macOS adịghị ugbu a."
+  },
+  "We don't have an iOS or macOS build to offer right now — we'd rather say that plainly than give you a link that doesn't work. In the meantime, you can use TracKasuwa directly in Safari at your usual web address.": {
+    "pcm": "We never get iOS or macOS app ready. We no wan give you link wey no work. For now, use TracKasuwa for Safari with your normal web address.",
+    "ha": "Ba mu da app na iOS ko macOS yanzu. Ba za mu ba ka mahaɗin da ba ya aiki ba. Yanzu kana iya amfani da TracKasuwa a Safari.",
+    "yo": "A kò ní app iOS tàbí macOS báyìí. A kò fẹ́ fún ọ ní ọ̀nà tí kò ṣiṣẹ́. Lo TracKasuwa nínú Safari pẹ̀lú àdírẹ́sì rẹ.",
+    "ig": "Anyị enweghị ngwa iOS ma ọ bụ macOS ugbu a. Anyị agaghị enye njikọ na-adịghị arụ ọrụ. Jiri TracKasuwa na Safari na adreesị gị ugbu a."
+  },
+  "Open this page in Chrome or Edge, then look for the install icon in your browser's address bar (or this button will appear automatically).": {
+    "pcm": "Open this page for Chrome or Edge, then find install icon for address bar (or button go show by itself).",
+    "ha": "Buɗe wannan shafi a Chrome ko Edge, nemi alamar shigarwa a sandar adireshi (ko maɓallin zai bayyana).",
+    "yo": "Ṣí ojú-ewé yìí nínú Chrome tàbí Edge, wá àmì ìfisí ní ọ̀pá àdírẹ́sì (tàbí bọ́tìnì yóò farahàn).",
+    "ig": "Mepee ibe a na Chrome ma ọ bụ Edge, chọọ akara nrụnye n'ogwe adreesị (ma ọ bụ bọtịnụ ga-apụta)."
+  },
+  "A fast checkout screen built for a busy counter, not a boardroom.": {
+    "pcm": "Fast checkout screen for busy shop.",
+    "ha": "Allon biyan kuɗi mai sauri don shago mai cunkoso.",
+    "yo": "Ojú ìsanwó kíákíá fún ṣọ́ọ̀bù tó ń ṣiṣẹ́ púpọ̀.",
+    "ig": "Ihuenyo ịkwụ ụgwọ ngwa ngwa maka ụlọ ahịa na-arụsi ọrụ ike."
+  },
+  "Nigerian networks aren't always reliable — TracKasuwa doesn't stop working when yours drops.": {
+    "pcm": "Naija network fit misbehave — TracKasuwa no go stop when your own cut.",
+    "ha": "Intanet a Najeriya ba koyaushe take aiki ba — TracKasuwa ba ya tsayawa idan taka ta yanke.",
+    "yo": "Nẹ́tíwọ́ọ̀kì Nàìjíríà kì í ṣiṣẹ́ ní gbogbo ìgbà — TracKasuwa kò dúró bí tirẹ̀ bá dáwọ́ dúró.",
+    "ig": "Netwọkụ Naịjirịa anaghị akwụsi ike mgbe niile — TracKasuwa anaghị akwụsị mgbe nke gị dara."
+  },
+  "Give every customer a proper, verifiable receipt.": {
+    "pcm": "Give every customer correct receipt wey dem fit verify.",
+    "ha": "Ba kowane abokin ciniki rasit mai inganci.",
+    "yo": "Fún oníbàárà kọ̀ọ̀kan ní rísíìtì tó ṣeé fìdí múlẹ̀.",
+    "ig": "Nye onye ahịa ọ bụla ezigbo risit a ga-enyocha."
+  },
+  "Run more than one location without losing track of stock.": {
+    "pcm": "Run different locations and still know where stock dey.",
+    "ha": "Gudanar da wurare da yawa tare da bin haja.",
+    "yo": "Ṣàkóso ibi púpọ̀ láìpàdánù ìtọ́pa ọjà.",
+    "ig": "Jikwaa ọtụtụ ebe na-enweghị ịhapụ nsuso ngwaahịa."
+  },
+  "Get told before a shelf goes empty, not after.": {
+    "pcm": "Get alert before stock finish.",
+    "ha": "A sanar da kai kafin haja ta ƙare.",
+    "yo": "Gba ìkìlọ̀ kí ọjà tó tán.",
+    "ig": "Nata ozi tupu ngwaahịa agwụ."
+  },
+  "See what's actually happening in your business.": {
+    "pcm": "See wetin really dey happen for your business.",
+    "ha": "Duba ainihin abin da ke faruwa a kasuwancinka.",
+    "yo": "Wo ohun tó ń ṣẹlẹ̀ gan-an nínú iṣẹ́ rẹ.",
+    "ig": "Lee ihe na-eme n'azụmahịa gị n'ezie."
+  },
+  "Give staff the right level of access — no more, no less.": {
+    "pcm": "Give staff only the access wey dem need.",
+    "ha": "Ba ma'aikata damar da ta dace kawai.",
+    "yo": "Fún òṣìṣẹ́ ní àṣẹ tó yẹ nìkan.",
+    "ig": "Nye ndị ọrụ naanị ikike ha kwesịrị inwe."
+  },
+  "Know who did what, and when.": {
+    "pcm": "Know who do wetin and when.",
+    "ha": "San wanda ya yi me da lokacin da ya yi.",
+    "yo": "Mọ ẹni tó ṣe ohun àti ìgbà tí ó ṣe é.",
+    "ig": "Mara onye mere ihe na mgbe o mere ya."
+  },
+  "Track goods you sell on behalf of suppliers.": {
+    "pcm": "Track goods wey you sell for suppliers.",
+    "ha": "Bi diddigin kayan da kake sayar wa masu kaya.",
+    "yo": "Tọpasẹ̀ ọjà tí o ń tà fún olùpèsè.",
+    "ig": "Soro ngwaahịa ị na-ere maka ndị na-ebunye."
+  },
+  "We're exploring an AI assistant to help with things like restock suggestions and sales insights.": {
+    "pcm": "We dey explore AI assistant for restock advice and sales insights.",
+    "ha": "Muna binciken mataimakin AI don shawarar cika haja da nazarin sayarwa.",
+    "yo": "A ń ṣàyẹ̀wò olùrànlọ́wọ́ AI fún ìmọ̀ràn àtúnkún ọjà àti títà.",
+    "ig": "Anyị na-enyocha onye enyemaka AI maka ndụmọdụ ngwaahịa na nghọta ahịa."
+  },
+  "This feature does not exist in the app yet. We'd rather tell you that plainly than promise something that isn't built.": {
+    "pcm": "This feature never dey app. We prefer tell you true instead to promise wetin never ready.",
+    "ha": "Wannan fasalin bai samu ba tukuna. Mun fi son faɗin gaskiya fiye da alkawarin abin da ba a gina ba.",
+    "yo": "Iṣẹ́ yìí kò tíì wà nínú app. A fẹ́ sọ òtítọ́ ju ṣíṣe ìlérí ohun tí a kò tíì kọ́ lọ.",
+    "ig": "Atụmatụ a adịghị na ngwa ugbu a. Anyị chọrọ ikwu eziokwu kama ikwe ihe a na-ewubeghị."
+  },
+  "Suppliers": {
+    "pcm": "Suppliers",
+    "ha": "Masu samar da kaya",
+    "yo": "Àwọn olùpèsè",
+    "ig": "Ndị na-ebunye"
+  },
+  "Add supplier": {
+    "pcm": "Add supplier",
+    "ha": "Ƙara mai kaya",
+    "yo": "Fi olùpèsè kún",
+    "ig": "Tinye onye na-ebunye"
+  },
+  "Edit supplier": {
+    "pcm": "Edit supplier",
+    "ha": "Gyara mai kaya",
+    "yo": "Ṣàtúnṣe olùpèsè",
+    "ig": "Dezie onye na-ebunye"
+  },
+  "Supplier details": {
+    "pcm": "Supplier details",
+    "ha": "Bayanan mai kaya",
+    "yo": "Àlàyé olùpèsè",
+    "ig": "Nkọwa onye na-ebunye"
+  },
+  "Supply history": {
+    "pcm": "Supplies wey don come",
+    "ha": "Tarihin samar da kaya",
+    "yo": "Ìtàn ìpèsè",
+    "ig": "Akụkọ mbunye"
+  },
+  "Who supplies your products, what you ordered, and what arrived.": {
+    "pcm": "Who supply your products, wetin you order and wetin arrive.",
+    "ha": "Masu kawo kayanka, abin da ka oda da abin da ya iso.",
+    "yo": "Ẹni tó pèsè ọjà, ohun tí o rà àti ohun tó dé.",
+    "ig": "Onye na-ebunye gị, ihe ị tụrụ na ihe bịarutere."
+  },
+  "Products with suppliers": {
+    "pcm": "Products wey get supplier",
+    "ha": "Kayan da ke da masu samarwa",
+    "yo": "Ọjà tó ní olùpèsè",
+    "ig": "Ngwaahịa nwere ndị na-ebunye"
+  },
+  "Products supplied": {
+    "pcm": "Products wey dem supply",
+    "ha": "Kayan da aka samar",
+    "yo": "Ọjà tí a pèsè",
+    "ig": "Ngwaahịa e bunyere"
+  },
+  "Product to link": {
+    "pcm": "Product wey you wan link",
+    "ha": "Kayan da za a haɗa",
+    "yo": "Ọjà láti so pọ̀",
+    "ig": "Ngwaahịa a ga-ejikọta"
+  },
+  "Link product": {
+    "pcm": "Link product",
+    "ha": "Haɗa kaya",
+    "yo": "So ọjà pọ̀",
+    "ig": "Jikọta ngwaahịa"
+  },
+  "Unlink": {
+    "pcm": "Remove link",
+    "ha": "Cire haɗin",
+    "yo": "Yọ àsopọ̀",
+    "ig": "Wepụ njikọ"
+  },
+  "Primary": {
+    "pcm": "Main one",
+    "ha": "Na farko",
+    "yo": "Àkọ́kọ́",
+    "ig": "Nke mbụ"
+  },
+  "Choose a product": {
+    "pcm": "Choose product",
+    "ha": "Zaɓi kaya",
+    "yo": "Yan ọjà",
+    "ig": "Họrọ ngwaahịa"
+  },
+  "No suppliers found": {
+    "pcm": "We no see supplier",
+    "ha": "Ba a sami masu kaya ba",
+    "yo": "A kò rí olùpèsè",
+    "ig": "Ahụghị ndị na-ebunye"
+  },
+  "Add your first supplier or change your search.": {
+    "pcm": "Add your first supplier or change wetin you search.",
+    "ha": "Ƙara mai kaya na farko ko canja bincikenka.",
+    "yo": "Fi olùpèsè àkọ́kọ́ kún tàbí yí ìwádìí padà.",
+    "ig": "Tinye onye na-ebunye mbụ ma ọ bụ gbanwee nchọta."
+  },
+  "Select a supplier to manage its product catalog and see supply history.": {
+    "pcm": "Choose supplier to manage im products and see supplies wey don come.",
+    "ha": "Zaɓi mai kaya don sarrafa jerin kayansa da tarihin samarwa.",
+    "yo": "Yan olùpèsè láti ṣàkóso ọjà rẹ̀ àti wo ìtàn ìpèsè.",
+    "ig": "Họrọ onye na-ebunye ka ị jikwaa ngwaahịa ya ma hụ akụkọ mbunye."
+  },
+  "No purchase orders for this supplier yet.": {
+    "pcm": "No order dey for this supplier yet.",
+    "ha": "Babu odar saye ga wannan mai kaya tukuna.",
+    "yo": "Kò sí àṣẹ rírà fún olùpèsè yìí síbẹ̀.",
+    "ig": "Enweghị oda maka onye na-ebunye a."
+  },
+  "Search suppliers": {
+    "pcm": "Find suppliers",
+    "ha": "Nemi masu kaya",
+    "yo": "Wá olùpèsè",
+    "ig": "Chọọ ndị na-ebunye"
+  },
+  "Search supplier, phone or email…": {
+    "pcm": "Find supplier, phone or email…",
+    "ha": "Nemi mai kaya, waya ko imel…",
+    "yo": "Wá olùpèsè, fóònù tàbí ímeèlì…",
+    "ig": "Chọọ onye na-ebunye, ekwentị ma ọ bụ email…"
+  },
+  "Could not load suppliers": {
+    "pcm": "We no fit load suppliers",
+    "ha": "An kasa loda masu kaya",
+    "yo": "Kò ṣeé gbé olùpèsè wọlé",
+    "ig": "Enweghị ike ibunye ndị na-ebunye"
+  },
+  "Locations": {
+    "pcm": "Locations",
+    "ha": "Wurare",
+    "yo": "Àwọn ibi",
+    "ig": "Ebe dị iche iche"
+  },
+  "Add location": {
+    "pcm": "Add location",
+    "ha": "Ƙara wuri",
+    "yo": "Fi ibi kún",
+    "ig": "Tinye ebe"
+  },
+  "Add your first location": {
+    "pcm": "Add your first location",
+    "ha": "Ƙara wurinka na farko",
+    "yo": "Fi ibi àkọ́kọ́ kún",
+    "ig": "Tinye ebe mbụ gị"
+  },
+  "Main shops": {
+    "pcm": "Main shops",
+    "ha": "Manyan shaguna",
+    "yo": "Àwọn ṣọ́ọ̀bù pàtàkì",
+    "ig": "Isi ụlọ ahịa"
+  },
+  "Stock units": {
+    "pcm": "How many stock dey",
+    "ha": "Adadin haja",
+    "yo": "Iye ọjà",
+    "ig": "Ọnụọgụ ngwaahịa"
+  },
+  "Products stocked": {
+    "pcm": "Products wey dey stock",
+    "ha": "Kayan da ke ajiye",
+    "yo": "Ọjà tí a kó pamọ́",
+    "ig": "Ngwaahịa echekwara"
+  },
+  "View inventory": {
+    "pcm": "See stock",
+    "ha": "Duba haja",
+    "yo": "Wo ọjà",
+    "ig": "Lee ngwaahịa"
+  },
+  "Create your main shop or a warehouse, then assign its team.": {
+    "pcm": "Create main shop or warehouse, then assign team.",
+    "ha": "Ƙirƙiri babban shago ko ma'ajiya, sannan sanya ma'aikata.",
+    "yo": "Ṣẹ̀dá ṣọ́ọ̀bù pàtàkì tàbí ilé ìpamọ́, kí o yan ẹgbẹ́ rẹ̀.",
+    "ig": "Mepụta isi ụlọ ahịa ma ọ bụ ụlọ nkwakọba, kenye otu ya."
+  },
+  "Assign staff": {
+    "pcm": "Assign staff",
+    "ha": "Sanya ma'aikata",
+    "yo": "Yan òṣìṣẹ́",
+    "ig": "Kenye ndị ọrụ"
+  },
+  "Assign to location": {
+    "pcm": "Assign to this location",
+    "ha": "Sanya a wannan wuri",
+    "yo": "Yan sí ibi yìí",
+    "ig": "Kenye n'ebe a"
+  },
+  "Manager": {
+    "pcm": "Manager",
+    "ha": "Manaja",
+    "yo": "Alákòóso",
+    "ig": "Onye njikwa"
+  },
+  "Manager or cashier": {
+    "pcm": "Manager or cashier",
+    "ha": "Manaja ko mai karɓar kuɗi",
+    "yo": "Alákòóso tàbí olùgbà owó",
+    "ig": "Onye njikwa ma ọ bụ onye na-anata ego"
+  },
+  "Select team member": {
+    "pcm": "Choose team member",
+    "ha": "Zaɓi ma'aikaci",
+    "yo": "Yan ọmọ ẹgbẹ́",
+    "ig": "Họrọ onye otu"
+  },
+  "Team at": {
+    "pcm": "Team for",
+    "ha": "Ma'aikatan",
+    "yo": "Ẹgbẹ́ ní",
+    "ig": "Otu nọ na"
+  },
+  "Add a team member": {
+    "pcm": "Add team member",
+    "ha": "Ƙara ma'aikaci",
+    "yo": "Fi ọmọ ẹgbẹ́ kún",
+    "ig": "Tinye onye otu"
+  },
+  "first. A person can work at more than one location.": {
+    "pcm": "first. One person fit work for different locations.",
+    "ha": "da farko. Mutum zai iya aiki a wurare da yawa.",
+    "yo": "kọ́kọ́. Ẹnìkan lè ṣiṣẹ́ ní ibi púpọ̀.",
+    "ig": "mbụ. Otu onye nwere ike ịrụ ọrụ n'ọtụtụ ebe."
+  },
+  "Assign existing managers and cashiers to this location. Managers use the Admin account role. Assignments record responsibility; account permissions remain unchanged.": {
+    "pcm": "Assign managers and cashiers wey already get account. Managers dey use Admin role. Assignment record who responsible; e no change account permissions.",
+    "ha": "Sanya manajoji da masu karɓar kuɗi a wannan wuri. Manajoji suna amfani da matsayin Admin. Wannan yana rubuta nauyi; izinin asusu bai canja ba.",
+    "yo": "Yan alákòóso àti olùgbà owó tó wà sí ibi yìí. Alákòóso ń lo ipò Admin. Àṣàyàn ń kọ ojúṣe sílẹ̀; àṣẹ àkọọ́lẹ̀ kò yí padà.",
+    "ig": "Kenye ndị njikwa na ndị na-anata ego dị adị n'ebe a. Ndị njikwa na-eji ọrụ Admin. Nke a na-edekọ ọrụ; ikike akaụntụ anaghị agbanwe."
+  },
+  "Could not load assignments. Retry": {
+    "pcm": "We no fit load assignments. Try again",
+    "ha": "An kasa loda rabon aiki. Sake gwadawa",
+    "yo": "Kò ṣeé gbé àṣàyàn wọlé. Gbìyànjú lẹ́ẹ̀kan sí i",
+    "ig": "Enweghị ike ibunye ọrụ. Nwaa ọzọ"
+  },
+  "Receipts": {
+    "pcm": "Receipts",
+    "ha": "Rasitoci",
+    "yo": "Àwọn rísíìtì",
+    "ig": "Risit niile"
+  },
+  "Receipt": {
+    "pcm": "Receipt",
+    "ha": "Rasit",
+    "yo": "Rísíìtì",
+    "ig": "Risit"
+  },
+  "Receipt lookup": {
+    "pcm": "Find receipt",
+    "ha": "Neman rasit",
+    "yo": "Wíwá rísíìtì",
+    "ig": "Chọta risit"
+  },
+  "Receipt number": {
+    "pcm": "Receipt number",
+    "ha": "Lambar rasit",
+    "yo": "Nọ́mbà rísíìtì",
+    "ig": "Nọmba risit"
+  },
+  "Receipt preview": {
+    "pcm": "See how receipt go look",
+    "ha": "Duban rasit",
+    "yo": "Àwòkọ́ṣe rísíìtì",
+    "ig": "Nlele risit"
+  },
+  "Receipt template": {
+    "pcm": "Receipt style",
+    "ha": "Tsarin rasit",
+    "yo": "Àpẹẹrẹ rísíìtì",
+    "ig": "Ụdị risit"
+  },
+  "RECEIPT PREVIEW": {
+    "pcm": "RECEIPT PREVIEW",
+    "ha": "DUBAN RASIT",
+    "yo": "ÀWÒKỌ́ṢE RÍSÍÌTÌ",
+    "ig": "NLELE RISIT"
+  },
+  "Find, review and reprint your recorded sales.": {
+    "pcm": "Find saved sales, check them and print receipt again.",
+    "ha": "Nemo, duba kuma sake buga sayarwar da aka rubuta.",
+    "yo": "Wá, ṣàyẹ̀wò, tún tẹ títà tí o ti kọ sílẹ̀.",
+    "ig": "Chọta, nyochaa ma bipụtakwa ahịa e dekọrọ."
+  },
+  "All payment methods": {
+    "pcm": "All payment methods",
+    "ha": "Duk hanyoyin biya",
+    "yo": "Gbogbo ọ̀nà ìsanwó",
+    "ig": "Ụzọ ịkwụ ụgwọ niile"
+  },
+  "Search receipt number": {
+    "pcm": "Find receipt number",
+    "ha": "Nemi lambar rasit",
+    "yo": "Wá nọ́mbà rísíìtì",
+    "ig": "Chọọ nọmba risit"
+  },
+  "Search receipt number…": {
+    "pcm": "Find receipt number…",
+    "ha": "Nemi lambar rasit…",
+    "yo": "Wá nọ́mbà rísíìtì…",
+    "ig": "Chọọ nọmba risit…"
+  },
+  "No receipts found": {
+    "pcm": "We no see receipt",
+    "ha": "Ba a sami rasit ba",
+    "yo": "A kò rí rísíìtì",
+    "ig": "Ahụghị risit"
+  },
+  "Completed sales will appear here. Try a different receipt number or payment method.": {
+    "pcm": "Sales wey finish go show here. Try another receipt number or payment method.",
+    "ha": "Sayarwar da ta kammala za ta bayyana a nan. Gwada wata lambar rasit ko hanyar biya.",
+    "yo": "Títà tó parí yóò hàn níbí. Gbìyànjú nọ́mbà rísíìtì tàbí ọ̀nà ìsanwó mìíràn.",
+    "ig": "Ahịa agwụchara ga-apụta ebe a. Nwaa nọmba risit ma ọ bụ ụzọ ịkwụ ụgwọ ọzọ."
+  },
+  "Look up a receipt": {
+    "pcm": "Find receipt",
+    "ha": "Nemo rasit",
+    "yo": "Wá rísíìtì",
+    "ig": "Chọta risit"
+  },
+  "Look up a receipt to review its items, totals and payment details.": {
+    "pcm": "Find receipt to check items, total and payment details.",
+    "ha": "Nemo rasit don duba kaya, jimilla da bayanan biya.",
+    "yo": "Wá rísíìtì láti ṣàyẹ̀wò ọjà, àpapọ̀ àti ìsanwó.",
+    "ig": "Chọta risit iji lelee ngwaahịa, ngụkọta na nkọwa ịkwụ ụgwọ."
+  },
+  "Recent lookups": {
+    "pcm": "Receipts wey you just check",
+    "ha": "Binciken baya-bayan nan",
+    "yo": "Àwọn ìwádìí tuntun",
+    "ig": "Nchọta ọhụrụ"
+  },
+  "Your successful lookups in this session will appear here.": {
+    "pcm": "Receipts wey you find for this session go show here.",
+    "ha": "Rasitocin da ka samo a wannan zaman za su bayyana a nan.",
+    "yo": "Àwọn rísíìtì tí o rí ní àkókò yìí yóò hàn níbí.",
+    "ig": "Risit ị chọtara n'oge a ga-apụta ebe a."
+  },
+  "Use a receipt number or a connected barcode scanner. Photo scanning requires a supported browser.": {
+    "pcm": "Use receipt number or barcode scanner wey connect. Photo scan need browser wey support am.",
+    "ha": "Yi amfani da lambar rasit ko na'urar barcode. Duba hoto yana buƙatar burauza mai goyon baya.",
+    "yo": "Lo nọ́mbà rísíìtì tàbí ẹ̀rọ barcode. Àyẹ̀wò fọ́tò nílò ẹ̀rọ aṣàwákiri tó ṣe é.",
+    "ig": "Jiri nọmba risit ma ọ bụ igwe barcode ejikọrọ. Nyocha foto chọrọ ihe nchọgharị na-akwado ya."
+  },
+  "Barcode photo": {
+    "pcm": "Barcode picture",
+    "ha": "Hoton barcode",
+    "yo": "Fọ́tò barcode",
+    "ig": "Foto barcode"
+  },
+  "Receipt barcode photo": {
+    "pcm": "Receipt barcode picture",
+    "ha": "Hoton barcode na rasit",
+    "yo": "Fọ́tò barcode rísíìtì",
+    "ig": "Foto barcode risit"
+  },
+  "Download receipt": {
+    "pcm": "Download receipt",
+    "ha": "Sauke rasit",
+    "yo": "Ṣe ìgbàsílẹ̀ rísíìtì",
+    "ig": "Budata risit"
+  },
+  "View & print receipts": {
+    "pcm": "See and print receipts",
+    "ha": "Duba ka buga rasit",
+    "yo": "Wo kí o tẹ rísíìtì",
+    "ig": "Lee ma bipụta risit"
+  },
+  "Print to device": {
+    "pcm": "Print for printer",
+    "ha": "Buga zuwa na'ura",
+    "yo": "Tẹ sí ẹ̀rọ",
+    "ig": "Bipụta n'igwe"
+  },
+  "Connect a receipt printer (USB / Bluetooth)": {
+    "pcm": "Connect receipt printer (USB / Bluetooth)",
+    "ha": "Haɗa firintar rasit (USB / Bluetooth)",
+    "yo": "So ẹ̀rọ ìtẹ̀wé rísíìtì pọ̀ (USB / Bluetooth)",
+    "ig": "Jikọọ igwe risit (USB / Bluetooth)"
+  },
+  "Connect USB": {
+    "pcm": "Connect USB",
+    "ha": "Haɗa USB",
+    "yo": "So USB pọ̀",
+    "ig": "Jikọọ USB"
+  },
+  "Connect Bluetooth": {
+    "pcm": "Connect Bluetooth",
+    "ha": "Haɗa Bluetooth",
+    "yo": "So Bluetooth pọ̀",
+    "ig": "Jikọọ Bluetooth"
+  },
+  "Connecting…": {
+    "pcm": "E dey connect…",
+    "ha": "Ana haɗawa…",
+    "yo": "Ó ń sopọ̀…",
+    "ig": "Ọ na-ejikọ…"
+  },
+  "Disconnect": {
+    "pcm": "Disconnect",
+    "ha": "Yanke haɗi",
+    "yo": "Já àsopọ̀",
+    "ig": "Kwupu njikọ"
+  },
+  "Thank you for your purchase": {
+    "pcm": "Thank you as you buy from us",
+    "ha": "Na gode da sayayya",
+    "yo": "Ẹ ṣé fún rírà",
+    "ig": "Daalụ maka ịzụta"
+  },
+  "Thank you!": {
+    "pcm": "Thank you!",
+    "ha": "Na gode!",
+    "yo": "Ẹ ṣé!",
+    "ig": "Daalụ!"
+  },
+  "Business profile": {
+    "pcm": "Business profile",
+    "ha": "Bayanan kasuwanci",
+    "yo": "Àkọọ́lẹ̀ iṣẹ́",
+    "ig": "Profaịlụ azụmahịa"
+  },
+  "Business logo": {
+    "pcm": "Business logo",
+    "ha": "Tambarin kasuwanci",
+    "yo": "Àmì iṣẹ́",
+    "ig": "Akara azụmahịa"
+  },
+  "Brand": {
+    "pcm": "Brand",
+    "ha": "Tambari",
+    "yo": "Àmì",
+    "ig": "Akara"
+  },
+  "Language & currency": {
+    "pcm": "Language and currency",
+    "ha": "Harshe da kuɗi",
+    "yo": "Èdè àti owó",
+    "ig": "Asụsụ na ego"
+  },
+  "Localization": {
+    "pcm": "Language and local settings",
+    "ha": "Saitin yanki",
+    "yo": "Ètò agbègbè",
+    "ig": "Ntọala mpaghara"
+  },
+  "Date format": {
+    "pcm": "How date go show",
+    "ha": "Tsarin kwanan wata",
+    "yo": "Ọ̀nà fífi ọjọ́ hàn",
+    "ig": "Ụdị ụbọchị"
+  },
+  "Language applies to this device. Currency and timezone belong to your business.": {
+    "pcm": "Language na for this device. Currency and timezone na for your business.",
+    "ha": "Harshe na wannan na'ura ne. Kuɗi da yankin lokaci na kasuwancinka ne.",
+    "yo": "Èdè kan ẹ̀rọ yìí. Owó àti agbègbè àkókò jẹ́ ti iṣẹ́ rẹ.",
+    "ig": "Asụsụ bụ maka igwe a. Ego na mpaghara oge bụ nke azụmahịa gị."
+  },
+  "Shown on receipts, invoices, and your Zainpay account.": {
+    "pcm": "E go show for receipts, invoices and your Zainpay account.",
+    "ha": "Ana nunawa a rasit, invoice da asusun Zainpay.",
+    "yo": "A fi hàn lórí rísíìtì, ìwé owó àti àkọọ́lẹ̀ Zainpay.",
+    "ig": "A na-egosi ya na risit, akwụkwọ ụgwọ na akaụntụ Zainpay."
+  },
+  "PNG, JPEG or WebP · up to 256 KB · saved with your business profile": {
+    "pcm": "PNG, JPEG or WebP · no pass 256 KB · save with business profile",
+    "ha": "PNG, JPEG ko WebP · har 256 KB · ajiye da bayanan kasuwanci",
+    "yo": "PNG, JPEG tàbí WebP · tó 256 KB · a fipamọ́ pẹ̀lú àkọọ́lẹ̀ iṣẹ́",
+    "ig": "PNG, JPEG ma ọ bụ WebP · ruo 256 KB · echekwara na profaịlụ azụmahịa"
+  },
+  "Upload business logo": {
+    "pcm": "Upload business logo",
+    "ha": "Loda tambarin kasuwanci",
+    "yo": "Gbé àmì iṣẹ́ sókè",
+    "ig": "Bulite akara azụmahịa"
+  },
+  "Loading business settings": {
+    "pcm": "Business settings dey load",
+    "ha": "Ana loda saitin kasuwanci",
+    "yo": "A ń gbé ètò iṣẹ́ wọlé",
+    "ig": "A na-ebunye ntọala azụmahịa"
+  },
+  "Settings sections": {
+    "pcm": "Settings sections",
+    "ha": "Sassan saituna",
+    "yo": "Àwọn apá ètò",
+    "ig": "Akụkụ ntọala"
+  },
+  "Devices & printers": {
+    "pcm": "Devices and printers",
+    "ha": "Na'urori da firintoci",
+    "yo": "Ẹ̀rọ àti ẹ̀rọ ìtẹ̀wé",
+    "ig": "Igwe na igwe mbipụta"
+  },
+  "Pair a receipt printer with this browser. Connect it again from the receipt screen when you are ready to print.": {
+    "pcm": "Pair receipt printer with this browser. Connect am again from receipt screen when you ready to print.",
+    "ha": "Haɗa firintar rasit da wannan burauza. Sake haɗawa daga allon rasit idan ka shirya bugawa.",
+    "yo": "So ẹ̀rọ rísíìtì pọ̀ mọ́ ẹ̀rọ aṣàwákiri yìí. Tún sopọ̀ láti ojú rísíìtì nígbà tí o ṣetán láti tẹ̀.",
+    "ig": "Jikọọ igwe risit na ihe nchọgharị a. Jikọọ ya ọzọ site na ibe risit mgbe ị dị njikere ibipụta."
+  },
+  "Browser printing and downloadable PDF receipts remain available when USB or Bluetooth is unsupported.": {
+    "pcm": "You still fit print from browser or download PDF if USB or Bluetooth no work.",
+    "ha": "Bugawa daga burauza da sauke PDF suna nan idan USB ko Bluetooth ba su samu ba.",
+    "yo": "O lè tẹ̀ láti ẹ̀rọ aṣàwákiri tàbí gba PDF bí USB tàbí Bluetooth kò bá ṣiṣẹ́.",
+    "ig": "Ị ka nwere ike ibipụta site na ihe nchọgharị ma ọ bụ budata PDF ma USB ma ọ bụ Bluetooth anaghị akwado."
+  },
+  "Offline sync": {
+    "pcm": "Sync when internet return",
+    "ha": "Daidaita bayanai ba intanet",
+    "yo": "Mímú dọ́gba láìsí intanẹẹti",
+    "ig": "Mmekọrịta na-enweghị ịntanetị"
+  },
+  "Your sales and stock changes stay on this device until they sync.": {
+    "pcm": "Your sales and stock changes go stay for this device until dem sync.",
+    "ha": "Sayarwa da sauyin haja suna nan a na'ura har sai an daidaita su.",
+    "yo": "Títà àti ìyípadà ọjà rẹ dúró lórí ẹ̀rọ yìí títí tí wọn yóò fi dọ́gba.",
+    "ig": "Ahịa na mgbanwe ngwaahịa gị na-anọ n'igwe a ruo mgbe ha mekọrịtara."
+  },
+  "Sync now": {
+    "pcm": "Sync now",
+    "ha": "Daidaita yanzu",
+    "yo": "Mú dọ́gba nísinsìnyí",
+    "ig": "Mekọrịta ugbu a"
+  },
+  "Syncing…": {
+    "pcm": "E dey sync…",
+    "ha": "Ana daidaitawa…",
+    "yo": "A ń mú dọ́gba…",
+    "ig": "A na-emekọrịta…"
+  },
+  "Keep this tab open while syncing. Clearing browser storage removes changes that have not reached the server.": {
+    "pcm": "Leave this tab open while e dey sync. If you clear browser storage, changes wey never reach server go comot.",
+    "ha": "Bar wannan shafi a buɗe yayin daidaitawa. Goge ajiyar burauza zai cire canje-canjen da ba su kai uwar garke ba.",
+    "yo": "Fi taabu yìí sílẹ̀ nígbà ìdọ́gba. Pípa ìpamọ́ ẹ̀rọ aṣàwákiri rẹ́ yóò yọ ìyípadà tí kò tíì dé olupin.",
+    "ig": "Hapụ taabụ a mepere mgbe a na-emekọrịta. Ihichapụ nchekwa ihe nchọgharị na-ewepụ mgbanwe na-erubeghị sava."
+  },
+  "Your business profile supplies the receipt header. Saved sales retain their original totals and payment details.": {
+    "pcm": "Your business profile supply receipt header. Saved sales go keep original totals and payment details.",
+    "ha": "Bayanan kasuwancinka suna ba rasit kanun. Sayarwar da aka ajiye tana riƙe jimilla da bayanan biyanta.",
+    "yo": "Àkọọ́lẹ̀ iṣẹ́ rẹ pèsè orí rísíìtì. Títà tí a fipamọ́ pa àpapọ̀ àti ìsanwó àkọ́kọ́ mọ́.",
+    "ig": "Profaịlụ azụmahịa gị na-enye isi risit. Ahịa echekwara na-edobe ngụkọta na nkọwa ịkwụ ụgwọ mbụ."
+  },
+  "The standard invoice includes item quantities, prices, discount, tax, payment, change and a scannable receipt code.": {
+    "pcm": "Standard invoice get quantities, prices, discount, tax, payment, change and receipt code wey you fit scan.",
+    "ha": "Invoice na yau da kullum yana da adadi, farashi, rangwame, haraji, biya, canji da lambar rasit.",
+    "yo": "Ìwé owó ní iye ọjà, iye owó, ẹ̀dínwó, owó-orí, ìsanwó, owó-padà àti kóòdù rísíìtì.",
+    "ig": "Akwụkwọ ụgwọ nwere ọnụọgụ, ọnụahịa, mbelata, ụtụ, ịkwụ ụgwọ, mgbanwe na koodu risit."
+  },
+  "Manage notifications": {
+    "pcm": "Manage updates",
+    "ha": "Sarrafa sanarwa",
+    "yo": "Ṣàkóso ìfitónilétí",
+    "ig": "Jikwaa ozi"
+  },
+  "Review stock alerts, subscription updates and team activity in one place.": {
+    "pcm": "Check stock alerts, subscription updates and team activity for one place.",
+    "ha": "Duba faɗakarwar haja, rajista da aikin ma'aikata a wuri ɗaya.",
+    "yo": "Ṣàyẹ̀wò ìkìlọ̀ ọjà, ìmúdójúìwọ̀n ètò àti iṣẹ́ ẹgbẹ́ ní ibi kan.",
+    "ig": "Nyochaa ozi ngwaahịa, atụmatụ na ọrụ otu n'otu ebe."
+  },
+  "Data & export": {
+    "pcm": "Data and download",
+    "ha": "Bayanai da fitarwa",
+    "yo": "Dátà àti gbígbé jáde",
+    "ig": "Data na mbupụ"
+  },
+  "Download your business records using the filters on each report.": {
+    "pcm": "Use filters for each report to download business records.",
+    "ha": "Sauke bayanan kasuwanci da matatun kowane rahoto.",
+    "yo": "Lo àlẹ̀mọ́ ìròyìn kọ̀ọ̀kan láti gba àkọsílẹ̀ iṣẹ́ rẹ.",
+    "ig": "Jiri nzacha akụkọ ọ bụla budata ndekọ azụmahịa gị."
+  },
+  "Sales & financial reports": {
+    "pcm": "Sales and money reports",
+    "ha": "Rahoton sayarwa da kuɗi",
+    "yo": "Ìròyìn títà àti owó",
+    "ig": "Akụkọ ahịa na ego"
+  },
+  "Inventory & stock": {
+    "pcm": "Inventory and stock",
+    "ha": "Haja da kaya",
+    "yo": "Ọjà àti ìpamọ́",
+    "ig": "Ngwaahịa na nchekwa"
+  },
+  "Import products": {
+    "pcm": "Import products",
+    "ha": "Shigo da kaya",
+    "yo": "Gbé ọjà wọlé",
+    "ig": "Bubata ngwaahịa"
+  },
+  "Current": {
+    "pcm": "Current",
+    "ha": "Na yanzu",
+    "yo": "Lọ́wọ́lọ́wọ́",
+    "ig": "Ugbu a"
+  },
+  "Change plan": {
+    "pcm": "Change plan",
+    "ha": "Canja tsari",
+    "yo": "Yí ètò padà",
+    "ig": "Gbanwee atụmatụ"
+  },
+  "Renewal": {
+    "pcm": "Renewal",
+    "ha": "Sabunta rajista",
+    "yo": "Àtúnṣe ètò",
+    "ig": "Mmegharị atụmatụ"
+  },
+  "Manual payment": {
+    "pcm": "Pay by yourself",
+    "ha": "Biyan kuɗi da hannu",
+    "yo": "Ìsanwó fúnra rẹ",
+    "ig": "Ịkwụ ụgwọ n'onwe gị"
+  },
+  "Valid until": {
+    "pcm": "E valid till",
+    "ha": "Yana aiki har",
+    "yo": "Ó wúlò títí dé",
+    "ig": "Ọ dị ruo"
+  },
+  "Choose a plan to renew.": {
+    "pcm": "Choose plan to renew.",
+    "ha": "Zaɓi tsari don sabuntawa.",
+    "yo": "Yan ètò láti tún ṣe.",
+    "ig": "Họrọ atụmatụ iji megharịa."
+  },
+  "Cancel subscription?": {
+    "pcm": "Cancel subscription?",
+    "ha": "Soke rajista?",
+    "yo": "Fagilé ṣíṣe-alábápín?",
+    "ig": "Kagbuo ndebanye?"
+  },
+  "This ends subscription access immediately. Existing sales and records are retained. This does not issue a refund.": {
+    "pcm": "This go stop subscription access now. Saved sales and records go remain. E no go refund money.",
+    "ha": "Wannan zai dakatar da rajista nan take. Sayarwa da bayanai suna nan. Ba a mayar da kuɗi.",
+    "yo": "Èyí dá àṣẹ ètò dúró lẹ́sẹ̀kẹsẹ̀. Títà àti àkọsílẹ̀ wà. Kò dá owó padà.",
+    "ig": "Nke a na-akwụsị ohere atụmatụ ozugbo. Ahịa na ndekọ na-adị. Ọ naghị eweghachi ego."
+  },
+  "Keep subscription": {
+    "pcm": "Keep subscription",
+    "ha": "Riƙe rajista",
+    "yo": "Pa ètò mọ́",
+    "ig": "Debe ndebanye"
+  },
+  "Confirm cancellation": {
+    "pcm": "Confirm say you wan cancel",
+    "ha": "Tabbatar da sokewa",
+    "yo": "Fìdí ìfagilé múlẹ̀",
+    "ig": "Kwenye nkagbu"
+  },
+  "Cancelling?": {
+    "pcm": "E dey cancel…",
+    "ha": "Ana sokewa…",
+    "yo": "A ń fagilé…",
+    "ig": "A na-akagbu…"
+  },
+  "Subscription sections": {
+    "pcm": "Subscription sections",
+    "ha": "Sassan rajista",
+    "yo": "Àwọn apá ètò",
+    "ig": "Akụkụ ndebanye"
+  },
+  "Payment methods": {
+    "pcm": "Payment methods",
+    "ha": "Hanyoyin biya",
+    "yo": "Àwọn ọ̀nà ìsanwó",
+    "ig": "Ụzọ ịkwụ ụgwọ"
+  },
+  "Usage": {
+    "pcm": "How much you don use",
+    "ha": "Amfani",
+    "yo": "Ìlò",
+    "ig": "Ojiji"
+  },
+  "Usage unavailable": {
+    "pcm": "We no fit load usage",
+    "ha": "Bayanan amfani ba su samu ba",
+    "yo": "Àlàyé ìlò kò sí",
+    "ig": "Ojiji adịghị"
+  },
+  "Your Zainpay Naira account": {
+    "pcm": "Your Zainpay Naira account",
+    "ha": "Asusun Naira naka na Zainpay",
+    "yo": "Àkọọ́lẹ̀ Naira Zainpay rẹ",
+    "ig": "Akaụntụ Naira Zainpay gị"
+  },
+  "Bank": {
+    "pcm": "Bank",
+    "ha": "Banki",
+    "yo": "Báńkì",
+    "ig": "Ụlọ akụ"
+  },
+  "Account number (NUBAN)": {
+    "pcm": "Account number (NUBAN)",
+    "ha": "Lambar asusu (NUBAN)",
+    "yo": "Nọ́mbà àkọọ́lẹ̀ (NUBAN)",
+    "ig": "Nọmba akaụntụ (NUBAN)"
+  },
+  "Account name": {
+    "pcm": "Account name",
+    "ha": "Sunan asusu",
+    "yo": "Orúkọ àkọọ́lẹ̀",
+    "ig": "Aha akaụntụ"
+  },
+  "Copy account number": {
+    "pcm": "Copy account number",
+    "ha": "Kwafi lambar asusu",
+    "yo": "Ṣe ẹ̀dà nọ́mbà àkọọ́lẹ̀",
+    "ig": "Detuo nọmba akaụntụ"
+  },
+  "Account unavailable": {
+    "pcm": "Account no dey available",
+    "ha": "Asusu bai samu ba",
+    "yo": "Àkọọ́lẹ̀ kò sí",
+    "ig": "Akaụntụ adịghị"
+  },
+  "Could not load your bank account.": {
+    "pcm": "We no fit load your bank account.",
+    "ha": "An kasa loda asusun bankinka.",
+    "yo": "Kò ṣeé gbé àkọọ́lẹ̀ báńkì rẹ wọlé.",
+    "ig": "Enweghị ike ibunye akaụntụ ụlọ akụ gị."
+  },
+  "No account assigned yet": {
+    "pcm": "Dem never assign account",
+    "ha": "Ba a sanya asusu ba tukuna",
+    "yo": "A kò tíì yan àkọọ́lẹ̀",
+    "ig": "E kenyebeghị akaụntụ"
+  },
+  "Your payment account will appear here after merchant onboarding is complete.": {
+    "pcm": "Your payment account go show here when business setup finish.",
+    "ha": "Asusun biyanka zai bayyana bayan kammala saitin kasuwanci.",
+    "yo": "Àkọọ́lẹ̀ ìsanwó rẹ yóò hàn lẹ́yìn tí ìṣètò iṣẹ́ parí.",
+    "ig": "Akaụntụ ịkwụ ụgwọ gị ga-apụta mgbe nhazi azụmahịa gwụchara."
+  },
+  "Payments appear in billing history after confirmation.": {
+    "pcm": "Payments go show for billing history after confirmation.",
+    "ha": "Biyan kuɗi yana bayyana a tarihi bayan tabbatarwa.",
+    "yo": "Ìsanwó yóò hàn nínú ìtàn lẹ́yìn ìmúdájú.",
+    "ig": "Ịkwụ ụgwọ na-apụta n'akụkọ mgbe ekwenyesịrị ya."
+  },
+  "Check again": {
+    "pcm": "Check again",
+    "ha": "Sake dubawa",
+    "yo": "Tún ṣàyẹ̀wò",
+    "ig": "Lelee ọzọ"
+  },
+  "Outstanding": {
+    "pcm": "Money never complete",
+    "ha": "Bashin da ya rage",
+    "yo": "Owó tó kù",
+    "ig": "Ego fọdụrụ"
+  },
+  "Outstanding balance": {
+    "pcm": "Money wey remain to pay",
+    "ha": "Bashin da ya rage",
+    "yo": "Owó tí a kò tíì san",
+    "ig": "Ego a na-akwụbeghị"
+  },
+  "Collected": {
+    "pcm": "Money wey don come",
+    "ha": "An karɓa",
+    "yo": "A ti gbà",
+    "ig": "Anatala"
+  },
+  "All sales": {
+    "pcm": "All sales",
+    "ha": "Duk sayarwa",
+    "yo": "Gbogbo títà",
+    "ig": "Ahịa niile"
+  },
+  "Search vendor sales": {
+    "pcm": "Find vendor sales",
+    "ha": "Nemi sayarwar dillali",
+    "yo": "Wá títà olùtajà",
+    "ig": "Chọọ ahịa onye na-ere"
+  },
+  "Search vendor name or phone?": {
+    "pcm": "Find vendor name or phone…",
+    "ha": "Nemi sunan dillali ko waya…",
+    "yo": "Wá orúkọ tàbí fóònù olùtajà…",
+    "ig": "Chọọ aha onye na-ere ma ọ bụ ekwentị…"
+  },
+  "Vendor sales status": {
+    "pcm": "Vendor sales status",
+    "ha": "Halin sayarwar dillali",
+    "yo": "Ipò títà olùtajà",
+    "ig": "Ọnọdụ ahịa onye na-ere"
+  },
+  "Record payment": {
+    "pcm": "Record payment",
+    "ha": "Rubuta biyan kuɗi",
+    "yo": "Kọ ìsanwó sílẹ̀",
+    "ig": "Dekọọ ịkwụ ụgwọ"
+  },
+  "Save payment": {
+    "pcm": "Save payment",
+    "ha": "Ajiye biyan kuɗi",
+    "yo": "Fi ìsanwó pamọ́",
+    "ig": "Chekwaa ịkwụ ụgwọ"
+  },
+  "Reconnect to record payment.": {
+    "pcm": "Connect internet to record payment.",
+    "ha": "Sake haɗawa don rubuta biya.",
+    "yo": "Tún sopọ̀ láti kọ ìsanwó.",
+    "ig": "Jikọọ ọzọ iji dekọọ ịkwụ ụgwọ."
+  },
+  "Could not load this page": {
+    "pcm": "We no fit load this page",
+    "ha": "An kasa loda shafin",
+    "yo": "Kò ṣeé gbé ojú-ewé wọlé",
+    "ig": "Enweghị ike ibunye ibe a"
+  },
+  "This page could not be loaded": {
+    "pcm": "We no fit load this page",
+    "ha": "An kasa loda shafin",
+    "yo": "Kò ṣeé gbé ojú-ewé wọlé",
+    "ig": "Enweghị ike ibunye ibe a"
+  },
+  "Check your connection and try loading this page again.": {
+    "pcm": "Check internet and try load page again.",
+    "ha": "Duba haɗinka ka sake loda shafin.",
+    "yo": "Ṣàyẹ̀wò ìsopọ̀ kí o tún gbé ojú-ewé wọlé.",
+    "ig": "Lelee njikọ gị ma gbalịa ibunye ibe a ọzọ."
+  },
+  "Try again": {
+    "pcm": "Try again",
+    "ha": "Sake gwadawa",
+    "yo": "Gbìyànjú lẹ́ẹ̀kan sí i",
+    "ig": "Nwaa ọzọ"
+  },
+  "Previous": {
+    "pcm": "Previous one",
+    "ha": "Na baya",
+    "yo": "Tẹ́lẹ̀",
+    "ig": "Nke gara aga"
+  },
+  "Loading…": {
+    "pcm": "E dey load…",
+    "ha": "Ana lodawa…",
+    "yo": "A ń gbé wọlé…",
+    "ig": "A na-ebunye…"
+  },
+  "Loading cart…": {
+    "pcm": "Cart dey load…",
+    "ha": "Ana loda kwando…",
+    "yo": "A ń gbé kẹ̀kẹ́ wọlé…",
+    "ig": "A na-ebunye nkata…"
+  },
+  "Loading workspace": {
+    "pcm": "Workspace dey load",
+    "ha": "Ana loda wurin aiki",
+    "yo": "A ń gbé ibi iṣẹ́ wọlé",
+    "ig": "A na-ebunye ebe ọrụ"
+  },
+  "Open search": {
+    "pcm": "Open search",
+    "ha": "Buɗe bincike",
+    "yo": "Ṣí ìwádìí",
+    "ig": "Mepee nchọta"
+  },
+  "Toggle menu": {
+    "pcm": "Open or close menu",
+    "ha": "Buɗe ko rufe menu",
+    "yo": "Ṣí tàbí pa àtòjọ",
+    "ig": "Mepee ma ọ bụ mechie ndepụta"
+  },
+  "Collapse sidebar": {
+    "pcm": "Close sidebar small",
+    "ha": "Rage gefen menu",
+    "yo": "Kó àtòjọ ẹ̀gbẹ́ kéré",
+    "ig": "Belata ogwe akụkụ"
+  },
+  "Expand sidebar": {
+    "pcm": "Open sidebar full",
+    "ha": "Faɗaɗa gefen menu",
+    "yo": "Fẹ àtòjọ ẹ̀gbẹ́",
+    "ig": "Gbasaa ogwe akụkụ"
+  },
+  "Notification filters": {
+    "pcm": "Filter updates",
+    "ha": "Matatun sanarwa",
+    "yo": "Àlẹ̀mọ́ ìfitónilétí",
+    "ig": "Nzacha ozi"
+  },
+  "Could not load notifications": {
+    "pcm": "We no fit load updates",
+    "ha": "An kasa loda sanarwa",
+    "yo": "Kò ṣeé gbé ìfitónilétí wọlé",
+    "ig": "Enweghị ike ibunye ozi"
+  },
+  "Could not update notifications. Try again.": {
+    "pcm": "We no fit update notifications. Try again.",
+    "ha": "An kasa sabunta sanarwa. Sake gwadawa.",
+    "yo": "Kò ṣeé ṣe ìmúdójúìwọ̀n ìfitónilétí. Gbìyànjú lẹ́ẹ̀kan sí i.",
+    "ig": "Enweghị ike imelite ozi. Nwaa ọzọ."
+  },
+  "Payments": {
+    "pcm": "Payments",
+    "ha": "Biyan kuɗi",
+    "yo": "Àwọn ìsanwó",
+    "ig": "Ịkwụ ụgwọ"
+  },
+  "Review updates requiring your attention.": {
+    "pcm": "Check updates wey need your attention.",
+    "ha": "Duba sanarwar da ke buƙatar hankalinka.",
+    "yo": "Ṣàyẹ̀wò ìfitónilétí tó nílò àkíyèsí rẹ.",
+    "ig": "Nyochaa ozi chọrọ nlebara anya gị."
+  },
+  "Account recovery": {
+    "pcm": "Recover account",
+    "ha": "Maido da asusu",
+    "yo": "Ìgbàpadà àkọọ́lẹ̀",
+    "ig": "Weghachite akaụntụ"
+  },
+  "Account security": {
+    "pcm": "Account security",
+    "ha": "Tsaron asusu",
+    "yo": "Ààbò àkọọ́lẹ̀",
+    "ig": "Nchekwa akaụntụ"
+  },
+  "Let's get you back in.": {
+    "pcm": "Make we get you back inside.",
+    "ha": "Bari mu mayar da kai ciki.",
+    "yo": "Jẹ́ kí a mú ọ padà wọlé.",
+    "ig": "Ka anyị weghachite gị."
+  },
+  "Let's get you back in, safely.": {
+    "pcm": "Make we get you back inside safely.",
+    "ha": "Bari mu mayar da kai ciki cikin tsaro.",
+    "yo": "Jẹ́ kí a mú ọ padà wọlé láìléwu.",
+    "ig": "Ka anyị weghachite gị n'enweghị nsogbu."
+  },
+  "Enter the email tied to your merchant account. We'll send a reset link.": {
+    "pcm": "Enter email wey dey your business account. We go send reset link.",
+    "ha": "Shigar da imel na asusun kasuwanci. Za mu aika mahaɗin sake saita kalmar sirri.",
+    "yo": "Tẹ ímeèlì àkọọ́lẹ̀ iṣẹ́ rẹ. A ó rán ọ̀nà àtúntò sí ọ.",
+    "ig": "Tinye email akaụntụ azụmahịa gị. Anyị ga-eziga njikọ nrụgharị."
+  },
+  "We have sent a password reset link to your email address.": {
+    "pcm": "We don send reset password link to your email.",
+    "ha": "Mun aika mahaɗin sake saita kalmar sirri zuwa imel ɗinka.",
+    "yo": "A ti rán ọ̀nà àtúntò ọ̀rọ̀ aṣínà sí ímeèlì rẹ.",
+    "ig": "Anyị ezipụla njikọ nrụgharị paswọọdụ na email gị."
+  },
+  "Back to Login": {
+    "pcm": "Go back to sign in",
+    "ha": "Koma shiga",
+    "yo": "Padà sí ìwọlé",
+    "ig": "Laghachi na nbanye"
+  },
+  "Sending...": {
+    "pcm": "E dey send...",
+    "ha": "Ana aikawa...",
+    "yo": "A ń ránṣẹ́...",
+    "ig": "A na-eziga..."
+  },
+  "Cashier or admin account?": {
+    "pcm": "Na cashier or admin account?",
+    "ha": "Asusun mai karɓar kuɗi ko admin?",
+    "yo": "Àkọọ́lẹ̀ olùgbà owó tàbí admin?",
+    "ig": "Akaụntụ onye na-anata ego ma ọ bụ admin?"
+  },
+  "Ask your business owner to reset your password from Settings → Team. We only send resets directly to business owners.": {
+    "pcm": "Ask business owner to reset password from Settings → Team. Na only business owners we dey send reset directly.",
+    "ha": "Nemi mai kasuwanci ya sake saita kalmar sirri daga Settings → Team. Masu kasuwanci kawai muke aikawa kai tsaye.",
+    "yo": "Béèrè lọ́wọ́ oníṣẹ́ láti tún ọ̀rọ̀ aṣínà ṣe ní Settings → Team. Oníṣẹ́ nìkan ni a ń rán àtúntò sí.",
+    "ig": "Rịọ onye nwe azụmahịa ka ọ tọgharịa paswọọdụ na Settings → Team. Anyị na-ezigara naanị ndị nwe azụmahịa ozugbo."
+  },
+  "New to TracKasuwa?": {
+    "pcm": "You new for TracKasuwa?",
+    "ha": "Sabon zuwa TracKasuwa?",
+    "yo": "Ṣé o jẹ́ tuntun sí TracKasuwa?",
+    "ig": "Ị bụ onye ọhụrụ na TracKasuwa?"
+  },
+  "Create your merchant account": {
+    "pcm": "Open your business account",
+    "ha": "Buɗe asusun kasuwanci",
+    "yo": "Ṣí àkọọ́lẹ̀ iṣẹ́ rẹ",
+    "ig": "Mepee akaụntụ azụmahịa gị"
+  },
+  "Create your merchant": {
+    "pcm": "Set up your business",
+    "ha": "Ƙirƙiri kasuwancinka",
+    "yo": "Ṣẹ̀dá iṣẹ́ rẹ",
+    "ig": "Mepụta azụmahịa gị"
+  },
+  "Create your account": {
+    "pcm": "Open your account",
+    "ha": "Buɗe asusunka",
+    "yo": "Ṣí àkọọ́lẹ̀ rẹ",
+    "ig": "Mepee akaụntụ gị"
+  },
+  "Your name": {
+    "pcm": "Your name",
+    "ha": "Sunanka",
+    "yo": "Orúkọ rẹ",
+    "ig": "Aha gị"
+  },
+  "Phone (optional)": {
+    "pcm": "Phone (if you want)",
+    "ha": "Waya (na zaɓi)",
+    "yo": "Fóònù (bí o bá fẹ́)",
+    "ig": "Ekwentị (nhọrọ)"
+  },
+  "At least 8 characters": {
+    "pcm": "At least 8 characters",
+    "ha": "Aƙalla haruffa 8",
+    "yo": "Ó kéré tán àmì 8",
+    "ig": "Ọ dịkarịa ala mkpụrụedemede 8"
+  },
+  "Min. 8 characters": {
+    "pcm": "At least 8 characters",
+    "ha": "Aƙalla haruffa 8",
+    "yo": "Ó kéré tán àmì 8",
+    "ig": "Ọ dịkarịa ala mkpụrụedemede 8"
+  },
+  "Re-enter your password": {
+    "pcm": "Enter password again",
+    "ha": "Sake shigar da kalmar sirri",
+    "yo": "Tún tẹ ọ̀rọ̀ aṣínà rẹ",
+    "ig": "Tinye paswọọdụ ọzọ"
+  },
+  "Repeat password": {
+    "pcm": "Enter password again",
+    "ha": "Maimaita kalmar sirri",
+    "yo": "Tún ọ̀rọ̀ aṣínà tẹ̀",
+    "ig": "Tinye paswọọdụ ọzọ"
+  },
+  "Creating account...": {
+    "pcm": "We dey create account...",
+    "ha": "Ana ƙirƙirar asusu...",
+    "yo": "A ń ṣẹ̀dá àkọọ́lẹ̀...",
+    "ig": "A na-emepụta akaụntụ..."
+  },
+  "Already have an account?": {
+    "pcm": "You don get account?",
+    "ha": "Kana da asusu?",
+    "yo": "Ṣé o ní àkọọ́lẹ̀ tẹ́lẹ̀?",
+    "ig": "Ị nwere akaụntụ?"
+  },
+  "Your selected plan will be applied to your new account automatically after signup.": {
+    "pcm": "Plan wey you choose go apply for your new account after signup.",
+    "ha": "Za a saita tsarin da ka zaɓa a sabon asusunka bayan rajista.",
+    "yo": "Ètò tí o yàn yóò ṣiṣẹ́ fún àkọọ́lẹ̀ tuntun lẹ́yìn ìforúkọsílẹ̀.",
+    "ig": "Atụmatụ ị họọrọ ga-adị na akaụntụ ọhụrụ gị mgbe ị debanyere aha."
+  },
+  "You're one step away from your selected plan.": {
+    "pcm": "Na one step remain before your selected plan.",
+    "ha": "Mataki ɗaya ya rage zuwa tsarin da ka zaɓa.",
+    "yo": "Ìgbésẹ̀ kan ló kù sí ètò tí o yàn.",
+    "ig": "Otu nzọụkwụ fọdụrụ ruo atụmatụ ị họọrọ."
+  },
+  "Need a new account?": {
+    "pcm": "You need new account?",
+    "ha": "Kana buƙatar sabon asusu?",
+    "yo": "Ṣé o nílò àkọọ́lẹ̀ tuntun?",
+    "ig": "Ị chọrọ akaụntụ ọhụrụ?"
+  },
+  "Required · First-time login": {
+    "pcm": "You must do am · first login",
+    "ha": "Dole · shiga na farko",
+    "yo": "Ó ṣe pàtàkì · ìwọlé àkọ́kọ́",
+    "ig": "Achọrọ · nbanye mbụ"
+  },
+  "One quick step before you continue.": {
+    "pcm": "One quick step before you continue.",
+    "ha": "Mataki ɗaya kafin ka ci gaba.",
+    "yo": "Ìgbésẹ̀ kan kí o tó tẹ̀síwájú.",
+    "ig": "Otu nzọụkwụ tupu ị gaa n'ihu."
+  },
+  "Your profile is not loaded. Refresh the page and sign in again if needed.": {
+    "pcm": "Your profile never load. Refresh page and sign in again if e need am.",
+    "ha": "Bayananka ba su loda ba. Sabunta shafin, sake shiga idan an buƙata.",
+    "yo": "Àkọọ́lẹ̀ rẹ kò wọlé. Tún ojú-ewé ṣí, wọlé lẹ́ẹ̀kan sí i bí ó bá yẹ.",
+    "ig": "Profaịlụ gị ebughị. Mee ka ibe ọhụrụ ma banye ọzọ ma ọ dị mkpa."
+  },
+  "Accounting and reconciliation": {
+    "pcm": "Accounts and payment matching",
+    "ha": "Lissafi da daidaita kuɗi",
+    "yo": "Ìṣirò àti ìmúdọ́gba owó",
+    "ig": "Akaụntụ na imekọrịta ego"
+  },
+  "Accounting, cash-up and reconciliation reports": {
+    "pcm": "Accounts, cash-up and payment matching reports",
+    "ha": "Rahoton lissafi, rufe kuɗi da daidaitawa",
+    "yo": "Ìròyìn ìṣirò, pípa àpò owó àti ìmúdọ́gba",
+    "ig": "Akụkọ akaụntụ, mkpokọta ego na imekọrịta"
+  },
+  "Review sales, reconcile payments, and sign off cash-up periods.": {
+    "pcm": "Check sales, match payments and sign off cash-up periods.",
+    "ha": "Duba sayarwa, daidaita biya, amince da lokacin rufe kuɗi.",
+    "yo": "Ṣàyẹ̀wò títà, mú ìsanwó dọ́gba, fọwọ́ sí àkókò àkójọ owó.",
+    "ig": "Nyochaa ahịa, mekọrịta ụgwọ ma kwado oge nchịkọta ego."
+  },
+  "Audit trail and exports": {
+    "pcm": "Audit records and downloads",
+    "ha": "Tarihin bincike da fitarwa",
+    "yo": "Àkọsílẹ̀ àyẹ̀wò àti gbígbé jáde",
+    "ig": "Ndekọ nyocha na mbupụ"
+  },
+  "Import business data": {
+    "pcm": "Import business records",
+    "ha": "Shigo da bayanan kasuwanci",
+    "yo": "Gbé dátà iṣẹ́ wọlé",
+    "ig": "Bubata data azụmahịa"
+  },
+  "Include imported historical sales": {
+    "pcm": "Include old sales wey you import",
+    "ha": "Haɗa tsohuwar sayarwar da aka shigo da ita",
+    "yo": "Fi títà àtijọ́ tí a gbé wọlé kún",
+    "ig": "Tinye ahịa ochie e bubatara"
+  },
+  "Report": {
+    "pcm": "Report",
+    "ha": "Rahoto",
+    "yo": "Ìròyìn",
+    "ig": "Akụkọ"
+  },
+  "Review correction": {
+    "pcm": "Check correction",
+    "ha": "Duba gyara",
+    "yo": "Ṣàyẹ̀wò àtúnṣe",
+    "ig": "Nyochaa mmezi"
+  },
+  "Close a cash-up period": {
+    "pcm": "Close cash-up period",
+    "ha": "Rufe lokacin lissafin kuɗi",
+    "yo": "Pa àkókò àkójọ owó",
+    "ig": "Mechie oge nchịkọta ego"
+  },
+  "Owner/manager sign-off. Enter actual counted totals per payment method.": {
+    "pcm": "Owner or manager must sign off. Enter real money wey you count for each payment method.",
+    "ha": "Amincewar mai shago ko manaja. Shigar da kuɗin da aka ƙirga ga kowace hanyar biya.",
+    "yo": "Ìfọwọ́sí oníṣẹ́ tàbí alákòóso. Tẹ àpapọ̀ gidi tí a kà fún ọ̀nà ìsanwó kọ̀ọ̀kan.",
+    "ig": "Nkwado onye nwe ma ọ bụ njikwa. Tinye ego ị gụrụ n'ezie maka ụzọ ịkwụ ụgwọ ọ bụla."
+  },
+  "Cashier ID": {
+    "pcm": "Cashier ID",
+    "ha": "Lambar mai karɓar kuɗi",
+    "yo": "ID olùgbà owó",
+    "ig": "ID onye na-anata ego"
+  },
+  "Opened": {
+    "pcm": "When e open",
+    "ha": "An buɗe",
+    "yo": "A ṣí",
+    "ig": "E meghere"
+  },
+  "Preview close": {
+    "pcm": "Check before close",
+    "ha": "Duba kafin rufewa",
+    "yo": "Ṣàyẹ̀wò kí o tó pa",
+    "ig": "Lelee tupu imechie"
+  },
+  "No entries for this report": {
+    "pcm": "No records for this report",
+    "ha": "Babu bayanai ga wannan rahoto",
+    "yo": "Kò sí àkọsílẹ̀ fún ìròyìn yìí",
+    "ig": "Enweghị ndekọ maka akụkọ a"
+  },
+  "Choose another report or date range. New business activity will appear here.": {
+    "pcm": "Choose another report or date. New business activity go show here.",
+    "ha": "Zaɓi wani rahoto ko lokaci. Sabon aikin kasuwanci zai bayyana a nan.",
+    "yo": "Yan ìròyìn tàbí àkókò mìíràn. Iṣẹ́ tuntun yóò hàn níbí.",
+    "ig": "Họrọ akụkọ ma ọ bụ oge ọzọ. Ọrụ azụmahịa ọhụrụ ga-apụta ebe a."
+  },
+  "Review permanent accounting entry": {
+    "pcm": "Check permanent account record",
+    "ha": "Duba rubutun lissafi na dindindin",
+    "yo": "Ṣàyẹ̀wò àkọsílẹ̀ ìṣirò títí láé",
+    "ig": "Nyochaa ndekọ akaụntụ na-adịgide"
+  },
+  "Check the entry and enter a reason before confirming. This action is recorded in your audit trail.": {
+    "pcm": "Check record and enter reason before you confirm. This action go enter audit record.",
+    "ha": "Duba rubutun ka ba da dalili kafin tabbatarwa. Za a rubuta wannan aiki a tarihi.",
+    "yo": "Ṣàyẹ̀wò àkọsílẹ̀, tẹ ìdí kí o tó fìdí múlẹ̀. A ó kọ iṣẹ́ yìí sílẹ̀.",
+    "ig": "Nyochaa ndekọ ma tinye ihe kpatara ya tupu nkwenye. A na-edekọ omume a n'akụkọ nyocha."
+  },
+  "Confirm and sign": {
+    "pcm": "Confirm and sign",
+    "ha": "Tabbatar ka sa hannu",
+    "yo": "Fìdí múlẹ̀ kí o fọwọ́ sí",
+    "ig": "Kwenye ma bịanye aka"
+  },
+  "Platform overview": {
+    "pcm": "Platform overview",
+    "ha": "Bayanin dandali",
+    "yo": "Àkópọ̀ ètò",
+    "ig": "Nchịkọta nyiwe"
+  },
+  "Could not load platform data": {
+    "pcm": "We no fit load platform records",
+    "ha": "An kasa loda bayanan dandali",
+    "yo": "Kò ṣeé gbé dátà ètò wọlé",
+    "ig": "Enweghị ike ibunye data nyiwe"
+  },
+  "Merchant operations, subscription collections, and platform activity.": {
+    "pcm": "Business operations, subscription money and platform activity.",
+    "ha": "Ayyukan kasuwanci, kuɗin rajista da ayyukan dandali.",
+    "yo": "Iṣẹ́ àwọn oníṣòwò, owó ètò àti iṣẹ́ pẹpẹ.",
+    "ig": "Ọrụ azụmahịa, ego ndebanye na ọrụ nyiwe."
+  },
+  "Active merchants": {
+    "pcm": "Businesses wey dey active",
+    "ha": "Kasuwanci masu aiki",
+    "yo": "Oníṣòwò tó ń ṣiṣẹ́",
+    "ig": "Ndị ahịa na-arụ ọrụ"
+  },
+  "Pending merchants": {
+    "pcm": "Businesses wey never finish setup",
+    "ha": "Kasuwanci masu jira",
+    "yo": "Oníṣòwò tó ń dúró",
+    "ig": "Ndị ahịa na-eche"
+  },
+  "Latest month collected": {
+    "pcm": "Money wey come last month",
+    "ha": "Kuɗin watan ƙarshe",
+    "yo": "Owó tí a gbà ní oṣù tó ṣẹ̀ṣẹ̀ kọjá",
+    "ig": "Ego anakọtara n'ọnwa ikpeazụ"
+  },
+  "Manage merchants": {
+    "pcm": "Manage businesses",
+    "ha": "Sarrafa kasuwanci",
+    "yo": "Ṣàkóso oníṣòwò",
+    "ig": "Jikwaa ndị ahịa"
+  },
+  "Onboarding, verification, and account access": {
+    "pcm": "Setup, verification and account access",
+    "ha": "Saiti, tabbatarwa da damar asusu",
+    "yo": "Ìṣètò, ìmúdájú àti àṣẹ àkọọ́lẹ̀",
+    "ig": "Nhazi, nkwenye na ohere akaụntụ"
+  },
+  "Manage subscription plans": {
+    "pcm": "Manage subscription plans",
+    "ha": "Sarrafa tsarin rajista",
+    "yo": "Ṣàkóso ètò alábápín",
+    "ig": "Jikwaa atụmatụ ndebanye"
+  },
+  "Platform pricing, features, and usage limits": {
+    "pcm": "Platform prices, features and usage limits",
+    "ha": "Farashi, fasaloli da iyakokin amfani",
+    "yo": "Iye owó, iṣẹ́ àti ààlà ìlò ètò",
+    "ig": "Ọnụahịa, atụmatụ na oke ojiji"
+  },
+  "Charts use up to 200 loaded records. Collections are paid invoice amounts, not recurring revenue. Service health is not monitored on this page.": {
+    "pcm": "Charts use up to 200 records wey load. Collections na paid invoice money, no be recurring revenue. This page no dey monitor service health.",
+    "ha": "Jadawali suna amfani da bayanai har 200. Kuɗin da aka tara daga invoice ne, ba kuɗin maimaituwa ba. Ba a sa ido kan lafiyar sabis a nan.",
+    "yo": "Àwòrán ń lo àkọsílẹ̀ tó 200. Owó tí a gbà jẹ́ owó ìwé owó, kì í ṣe owó tó ń tún wá. A kò ṣàyẹ̀wò ìlera iṣẹ́ níbí.",
+    "ig": "Eserese na-eji ndekọ ruru 200. Ego anakọtara bụ nke akwụkwọ ụgwọ akwụgoro, ọ bụghị ego na-alọghachi. A naghị enyocha ahụike ọrụ n'ebe a."
+  },
+  "Loaded invoice collections": {
+    "pcm": "Invoice money wey load",
+    "ha": "Kuɗin invoice da aka loda",
+    "yo": "Owó ìwé owó tí a gbé wọlé",
+    "ig": "Ego akwụkwọ ụgwọ e bunyere"
+  },
+  "Annualized collection estimate": {
+    "pcm": "Estimate of yearly collections",
+    "ha": "Kiyasin kuɗin shekara",
+    "yo": "Ìdíwọ̀n owó ọdún",
+    "ig": "Atụmatụ nchịkọta kwa afọ"
+  },
+  "Merchant access": {
+    "pcm": "Business access",
+    "ha": "Damar kasuwanci",
+    "yo": "Àṣẹ oníṣòwò",
+    "ig": "Ohere onye ahịa"
+  },
+  "Merchant directory": {
+    "pcm": "Business list",
+    "ha": "Jerin kasuwanci",
+    "yo": "Àtòjọ oníṣòwò",
+    "ig": "Ndepụta ndị ahịa"
+  },
+  "Merchant unavailable": {
+    "pcm": "Business no dey available",
+    "ha": "Kasuwanci bai samu ba",
+    "yo": "Oníṣòwò kò sí",
+    "ig": "Onye ahịa adịghị"
+  },
+  "The merchant could not be loaded. Check your connection and platform access.": {
+    "pcm": "We no fit load business. Check internet and platform access.",
+    "ha": "An kasa loda kasuwanci. Duba haɗi da damar dandali.",
+    "yo": "Kò ṣeé gbé oníṣòwò wọlé. Ṣàyẹ̀wò ìsopọ̀ àti àṣẹ ètò.",
+    "ig": "Enweghị ike ibunye onye ahịa. Lelee njikọ na ohere nyiwe."
+  },
+  "Open merchant page": {
+    "pcm": "Open business page",
+    "ha": "Buɗe shafin kasuwanci",
+    "yo": "Ṣí ojú-ewé oníṣòwò",
+    "ig": "Mepee ibe onye ahịa"
+  },
+  "Primary contact": {
+    "pcm": "Main contact",
+    "ha": "Babban mai tuntuɓa",
+    "yo": "Olùbáṣepọ̀ pàtàkì",
+    "ig": "Isi kọntaktị"
+  },
+  "Platform notes": {
+    "pcm": "Platform notes",
+    "ha": "Bayanan dandali",
+    "yo": "Àkọsílẹ̀ ètò",
+    "ig": "Ihe ndetu nyiwe"
+  },
+  "Platform operations": {
+    "pcm": "Platform operations",
+    "ha": "Ayyukan dandali",
+    "yo": "Iṣẹ́ ètò",
+    "ig": "Ọrụ nyiwe"
+  },
+  "Manage TracKasuwa across merchants. Personal language and theme preferences are in Display.": {
+    "pcm": "Manage TracKasuwa for all businesses. Your language and theme settings dey Display.",
+    "ha": "Sarrafa TracKasuwa ga kasuwanci. Zaɓin harshe da jigo na cikin Display.",
+    "yo": "Ṣàkóso TracKasuwa fún oníṣòwò. Èdè àti àwọ̀ rẹ wà ní Display.",
+    "ig": "Jikwaa TracKasuwa n'etiti ndị ahịa. Asụsụ na isiokwu gị dị na Display."
+  },
+  "Manage the plans available to merchants and review subscriptions.": {
+    "pcm": "Manage plans wey businesses fit use and check subscriptions.",
+    "ha": "Sarrafa tsarin da kasuwanci za su iya amfani da shi, duba rajista.",
+    "yo": "Ṣàkóso ètò fún oníṣòwò kí o ṣàyẹ̀wò alábápín.",
+    "ig": "Jikwaa atụmatụ ndị ahịa nwere ma nyochaa ndebanye."
+  },
+  "Plans and subscriptions": {
+    "pcm": "Plans and subscriptions",
+    "ha": "Tsare-tsare da rajista",
+    "yo": "Ètò àti ṣíṣe-alábápín",
+    "ig": "Atụmatụ na ndebanye"
+  },
+  "Monitor platform activity and merchant growth.": {
+    "pcm": "Check platform activity and business growth.",
+    "ha": "Bi ayyukan dandali da haɓakar kasuwanci.",
+    "yo": "Ṣàyẹ̀wò iṣẹ́ ètò àti ìdàgbàsókè oníṣòwò.",
+    "ig": "Nyochaa ọrụ nyiwe na uto ndị ahịa."
+  },
+  "Review onboarding, verification, account status and device limits.": {
+    "pcm": "Check setup, verification, account status and device limits.",
+    "ha": "Duba saiti, tabbatarwa, halin asusu da iyakokin na'ura.",
+    "yo": "Ṣàyẹ̀wò ìṣètò, ìmúdájú, ipò àkọọ́lẹ̀ àti ààlà ẹ̀rọ.",
+    "ig": "Nyochaa nhazi, nkwenye, ọnọdụ akaụntụ na oke igwe."
+  },
+  "Business-data import": {
+    "pcm": "Import business records",
+    "ha": "Shigo da bayanan kasuwanci",
+    "yo": "Gbígbé dátà iṣẹ́ wọlé",
+    "ig": "Mbubata data azụmahịa"
+  },
+  "Upload → map columns → validate → preview → confirm. Offline previews are provisional; the server rechecks duplicates on sync.": {
+    "pcm": "Upload → match columns → validate → preview → confirm. Offline preview na temporary; server go check duplicates again when e sync.",
+    "ha": "Loda → daidaita ginshiƙai → tantance → duba → tabbatar. Duban ba intanet na wucin gadi ne; uwar garke ta sake duba maimaitawa lokacin daidaitawa.",
+    "yo": "Gbé sókè → so ọwọ̀n → ṣàyẹ̀wò → wo àwòkọ́ṣe → fìdí múlẹ̀. Àwòkọ́ṣe láìsí intanẹẹti jẹ́ fún ìgbà díẹ̀; olupin yóò tún ṣàyẹ̀wò àdàkọ.",
+    "ig": "Bulite → jikọta kọlụm → nyochaa → lelee → kwenye. Nlele na-enweghị ịntanetị bụ nwa oge; sava na-enyocha oyiri ọzọ mgbe e mekọrịtara."
+  },
+  "Upload and map your data": {
+    "pcm": "Upload records and match columns",
+    "ha": "Loda ka daidaita bayananka",
+    "yo": "Gbé dátà sókè kí o so wọ́n",
+    "ig": "Bulite ma jikọta data gị"
+  },
+  "CSV or Excel file": {
+    "pcm": "CSV or Excel file",
+    "ha": "Fayil CSV ko Excel",
+    "yo": "Fáìlì CSV tàbí Excel",
+    "ig": "Faịlụ CSV ma ọ bụ Excel"
+  },
+  "Record type": {
+    "pcm": "Type of record",
+    "ha": "Nau'in bayanai",
+    "yo": "Irú àkọsílẹ̀",
+    "ig": "Ụdị ndekọ"
+  },
+  "Opening-stock warehouse": {
+    "pcm": "Warehouse for starting stock",
+    "ha": "Ma'ajiyar hajar farko",
+    "yo": "Ilé ìpamọ́ ọjà àkọ́kọ́",
+    "ig": "Ụlọ nkwakọba ngwaahịa mbido"
+  },
+  "Choose warehouse": {
+    "pcm": "Choose warehouse",
+    "ha": "Zaɓi ma'ajiya",
+    "yo": "Yan ilé ìpamọ́",
+    "ig": "Họrọ ụlọ nkwakọba"
+  },
+  "Load saved mapping": {
+    "pcm": "Load column matching wey save",
+    "ha": "Loda tsarin haɗin da aka ajiye",
+    "yo": "Gbé ìsopọ̀ tí a fipamọ́ wọlé",
+    "ig": "Bunye njikọ echekwara"
+  },
+  "Save mapping template": {
+    "pcm": "Save column matching template",
+    "ha": "Ajiye tsarin haɗin",
+    "yo": "Fi àpẹẹrẹ ìsopọ̀ pamọ́",
+    "ig": "Chekwaa ụdị njikọ"
+  },
+  "Validate and preview": {
+    "pcm": "Check and preview",
+    "ha": "Tantance ka duba",
+    "yo": "Ṣàyẹ̀wò kí o wo àwòkọ́ṣe",
+    "ig": "Nyochaa ma lelee"
+  },
+  "Download full validation report": {
+    "pcm": "Download full checking report",
+    "ha": "Sauke cikakken rahoton tantancewa",
+    "yo": "Gba gbogbo ìròyìn àyẹ̀wò",
+    "ig": "Budata akụkọ nyocha niile"
+  },
+  "Download row-level report": {
+    "pcm": "Download report for each row",
+    "ha": "Sauke rahoton kowane layi",
+    "yo": "Gba ìròyìn ìlà kọ̀ọ̀kan",
+    "ig": "Budata akụkọ ahịrị ọ bụla"
+  },
+  "Showing the first 200 rows; validation covers every row. Fix errors in the source file and upload again.": {
+    "pcm": "We show first 200 rows; validation check every row. Fix errors for original file and upload again.",
+    "ha": "Ana nuna layuka 200 na farko; an tantance duka. Gyara kurakurai a asalin fayil ka sake loda.",
+    "yo": "A fi ìlà 200 àkọ́kọ́ hàn; àyẹ̀wò kan gbogbo ìlà. Ṣàtúnṣe aṣìṣe nínú fáìlì kí o tún gbé sókè.",
+    "ig": "A na-egosi ahịrị 200 mbụ; nyocha gụnyere niile. Dezie njehie na faịlụ mbụ ma bulite ọzọ."
+  },
+  "Import history and audited reversal": {
+    "pcm": "Import history and recorded reversal",
+    "ha": "Tarihin shigowa da juyawa mai bincike",
+    "yo": "Ìtàn gbígbé wọlé àti ìyípadà tí a kọ",
+    "ig": "Akụkọ mbubata na ntụgharị e dekọrọ"
+  },
+  "No import history loaded. Completed batches appear here when online.": {
+    "pcm": "No import history load. Batches wey finish go show when internet dey.",
+    "ha": "Babu tarihin shigowa da aka loda. Rukunin da ya kammala zai bayyana idan intanet ta dawo.",
+    "yo": "Kò sí ìtàn gbígbé wọlé. Ìpele tó parí yóò hàn nígbà ìsopọ̀.",
+    "ig": "Ebughị akụkọ mbubata. Otu agwụchara ga-apụta mgbe ịntanetị dị."
+  },
+  "Reverse batch": {
+    "pcm": "Reverse this batch",
+    "ha": "Juya rukuni",
+    "yo": "Yí ìpele padà",
+    "ig": "Tụgharịa otu"
+  },
+  "Review reversal": {
+    "pcm": "Check reversal",
+    "ha": "Duba juyawa",
+    "yo": "Ṣàyẹ̀wò ìyípadà",
+    "ig": "Nyochaa ntụgharị"
+  },
+  "Confirm reversal": {
+    "pcm": "Confirm reversal",
+    "ha": "Tabbatar da juyawa",
+    "yo": "Fìdí ìyípadà múlẹ̀",
+    "ig": "Kwenye ntụgharị"
+  },
+  ". Changed or consumed records will require reconciliation first.": {
+    "pcm": ". Records wey change or dem don use need reconciliation first.",
+    "ha": ". Bayanai da aka canja ko amfani da su suna buƙatar daidaitawa da farko.",
+    "yo": ". Àkọsílẹ̀ tí a yí tàbí lò nílò ìmúdọ́gba kọ́kọ́.",
+    "ig": ". Ndekọ gbanwere ma ọ bụ ejirila chọrọ imekọrịta mbụ."
+  },
+  "Upload pending data": {
+    "pcm": "Upload records wey dey wait",
+    "ha": "Loda bayanan da ke jira",
+    "yo": "Gbé dátà tó ń dúró sókè",
+    "ig": "Bulite data na-eche"
+  },
+  "Duplicates": {
+    "pcm": "Duplicates",
+    "ha": "Maimaitawa",
+    "yo": "Àwọn àdàkọ",
+    "ig": "Oyiri"
+  },
+  "Errors": {
+    "pcm": "Errors",
+    "ha": "Kurakurai",
+    "yo": "Àwọn aṣìṣe",
+    "ig": "Njehie"
+  },
+  "Unmapped": {
+    "pcm": "Never match",
+    "ha": "Ba a haɗa ba",
+    "yo": "A kò tíì so pọ̀",
+    "ig": "Ejikọtaghị"
+  },
+  "Batch": {
+    "pcm": "Batch",
+    "ha": "Rukuni",
+    "yo": "Ìpele",
+    "ig": "Otu"
+  },
+  "Row": {
+    "pcm": "Row",
+    "ha": "Layi",
+    "yo": "Ìlà",
+    "ig": "Ahịrị"
+  },
+  "rows": {
+    "pcm": "rows",
+    "ha": "layuka",
+    "yo": "àwọn ìlà",
+    "ig": "ahịrị"
+  },
+  "rows loaded": {
+    "pcm": "rows don load",
+    "ha": "layuka sun loda",
+    "yo": "ìlà ti wọlé",
+    "ig": "ahịrị e bunyere"
+  },
+  "rows…": {
+    "pcm": "rows…",
+    "ha": "layuka…",
+    "yo": "àwọn ìlà…",
+    "ig": "ahịrị…"
+  },
+  "row results.": {
+    "pcm": "results for rows.",
+    "ha": "sakamakon layi.",
+    "yo": "èsì ìlà.",
+    "ig": "nsonaazụ ahịrị."
+  },
+  "Processed": {
+    "pcm": "Don process",
+    "ha": "An sarrafa",
+    "yo": "A ti ṣe",
+    "ig": "E meela"
+  },
+  "Rejected": {
+    "pcm": "Dem reject am",
+    "ha": "An ƙi",
+    "yo": "A kọ̀ ọ́",
+    "ig": "Ajụrụ"
+  },
+  "Values": {
+    "pcm": "Values",
+    "ha": "Ƙimomi",
+    "yo": "Àwọn iye",
+    "ig": "Uru"
+  },
+  "Result": {
+    "pcm": "Result",
+    "ha": "Sakamako",
+    "yo": "Èsì",
+    "ig": "Nsonaazụ"
+  },
+  "Results": {
+    "pcm": "Results",
+    "ha": "Sakamako",
+    "yo": "Àwọn èsì",
+    "ig": "Nsonaazụ"
+  },
+  "TracKasuwa assistant": {
+    "pcm": "TracKasuwa assistant",
+    "ha": "Mataimakin TracKasuwa",
+    "yo": "Olùrànlọ́wọ́ TracKasuwa",
+    "ig": "Onye enyemaka TracKasuwa"
+  },
+  "AI Assistant": {
+    "pcm": "AI assistant",
+    "ha": "Mataimakin AI",
+    "yo": "Olùrànlọ́wọ́ AI",
+    "ig": "Onye enyemaka AI"
+  },
+  "Prepare product imports and review insights from your business data.": {
+    "pcm": "Prepare products to import and check insights from your business records.",
+    "ha": "Shirya shigo da kaya, duba nazarin bayanan kasuwanci.",
+    "yo": "Ṣètò gbígbé ọjà wọlé, ṣàyẹ̀wò ìmọ̀ látinú dátà iṣẹ́ rẹ.",
+    "ig": "Kwadebe mbubata ngwaahịa ma nyochaa nghọta data azụmahịa gị."
+  },
+  "Preview mode: this assistant uses fixed rules, with no live AI model or external market data. Review every proposed change before confirming.": {
+    "pcm": "Preview mode: this assistant use fixed rules; no live AI or outside market data. Check every proposed change before you confirm.",
+    "ha": "Yanayin dubawa: mataimakin yana amfani da ƙa'idoji tsayayyu, ba AI kai tsaye ko bayanan kasuwa na waje ba. Duba kowane canji kafin tabbatarwa.",
+    "yo": "Àwòkọ́ṣe: olùrànlọ́wọ́ yìí ń lo ìlànà tó dúró, kò lo AI alààyè tàbí dátà ọjà òde. Ṣàyẹ̀wò gbogbo ìyípadà kí o tó fìdí múlẹ̀.",
+    "ig": "Ụdị nlele: onye enyemaka a na-eji iwu edobere, enweghị AI dị ndụ ma ọ bụ data ahịa mpụga. Nyochaa mgbanwe niile tupu nkwenye."
+  },
+  "Business imports": {
+    "pcm": "Business imports",
+    "ha": "Shigo da bayanan kasuwanci",
+    "yo": "Gbígbé dátà iṣẹ́ wọlé",
+    "ig": "Mbubata azụmahịa"
+  },
+  "Business insights": {
+    "pcm": "Business insights",
+    "ha": "Nazarin kasuwanci",
+    "yo": "Ìmọ̀ nípa iṣẹ́",
+    "ig": "Nghọta azụmahịa"
+  },
+  "Working on your request?": {
+    "pcm": "We dey work on your request…",
+    "ha": "Ana aiki kan buƙatarka…",
+    "yo": "A ń ṣiṣẹ́ lórí ìbéèrè rẹ…",
+    "ig": "A na-arụ ọrụ na arịrịọ gị…"
+  },
+  "Loading assistant preferences?": {
+    "pcm": "Assistant settings dey load…",
+    "ha": "Ana loda saitin mataimaki…",
+    "yo": "A ń gbé ètò olùrànlọ́wọ́ wọlé…",
+    "ig": "A na-ebunye ntọala enyemaka…"
+  },
+  "Bulk inventory draft": {
+    "pcm": "Draft for plenty stock",
+    "ha": "Daftarin haja mai yawa",
+    "yo": "Àkọ́kọ́ ọjà púpọ̀",
+    "ig": "Ndetu ọtụtụ ngwaahịa"
+  },
+  "Paste product data only, without customer or staff details. Use column headers or “product quantity price”.": {
+    "pcm": "Paste only product data, no customer or staff details. Use column headers or “product quantity price”.",
+    "ha": "Manna bayanan kaya kawai, ba na abokan ciniki ko ma'aikata ba. Yi amfani da kanun ginshiƙai ko “product quantity price”.",
+    "yo": "Lẹ dátà ọjà nìkan, láìsí àlàyé oníbàárà tàbí òṣìṣẹ́. Lo orí ọwọ̀n tàbí “product quantity price”.",
+    "ig": "Tapawa naanị data ngwaahịa, enweghị nkọwa ndị ahịa ma ọ bụ ọrụ. Jiri aha kọlụm ma ọ bụ “product quantity price”."
+  },
+  "Product CSV or Excel file": {
+    "pcm": "Product CSV or Excel file",
+    "ha": "Fayil kayan CSV ko Excel",
+    "yo": "Fáìlì ọjà CSV tàbí Excel",
+    "ig": "Faịlụ ngwaahịa CSV ma ọ bụ Excel"
+  },
+  "Messy product data": {
+    "pcm": "Product data wey never arrange",
+    "ha": "Bayanan kaya marasa tsari",
+    "yo": "Dátà ọjà tí kò ṣètò",
+    "ig": "Data ngwaahịa ahazighị"
+  },
+  "Propose mapped rows": {
+    "pcm": "Suggest matched rows",
+    "ha": "Ba da shawarar layukan haɗi",
+    "yo": "Dábàá ìlà tí a so pọ̀",
+    "ig": "Tụọ aro ahịrị ejikọrọ"
+  },
+  "Review inventory proposal": {
+    "pcm": "Check proposed stock changes",
+    "ha": "Duba shawarar haja",
+    "yo": "Ṣàyẹ̀wò àbá ọjà",
+    "ig": "Nyochaa aro ngwaahịa"
+  },
+  "Generate organization-only insights": {
+    "pcm": "Create insights from only this business",
+    "ha": "Ƙirƙiri nazarin wannan kasuwanci kawai",
+    "yo": "Ṣẹ̀dá ìmọ̀ fún iṣẹ́ yìí nìkan",
+    "ig": "Mepụta nghọta naanị azụmahịa a"
+  },
+  "Deliver this preview to your profile": {
+    "pcm": "Send this preview to your profile",
+    "ha": "Aika wannan duban zuwa bayananka",
+    "yo": "Rán àwòkọ́ṣe yìí sí àkọọ́lẹ̀ rẹ",
+    "ig": "Zipu nlele a na profaịlụ gị"
+  },
+  "Confirm and deliver displayed insights": {
+    "pcm": "Confirm and send insights wey show",
+    "ha": "Tabbatar ka aika nazarin da aka nuna",
+    "yo": "Fìdí múlẹ̀ kí o rán ìmọ̀ tí a fihàn",
+    "ig": "Kwenye ma zipu nghọta egosiri"
+  },
+  "Your delivery opt-ins": {
+    "pcm": "Where you agree to receive updates",
+    "ha": "Zaɓin karɓar saƙonni",
+    "yo": "Ìyọ̀ǹda gbígba rẹ",
+    "ig": "Nhọrọ nnata gị"
+  },
+  "Confirm delivery preferences": {
+    "pcm": "Confirm where to send updates",
+    "ha": "Tabbatar da zaɓin aika saƙonni",
+    "yo": "Fìdí ètò gbígba múlẹ̀",
+    "ig": "Kwenye nhọrọ nnyefe"
+  },
+  "Limits: 20 requests per hour; 5 deliveries per channel per hour. Each insight can be delivered once per channel.": {
+    "pcm": "Limits: 20 requests each hour; 5 deliveries per channel each hour. Each insight fit send once per channel.",
+    "ha": "Iyaka: buƙatu 20 a awa; aika 5 ga kowane tashar a awa. Nazari ɗaya za a aika sau ɗaya ga tashar.",
+    "yo": "Ààlà: ìbéèrè 20 lójú wákàtí; ìfijiṣẹ́ 5 fún ikanni kọ̀ọ̀kan. A lè fi ìmọ̀ kọ̀ọ̀kan ránṣẹ́ lẹ́ẹ̀kan fún ikanni.",
+    "ig": "Oke: arịrịọ 20 kwa elekere; nnyefe 5 kwa ọwa kwa elekere. A na-ezipụ nghọta ọ bụla otu ugboro kwa ọwa."
+  },
+  "Draft product rows with the assistant": {
+    "pcm": "Use assistant draft product rows",
+    "ha": "Yi daftarin layin kaya da mataimaki",
+    "yo": "Lo olùrànlọ́wọ́ ṣe àkọ́kọ́ ìlà ọjà",
+    "ig": "Jiri onye enyemaka detuo ahịrị ngwaahịa"
+  },
+  "Business performance insights": {
+    "pcm": "How business dey perform",
+    "ha": "Nazarin aikin kasuwanci",
+    "yo": "Ìmọ̀ ìṣiṣẹ́ iṣẹ́",
+    "ig": "Nghọta arụmọrụ azụmahịa"
+  },
+  "Sales overview": {
+    "pcm": "Sales overview",
+    "ha": "Bayanin sayarwa",
+    "yo": "Àkópọ̀ títà",
+    "ig": "Nchịkọta ahịa"
+  },
+  "No sales yet this week": {
+    "pcm": "No sale yet this week",
+    "ha": "Babu sayarwa wannan makon tukuna",
+    "yo": "Kò sí títà lọ́sẹ̀ yìí síbẹ̀",
+    "ig": "Enweghị ahịa n'izu a"
+  },
+  "Once sales come in, your revenue trend will show up here.": {
+    "pcm": "When sales start, how money dey come go show here.",
+    "ha": "Da zarar an fara sayarwa, yanayin kuɗinka zai bayyana a nan.",
+    "yo": "Nígbà tí títà bá bẹ̀rẹ̀, ìṣàn owó yóò hàn níbí.",
+    "ig": "Mgbe ahịa malitere, usoro ego gị ga-apụta ebe a."
+  },
+  "Live activity": {
+    "pcm": "Wetin dey happen now",
+    "ha": "Ayyuka kai tsaye",
+    "yo": "Iṣẹ́ lọ́wọ́lọ́wọ́",
+    "ig": "Ọrụ dị ugbu a"
+  },
+  "Sales will appear here as soon as your team starts ringing them up.": {
+    "pcm": "Sales go show here as your team start to record them.",
+    "ha": "Sayarwa za ta bayyana da zarar ma'aikatanka suka fara rubutawa.",
+    "yo": "Títà yóò hàn bí ẹgbẹ́ rẹ bá bẹ̀rẹ̀ sí í kọ ọ́ sílẹ̀.",
+    "ig": "Ahịa ga-apụta ebe a mgbe otu gị malitere idekọ ha."
+  },
+  "Open POS": {
+    "pcm": "Open selling screen",
+    "ha": "Buɗe POS",
+    "yo": "Ṣí POS",
+    "ig": "Mepee POS"
+  },
+  "Daily revenue breakdown": {
+    "pcm": "Sales money for each day",
+    "ha": "Cikakken kuɗin kullum",
+    "yo": "Àlàyé owó ojoojúmọ́",
+    "ig": "Nkọwa ego kwa ụbọchị"
+  },
+  "Revenue by Day": {
+    "pcm": "Sales money by day",
+    "ha": "Kuɗi bisa rana",
+    "yo": "Owó ní ọjọ́ kọ̀ọ̀kan",
+    "ig": "Ego kwa ụbọchị"
+  },
+  "Revenue by payment method": {
+    "pcm": "Sales money by payment method",
+    "ha": "Kuɗi bisa hanyar biya",
+    "yo": "Owó ní ọ̀nà ìsanwó kọ̀ọ̀kan",
+    "ig": "Ego site n'ụzọ ịkwụ ụgwọ"
+  },
+  "No revenue for this period": {
+    "pcm": "No sales money for this period",
+    "ha": "Babu kuɗi a wannan lokacin",
+    "yo": "Kò sí owó ní àkókò yìí",
+    "ig": "Enweghị ego n'oge a"
+  },
+  "Choose another period or return after a completed sale.": {
+    "pcm": "Choose another period or come back after sale finish.",
+    "ha": "Zaɓi wani lokaci ko dawo bayan an kammala sayarwa.",
+    "yo": "Yan àkókò mìíràn tàbí padà lẹ́yìn títà tó parí.",
+    "ig": "Họrọ oge ọzọ ma ọ bụ laghachi mgbe ahịa gwụchara."
+  },
+  "No payment data": {
+    "pcm": "No payment record",
+    "ha": "Babu bayanan biya",
+    "yo": "Kò sí dátà ìsanwó",
+    "ig": "Enweghị data ịkwụ ụgwọ"
+  },
+  "Completed sales will show your payment-method mix here.": {
+    "pcm": "Sales wey finish go show different payment methods here.",
+    "ha": "Sayarwar da ta kammala za ta nuna hanyoyin biyanka a nan.",
+    "yo": "Títà tó parí yóò fi ọ̀nà ìsanwó rẹ hàn níbí.",
+    "ig": "Ahịa agwụchara ga-egosi ụzọ ịkwụ ụgwọ ebe a."
+  },
+  "No products sold in this period": {
+    "pcm": "No product sell for this period",
+    "ha": "Ba a sayar da kaya a wannan lokacin ba",
+    "yo": "A kò ta ọjà ní àkókò yìí",
+    "ig": "E rereghị ngwaahịa n'oge a"
+  },
+  "Products by revenue for selected period": {
+    "pcm": "Products by sales money for selected period",
+    "ha": "Kaya bisa kuɗi a lokacin da aka zaɓa",
+    "yo": "Ọjà nípa owó fún àkókò tí a yàn",
+    "ig": "Ngwaahịa site n'ego n'oge ahọpụtara"
+  },
+  "Items sold": {
+    "pcm": "Items wey sell",
+    "ha": "Kayan da aka sayar",
+    "yo": "Ọjà tí a tà",
+    "ig": "Ngwaahịa e rere"
+  },
+  "Units Sold": {
+    "pcm": "How many sell",
+    "ha": "Adadin da aka sayar",
+    "yo": "Iye tí a tà",
+    "ig": "Ọnụọgụ e rere"
+  },
+  "Total transactions": {
+    "pcm": "All transactions",
+    "ha": "Jimillar ciniki",
+    "yo": "Àpapọ̀ ìṣòwò",
+    "ig": "Ngụkọta azụmahịa"
+  },
+  "Payment summary": {
+    "pcm": "Payment summary",
+    "ha": "Taƙaitaccen biya",
+    "yo": "Àkópọ̀ ìsanwó",
+    "ig": "Nchịkọta ịkwụ ụgwọ"
+  },
+  "This Week": {
+    "pcm": "This week",
+    "ha": "Wannan makon",
+    "yo": "Ọ̀sẹ̀ yìí",
+    "ig": "Izu a"
+  },
+  "This Month": {
+    "pcm": "This month",
+    "ha": "Wannan watan",
+    "yo": "Oṣù yìí",
+    "ig": "Ọnwa a"
+  },
+  "This Quarter": {
+    "pcm": "This 3 months",
+    "ha": "Wannan kwatar",
+    "yo": "Mẹ́ẹ̀dogún yìí",
+    "ig": "Ọnwa atọ a"
+  },
+  "This Year": {
+    "pcm": "This year",
+    "ha": "Wannan shekarar",
+    "yo": "Ọdún yìí",
+    "ig": "Afọ a"
+  },
+  "Today": {
+    "pcm": "Today",
+    "ha": "Yau",
+    "yo": "Lónìí",
+    "ig": "Taa"
+  },
+  "Back to sales": {
+    "pcm": "Back to sales",
+    "ha": "Koma sayarwa",
+    "yo": "Padà sí títà",
+    "ig": "Laghachi n'ahịa"
+  },
+  "Sale unavailable": {
+    "pcm": "Sale no dey available",
+    "ha": "Sayarwa ba ta samu ba",
+    "yo": "Títà kò sí",
+    "ig": "Ahịa adịghị"
+  },
+  "This sale could not be loaded. Check your connection and access, then try again.": {
+    "pcm": "We no fit load this sale. Check internet and access, then try again.",
+    "ha": "An kasa loda sayarwar. Duba haɗi da izini, sake gwadawa.",
+    "yo": "Kò ṣeé gbé títà wọlé. Ṣàyẹ̀wò ìsopọ̀ àti àṣẹ, tún gbìyànjú.",
+    "ig": "Enweghị ike ibunye ahịa a. Lelee njikọ na ikike, nwaa ọzọ."
+  },
+  "Prepare your purchase order. Drafts are saved on this device when offline.": {
+    "pcm": "Prepare supplier order. Drafts go save for this device when internet no dey.",
+    "ha": "Shirya odar saye. Ana ajiye daftari a na'ura idan ba intanet.",
+    "yo": "Ṣètò àṣẹ rírà. Àkọ́kọ́ yóò fipamọ́ lórí ẹ̀rọ nígbà tí kò sí intanẹẹti.",
+    "ig": "Kwadebe oda ịzụta. A na-echekwa ndetu n'igwe a mgbe ịntanetị adịghị."
+  },
+  "Supplier and order items": {
+    "pcm": "Supplier and order items",
+    "ha": "Mai kaya da kayan oda",
+    "yo": "Olùpèsè àti ọjà àṣẹ",
+    "ig": "Onye na-ebunye na ngwaahịa oda"
+  },
+  "Waiting for this order and all items to sync.": {
+    "pcm": "We dey wait make this order and items sync.",
+    "ha": "Ana jiran oda da kayanta su daidaita.",
+    "yo": "A ń dúró kí àṣẹ àti ọjà rẹ̀ dọ́gba.",
+    "ig": "A na-eche ka oda na ngwaahịa niile mekọrịta."
+  },
+  "Waiting for this transaction, its items and linked sale to sync.": {
+    "pcm": "We dey wait make this transaction, items and linked sale sync.",
+    "ha": "Ana jiran ciniki, kayansa da sayarwar da aka haɗa su daidaita.",
+    "yo": "A ń dúró kí ìṣòwò, ọjà rẹ̀ àti títà tó sopọ̀ dọ́gba.",
+    "ig": "A na-eche ka azụmahịa, ngwaahịa na ahịa ejikọrọ mekọrịta."
+  },
+  "Reconnect to send, cancel or receive.": {
+    "pcm": "Connect internet to send, cancel or receive.",
+    "ha": "Sake haɗawa don aika, soke ko karɓa.",
+    "yo": "Tún sopọ̀ láti ránṣẹ́, fagilé tàbí gbà.",
+    "ig": "Jikọọ ọzọ iji zipu, kagbuo ma ọ bụ nata."
+  },
+  "Saved offline — will sync automatically once you’re back online.": {
+    "pcm": "E don save for device — e go sync when internet return.",
+    "ha": "An ajiye ba intanet — zai daidaita idan ka sake haɗawa.",
+    "yo": "A fipamọ́ láìsí intanẹẹti — yóò dọ́gba nígbà ìsopọ̀.",
+    "ig": "Echekwara na-enweghị ịntanetị — ọ ga-emekọrịta mgbe njikọ lọghachiri."
+  },
+  "Add a photo or product data": {
+    "pcm": "Add picture or product details",
+    "ha": "Ƙara hoto ko bayanan kaya",
+    "yo": "Fi fọ́tò tàbí dátà ọjà kún",
+    "ig": "Tinye foto ma ọ bụ data ngwaahịa"
+  },
+  "Photo, scan or import": {
+    "pcm": "Picture, scan or import",
+    "ha": "Hoto, dubawa ko shigowa",
+    "yo": "Fọ́tò, ṣàyẹ̀wò tàbí gbé wọlé",
+    "ig": "Foto, nyocha ma ọ bụ mbubata"
+  },
+  "Take a photo": {
+    "pcm": "Take picture",
+    "ha": "Ɗauki hoto",
+    "yo": "Ya fọ́tò",
+    "ig": "See foto"
+  },
+  "Take product photo": {
+    "pcm": "Take product picture",
+    "ha": "Ɗauki hoton kaya",
+    "yo": "Ya fọ́tò ọjà",
+    "ig": "See foto ngwaahịa"
+  },
+  "Upload a photo": {
+    "pcm": "Upload picture",
+    "ha": "Loda hoto",
+    "yo": "Gbé fọ́tò sókè",
+    "ig": "Bulite foto"
+  },
+  "Upload product photo": {
+    "pcm": "Upload product picture",
+    "ha": "Loda hoton kaya",
+    "yo": "Gbé fọ́tò ọjà sókè",
+    "ig": "Bulite foto ngwaahịa"
+  },
+  "Upload": {
+    "pcm": "Upload",
+    "ha": "Loda",
+    "yo": "Gbé sókè",
+    "ig": "Bulite"
+  },
+  "Upload an inventory list": {
+    "pcm": "Upload stock list",
+    "ha": "Loda jerin haja",
+    "yo": "Gbé àtòjọ ọjà sókè",
+    "ig": "Bulite ndepụta ngwaahịa"
+  },
+  "Choose an existing image from your device": {
+    "pcm": "Choose picture wey already dey your device",
+    "ha": "Zaɓi hoton da ke kan na'urarka",
+    "yo": "Yan àwòrán tó wà lórí ẹ̀rọ rẹ",
+    "ig": "Họrọ foto dị n'igwe gị"
+  },
+  "Choose one option. Camera access depends on your device; desktop may open the file picker.": {
+    "pcm": "Choose one option. Camera access depend on device; computer fit open file picker.",
+    "ha": "Zaɓi zaɓi ɗaya. Samun kyamara ya danganta da na'ura; kwamfuta na iya buɗe zaɓin fayil.",
+    "yo": "Yan ọ̀nà kan. Àṣẹ kámẹ́rà dá lórí ẹ̀rọ; kọ̀ǹpútà lè ṣí olùyàn fáìlì.",
+    "ig": "Họrọ otu. Ikike igwefoto dabere n'igwe; kọmputa nwere ike imepe nhọrọ faịlụ."
+  },
+  "Open your camera · up to 2 MB": {
+    "pcm": "Open camera · no pass 2 MB",
+    "ha": "Buɗe kyamara · har 2 MB",
+    "yo": "Ṣí kámẹ́rà · tó 2 MB",
+    "ig": "Mepee igwefoto · ruo 2 MB"
+  },
+  "CSV / Excel · opens bulk import in a new tab": {
+    "pcm": "CSV / Excel · open bulk import for new tab",
+    "ha": "CSV / Excel · yana buɗe shigo da yawa a sabon shafi",
+    "yo": "CSV / Excel · ṣí gbígbé púpọ̀ wọlé ní taabu tuntun",
+    "ig": "CSV / Excel · na-emepe mbubata n'ọtụtụ na taabụ ọhụrụ"
+  },
+  "Product image and capture options": {
+    "pcm": "Product picture options",
+    "ha": "Zaɓin hoton kaya",
+    "yo": "Àwọn ọ̀nà àwòrán ọjà",
+    "ig": "Nhọrọ foto ngwaahịa"
+  },
+  "Remove image": {
+    "pcm": "Comot picture",
+    "ha": "Cire hoto",
+    "yo": "Yọ àwòrán",
+    "ig": "Wepụ foto"
+  },
+  "Replace image": {
+    "pcm": "Change picture",
+    "ha": "Sauya hoto",
+    "yo": "Rọ́pò àwòrán",
+    "ig": "Dochie foto"
+  },
+  "JPG, PNG, WebP · Max": {
+    "pcm": "JPG, PNG, WebP · no pass",
+    "ha": "JPG, PNG, WebP · iyaka",
+    "yo": "JPG, PNG, WebP · tó pọ̀ jù",
+    "ig": "JPG, PNG, WebP · oke"
+  },
+  "Back to options": {
+    "pcm": "Go back to options",
+    "ha": "Koma zaɓuɓɓuka",
+    "yo": "Padà sí àṣàyàn",
+    "ig": "Laghachi na nhọrọ"
+  },
+  "Scan barcode / QR": {
+    "pcm": "Scan barcode / QR",
+    "ha": "Duba barcode / QR",
+    "yo": "Ṣàyẹ̀wò barcode / QR",
+    "ig": "Nyochaa barcode / QR"
+  },
+  "Scan barcode or QR": {
+    "pcm": "Scan barcode or QR",
+    "ha": "Duba barcode ko QR",
+    "yo": "Ṣàyẹ̀wò barcode tàbí QR",
+    "ig": "Nyochaa barcode ma ọ bụ QR"
+  },
+  "Scan with a photo": {
+    "pcm": "Use picture scan",
+    "ha": "Duba ta hoto",
+    "yo": "Ṣàyẹ̀wò pẹ̀lú fọ́tò",
+    "ig": "Jiri foto nyochaa"
+  },
+  "Find a product by code": {
+    "pcm": "Find product with code",
+    "ha": "Nemo kaya ta lamba",
+    "yo": "Wá ọjà pẹ̀lú kóòdù",
+    "ig": "Chọta ngwaahịa site na koodu"
+  },
+  "Find product": {
+    "pcm": "Find product",
+    "ha": "Nemo kaya",
+    "yo": "Wá ọjà",
+    "ig": "Chọta ngwaahịa"
+  },
+  "Find and prefill a product · manual entry available": {
+    "pcm": "Find product and fill details · you fit enter by hand",
+    "ha": "Nemo ka cika bayanan kaya · za a iya rubuta da hannu",
+    "yo": "Wá ọjà kí o kún àlàyé · o lè tẹ̀ fúnra rẹ",
+    "ig": "Chọta ma jupụta ngwaahịa · ị nwere ike itinye n'onwe gị"
+  },
+  "Barcode, QR value or SKU": {
+    "pcm": "Barcode, QR value or SKU",
+    "ha": "Barcode, ƙimar QR ko SKU",
+    "yo": "Barcode, iye QR tàbí SKU",
+    "ig": "Barcode, uru QR ma ọ bụ SKU"
+  },
+  "Photograph one barcode or QR code, or enter its value below. We search your business catalog; no photo is attached.": {
+    "pcm": "Take picture of one barcode or QR, or type value below. We go search your business products; no picture go attach.",
+    "ha": "Ɗauki hoton barcode ko QR ɗaya, ko rubuta ƙimarsa. Muna binciken kayan kasuwancinka; ba a haɗa hoto.",
+    "yo": "Ya fọ́tò barcode tàbí QR kan, tàbí tẹ iye rẹ̀. A wá nínú ọjà iṣẹ́ rẹ; a kò so fọ́tò mọ́ ọn.",
+    "ig": "See otu barcode ma ọ bụ QR, ma ọ bụ tinye uru ya n'okpuru. Anyị na-achọ ndepụta ngwaahịa gị; foto anaghị etinye."
+  },
+  "Barcode scanning is not supported by this browser. Enter the barcode, QR value or SKU manually below.": {
+    "pcm": "This browser no support barcode scanning. Type barcode, QR value or SKU below.",
+    "ha": "Wannan burauza ba ta goyon bayan barcode. Rubuta barcode, ƙimar QR ko SKU a ƙasa.",
+    "yo": "Ẹ̀rọ aṣàwákiri yìí kò ṣe àyẹ̀wò barcode. Tẹ barcode, iye QR tàbí SKU ní ìsàlẹ̀.",
+    "ig": "Ihe nchọgharị a anaghị akwado nyocha barcode. Tinye barcode, uru QR ma ọ bụ SKU n'okpuru."
+  },
+  "Looking up product…": {
+    "pcm": "We dey find product…",
+    "ha": "Ana neman kaya…",
+    "yo": "A ń wá ọjà…",
+    "ig": "A na-achọ ngwaahịa…"
+  },
+  "Look up an existing product before filling the form.": {
+    "pcm": "Find existing product before you fill form.",
+    "ha": "Nemo kayan da ke akwai kafin cika fom.",
+    "yo": "Wá ọjà tó wà kí o tó kún fọ́ọ̀mù.",
+    "ig": "Chọta ngwaahịa dị adị tupu ị jupụta fọm."
+  },
+  "No product found in your business catalog.": {
+    "pcm": "We no see product for your business list.",
+    "ha": "Ba a sami kaya a jerin kasuwancinka ba.",
+    "yo": "A kò rí ọjà nínú àtòjọ iṣẹ́ rẹ.",
+    "ig": "Ahụghị ngwaahịa n'akwụkwọ ngwaahịa azụmahịa gị."
+  },
+  "No match in the offline cache. Reconnect to check the full catalog.": {
+    "pcm": "No match for offline records. Connect internet to check full list.",
+    "ha": "Babu daidaito a ajiyar na'ura. Sake haɗawa don duba cikakken jerin.",
+    "yo": "Kò sí ohun tó bá a mu nínú ìpamọ́. Tún sopọ̀ láti ṣàyẹ̀wò gbogbo àtòjọ.",
+    "ig": "Enweghị ihe dakọtara n'ihe echekwara. Jikọọ ọzọ lelee ndepụta niile."
+  },
+  "Cached match. Reconnect before saving. ": {
+    "pcm": "Na cached product. Connect internet before save. ",
+    "ha": "Daidaito daga ajiya. Sake haɗawa kafin ajiyewa. ",
+    "yo": "Ó wá láti ìpamọ́. Tún sopọ̀ kí o tó fipamọ́. ",
+    "ig": "Ọ si na nchekwa. Jikọọ ọzọ tupu ị chekwaa. "
+  },
+  "Use this product": {
+    "pcm": "Use this product",
+    "ha": "Yi amfani da wannan kaya",
+    "yo": "Lo ọjà yìí",
+    "ig": "Jiri ngwaahịa a"
+  },
+  "Use code in form": {
+    "pcm": "Use code for form",
+    "ha": "Yi amfani da lamba a fom",
+    "yo": "Lo kóòdù nínú fọ́ọ̀mù",
+    "ig": "Jiri koodu n'ime fọm"
+  },
+  "Use this product to replace the form fields. Saving will update this existing product, not create a duplicate.": {
+    "pcm": "Use this product replace form details. When you save, e go update existing product, no be create duplicate.",
+    "ha": "Yi amfani da wannan kaya don maye gurbin fom. Ajiye zai sabunta kayan da ke akwai, ba ƙirƙiri kwafi ba.",
+    "yo": "Lo ọjà yìí rọ́pò àlàyé fọ́ọ̀mù. Fífipamọ́ yóò ṣàtúnṣe ọjà tó wà, kì í ṣẹ̀dá àdàkọ.",
+    "ig": "Jiri ngwaahịa a dochie mpaghara fọm. Ichekwa ga-emelite ngwaahịa dị adị, ọ bụghị imepụta oyiri."
+  },
+  "Create another record": {
+    "pcm": "Create another record",
+    "ha": "Ƙirƙiri wani rubutu",
+    "yo": "Ṣẹ̀dá àkọsílẹ̀ mìíràn",
+    "ig": "Mepụta ndekọ ọzọ"
+  },
+  "Editing existing product:": {
+    "pcm": "You dey edit existing product:",
+    "ha": "Ana gyara kayan da ke akwai:",
+    "yo": "A ń ṣàtúnṣe ọjà tó wà:",
+    "ig": "A na-edezi ngwaahịa dị adị:"
+  },
+  "Create Product": {
+    "pcm": "Create product",
+    "ha": "Ƙirƙiri kaya",
+    "yo": "Ṣẹ̀dá ọjà",
+    "ig": "Mepụta ngwaahịa"
+  },
+  "Update Product": {
+    "pcm": "Update product",
+    "ha": "Sabunta kaya",
+    "yo": "Ṣàtúnṣe ọjà",
+    "ig": "Melite ngwaahịa"
+  },
+  "Product information": {
+    "pcm": "Product details",
+    "ha": "Bayanan kaya",
+    "yo": "Àlàyé ọjà",
+    "ig": "Nkọwa ngwaahịa"
+  },
+  "Product unavailable": {
+    "pcm": "Product no dey available",
+    "ha": "Kaya bai samu ba",
+    "yo": "Ọjà kò sí",
+    "ig": "Ngwaahịa adịghị"
+  },
+  "Check your connection and product access.": {
+    "pcm": "Check internet and product access.",
+    "ha": "Duba haɗinka da damar kaya.",
+    "yo": "Ṣàyẹ̀wò ìsopọ̀ àti àṣẹ ọjà.",
+    "ig": "Lelee njikọ na ikike ngwaahịa gị."
+  },
+  "Optional product description": {
+    "pcm": "Product description (if you want)",
+    "ha": "Bayanin kaya (na zaɓi)",
+    "yo": "Àlàyé ọjà (bí o bá fẹ́)",
+    "ig": "Nkọwa ngwaahịa (nhọrọ)"
+  },
+  "Select category": {
+    "pcm": "Choose category",
+    "ha": "Zaɓi rukuni",
+    "yo": "Yan ẹ̀ka",
+    "ig": "Họrọ ngalaba"
+  },
+  "Make / Brand": {
+    "pcm": "Make or brand",
+    "ha": "Kamfani / tambari",
+    "yo": "Olùṣe / àmì",
+    "ig": "Ụlọ ọrụ / akara"
+  },
+  "Selling Price (₦) *": {
+    "pcm": "Price wey you dey sell (₦) *",
+    "ha": "Farashin sayarwa (₦) *",
+    "yo": "Iye títà (₦) *",
+    "ig": "Ọnụahịa ire (₦) *"
+  },
+  "Cost Price (₦) *": {
+    "pcm": "Price wey you buy (₦) *",
+    "ha": "Farashin saye (₦) *",
+    "yo": "Iye rírà (₦) *",
+    "ig": "Ọnụahịa ịzụta (₦) *"
+  },
+  "e.g., Rice (50kg bag)": {
+    "pcm": "Like Rice (50kg bag)",
+    "ha": "Misali, shinkafa (buhu 50kg)",
+    "yo": "Fún àpẹẹrẹ, ìrẹsì (àpò 50kg)",
+    "ig": "Dịka osikapa (akpa 50kg)"
+  },
+  "e.g., Samsung, Nike": {
+    "pcm": "Like Samsung, Nike",
+    "ha": "Misali, Samsung, Nike",
+    "yo": "Fún àpẹẹrẹ, Samsung, Nike",
+    "ig": "Dịka Samsung, Nike"
+  },
+  "e.g. Adaeze General Stores": {
+    "pcm": "Like Adaeze General Stores",
+    "ha": "Misali Adaeze General Stores",
+    "yo": "Fún àpẹẹrẹ Adaeze General Stores",
+    "ig": "Dịka Adaeze General Stores"
+  },
+  "e.g. Adaeze Okonkwo": {
+    "pcm": "Like Adaeze Okonkwo",
+    "ha": "Misali Adaeze Okonkwo",
+    "yo": "Fún àpẹẹrẹ Adaeze Okonkwo",
+    "ig": "Dịka Adaeze Okonkwo"
+  },
+  "e.g. 3, -1 for unlimited": {
+    "pcm": "Like 3, -1 mean no limit",
+    "ha": "Misali 3, -1 na nufin babu iyaka",
+    "yo": "Fún àpẹẹrẹ 3, -1 fún àìní ààlà",
+    "ig": "Dịka 3, -1 maka enweghị oke"
+  },
+  "Open": {
+    "pcm": "Open am",
+    "ha": "Buɗe",
+    "yo": "Ṣí",
+    "ig": "Mepee"
+  },
+  "Skip": {
+    "pcm": "Skip am",
+    "ha": "Tsallake",
+    "yo": "Fò ó",
+    "ig": "Mafee"
+  },
+  "Available": {
+    "pcm": "E dey available",
+    "ha": "Akwai",
+    "yo": "Ó wà",
+    "ig": "Ọ dị"
+  },
+  "Detected": {
+    "pcm": "We don detect am",
+    "ha": "An gano",
+    "yo": "A ti rí",
+    "ig": "Achọpụtara"
+  },
+  "Failed": {
+    "pcm": "E no work",
+    "ha": "An gaza",
+    "yo": "Ó kùnà",
+    "ig": "Ọ dara"
+  },
+  "Deactivated": {
+    "pcm": "Dem deactivate am",
+    "ha": "An kashe",
+    "yo": "A ti dá dúró",
+    "ig": "Akwụsịla"
+  },
+  "Discontinued": {
+    "pcm": "Dem no dey sell am again",
+    "ha": "An daina",
+    "yo": "A ti dáwọ́ dúró",
+    "ig": "Akwụsịla ire"
+  },
+  "Trial": {
+    "pcm": "Trial period",
+    "ha": "Gwaji",
+    "yo": "Ìdánwò",
+    "ig": "Nnwale"
+  },
+  "Unverified": {
+    "pcm": "Never verify",
+    "ha": "Ba a tabbatar ba",
+    "yo": "A kò tíì fìdí múlẹ̀",
+    "ig": "Ekwenyebeghị"
+  },
+  "Unpaid": {
+    "pcm": "Never pay",
+    "ha": "Ba a biya ba",
+    "yo": "A kò tíì san",
+    "ig": "Akwụbeghị"
+  },
+  "Plan price": {
+    "pcm": "Plan price",
+    "ha": "Farashin tsari",
+    "yo": "Iye ètò",
+    "ig": "Ọnụahịa atụmatụ"
+  },
+  "Yearly · save 20%": {
+    "pcm": "Yearly · save 20%",
+    "ha": "Shekara-shekara · rage 20%",
+    "yo": "Lọ́dọọdún · fi 20% pamọ́",
+    "ig": "Kwa afọ · chekwaa 20%"
+  },
+  "month": {
+    "pcm": "month",
+    "ha": "wata",
+    "yo": "oṣù",
+    "ig": "ọnwa"
+  },
+  "year": {
+    "pcm": "year",
+    "ha": "shekara",
+    "yo": "ọdún",
+    "ig": "afọ"
+  },
+  "per": {
+    "pcm": "per",
+    "ha": "kowace",
+    "yo": "fún",
+    "ig": "kwa"
+  },
+  "Current Bill": {
+    "pcm": "Bill wey dey now",
+    "ha": "Lissafin yanzu",
+    "yo": "Ìwé owó lọ́wọ́lọ́wọ́",
+    "ig": "Ụgwọ ugbu a"
+  },
+  "Current sale": {
+    "pcm": "Sale wey dey now",
+    "ha": "Sayarwar yanzu",
+    "yo": "Títà lọ́wọ́lọ́wọ́",
+    "ig": "Ahịa ugbu a"
+  },
+  "Sale complete": {
+    "pcm": "Sale don complete",
+    "ha": "Sayarwa ta kammala",
+    "yo": "Títà ti parí",
+    "ig": "Ahịa agwụla"
+  },
+  "Generate invoice": {
+    "pcm": "Create invoice",
+    "ha": "Ƙirƙiri invoice",
+    "yo": "Ṣẹ̀dá ìwé owó",
+    "ig": "Mepụta akwụkwọ ụgwọ"
+  },
+  "Bank card:": {
+    "pcm": "Bank card:",
+    "ha": "Katin banki:",
+    "yo": "Káàdì báńkì:",
+    "ig": "Kaadị ụlọ akụ:"
+  },
+  "Approval Code:": {
+    "pcm": "Approval code:",
+    "ha": "Lambar amincewa:",
+    "yo": "Kóòdù ìfọwọ́sí:",
+    "ig": "Koodu nkwado:"
+  },
+  "POS card": {
+    "pcm": "POS card",
+    "ha": "Katin POS",
+    "yo": "Káàdì POS",
+    "ig": "Kaadị POS"
+  },
+  "Ref:": {
+    "pcm": "Ref:",
+    "ha": "Madogara:",
+    "yo": "Ìtọ́kasí:",
+    "ig": "Ntụaka:"
+  },
+  "Amt": {
+    "pcm": "Money",
+    "ha": "Kuɗi",
+    "yo": "Owó",
+    "ig": "Ego"
+  },
+  "Item × 1": {
+    "pcm": "Item × 1",
+    "ha": "Kaya × 1",
+    "yo": "Ọjà × 1",
+    "ig": "Ngwaahịa × 1"
+  },
+  "Tel.": {
+    "pcm": "Phone",
+    "ha": "Waya",
+    "yo": "Fóònù",
+    "ig": "Ekwentị"
+  },
+  "Telp.": {
+    "pcm": "Phone",
+    "ha": "Waya",
+    "yo": "Fóònù",
+    "ig": "Ekwentị"
+  },
+  "% of Total": {
+    "pcm": "% of total",
+    "ha": "% na jimilla",
+    "yo": "% àpapọ̀",
+    "ig": "% nke ngụkọta"
+  },
+  "147 sales today": {
+    "pcm": "147 sales today",
+    "ha": "Sayarwa 147 yau",
+    "yo": "Títà 147 lónìí",
+    "ig": "Ahịa 147 taa"
+  },
+  "4 queued": {
+    "pcm": "4 dey wait",
+    "ha": "4 suna jira",
+    "yo": "4 ń dúró",
+    "ig": "4 na-eche"
+  },
+  "+18% vs yesterday": {
+    "pcm": "+18% compared to yesterday",
+    "ha": "+18% idan aka kwatanta da jiya",
+    "yo": "+18% ju àná lọ",
+    "ig": "+18% karịa ụnyaahụ"
+  },
+  "Charge ₦14,500": {
+    "pcm": "Collect ₦14,500",
+    "ha": "Karɓi ₦14,500",
+    "yo": "Gba ₦14,500",
+    "ig": "Nara ₦14,500"
+  },
+  "Today · Lagos HQ": {
+    "pcm": "Today · Lagos HQ",
+    "ha": "Yau · Hedikwatar Legas",
+    "yo": "Lónìí · Orílé-iṣẹ́ Èkó",
+    "ig": "Taa · Isi ụlọ ọrụ Lagos"
+  },
+  "receipts · Page": {
+    "pcm": "receipts · Page",
+    "ha": "rasit · Shafi",
+    "yo": "rísíìtì · Ojú-ewé",
+    "ig": "risit · Ibe"
+  },
+  "recent records)": {
+    "pcm": "latest records)",
+    "ha": "bayanan baya-bayan nan)",
+    "yo": "àkọsílẹ̀ tuntun)",
+    "ig": "ndekọ ọhụrụ)"
+  },
+  "All (": {
+    "pcm": "All (",
+    "ha": "Duka (",
+    "yo": "Gbogbo (",
+    "ig": "Niile ("
+  },
+  "Unread (": {
+    "pcm": "Never read (",
+    "ha": "Ba a karanta ba (",
+    "yo": "A kò tíì kà (",
+    "ig": "Agụbeghị ("
+  },
+  "to continue.": {
+    "pcm": "to continue.",
+    "ha": "don ci gaba.",
+    "yo": "láti tẹ̀síwájú.",
+    "ig": "iji gaa n'ihu."
+  },
+  "OR": {
+    "pcm": "OR",
+    "ha": "KO",
+    "yo": "TÀBÍ",
+    "ig": "MA Ọ BỤ"
+  },
+  " (coming soon)": {
+    "pcm": " (e dey come soon)",
+    "ha": " (yana zuwa)",
+    "yo": " (ó ń bọ̀)",
+    "ig": " (ọ na-abịa)"
+  },
+  " (disabled)": {
+    "pcm": " (e no dey active)",
+    "ha": " (an kashe)",
+    "yo": " (a ti dá dúró)",
+    "ig": " (akwụsịrị)"
+  },
+  " — adapter not configured": {
+    "pcm": " — adapter never set up",
+    "ha": " — ba a saita adafta ba",
+    "yo": " — a kò tíì ṣètò ohun àsopọ̀",
+    "ig": " — ahaziebeghị njikọ"
+  },
+  "Powered by TracKasuwa": {
+    "pcm": "Powered by TracKasuwa",
+    "ha": "TracKasuwa ne ya samar",
+    "yo": "TracKasuwa ló ń ṣiṣẹ́ rẹ̀",
+    "ig": "TracKasuwa na-akwado ya"
+  },
+  "TracKasuwa home": {
+    "pcm": "TracKasuwa home",
+    "ha": "Gidan TracKasuwa",
+    "yo": "Ilé TracKasuwa",
+    "ig": "Ụlọ TracKasuwa"
+  },
+  "Traders at a Nigerian market": {
+    "pcm": "Traders for Naija market",
+    "ha": "Ƴan kasuwa a kasuwar Najeriya",
+    "yo": "Àwọn oníṣòwò ní ọjà Nàìjíríà",
+    "ig": "Ndị na-ere ahịa n'ahịa Naịjirịa"
+  },
+  "Multiple Cashiers & Roles": {
+    "pcm": "Different cashiers and roles",
+    "ha": "Masu karɓar kuɗi da matsayi da yawa",
+    "yo": "Olùgbà owó púpọ̀ àti ipò",
+    "ig": "Ọtụtụ ndị na-anata ego na ọrụ"
+  },
+  "Receipt Printing with QR Codes": {
+    "pcm": "Print receipt with QR code",
+    "ha": "Buga rasit da QR",
+    "yo": "Títẹ rísíìtì pẹ̀lú QR",
+    "ig": "Ibipụta risit na koodu QR"
+  },
+  "Offline-First Sync": {
+    "pcm": "Sync wey support no internet",
+    "ha": "Daidaitawa ba intanet",
+    "yo": "Ìdọ́gba láìsí intanẹẹti",
+    "ig": "Mmekọrịta na-enweghị ịntanetị"
+  },
+  "Reports & Analytics": {
+    "pcm": "Reports and analysis",
+    "ha": "Rahotanni da nazari",
+    "yo": "Ìròyìn àti ìtúpalẹ̀",
+    "ig": "Akụkọ na nyocha"
+  },
+  "Vendor Consignment": {
+    "pcm": "Goods wey vendors collect to sell",
+    "ha": "Kayan amana na dillali",
+    "yo": "Ọjà tí olùtajà gbà láti tà",
+    "ig": "Ngwaahịa e nyere onye na-ere"
+  },
+  "Retail and grocery tools, with planned hospitality and production extensions.": {
+    "pcm": "Retail and grocery tools, with hospitality and production extensions wey we plan.",
+    "ha": "Kayan aikin retail da abinci, tare da shirin ƙarin karɓar baƙi da samarwa.",
+    "yo": "Ohun èlò ìtajà àti oúnjẹ, pẹ̀lú àfikún iṣẹ́ àlejò àti iṣelọpọ tí a ń gbero.",
+    "ig": "Ngwaahịa ahịa na nri, yana atụmatụ mgbakwunye ile ọbịa na mmepụta."
+  },
+  "We ship this list — not aspirational marketing. What's not built yet is either coming soon, or hidden until it is.": {
+    "pcm": "Na features wey ready we list. Wetin never ready dey marked coming soon or hidden till e ready.",
+    "ha": "Abubuwan da muka gina ne a nan. Abin da bai shirya ba yana da alamar zuwa ko a ɓoye yake.",
+    "yo": "Iṣẹ́ tí a ti kọ́ ló wà níbí. Ohun tí kò tíì wà ní àmì pé ó ń bọ̀ tàbí a fi pamọ́.",
+    "ig": "Ihe anyị wurula dị ebe a. Ihe na-adịbeghị njikere ka akara na-abịa ma ọ bụ e zoro ya."
+  },
+  ", pricing and product details.": {
+    "pcm": ", prices and product details.",
+    "ha": ", farashi da bayanan kaya.",
+    "yo": ", iye owó àti àlàyé ọjà.",
+    "ig": ", ọnụahịa na nkọwa ngwaahịa."
+  },
+  "All plans include offline-first functionality, multi-device support, and automatic data sync. Prices are billed monthly in Nigerian Naira (₦). Enterprise pricing is custom — talk to sales.": {
+    "pcm": "All plans fit work without internet, support different devices and sync automatically. You pay monthly in Naira (₦). Enterprise price na custom — talk to sales.",
+    "ha": "Duk tsare-tsare suna aiki ba intanet, na'urori da yawa da daidaitawa. Ana biya kowane wata da Naira (₦). Farashin Enterprise na musamman ne — tuntuɓi tallace-tallace.",
+    "yo": "Gbogbo ètò ṣiṣẹ́ láìsí intanẹẹti, lórí ẹ̀rọ púpọ̀, pẹ̀lú ìdọ́gba. Ìsanwó jẹ́ oṣooṣù ní Naira (₦). Iye Enterprise dá lórí ìbéèrè — bá ẹgbẹ́ títà sọ̀rọ̀.",
+    "ig": "Atụmatụ niile na-arụ ọrụ na-enweghị ịntanetị, n'ọtụtụ igwe ma mekọrịta. A na-akwụ kwa ọnwa na Naira (₦). Ọnụahịa Enterprise bụ pụrụ iche — kpọtụrụ ndị ahịa."
+  },
+  "Windows SmartScreen may show": {
+    "pcm": "Windows SmartScreen fit show",
+    "ha": "Windows SmartScreen na iya nunawa",
+    "yo": "Windows SmartScreen lè fi hàn",
+    "ig": "Windows SmartScreen nwere ike igosi"
+  },
+  "Android will warn": {
+    "pcm": "Android go warn you",
+    "ha": "Android zai yi gargaɗi",
+    "yo": "Android yóò kìlọ̀",
+    "ig": "Android ga-adọ aka ná ntị"
+  },
+  "and allow installs from this source.": {
+    "pcm": "and allow installation from this source.",
+    "ha": "kuma ba da izinin shigarwa daga wannan tushe.",
+    "yo": "kí o gba ìfisí láti orísun yìí láàyè.",
+    "ig": "ma kwe ka a wụnye site na ebe a."
+  },
+  "— showing the best option for your device below.": {
+    "pcm": "— best option for your device dey below.",
+    "ha": "— ana nuna mafi kyawun zaɓi ga na'urarka a ƙasa.",
+    "yo": "— àṣàyàn tó dára fún ẹ̀rọ rẹ wà ní ìsàlẹ̀.",
+    "ig": "— nhọrọ kacha mma maka igwe gị dị n'okpuru."
+  },
+  "— this is expected for a new, unsigned app. Click": {
+    "pcm": "— this fit happen for new app wey never sign. Click",
+    "ha": "— ana tsammanin wannan ga sabon app da ba a sanya hannu ba. Danna",
+    "yo": "— èyí sábà máa ń ṣẹlẹ̀ fún app tuntun tí kò ní ìfọwọ́sí. Tẹ",
+    "ig": "— nke a nwere ike ime maka ngwa ọhụrụ na-enweghị mbinye aka. Pịa"
+  },
+  "— this is expected since the app isn't distributed via the Play Store yet. Tap": {
+    "pcm": "— this fit happen because app never dey Play Store. Tap",
+    "ha": "— wannan saboda app bai shiga Play Store ba tukuna. Danna",
+    "yo": "— èyí jẹ́ nítorí app kò tíì wà ní Play Store. Tẹ",
+    "ig": "— nke a bụ n'ihi na ngwa adịghị na Play Store ugbu a. Pịa"
+  },
+  "This warning appears because the installer isn't yet signed with a commercial code-signing certificate — it does not mean the app is unsafe.": {
+    "pcm": "This warning show because installer never get commercial code-signing certificate — warning alone no mean say app unsafe.",
+    "ha": "Wannan gargaɗi yana bayyana saboda installer ba shi da takardar sa hannun lamba ta kasuwanci tukuna — gargaɗin kaɗai ba ya nufin app ba shi da tsaro.",
+    "yo": "Ìkìlọ̀ yìí hàn nítorí fáìlì ìfisí kò tíì ní ìwé ìfọwọ́sí kóòdù — ìkìlọ̀ nìkan kò túmọ̀ sí pé app léwu.",
+    "ig": "Ịdọ aka ná ntị a pụtara n'ihi na ihe nrụnye enweghị asambodo mbinye koodu azụmahịa — ozi ahụ naanị apụtaghị na ngwa adịghị nchekwa."
+  },
+  "Naira-priced plans, Free to Enterprise": {
+    "pcm": "Plans priced in Naira, from Free to Enterprise",
+    "ha": "Tsare-tsare da Naira, daga Free zuwa Enterprise",
+    "yo": "Ètò ní Naira, láti Free sí Enterprise",
+    "ig": "Atụmatụ na Naira, site na Free ruo Enterprise"
+  },
+  "Roles with dedicated permissions": {
+    "pcm": "Roles wey get their own permissions",
+    "ha": "Matsayi da izini na musamman",
+    "yo": "Ipò pẹ̀lú àṣẹ pàtó",
+    "ig": "Ọrụ nwere ikike pụrụ iche"
+  },
+  "Sales lost when your connection drops": {
+    "pcm": "Sales wey lost when internet cut",
+    "ha": "Sayarwar da aka rasa idan haɗi ya yanke",
+    "yo": "Títà tó sọnù nígbà tí ìsopọ̀ dáwọ́ dúró",
+    "ig": "Ahịa furu mgbe njikọ dara"
+  },
+  "Actions logged to an audit trail": {
+    "pcm": "Actions wey enter audit record",
+    "ha": "Ayyukan da aka rubuta a tarihi",
+    "yo": "Iṣẹ́ tí a kọ sí àkọsílẹ̀ àyẹ̀wò",
+    "ig": "Omume e dekọrọ n'akụkọ nyocha"
+  },
+  "Sales lost": {
+    "pcm": "Sales wey lost",
+    "ha": "Sayarwar da aka rasa",
+    "yo": "Títà tó sọnù",
+    "ig": "Ahịa furu"
+  },
+  "Reconnect sync": {
+    "pcm": "Sync when internet return",
+    "ha": "Daidaitawa bayan sake haɗi",
+    "yo": "Ìdọ́gba nígbà ìsopọ̀",
+    "ig": "Mmekọrịta mgbe njikọ lọghachiri"
+  },
+  "Local cache": {
+    "pcm": "Records for this device",
+    "ha": "Ajiyar na'ura",
+    "yo": "Ìpamọ́ ẹ̀rọ",
+    "ig": "Nchekwa igwe"
+  },
+  "Every sale is timestamped and tied to the cashier who made it — no more guessing who sold what.": {
+    "pcm": "Every sale get time and cashier wey make am — no need guess who sell wetin.",
+    "ha": "Kowace sayarwa tana da lokaci da sunan mai karɓar kuɗi — babu hasashen wanda ya sayar.",
+    "yo": "Gbogbo títà ní àkókò àti olùgbà owó tó ṣe é — kò sí fífi àròsọ mọ ẹni tó tà.",
+    "ig": "Ahịa ọ bụla nwere oge na onye na-anata ego mere ya — enweghị ịkọ onye rere ihe."
+  },
+  "Stock adjustments require a reason, so shrinkage and errors are visible, not hidden.": {
+    "pcm": "Stock corrections need reason, so missing stock and errors go show.",
+    "ha": "Gyaran haja yana buƙatar dalili, don asara da kurakurai su bayyana.",
+    "yo": "Àtúnṣe ọjà nílò ìdí, kí àdánù àti aṣìṣe lè hàn.",
+    "ig": "Mmezi ngwaahịa chọrọ ihe kpatara ya ka mfu na njehie pụta ìhè."
+  },
+  "Warehouse transfers are logged both ways, so nothing goes missing between locations.": {
+    "pcm": "Warehouse transfers get record for both sides, so nothing go miss between locations.",
+    "ha": "Ana rubuta canjin ma'ajiya a ɓangarorin biyu, don kada kaya su ɓace.",
+    "yo": "A kọ ìgbé ọjà sílẹ̀ ní ẹgbẹ́ méjèèjì kí ohun kankan má sọnù láàárín ibi.",
+    "ig": "A na-edekọ mbufe ụlọ nkwakọba n'akụkụ abụọ ka ihe ghara ifu n'etiti ebe."
+  },
+  "An audit trail records who changed what, and when — for owners who need to know what happened while they weren't looking.": {
+    "pcm": "Audit record show who change wetin and when — so owner go know wetin happen when e no dey.",
+    "ha": "Tarihin bincike yana rubuta wanda ya canja me da lokacin — domin mai shago ya san abin da ya faru ba ya nan.",
+    "yo": "Àkọsílẹ̀ àyẹ̀wò ń fi ẹni tó yí ohun padà àti ìgbà hàn — fún oníṣẹ́ láti mọ ohun tó ṣẹlẹ̀ nígbà tí kò sí.",
+    "ig": "Ndekọ nyocha na-egosi onye gbanwere ihe na mgbe — ka onye nwe mara ihe mere mgbe ọ na-anọghị."
+  },
+  "Search or scan products to build a sale in seconds": {
+    "pcm": "Find or scan products to make sale in seconds",
+    "ha": "Nemo ko duba kaya don yin sayarwa cikin daƙiƙu",
+    "yo": "Wá tàbí ṣàyẹ̀wò ọjà láti tà ní ìṣẹ́jú-àáyá",
+    "ig": "Chọọ ma ọ bụ nyochaa ngwaahịa iji ree n'ime sekọnd"
+  },
+  "Apply discounts and accept cash or other payment methods": {
+    "pcm": "Reduce price and collect cash or other payment",
+    "ha": "Yi rangwame ka karɓi kuɗi ko wasu hanyoyin biya",
+    "yo": "Lo ẹ̀dínwó kí o gba owó tàbí ọ̀nà ìsanwó mìíràn",
+    "ig": "Belata ọnụahịa ma nata ego nkịtị ma ọ bụ ụzọ ịkwụ ụgwọ ọzọ"
+  },
+  "Works on a phone, tablet, or desktop browser": {
+    "pcm": "E work for phone, tablet or computer browser",
+    "ha": "Yana aiki a waya, tablet ko burauzar kwamfuta",
+    "yo": "Ó ṣiṣẹ́ lórí fóònù, tablet tàbí ẹ̀rọ aṣàwákiri kọ̀ǹpútà",
+    "ig": "Ọ na-arụ ọrụ na ekwentị, tablet ma ọ bụ ihe nchọgharị kọmputa"
+  },
+  "Sales and stock changes are saved locally the instant they happen": {
+    "pcm": "Sales and stock changes save for device immediately",
+    "ha": "Ana ajiye sayarwa da sauyin haja a na'ura nan take",
+    "yo": "A fipamọ́ títà àti ìyípadà ọjà lẹ́sẹ̀kẹsẹ̀ lórí ẹ̀rọ",
+    "ig": "Ahịa na mgbanwe ngwaahịa na-echekwa n'igwe ozugbo"
+  },
+  "A background sync queue pushes everything to the cloud once you're back online": {
+    "pcm": "Background sync send everything to cloud when internet return",
+    "ha": "Jerin daidaitawa yana aika komai zuwa gajimare idan intanet ta dawo",
+    "yo": "Ìlà ìdọ́gba ń rán gbogbo ohun sí cloud nígbà tí ìsopọ̀ bá padà",
+    "ig": "Ahịrị mmekọrịta na-eziga ihe niile na cloud mgbe ịntanetị lọghachiri"
+  },
+  "No double-entry, no lost sales when the connection blips": {
+    "pcm": "No double records, no lost sales when network cut",
+    "ha": "Babu rubutawa sau biyu ko asarar sayarwa idan haɗi ya yanke",
+    "yo": "Kò sí àkọsílẹ̀ méjì tàbí títà tó sọnù nígbà ìṣòro ìsopọ̀",
+    "ig": "Enweghị ndekọ ugboro abụọ ma ọ bụ ahịa furu mgbe njikọ dara"
+  },
+  "Generate PDF receipts you can print or share": {
+    "pcm": "Create PDF receipts wey you fit print or share",
+    "ha": "Ƙirƙiri rasit PDF don bugawa ko rabawa",
+    "yo": "Ṣẹ̀dá rísíìtì PDF tí o lè tẹ̀ tàbí pín",
+    "ig": "Mepụta risit PDF ị nwere ike ibipụta ma ọ bụ kesaa"
+  },
+  "Each receipt includes a scannable QR code": {
+    "pcm": "Each receipt get QR code wey you fit scan",
+    "ha": "Kowace rasit tana da lambar QR",
+    "yo": "Rísíìtì kọ̀ọ̀kan ní kóòdù QR tí a lè ṣàyẹ̀wò",
+    "ig": "Risit ọ bụla nwere koodu QR a ga-enyocha"
+  },
+  "Works with standard printers — no special hardware required": {
+    "pcm": "E work with normal printer — no special hardware needed",
+    "ha": "Yana aiki da firintoci na yau da kullum — ba sai na musamman ba",
+    "yo": "Ó ṣiṣẹ́ pẹ̀lú ẹ̀rọ ìtẹ̀wé déédéé — kò nílò ẹ̀rọ pàtó",
+    "ig": "Ọ na-arụ ọrụ na igwe mbipụta nkịtị — igwe pụrụ iche adịghị mkpa"
+  },
+  "Track quantities per warehouse, not just one global number": {
+    "pcm": "Track quantity for each warehouse, no be only one total",
+    "ha": "Bi adadin kowace ma'ajiya, ba jimilla ɗaya kawai ba",
+    "yo": "Tọpasẹ̀ iye fún ilé ìpamọ́ kọ̀ọ̀kan, kì í ṣe àpapọ̀ nìkan",
+    "ig": "Soro ọnụọgụ n'ụlọ nkwakọba ọ bụla, ọ bụghị naanị ngụkọta"
+  },
+  "Move stock between warehouses with a full transfer record": {
+    "pcm": "Move stock between warehouses with full record",
+    "ha": "Matsar da haja tsakanin ma'ajiyoyi da cikakken tarihi",
+    "yo": "Gbé ọjà láàárín ilé ìpamọ́ pẹ̀lú àkọsílẹ̀ kíkún",
+    "ig": "Bufee ngwaahịa n'etiti ụlọ nkwakọba na ndekọ zuru ezu"
+  },
+  "Number of warehouses allowed scales with your plan": {
+    "pcm": "Number of warehouses depend on your plan",
+    "ha": "Adadin ma'ajiyoyi ya danganta da tsarinka",
+    "yo": "Iye ilé ìpamọ́ dá lórí ètò rẹ",
+    "ig": "Ọnụọgụ ụlọ nkwakọba dabere na atụmatụ gị"
+  },
+  "Set a reorder threshold per product": {
+    "pcm": "Set when to reorder each product",
+    "ha": "Saita iyakar sake oda ga kowace haja",
+    "yo": "Ṣètò ààlà àtúnrà fún ọjà kọ̀ọ̀kan",
+    "ig": "Tọọ oke ịzụta ọzọ maka ngwaahịa ọ bụla"
+  },
+  "In-app notifications when stock drops below it": {
+    "pcm": "App go alert you when stock pass the low limit",
+    "ha": "Sanarwa idan haja ta sauka ƙasa da iyaka",
+    "yo": "Ìfitónilétí nígbà tí ọjà bá kéré ju ààlà lọ",
+    "ig": "Ozi mgbe ngwaahịa dara n'okpuru oke"
+  },
+  "Helps prevent lost sales from unnoticed stockouts": {
+    "pcm": "E help stop lost sales because stock finish without notice",
+    "ha": "Yana hana asarar sayarwa saboda ƙarewar haja ba a sani ba",
+    "yo": "Ó dènà àdánù títà nítorí ọjà tó tán láìmọ̀",
+    "ig": "Ọ na-enyere igbochi ahịa furu n'ihi ngwaahịa gwụrụ na-amaghị"
+  },
+  "Daily sales summaries": {
+    "pcm": "Summary of sales every day",
+    "ha": "Taƙaitaccen sayarwar kullum",
+    "yo": "Àkópọ̀ títà ojoojúmọ́",
+    "ig": "Nchịkọta ahịa kwa ụbọchị"
+  },
+  "Inventory and stock-movement reports": {
+    "pcm": "Stock and stock movement reports",
+    "ha": "Rahoton haja da motsinta",
+    "yo": "Ìròyìn ọjà àti ìgbé ọjà",
+    "ig": "Akụkọ ngwaahịa na mmegharị ya"
+  },
+  "Advanced reports on higher-tier plans": {
+    "pcm": "Advanced reports dey bigger plans",
+    "ha": "Rahotanni masu zurfi a manyan tsare-tsare",
+    "yo": "Ìròyìn jíjinlẹ̀ lórí ètò gíga",
+    "ig": "Akụkọ dị elu n'atụmatụ ka elu"
+  },
+  "Record vendor transactions and payments": {
+    "pcm": "Record vendor transactions and payments",
+    "ha": "Rubuta cinikin dillali da biyan kuɗi",
+    "yo": "Kọ ìṣòwò àti ìsanwó olùtajà",
+    "ig": "Dekọọ azụmahịa na ịkwụ ụgwọ onye na-ere"
+  },
+  "Keep consignment stock separate from your own inventory": {
+    "pcm": "Keep goods wey dem give you to sell separate from your own",
+    "ha": "Raba kayan amana da hajarka",
+    "yo": "Ya ọjà àfúnni-síta sọ́tọ̀ kúrò nínú tirẹ",
+    "ig": "Debe ngwaahịa e nyere ire iche na nke gị"
+  },
+  "Business owner, admin, and cashier roles": {
+    "pcm": "Business owner, admin and cashier roles",
+    "ha": "Matsayin mai kasuwanci, admin da mai karɓar kuɗi",
+    "yo": "Ipò oníṣẹ́, admin àti olùgbà owó",
+    "ig": "Ọrụ onye nwe azụmahịa, admin na onye na-anata ego"
+  },
+  "Number of cashier seats scales with your plan": {
+    "pcm": "Number of cashiers depend on plan",
+    "ha": "Adadin masu karɓar kuɗi ya danganta da tsari",
+    "yo": "Iye olùgbà owó dá lórí ètò",
+    "ig": "Ọnụọgụ ndị na-anata ego dabere na atụmatụ"
+  },
+  "Key actions across the app are logged for accountability": {
+    "pcm": "Important actions for app get record so you fit trace am",
+    "ha": "Ana rubuta muhimman ayyuka don riƙon amana",
+    "yo": "A kọ iṣẹ́ pàtàkì sílẹ̀ fún jíjíhìn",
+    "ig": "A na-edekọ omume dị mkpa maka ịza ajụjụ"
+  },
+  "Helps identify the source of stock discrepancies or unusual changes": {
+    "pcm": "E help find where stock mismatch or strange changes come from",
+    "ha": "Yana gano tushen bambancin haja ko sauyi ba na al'ada ba",
+    "yo": "Ó ń tọ́ka sí orísun àìdọ́gba ọjà tàbí ìyípadà àjèjì",
+    "ig": "Ọ na-enyere ịchọta ebe ngwaahịa na-adaghị ma ọ bụ mgbanwe pụrụ iche si bịa"
+  },
+  "Installable as a Progressive Web App on Android and desktop Chromium browsers": {
+    "pcm": "You fit install as PWA for Android and computer Chromium browser",
+    "ha": "Ana iya shigarwa a matsayin PWA a Android da burauzar Chromium",
+    "yo": "A lè fi sí ẹ̀rọ bí PWA lórí Android àti Chromium kọ̀ǹpútà",
+    "ig": "Enwere ike iwunye dịka PWA na Android na Chromium kọmputa"
+  },
+  "Dedicated Windows desktop and Android builds available — see /download": {
+    "pcm": "Windows and Android apps dey — check /download",
+    "ha": "Apps na Windows da Android suna nan — duba /download",
+    "yo": "App Windows àti Android wà — wo /download",
+    "ig": "Ngwa Windows na Android dị — lee /download"
+  },
+  "Operate": {
+    "pcm": "Run business",
+    "ha": "Gudanarwa",
+    "yo": "Ṣiṣẹ́",
+    "ig": "Rụọ ọrụ"
+  },
+  "Insights": {
+    "pcm": "Business insights",
+    "ha": "Nazari",
+    "yo": "Ìmọ̀",
+    "ig": "Nghọta"
+  },
+  "Imports": {
+    "pcm": "Imports",
+    "ha": "Shigo da bayanai",
+    "yo": "Gbígbé wọlé",
+    "ig": "Mbubata"
+  },
+  "Accounting": {
+    "pcm": "Accounts",
+    "ha": "Lissafi",
+    "yo": "Ìṣirò owó",
+    "ig": "Akaụntụ"
+  },
+  "Assistant": {
+    "pcm": "Assistant",
+    "ha": "Mataimaki",
+    "yo": "Olùrànlọ́wọ́",
+    "ig": "Onye enyemaka"
+  },
+  "Search platform navigation…": {
+    "pcm": "Find platform page…",
+    "ha": "Nemi shafin dandali…",
+    "yo": "Wá ojú-ewé ètò…",
+    "ig": "Chọọ ibe nyiwe…"
+  },
+  "Something went wrong": {
+    "pcm": "Something no work",
+    "ha": "Wani abu ya faru ba daidai ba",
+    "yo": "Ohun kan kùnà",
+    "ig": "Ihe adịghị mma"
+  },
+  "Photo: shop owner at the counter": {
+    "pcm": "Picture: shop owner for counter",
+    "ha": "Hoto: mai shago a wurin sayarwa",
+    "yo": "Fọ́tò: oníṣòwò níbi ìtajà",
+    "ig": "Foto: onye nwe ụlọ ahịa n'ebe ire"
+  },
+  "Photo: cashier ringing up a sale": {
+    "pcm": "Picture: cashier dey record sale",
+    "ha": "Hoto: mai karɓar kuɗi yana sayarwa",
+    "yo": "Fọ́tò: olùgbà owó ń ṣe títà",
+    "ig": "Foto: onye na-anata ego na-ere"
+  },
+  "Photo: stock check across warehouses": {
+    "pcm": "Picture: stock check for warehouses",
+    "ha": "Hoto: duba haja a ma'ajiyoyi",
+    "yo": "Fọ́tò: àyẹ̀wò ọjà ilé ìpamọ́",
+    "ig": "Foto: nyocha ngwaahịa n'ụlọ nkwakọba"
+  },
+  "Photo: printed receipt with QR code": {
+    "pcm": "Picture: printed receipt with QR code",
+    "ha": "Hoto: rasit da QR",
+    "yo": "Fọ́tò: rísíìtì tí a tẹ̀ pẹ̀lú QR",
+    "ig": "Foto: risit e bipụtara na QR"
+  },
+  "Pending changes": {
+    "pcm": "Changes wey never sync",
+    "ha": "Canje-canjen da ke jira",
+    "yo": "Ìyípadà tó ń dúró",
+    "ig": "Mgbanwe na-eche"
+  },
+  "Last synced": {
+    "pcm": "Last time e sync",
+    "ha": "Daidaitawa ta ƙarshe",
+    "yo": "Ìdọ́gba tó gbẹ̀yìn",
+    "ig": "Mmekọrịta ikpeazụ"
+  },
+  "Not yet synced": {
+    "pcm": "E never sync",
+    "ha": "Ba a daidaita ba tukuna",
+    "yo": "Kò tíì dọ́gba",
+    "ig": "Emekọrịtaghị"
+  },
+  "Checking…": {
+    "pcm": "We dey check…",
+    "ha": "Ana dubawa…",
+    "yo": "A ń ṣàyẹ̀wò…",
+    "ig": "A na-enyocha…"
+  },
+  "No printer connected": {
+    "pcm": "No printer connect",
+    "ha": "Babu firinta da aka haɗa",
+    "yo": "Kò sí ẹ̀rọ ìtẹ̀wé tó sopọ̀",
+    "ig": "Enweghị igwe mbipụta ejikọrọ"
+  },
+  "No plan": {
+    "pcm": "No plan yet",
+    "ha": "Babu tsari",
+    "yo": "Kò sí ètò",
+    "ig": "Enweghị atụmatụ"
+  },
+  "No address added": {
+    "pcm": "No address yet",
+    "ha": "Ba a ƙara adireshi ba",
+    "yo": "A kò tíì fi àdírẹ́sì kún",
+    "ig": "Etinyebeghị adreesị"
+  },
+  "Not provided": {
+    "pcm": "Dem never provide am",
+    "ha": "Ba a bayar ba",
+    "yo": "A kò pèsè",
+    "ig": "Enyeghị"
+  },
+  "Receipt history": {
+    "pcm": "Receipt history",
+    "ha": "Tarihin rasit",
+    "yo": "Ìtàn rísíìtì",
+    "ig": "Akụkọ risit"
+  },
+  "Inventory Management": {
+    "pcm": "Manage stock",
+    "ha": "Sarrafa haja",
+    "yo": "Ìṣàkóso ọjà",
+    "ig": "Njikwa ngwaahịa"
+  },
+  "Basic Reports": {
+    "pcm": "Basic reports",
+    "ha": "Rahotanni na asali",
+    "yo": "Ìròyìn ìpilẹ̀",
+    "ig": "Akụkọ isi"
+  },
+  "Receipt Printing": {
+    "pcm": "Print receipts",
+    "ha": "Buga rasit",
+    "yo": "Títẹ rísíìtì",
+    "ig": "Mbipụta risit"
+  },
+  "Advanced Reports": {
+    "pcm": "Advanced reports",
+    "ha": "Rahotanni masu zurfi",
+    "yo": "Ìròyìn jíjinlẹ̀",
+    "ig": "Akụkọ dị elu"
+  },
+  "Multiple Warehouses": {
+    "pcm": "Different warehouses",
+    "ha": "Ma'ajiyoyi da yawa",
+    "yo": "Ilé ìpamọ́ púpọ̀",
+    "ig": "Ọtụtụ ụlọ nkwakọba"
+  },
+  "Barcode Label Printing": {
+    "pcm": "Print barcode labels",
+    "ha": "Buga alamun barcode",
+    "yo": "Títẹ àmì barcode",
+    "ig": "Mbipụta akara barcode"
+  },
+  "Custom Role Permissions": {
+    "pcm": "Choose permissions for roles",
+    "ha": "Izinin matsayi na musamman",
+    "yo": "Àṣẹ ipò àkànṣe",
+    "ig": "Ikike ọrụ ahaziri"
+  },
+  "Priority Support": {
+    "pcm": "Support wey come first",
+    "ha": "Taimako na fifiko",
+    "yo": "Ìrànlọ́wọ́ àkọ́kọ́",
+    "ig": "Nkwado mbụ"
+  },
+  "API Access": {
+    "pcm": "API access",
+    "ha": "Damar API",
+    "yo": "Àṣẹ API",
+    "ig": "Ohere API"
+  },
+  "Webhooks": {
+    "pcm": "Webhooks",
+    "ha": "Webhooks",
+    "yo": "Webhooks",
+    "ig": "Webhooks"
+  },
+  "Dedicated Account Manager": {
+    "pcm": "Account manager for you",
+    "ha": "Manajan asusu na musamman",
+    "yo": "Alákòóso àkọọ́lẹ̀ pàtó",
+    "ig": "Onye njikwa akaụntụ pụrụ iche"
+  },
+  "Best for getting started": {
+    "pcm": "Best when you just dey start",
+    "ha": "Mafi kyau don farawa",
+    "yo": "Ó dára fún ìbẹ̀rẹ̀",
+    "ig": "Kacha mma maka ịmalite"
+  },
+  "Best for a single shop finding its rhythm": {
+    "pcm": "Best for one shop wey dey find im feet",
+    "ha": "Mafi kyau ga shago ɗaya mai farawa",
+    "yo": "Ó dára fún ṣọ́ọ̀bù kan tó ń bẹ̀rẹ̀",
+    "ig": "Kacha mma maka otu ụlọ ahịa na-amalite"
+  },
+  "Best for multi-cashier shops that need real oversight": {
+    "pcm": "Best for shop with plenty cashiers wey need proper monitoring",
+    "ha": "Mafi kyau ga shago da masu karɓar kuɗi da yawa masu buƙatar kulawa",
+    "yo": "Ó dára fún ṣọ́ọ̀bù tó ní olùgbà owó púpọ̀ tó nílò àbójútó",
+    "ig": "Kacha mma maka ụlọ ahịa nwere ọtụtụ ndị na-anata ego chọrọ nlekọta"
+  },
+  "Best for growing operations with multiple staff roles": {
+    "pcm": "Best for growing business with different staff roles",
+    "ha": "Mafi kyau ga kasuwanci mai girma da matsayi da yawa",
+    "yo": "Ó dára fún iṣẹ́ tó ń dàgbà pẹ̀lú ipò òṣìṣẹ́ púpọ̀",
+    "ig": "Kacha mma maka azụmahịa na-eto nwere ọrụ dị iche iche"
+  },
+  "Best for custom multi-branch operations": {
+    "pcm": "Best for business with plenty branches and special needs",
+    "ha": "Mafi kyau ga kasuwanci na musamman da rassa da yawa",
+    "yo": "Ó dára fún iṣẹ́ àkànṣe tó ní ẹ̀ka púpọ̀",
+    "ig": "Kacha mma maka azụmahịa pụrụ iche nwere ọtụtụ alaka"
+  },
+  "Unlimited locations": {
+    "pcm": "No limit for locations",
+    "ha": "Wurare marasa iyaka",
+    "yo": "Ibi láìní ààlà",
+    "ig": "Ebe enweghị oke"
+  },
+  "Unlimited cashiers": {
+    "pcm": "No limit for cashiers",
+    "ha": "Masu karɓar kuɗi marasa iyaka",
+    "yo": "Olùgbà owó láìní ààlà",
+    "ig": "Ndị na-anata ego enweghị oke"
+  },
+  "{count} cashiers": {
+    "pcm": "{count} cashiers",
+    "ha": "Masu karɓar kuɗi {count}",
+    "yo": "Olùgbà owó {count}",
+    "ig": "Ndị na-anata ego {count}"
+  },
+  "Custom": {
+    "pcm": "Custom",
+    "ha": "Na musamman",
+    "yo": "Àkànṣe",
+    "ig": "Pụrụ iche"
+  },
+  "Free": {
+    "pcm": "Free",
+    "ha": "Kyauta",
+    "yo": "Lọ́fẹ̀ẹ́",
+    "ig": "N'efu"
+  },
+  "Daily sales": {
+    "pcm": "Daily sales",
+    "ha": "Sayarwar kullum",
+    "yo": "Títà ojoojúmọ́",
+    "ig": "Ahịa kwa ụbọchị"
+  },
+  "Vendor payment reconciliation": {
+    "pcm": "Match vendor payments",
+    "ha": "Daidaita biyan dillali",
+    "yo": "Ìmúdọ́gba ìsanwó olùtajà",
+    "ig": "Mmekọrịta ịkwụ ụgwọ onye na-ere"
+  },
+  "Voids, discounts and adjustments": {
+    "pcm": "Voids, discounts and corrections",
+    "ha": "Sokewa, rangwame da gyare-gyare",
+    "yo": "Ìfagilé, ẹ̀dínwó àti àtúnṣe",
+    "ig": "Nkagbu, mbelata na mmezi"
+  },
+  "Stock movements": {
+    "pcm": "How stock move",
+    "ha": "Motsin haja",
+    "yo": "Ìgbé ọjà",
+    "ig": "Mmegharị ngwaahịa"
+  },
+  "Cash-up closes": {
+    "pcm": "Cash-up closures",
+    "ha": "Rufe lissafin kuɗi",
+    "yo": "Pípa àkójọ owó",
+    "ig": "Mmechi nchịkọta ego"
+  },
+  "Sales and reversals": {
+    "pcm": "Sales and reversals",
+    "ha": "Sayarwa da juyawa",
+    "yo": "Títà àti ìyípadà",
+    "ig": "Ahịa na ntụgharị"
+  },
+  "void": {
+    "pcm": "Cancel sale",
+    "ha": "Soke sayarwa",
+    "yo": "Fagilé títà",
+    "ig": "Kagbuo ahịa"
+  },
+  "refund": {
+    "pcm": "Return money",
+    "ha": "Mayar da kuɗi",
+    "yo": "Dá owó padà",
+    "ig": "Weghachi ego"
+  },
+  "return": {
+    "pcm": "Return goods",
+    "ha": "Mayar da kaya",
+    "yo": "Dá ọjà padà",
+    "ig": "Weghachi ngwaahịa"
+  }
+}

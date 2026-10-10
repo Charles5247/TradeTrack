@@ -1,4 +1,6 @@
 "use client";
+import { TranslatedLabel } from '@/i18n/text';
+
 
 import * as React from "react";
 import { Card } from "@/components/ui/card";
@@ -49,9 +51,9 @@ export function FormTemplate({
         {sections.map((sec, i) => (
           <Card key={i} className="p-[var(--card-pad)]">
             <div className="mb-5">
-              <div className="tt-section-title text-lg">{sec.title}</div>
+              <div className="tt-section-title text-lg"><TranslatedLabel>{sec.title}</TranslatedLabel></div>
               {sec.description && (
-                <div className="mt-1 text-[13px] text-muted-foreground">{sec.description}</div>
+                <div className="mt-1 text-[13px] text-muted-foreground"><TranslatedLabel>{sec.description}</TranslatedLabel></div>
               )}
             </div>
             {sec.fields}
@@ -60,12 +62,12 @@ export function FormTemplate({
         <div className="sticky bottom-0 flex justify-end gap-2.5 border-t border-border bg-background/80 py-4 backdrop-blur-sm">
           {onCancel && (
             <Button variant="ghost" onClick={onCancel} disabled={isSaving}>
-              {cancelLabel}
+              <TranslatedLabel>{cancelLabel}</TranslatedLabel>
             </Button>
           )}
           {onSave && (
             <Button onClick={onSave} disabled={isSaving}>
-              {isSaving ? "Saving…" : isNew ? "Create" : saveLabel}
+              <TranslatedLabel>{isSaving ? "Saving…" : isNew ? "Create" : saveLabel}</TranslatedLabel>
             </Button>
           )}
         </div>
@@ -87,9 +89,9 @@ export interface FieldProps {
 export function Field({ label, hint, error, children, half, className }: FieldProps) {
   return (
     <div className={cn("mb-4", half && "inline-block w-[calc(50%-8px)] align-top even:ml-2", className)}>
-      {label && <Label className="mb-1.5 block">{label}</Label>}
+      {label && <Label className="mb-1.5 block"><TranslatedLabel>{label}</TranslatedLabel></Label>}
       {children}
-      {hint && !error && <div className="mt-1.5 text-[11px] text-muted-foreground">{hint}</div>}
+      {hint && !error && <div className="mt-1.5 text-[11px] text-muted-foreground"><TranslatedLabel>{hint}</TranslatedLabel></div>}
       {error && <div className="mt-1.5 text-[11px] text-destructive">{error}</div>}
     </div>
   );

@@ -1,4 +1,6 @@
 "use client";
+import { TranslatedText, useCopy } from '@/i18n/text';
+
 
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
@@ -206,6 +208,7 @@ export default function DashboardPage() {
 }
 
 function MerchantDashboard() {
+  const copy = useCopy();
   const { user } = useAuthStore();
   const { t } = useI18n();
   const [range, setRange] = useState<RangeKey>("week");
@@ -247,15 +250,11 @@ function MerchantDashboard() {
         <div className="flex items-center gap-2">
           {user?.role !== "cashier" && <Button variant="outline" size="sm" asChild>
             <Link href="/reports">
-            <Download className="h-4 w-4 mr-1.5" strokeWidth={1.75} />
-            Reports
-            </Link>
+            <Download className="h-4 w-4 mr-1.5" strokeWidth={1.75} /><TranslatedText text={"Reports"} /></Link>
           </Button>}
           <Button size="sm" asChild>
             <Link href="/pos">
-              <ShoppingCart className="h-4 w-4 mr-1.5" strokeWidth={1.75} />
-              Open POS
-            </Link>
+              <ShoppingCart className="h-4 w-4 mr-1.5" strokeWidth={1.75} /><TranslatedText text={"Open POS"} /></Link>
           </Button>
         </div>
       </div>
@@ -354,7 +353,7 @@ function MerchantDashboard() {
             {/* Sales Chart */}
             <Card className="lg:col-span-2">
               <CardHeader>
-                <div className="tt-eyebrow mb-1">Sales overview</div>
+                <div className="tt-eyebrow mb-1"><TranslatedText text={"Sales overview"} /></div>
                 <CardTitle className="tt-section-title">
                   {t.dashboard.revenue_chart}
                 </CardTitle>
@@ -366,8 +365,8 @@ function MerchantDashboard() {
                 ) : chartData.length === 0 ? (
                   <EmptyState
                     icon={BarChart3}
-                    title="No sales yet this week"
-                    body="Once sales come in, your revenue trend will show up here."
+                    title={copy("No sales yet this week")}
+                    body={copy("Once sales come in, your revenue trend will show up here.")}
                   />
                 ) : (
                   <SalesChart data={chartData} height={260} />
@@ -378,7 +377,7 @@ function MerchantDashboard() {
             {/* Recent Transactions */}
             <Card>
               <CardHeader>
-                <div className="tt-eyebrow mb-1">Live activity</div>
+                <div className="tt-eyebrow mb-1"><TranslatedText text={"Live activity"} /></div>
                 <CardTitle className="tt-section-title text-base">
                   {t.dashboard.recent_transactions}
                 </CardTitle>
@@ -403,7 +402,7 @@ function MerchantDashboard() {
                   <EmptyState
                     icon={ShoppingCart}
                     title={t.dashboard.no_sales_today}
-                    body="Sales will appear here as soon as your team starts ringing them up."
+                    body={copy("Sales will appear here as soon as your team starts ringing them up.")}
                   />
                 ) : (
                   <div className="divide-y">
@@ -507,9 +506,7 @@ function MerchantDashboard() {
               <RefreshCw
                 className={`h-3.5 w-3.5 mr-1.5 ${isFetching ? "animate-spin" : ""}`}
                 strokeWidth={1.75}
-              />
-              Refresh
-            </Button>
+              /><TranslatedText text={"Refresh"} /></Button>
           </div>
         </>
       )}

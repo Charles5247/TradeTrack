@@ -1,4 +1,6 @@
 'use client';
+import { TranslatedText, useCopy } from '@/i18n/text';
+
 
 import Link from 'next/link';
 import { StaffAssignments } from '@/components/warehouses/staff-assignments';
@@ -43,6 +45,7 @@ export default function WarehousesPage() {
 }
 
 function WarehousesPageInner() {
+  const copy = useCopy();
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
@@ -118,9 +121,9 @@ function WarehousesPageInner() {
         </Button>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3"><StatCard label="Locations" value={warehouses.length} loading={isLoading} /><StatCard label="Main shops" value={warehouses.filter(w => w.is_main).length} loading={isLoading} /><StatCard label="Stock units" value={warehouses.reduce((n,w) => n + (w.inventory || []).reduce((a,i) => a+i.quantity,0),0).toLocaleString('en-NG')} loading={isLoading} /></div>
+      <div className="grid gap-4 sm:grid-cols-3"><StatCard label={copy("Locations")} value={warehouses.length} loading={isLoading} /><StatCard label={copy("Main shops")} value={warehouses.filter(w => w.is_main).length} loading={isLoading} /><StatCard label={copy("Stock units")} value={warehouses.reduce((n,w) => n + (w.inventory || []).reduce((a,i) => a+i.quantity,0),0).toLocaleString('en-NG')} loading={isLoading} /></div>
       {error && <ErrorState body={error.message} onRetry={() => refetch()} />}
-      {!isLoading && !error && !warehouses.length && <EmptyState icon={Warehouse} title="Add your first location" body="Create your main shop or a warehouse, then assign its team." action={<Button onClick={openCreate}>Add location</Button>} />}
+      {!isLoading && !error && !warehouses.length && <EmptyState icon={Warehouse} title={copy("Add your first location")} body={copy("Create your main shop or a warehouse, then assign its team.")} action={<Button onClick={openCreate}><TranslatedText text={"Add location"} /></Button>} />}
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
         {isLoading ? (
           [...Array(3)].map((_, i) => (
@@ -177,9 +180,9 @@ function WarehousesPageInner() {
                   <span className="text-sm text-muted-foreground">{t.warehouse.total_stock}</span>
                   <span className="tt-head text-lg">{totalStock.toLocaleString()}</span>
                 </div>
-                <div className="mt-auto flex items-center justify-between text-sm"><span className="text-muted-foreground">Products stocked</span><span className="font-mono">{(w.inventory || []).length}</span></div>
+                <div className="mt-auto flex items-center justify-between text-sm"><span className="text-muted-foreground"><TranslatedText text={"Products stocked"} /></span><span className="font-mono">{(w.inventory || []).length}</span></div>
                 <StaffAssignments warehouseId={w.id} name={w.name} />
-                <Button variant="outline" asChild><Link href={'/inventory?warehouse=' + w.id}>View inventory</Link></Button>
+                <Button variant="outline" asChild><Link href={'/inventory?warehouse=' + w.id}><TranslatedText text={"View inventory"} /></Link></Button>
               </CardContent>
             </Card>
           );

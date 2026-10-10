@@ -1,0 +1,585 @@
+Loading...|E dey load...
+Confirm|Confirm am
+Submit|Send am
+None|Nothing
+Quantity|How many
+Required|You must fill am
+Optional|If you want
+Active|E dey active
+Inactive|E no dey active
+Suspended|Dem suspend am
+Success|E don work
+Error|Something no work
+Warning|Take note
+Information|Wetin you need know
+Access Denied|You no get access
+You don't have permission to view this page.|You no get permission to open this page.
+Login|Sign in
+Logout|Sign out
+Forgot Password?|You forget password?
+Reset Password|Set password again
+Remember me|Remember me for this device
+Welcome Back|Welcome back
+Sign in to your TracKasuwa account|Sign in to your TracKasuwa account
+Password reset email sent|We don send email to reset your password
+Password updated successfully|Your password don change
+POS & Inventory Management|Manage sales and stock
+Signing in...|We dey sign you in...
+Keep me signed in on this device (enables offline sign-in for 30 days)|Keep me signed in for this device (you fit sign in without internet for 30 days)
+Invalid email or password|Email or password no correct
+Signed in successfully|You don sign in
+An unexpected error occurred|Something we no expect don happen
+Demo Credentials:|Login details to try am:
+TracKasuwa. All rights reserved.|TracKasuwa. All rights dey reserved.
+Platform Owner|Platform owner
+Business Owner|Business owner
+Set a New Password|Set new password
+For security, you must set your own password before continuing. This replaces the temporary password you were given at onboarding.|For your security, set your own password before you continue. E go replace the temporary password we give you when you join.
+New Password|New password
+Confirm Password|Enter password again
+Set Password & Continue|Save password and continue
+Setting password…|We dey save password…
+Password updated — welcome to TracKasuwa!|Password don change — welcome to TracKasuwa!
+New password is required|Enter your new password
+Password must be at least 8 characters|Password must get at least 8 characters
+Passwords do not match|The two passwords no match
+Failed to update password. Please try again.|We no fit change password. Abeg try again.
+Point of Sale|Where you sell
+Sales History|Sales wey you don make
+Purchase Orders|Orders to suppliers
+Scan Receipt|Scan receipt
+Vendor Sales|Vendor sales
+Audit Trail|Record of who do wetin
+Notifications|Updates
+Users|Team members
+Subscriptions|Subscription plans
+Merchants|Business owners
+POS & Inventory|Sales and stock
+Search products, sales, invoices...|Find products, sales or invoices...
+Demo Credentials|Login details to try am
+Good {time}, {name}|Good {time}, {name}
+Here's what's happening with your business today|Na wetin dey happen for your business today be this
+Today's Sales|Sales for today
+Weekly Revenue|Money from sales this week
+Monthly Revenue|Money from sales this month
+Total Products|All products
+Low Stock Items|Products wey remain small
+Out of Stock|Stock don finish
+Pending Vendor Debts|Vendor money wey never come
+Pending Transfers|Transfers wey never finish
+Recent Transactions|Latest transactions
+Latest sales activity|Latest sales wey happen
+Top Selling Products|Products wey sell pass
+Revenue Overview|How sales money dey come
+Last 7 days revenue trend|How sales money move for last 7 days
+Need restocking soon|You go need restock soon
+Requires immediate attention|Check am now
+Awaiting payment|We dey wait for payment
+Warehouse transfers|Transfers between warehouses
+No sales yet today|You never make any sale today
+Quick Actions|Things you fit do quick
+Common tasks for today|Things to do today
+New Sale|New sale
+Stock In|Stock wey enter
+Stock Out|Stock wey comot
+No recent transactions|No new transactions yet
+Add Product|Add product
+Edit Product|Edit product
+Product Name|Product name
+Make/Brand|Make or brand
+Selling Price|Price wey you dey sell
+Cost Price|Price wey you buy am
+Supplier|Person wey supply you
+Product Image|Product picture
+In Stock|Stock dey
+No products found|We no see any product
+Manage your product catalogue ({count} products)|Manage your product list ({count} products)
+Search by name, SKU, or barcode...|Find am with name, SKU or barcode...
+All Categories|All categories
+Add your first product|Add your first product
+View Details|See details
+Delete "{name}"? This action cannot be undone.|Delete "{name}"? You no fit undo am.
+Product deleted successfully|Product don delete
+Failed to delete product|We no fit delete product
+Product Details|Product details
+Margin|Profit margin
+Added|Don add
+Adjust Stock|Correct stock quantity
+Current Stock|Stock wey dey now
+Minimum Stock|Lowest stock quantity
+Low Stock Alert|Stock dey run low
+Track stock levels across all warehouses|Check stock for all your warehouses
+Total Items|All items
+Low Stock|Stock remain small
+Search product...|Find product...
+All Warehouses|All warehouses
+All Stock|All stock
+Last Updated|Last time we update am
+No inventory records found|We no see any stock record
+Stock In (+)|Stock wey enter (+)
+Stock Out (-)|Stock wey comot (-)
+Manual Adjustment|Correct stock by hand
+Movement Type|How stock move
+Quantity *|How many *
+Enter quantity|Enter how many
+Reason (required for audit)|Reason (you must enter am for the record)
+e.g., New delivery, damaged goods|Like new delivery or goods wey spoil
+Additional notes...|Any other thing to note...
+Confirm Adjustment|Confirm the correction
+Stock adjusted successfully|Stock quantity don change
+Failed to adjust stock|We no fit change stock quantity
+Please enter a valid quantity|Abeg enter correct quantity
+Product:|Product:
+Current Stock:|Stock wey dey now:
+Search product or scan barcode...|Find product or scan barcode...
+Cart|Items to buy
+Checkout|Collect payment
+Cart is empty|You never add any item
+Add to Cart|Add to items to buy
+Payment Method|How customer pay
+Split Payment|Pay with different methods
+Partial Payment|Pay part of the money
+Amount Paid|Money wey dem pay
+Change|Change
+Discount|Price reduction
+Subtotal|Total before tax and discount
+Complete Sale|Finish sale
+Print Receipt|Print receipt
+Customer Name (Optional)|Customer name (if you want)
+Customer Phone (Optional)|Customer phone (if you want)
+Select warehouse|Choose warehouse
+Select a warehouse to see products|Choose warehouse to see products
+left|remain
+Click products to add them|Tap products to add them
+Customer name|Customer name
+Bank Transfer|Bank transfer
+Amount Paid (₦)|Money wey dem pay (₦)
+Processing...|E dey process...
+Sale Complete!|Sale don complete!
+Not authenticated|You never sign in
+Amount paid is less than the total|Money wey dem pay never reach the total
+Sale completed! Invoice: {invoice}|Sale don complete! Invoice: {invoice}
+Failed to complete sale|We no fit finish the sale
+Only {count} units available|Na only {count} remain
+Proof of Payment (optional)|Payment evidence (if you want)
+Upload receipt image|Upload receipt picture
+Receipt uploaded|Receipt don upload
+Remove|Comot am
+Upload failed|Upload no work
+Sale Details|Sale details
+No sales found|We no see any sale
+{count} transactions · {revenue} revenue|{count} transactions · {revenue} sales money
+Search invoice, customer...|Find invoice or customer...
+All Status|All statuses
+Completed|Don finish
+Pending|Never finish
+Cancelled|Don cancel
+Refunded|Money don return
+All Payments|All payments
+Split|Split payment
+Partial|Part payment
+Walk-in|Customer wey walk in
+{count} items|{count} items
+Sale Details - {invoice}|Sale details - {invoice}
+Qty|How many
+Main Warehouse|Main warehouse
+Transfer Stock|Move stock
+Receive Transfer|Receive stock transfer
+{count} locations|{count} locations
+Delete "{name}"?|Delete "{name}"?
+Warehouse updated|Warehouse don update
+Warehouse created|Warehouse don create
+Failed to save warehouse|We no fit save warehouse
+Warehouse deleted|Warehouse don delete
+Cannot delete — warehouse may have inventory|We no fit delete am — stock fit still dey inside
+Total Stock|All stock
+Edit Warehouse|Edit warehouse
+Create Warehouse|Create warehouse
+Warehouse Name *|Warehouse name *
+Main warehouse|Main warehouse
+Warehouse Transfers|Transfers between warehouses
+{count} pending transfer(s)|{count} transfers never finish
+New Transfer|New transfer
+Sent By|Person wey send am
+Received By|Person wey receive am
+Date Sent|Date wey dem send am
+No transfers found|We no see any transfer
+Receive|Receive am
+Create Warehouse Transfer|Create warehouse transfer
+From Warehouse *|Warehouse wey e dey come from *
+To Warehouse *|Warehouse wey e dey go *
+Select...|Choose...
+Product *|Product *
+Select product|Choose product
+Optional notes...|Anything else to note (if you want)...
+Create Transfer|Create transfer
+Please fill all required fields|Abeg fill all the fields wey you must fill
+From and To warehouses must be different|The two warehouses no fit be the same
+Enter a valid quantity|Enter correct quantity
+Transfer created successfully|Transfer don create
+Failed to create transfer|We no fit create transfer
+Transfer updated successfully|Transfer don update
+Failed to update transfer|We no fit update transfer
+Initiated By|Person wey request am
+Approved By|Person wey approve am
+Coordinated By|Person wey arrange am
+Who requested this transfer|Who request this transfer
+Who approved this transfer|Who approve this transfer
+Who coordinates this transfer|Who dey arrange this transfer
+View Receipt|See receipt
+Download PDF|Download PDF
+Stock Transfer Note|Stock transfer note
+{draft} draft · {sent} awaiting delivery|{draft} drafts · {sent} dey wait for delivery
+New Purchase Order|New order to supplier
+Total Value|Total value
+Expected Date|Date wey we expect am
+No purchase orders found|We no see any supplier order
+Create Purchase Order|Create order to supplier
+Purchase Order Details|Supplier order details
+Supplier *|Person wey supply you *
+Select supplier|Choose supplier
+Please select a supplier|Abeg choose supplier
+Line Items *|Items for the order *
+Please add at least one line item|Abeg add at least one item
+Enter a valid quantity and unit cost for each item|Enter correct quantity and cost for each item
+Unit Cost|Cost of one
+Line Total|Total for this item
+Add Item|Add item
+Save as Draft|Save draft
+Purchase order created successfully|Supplier order don create
+Failed to create purchase order|We no fit create supplier order
+Purchase order sent to supplier|Order don go to supplier
+Purchase order cancelled|Supplier order don cancel
+Purchase order received — inventory updated|Supplier order don arrive — stock don update
+Failed to update purchase order|We no fit update supplier order
+No warehouse found to receive stock into|No warehouse dey to receive the stock
+Created by|Person wey create am
+Received by|Person wey receive am
+This stock update needs a quick check|This stock update need small check
+Count the items below and ask the shop owner to compare the count with Inventory. Your saved updates are kept for review.|Count these items and ask the shop owner to compare am with Inventory. Your saved updates still dey for review.
+saved quantity {quantity}|Quantity wey save na {quantity}
+Open Inventory to check stock|Open Inventory to check stock
+Add Vendor Transaction|Add vendor transaction
+Vendor Name|Vendor name
+Date Issued|Date wey dem give am
+Expected Payment Date|Date wey payment suppose come
+Overdue|Due date don pass
+Mark as Paid|Mark say dem don pay
+Debt Amount|Money wey dem owe
+Balance|Money wey remain
+Outstanding debt: {amount}|Money wey dem still owe: {amount}
+New Vendor Transaction|New vendor transaction
+You have {amount} in outstanding vendor payments. Follow up to collect.|Vendors still owe you {amount}. Follow up to collect am.
+No vendor transactions found|We no see any vendor transaction
+View|See am
+Pay|Pay
+Enter payment amount|Enter how much dem pay
+Vendor Name *|Vendor name *
+Products *|Products *
+Unit Price|Price of one
+Create Transaction|Create transaction
+{name} — Transaction|{name} — transaction
+Issued|Don give out
+Expected|Wey we dey expect
+Paid|Don pay
+Select payment method|Choose how dem pay
+Generate Report|Create report
+Daily|Every day
+Weekly|Every week
+Monthly|Every month
+Quarterly|Every 3 months
+Yearly|Every year
+Inventory Report|Stock report
+Sales Report|Sales report
+Profit Report|Profit report
+Stock Movement|How stock move
+Vendor Debts|Money wey vendors owe
+Total Revenue|All sales money
+Total Cost|All costs
+Gross Profit|Profit before expenses
+Profit Margin|Profit margin
+Resource|Record type
+Old Value|Wetin dey before
+New Value|Wetin dey now
+Performed By|Person wey do am
+Timestamp|Date and time
+Reason|Why
+No audit logs found|We no see any audit record
+Complete immutable history of all system changes|Full record of all changes; nobody fit edit am
+Search action, user...|Find action or team member...
+All Resources|All record types
+Vendor Transactions|Vendor transactions
+Changes|Wetin change
+{count} field(s) changed|{count} fields don change
+New record created|New record don create
+Audit Log Details|Audit record details
+Previous Values|Wetin dey before
+New Values|Wetin dey now
+User Management|Manage team members
+Add User|Add team member
+Role|Work role
+Suspend User|Suspend team member
+Activate User|Activate team member
+Last Login|Last time dem sign in
+No users found|We no see any team member
+Only business owners can manage users.|Na only business owner fit manage team members.
+{count} user(s) in your organization|{count} team members for your business
+Joined|Date wey dem join
+No users found. Create one to get started.|No team member dey yet. Add one to start.
+Never|Never
+Create a new team member account.|Create account for new team member.
+Full Name|Full name
+Create User|Create team member
+Please fill in all required fields|Abeg fill all the fields wey you must fill
+Edit User|Edit team member
+Update this team member's details.|Change this team member details.
+Save Changes|Save changes
+Set a new password for this user.|Set new password for this team member.
+Delete User|Delete team member
+Are you sure you want to delete this user? This action cannot be undone.|You sure say you wan delete this team member? You no fit undo am.
+Mark All as Read|Mark all say you don read am
+No notifications|No updates yet
+Pending Payment|Payment never come
+Pending Transfer|Transfer never finish
+Subscription Expiry|When subscription go end
+{count} unread notification(s)|{count} updates wey you never read
+All caught up!|You don read everything!
+No notifications yet|No updates yet
+Manage your account and application preferences|Manage your account and how the app work for you
+Organization|Business
+My Profile|My profile
+Receipt Settings|Receipt settings
+Notification Preferences|Choose the updates you want
+Tax Rate|Tax rate
+Personal Information|Your personal details
+Update your name and contact details|Change your name and contact details
+Full Name *|Full name *
+Your full name|Your full name
+Email cannot be changed here|You no fit change email here
+Full name is required|Enter your full name
+Profile updated successfully|Profile don update
+Failed to update profile. Please try again.|We no fit update profile. Abeg try again.
+Business Information|Business details
+Update your business details and preferences|Change your business details and settings
+Business Name *|Business name *
+Your business name|Your business name
+Business address|Business address
+Save Business Settings|Save business settings
+Business name is required|Enter your business name
+Organization settings saved|Business settings don save
+Failed to save organization settings|We no fit save business settings
+Display Preferences|How the app go look
+Customize how TracKasuwa looks and feels|Choose how TracKasuwa go look for you
+Light|Light mode
+Dark|Dark mode
+System|Follow device settings
+Language changes apply immediately and are saved automatically.|Language go change now and save by itself.
+Change Password|Change password
+Update your account password. Use at least 8 characters.|Change your account password. Use at least 8 characters.
+Confirm New Password|Enter new password again
+Password changed successfully|Password don change
+Failed to change password|We no fit change password
+Online|Internet dey
+Offline|No internet
+Connected to internet|Internet connect
+Working offline — changes will sync when reconnected|E dey work without internet — changes go sync when internet come back
+Working offline|E dey work without internet
+Toggle theme|Change light or dark mode
+Syncing...|Changes dey sync...
+Owner Dashboard|Owner dashboard
+Platform-wide analytics, merchant management, and system health|Check the whole platform, manage businesses and system status
+Refresh|Load again
+All systems operational|All systems dey work
+Last checked|Last time we check
+Total Merchants|All business owners
+Active Subscriptions|Subscriptions wey dey active
+Monthly Recurring Revenue|Subscription money every month
+Total collected|All money wey come in
+Overview|Overview
+Revenue|Sales money
+Audit Log|Audit record
+Revenue Growth|How sales money dey grow
+Monthly recurring revenue over time (NGN)|How monthly subscription money dey grow (NGN)
+Merchant Acquisition|Businesses wey join
+New merchants registered per month|New businesses wey join each month
+Onboarded|Setup don finish
+All Merchants|All business owners
+Platform-wide merchant list|List of all businesses for the platform
+Verification|Checking details
+No merchants registered yet|No business don register yet
+Complete|Don finish
+In Progress|E still dey go on
+Current MRR|Monthly recurring revenue now
+ARR Projection|Estimate of yearly recurring revenue
+Revenue Trend (12 months)|How sales money move (12 months)
+Live Audit Stream|Latest audit records
+Latest 20 platform events · auto-refreshes every 30s|Latest 20 things wey happen · e refresh every 30 seconds
+Live|Live
+No audit events yet|No audit record yet
+Access Restricted|Access dey restricted
+This dashboard is restricted to TracKasuwa platform owners only.|Na only TracKasuwa platform owners fit open this dashboard.
+No Revenue Data Yet|No sales money record yet
+This chart will populate automatically once paid invoices start coming in.|This chart go show records when paid invoices start to come in.
+No Merchant Data Yet|No business record yet
+New merchant sign-ups will appear here as they register on the platform.|New businesses go show here as dem register.
+This chart is not showing demo or simulated data|This chart no dey show demo or made-up data
+Add Merchant|Add business
+Edit Merchant|Edit business
+Max Devices|Highest number of devices
+Onboarding|Business setup
+Verification Status|Status of detail checks
+Verified|Don verify
+Manage merchant accounts, onboarding, and device limits|Manage business accounts, setup and device limits
+Search merchants…|Find business owners…
+All ({count})|All ({count})
+Active ({count})|Active ({count})
+Pending ({count})|Never finish ({count})
+Suspended ({count})|Suspended ({count})
+Deactivated ({count})|Deactivated ({count})
+Registered|Don register
+No merchants found|We no see any business
+Try adjusting your search|Try change wetin you dey search for
+Add your first merchant to get started|Add your first business to start
+Activate|Activate am
+Mark Verified|Mark say we don verify am
+Suspend|Suspend am
+Done|Don finish
+Step 1: Business Information|Step 1: Business details
+Business Type|Type of business
+Retail|Retail
+Wholesale|Wholesale
+Restaurant / Food|Restaurant / food
+Services|Services
+Other|Another type
+Registration Number|Registration number
+Country|Country
+Step 2: Contact & Address|Step 2: Contact and address
+Contact Phone|Phone to contact
+Street Address|Street address
+Step 3: Review & Confirm|Step 3: Check and confirm
+Internal Notes (optional)|Notes for inside use (if you want)
+Create Merchant|Create business
+Business Details|Business details
+Onboarding Progress|How setup dey go
+Device Limits|Device limits
+Max devices:|Highest number of devices:
+No device limit data|No record of device limit
+Activate "{name}"? This will enable full platform access.|Activate "{name}"? Dem go get full access to the platform.
+Suspend "{name}"? They will lose access until re-activated.|Suspend "{name}"? Dem no go get access until you activate dem again.
+Mark "{name}" as verified?|Mark "{name}" say we don verify am?
+Permanently delete "{name}"? This cannot be undone.|Delete "{name}" permanently? You no fit undo am.
+Delete Merchant|Delete business
+Activate Merchant|Activate business
+Suspend Merchant|Suspend business
+Verify Merchant|Verify business
+Merchant created successfully|Business don create
+Merchant updated successfully|Business don update
+Action failed|Action no work
+Device limits updated|Device limits don update
+Failed to update device limits|We no fit update device limits
+Business name, contact name, and email are required|Enter business name, contact name and email
+Failed to create merchant|We no fit create business
+Register New Merchant|Register new business
+Complete all steps to onboard a new merchant to the platform.|Finish all the steps to set up new business for the platform.
+Merchant Onboarded Successfully|Business setup don finish
+A new organization and Business Owner account have been created. Share these sign-in details with the merchant — this temporary password is shown only once and cannot be retrieved again.|We don create new business and owner account. Give the owner these login details — this temporary password go show only once; you no fit retrieve am again.
+Temporary Password|Temporary password
+Copy|Copy am
+Copied to clipboard|E don copy
+The merchant must change this password on first login.|The owner must change this password the first time dem sign in.
+Business Owner Login Email|Business owner login email
+A dedicated Zainpay virtual account was created for automatic payment reconciliation.|We don create dedicated Zainpay account to match payments automatically.
+No virtual account was created (Zainpay not configured) — payment reconciliation can be set up later.|We no create virtual account (Zainpay never set up) — you fit set up payment matching later.
+Merchant subscription plan updated|Business subscription plan don update
+Failed to update subscription plan|We no fit update subscription plan
+Select type|Choose type
+Contact Person Name|Name of person to contact
+Contact Email|Email to contact
+Any additional notes about this merchant...|Anything else to note about this business...
+Creating...|E dey create...
+Saving…|E dey save…
+Processing…|E dey process…
+Contact & Address|Contact and address
+Document Verification|Check documents
+Payment Setup|Set up payment
+Subscription Plan|Subscription plan
+Select a subscription plan (optional)|Choose subscription plan (if you want)
+Assign a plan now, or leave unset and assign it later from Subscriptions.|Choose plan now or leave am and choose later from Subscriptions.
+Subscription Management|Manage subscriptions
+Manage your TracKasuwa subscription and billing|Manage your TracKasuwa subscription and bills
+Current Plan|Plan wey you dey use
+No Plan|No plan yet
+Subscription Expires|When subscription go end
+Monthly Cost|Cost each month
+Per month|Every month
+Unsubscribed|No subscription
+{count} days remaining|{count} days remain
+Expired|Time don finish
+Subscription Expiring Soon|Subscription go soon end
+Your subscription expires in {count} days. Renew now to avoid interruption.|Your subscription go end in {count} days. Renew now so e no go stop.
+Renew Now|Renew now
+No Active Subscription|No active subscription
+Choose a plan to unlock all TracKasuwa features|Choose plan to use all TracKasuwa features
+View Plans|See plans
+Current Plan Features|Wetin your plan get
+{name} plan inclusions|Wetin dey inside {name} plan
+Upgrade Plan|Move to bigger plan
+Cancel Subscription|Cancel subscription
+Choose a Plan|Choose plan
+Select the plan that best fits your business needs|Choose plan wey fit your business
+All plans include offline-first functionality, multi-device support, and automatic data sync. Prices are billed monthly in Nigerian Naira (₦).|All plans fit work without internet, support different devices and sync by themselves. You dey pay every month in Naira (₦).
+Payment History|Payments wey you don make
+All payment transactions|All payment transactions
+No Payment Records|No payment record yet
+Payment history will appear here after your first transaction|Your payment records go show here after your first transaction
+Only business owners and platform owners can access subscriptions.|Na only business owners and platform owners fit open subscriptions.
+Could not load subscription data|We no fit load subscription details
+Showing fallback plan information. Connect to internet to see live data.|Na backup plan details we dey show. Connect internet to see current details.
+Most Popular|Wey people choose pass
+Select Plan|Choose plan
+cashier(s)|cashiers
+{count} products|{count} products
+Unlimited|No limit
+Unlimited products|No limit for products
+Talk to Sales|Talk to sales team
+You'll save {savings}, billed at {yearly}/yr|You go save {savings}; you go pay {yearly} every year
+Rolling out soon|E go soon ready
+This feature is actively being built and not yet available to use. You won't be charged extra for it — it will unlock automatically on your plan once it ships.|We still dey build this feature; you no fit use am yet. No extra charge — e go open for your plan when e ready.
+Subscription updated successfully|Subscription don update
+Failed to update subscription|We no fit update subscription
+Add Plan|Add plan
+Edit Plan|Edit plan
+Delete Plan|Delete plan
+Create Plan|Create plan
+Set the pricing and limits for this subscription package.|Set price and limits for this subscription package.
+Plan Name|Plan name
+e.g., Standard|Like Standard
+Billing Cycle|How often you pay
+Max Cashiers|Highest number of cashiers
+Max Products|Highest number of products
+Max Warehouses|Highest number of warehouses
+Features (one per line)|Features (one for each line)
+Active (visible to merchants)|Active (business owners fit see am)
+Mark as Most Popular|Mark say na this one people choose pass
+Saving...|E dey save...
+Deleting...|E dey delete...
+Plan name and price are required|Enter plan name and price
+Please enter a valid price|Abeg enter correct price
+Plan created successfully|Plan don create
+Plan updated successfully|Plan don update
+Failed to save plan|We no fit save plan
+Plan deleted successfully|Plan don delete
+Failed to delete plan|We no fit delete plan
+Delete this plan?|Delete this plan?
+Are you sure you want to delete the "{name}" plan? This cannot be undone.|You sure say you wan delete "{name}" plan? You no fit undo am.
+Scan or type the barcode value printed on a receipt to view its full item list.|Scan or type the barcode value for receipt to see all the items.
+Scan barcode or type invoice/reference number...|Scan barcode or type invoice/reference number...
+Look Up|Find am
+Looking up...|We dey find am...
+No receipt found for this barcode|We no see receipt for this barcode
+Something went wrong looking up this receipt|Something no work as we dey find this receipt
+Cash Receipt|Cash receipt
+Grand Total|Final total
+From Warehouse|Warehouse wey e come from
+To Warehouse|Warehouse wey e dey go
+Scan Another|Scan another one

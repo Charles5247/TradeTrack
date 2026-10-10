@@ -1,3 +1,5 @@
+
+import { TranslatedText } from '@/i18n/text';
 import React from "react";
 import { formatCurrency } from "@/lib/utils/format";
 import type { ReceiptData } from "@/lib/receipt/build-receipt";
@@ -43,33 +45,31 @@ export function Receipt({ data }: { data: ReceiptData }) {
             {data.orgName}
           </div>
           {data.orgAddress && (
-            <div className="receipt-center receipt-small">
-              Address: {data.orgAddress}
+            <div className="receipt-center receipt-small"><TranslatedText text={"Address:"} />{" "}{data.orgAddress}
             </div>
           )}
           {data.orgPhone && (
-            <div className="receipt-center receipt-small">
-              Tel. {data.orgPhone}
+            <div className="receipt-center receipt-small"><TranslatedText text={"Tel."} />{" "}{data.orgPhone}
             </div>
           )}
 
           <div className="receipt-divider" />
-          <div className="receipt-title">Invoice</div>
-          <div className="receipt-center">Current Bill</div>
+          <div className="receipt-title"><TranslatedText text={"Invoice"} /></div>
+          <div className="receipt-center"><TranslatedText text={"Current Bill"} /></div>
           <div className="receipt-divider" />
 
           {/* Meta */}
           <div className="receipt-row">
-            <span>Invoice:</span>
+            <span><TranslatedText text={"Invoice:"} /></span>
             <span className="receipt-bold">{data.invoiceNumber}</span>
           </div>
           <div className="receipt-row">
-            <span>Date:</span>
+            <span><TranslatedText text={"Date:"} /></span>
             <span>{new Date(data.dateISO).toLocaleString()}</span>
           </div>
           {data.customerPhone && (
             <div className="receipt-row">
-              <span>Phone:</span>
+              <span><TranslatedText text={"Phone:"} /></span>
               <span>{data.customerPhone}</span>
             </div>
           )}
@@ -78,9 +78,9 @@ export function Receipt({ data }: { data: ReceiptData }) {
 
           {/* Item table */}
           <div className="receipt-table-head">
-            <span>Qty</span>
-            <span>Description</span>
-            <span>Amt</span>
+            <span><TranslatedText text={"Qty"} /></span>
+            <span><TranslatedText text={"Description"} /></span>
+            <span><TranslatedText text={"Amt"} /></span>
           </div>
           {data.items.map((item, i) => (
             <div key={i} className="receipt-item">
@@ -96,8 +96,8 @@ export function Receipt({ data }: { data: ReceiptData }) {
 
           {/* Item table */}
           <div className="receipt-table-head">
-            <span>Description</span>
-            <span>Amount</span>
+            <span><TranslatedText text={"Description"} /></span>
+            <span><TranslatedText text={"Amount"} /></span>
           </div>
           {data.items.map((item, i) => (
             <div key={i} className="receipt-item-block">
@@ -117,38 +117,38 @@ export function Receipt({ data }: { data: ReceiptData }) {
 
           {/* Totals */}
           <div className="receipt-row">
-            <span>Subtotal:</span>
+            <span><TranslatedText text={"Subtotal:"} /></span>
             <span>{formatCurrency(data.subtotal)}</span>
           </div>
           {data.discount > 0 && (
             <div className="receipt-row">
-              <span>Discount:</span>
+              <span><TranslatedText text={"Discount:"} /></span>
               <span>-{formatCurrency(data.discount)}</span>
             </div>
           )}
           {data.tax > 0 && (
             <div className="receipt-row">
-              <span>Tax:</span>
+              <span><TranslatedText text={"Tax:"} /></span>
               <span>{formatCurrency(data.tax)}</span>
             </div>
           )}
           <div className="receipt-row receipt-total">
-            <span>Total:</span>
+            <span><TranslatedText text={"Total:"} /></span>
             <span>{formatCurrency(data.total)}</span>
           </div>
           <div className="receipt-row">
-            <span>{data.paymentMethod === "cash" ? "Cash:" : "Paid:"}</span>
+            <span><TranslatedText text={data.paymentMethod === "cash" ? "Cash:" : "Paid:"} /></span>
             <span>{formatCurrency(data.amountPaid)}</span>
           </div>
           {data.changeAmount > 0 && (
             <div className="receipt-row">
-              <span>Change:</span>
+              <span><TranslatedText text={"Change:"} /></span>
               <span>{formatCurrency(data.changeAmount)}</span>
             </div>
           )}
           {!showPaymentDetails && (
             <div className="receipt-row">
-              <span>Payment:</span>
+              <span><TranslatedText text={"Payment:"} /></span>
               <span>{data.paymentMethod}</span>
             </div>
           )}
@@ -160,13 +160,13 @@ export function Receipt({ data }: { data: ReceiptData }) {
               <div className="receipt-payment-details">
                 {data.cardMasked && (
                   <div className="receipt-row">
-                    <span>Bank card:</span>
+                    <span><TranslatedText text={"Bank card:"} /></span>
                     <span>{data.cardMasked}</span>
                   </div>
                 )}
                 {data.approvalCode && (
                   <div className="receipt-row">
-                    <span>Approval Code:</span>
+                    <span><TranslatedText text={"Approval Code:"} /></span>
                     <span>#{data.approvalCode}</span>
                   </div>
                 )}

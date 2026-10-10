@@ -1,4 +1,6 @@
 'use client';
+import { TranslatedText } from '@/i18n/text';
+
 
 /**
  * Purchase Orders — minimal Business-tier feature.
@@ -517,7 +519,7 @@ function PurchaseOrdersPageInner({ createMode }: { createMode: boolean }) {
                     <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                       {(po.status === 'draft' || po.status === 'sent') && (!isOnline || !po.lifecycleReady) && (
                         <p className="text-xs text-muted-foreground mb-1" role="status">
-                          {!isOnline ? 'Reconnect to send, cancel or receive.' : 'Waiting for this order and all items to sync.'}
+                          <TranslatedText text={!isOnline ? 'Reconnect to send, cancel or receive.' : 'Waiting for this order and all items to sync.'} />
                         </p>
                       )}
                       <div className="flex flex-wrap items-center justify-end gap-2">

@@ -1,3 +1,5 @@
+
+import { TranslatedText } from '@/i18n/text';
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -64,7 +66,7 @@ export default async function PricingPage() {
       <section style={{ padding: "100px 0 40px", textAlign: "center" }}>
         <div className="mx-auto max-w-3xl px-4 sm:px-6">
           <Reveal>
-            <div className="tt-eyebrow mb-3">Pricing</div>
+            <div className="tt-eyebrow mb-3"><TranslatedText text={"Pricing"} /></div>
           </Reveal>
           <Reveal delay={100}>
             <h1
@@ -74,9 +76,7 @@ export default async function PricingPage() {
                 margin: "0 0 20px",
                 lineHeight: 1.05,
               }}
-            >
-              Pay in Naira. Grow when you grow.
-            </h1>
+            ><TranslatedText text={"Pay in Naira. Grow when you grow."} /></h1>
           </Reveal>
           <Reveal delay={200}>
             <p
@@ -86,10 +86,7 @@ export default async function PricingPage() {
                 maxWidth: 620,
                 margin: "0 auto",
               }}
-            >
-              Start free. Upgrade only when you need more cashiers, products, or
-              warehouses. No hidden fees.
-            </p>
+            ><TranslatedText text={"Start free. Upgrade only when you need more cashiers, products, or warehouses. No hidden fees."} /></p>
           </Reveal>
         </div>
       </section>
@@ -101,11 +98,7 @@ export default async function PricingPage() {
           <p
             className="text-center text-xs mx-auto mt-10 max-w-2xl"
             style={{ color: "var(--c-textMuted)" }}
-          >
-            All plans include offline-first functionality, multi-device support,
-            and automatic data sync. Prices are billed monthly in Nigerian Naira
-            (₦). Enterprise pricing is custom — talk to sales.
-          </p>
+          ><TranslatedText text={"All plans include offline-first functionality, multi-device support, and automatic data sync. Prices are billed monthly in Nigerian Naira (₦). Enterprise pricing is custom — talk to sales."} /></p>
         </div>
       </section>
     </div>

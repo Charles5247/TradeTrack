@@ -1,4 +1,6 @@
 "use client";
+import { TranslatedText, useCopy } from '@/i18n/text';
+
 
 import { useEffect, useState } from "react";
 import {
@@ -69,6 +71,7 @@ export function DownloadClient({
 }: {
   versionInfo: VersionInfo | null;
 }) {
+  const copy = useCopy();
   const [os, setOs] = useState<OS>("other");
   const [chromium, setChromium] = useState(false);
   const [deferredPrompt, setDeferredPrompt] =
@@ -115,8 +118,8 @@ export function DownloadClient({
   return (
     <div className="space-y-8">
       {/* Recommended card, based on detected OS */}
-      {os === "android" && <RecommendedBanner label="We detected Android" />}
-      {os === "windows" && <RecommendedBanner label="We detected Windows" />}
+      {os === "android" && <RecommendedBanner label={copy("We detected Android")} />}
+      {os === "windows" && <RecommendedBanner label={copy("We detected Windows")} />}
       {(os === "ios" || os === "macos") && (
         <RecommendedBanner
           label={`We detected ${os === "ios" ? "iOS" : "macOS"}`}
@@ -129,12 +132,10 @@ export function DownloadClient({
           <CardHeader>
             <div className="flex items-center gap-2">
               <Monitor className="h-5 w-5 text-primary" />
-              <CardTitle>Windows Desktop</CardTitle>
-              {os === "windows" && <Badge variant="info">Detected</Badge>}
+              <CardTitle><TranslatedText text={"Windows Desktop"} /></CardTitle>
+              {os === "windows" && <Badge variant="info"><TranslatedText text={"Detected"} /></Badge>}
             </div>
-            <CardDescription>
-              Native desktop app (.exe installer)
-              {versionInfo?.latest.windows.version
+            <CardDescription><TranslatedText text={"Native desktop app (.exe installer)"} />{versionInfo?.latest.windows.version
                 ? ` — v${versionInfo.latest.windows.version}`
                 : ""}
             </CardDescription>
@@ -143,39 +144,23 @@ export function DownloadClient({
             {windowsUrl ? (
               <Button className="w-full" asChild>
                 <a href={windowsUrl} download>
-                  <DownloadIcon className="h-4 w-4 mr-2" />
-                  Download for Windows
-                </a>
+                  <DownloadIcon className="h-4 w-4 mr-2" /><TranslatedText text={"Download for Windows"} /></a>
               </Button>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                Download link not configured yet. Please check back soon.
-              </p>
+              <p className="text-sm text-muted-foreground"><TranslatedText text={"Download link not configured yet. Please check back soon."} /></p>
             )}
 
             <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
-              <li>Download and run the installer.</li>
-              <li>
-                Windows SmartScreen may show{" "}
-                <span className="font-medium text-foreground">
-                  "Windows protected your PC"
-                </span>{" "}
-                — this is expected for a new, unsigned app. Click{" "}
-                <span className="font-medium text-foreground">
-                  "More info" → "Run anyway"
-                </span>{" "}
-                to continue.
-              </li>
-              <li>Follow the setup wizard to finish installing.</li>
-              <li>Launch TracKasuwa from your Start Menu.</li>
+              <li><TranslatedText text={"Download and run the installer."} /></li>
+              <li><TranslatedText text={"Windows SmartScreen may show"} />{" "}
+                <span className="font-medium text-foreground"><TranslatedText text={"\"Windows protected your PC\""} /></span>{" "}<TranslatedText text={"— this is expected for a new, unsigned app. Click"} />{" "}
+                <span className="font-medium text-foreground"><TranslatedText text={"\"More info\" → \"Run anyway\""} /></span>{" "}<TranslatedText text={"to continue."} /></li>
+              <li><TranslatedText text={"Follow the setup wizard to finish installing."} /></li>
+              <li><TranslatedText text={"Launch TracKasuwa from your Start Menu."} /></li>
             </ol>
             <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">
               <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5" />
-              <span>
-                This warning appears because the installer isn't yet signed with
-                a commercial code-signing certificate — it does not mean the app
-                is unsafe.
-              </span>
+              <span><TranslatedText text={"This warning appears because the installer isn't yet signed with a commercial code-signing certificate — it does not mean the app is unsafe."} /></span>
             </div>
           </CardContent>
         </Card>
@@ -185,58 +170,40 @@ export function DownloadClient({
           <CardHeader>
             <div className="flex items-center gap-2">
               <Smartphone className="h-5 w-5 text-primary" />
-              <CardTitle>Android</CardTitle>
-              {os === "android" && <Badge variant="info">Detected</Badge>}
+              <CardTitle><TranslatedText text={"Android"} /></CardTitle>
+              {os === "android" && <Badge variant="info"><TranslatedText text={"Detected"} /></Badge>}
             </div>
-            <CardDescription>
-              Native Android app (.apk){" "}
+            <CardDescription><TranslatedText text={"Native Android app (.apk)"} />{" "}
               {versionInfo?.latest.android.version
                 ? `— v${versionInfo.latest.android.version}`
-                : ""}{" "}
-              or install as a PWA in Chrome
-            </CardDescription>
+                : ""}{" "}<TranslatedText text={"or install as a PWA in Chrome"} /></CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {os === "android" && chromium && canInstallPwa && (
               <Button className="w-full" onClick={handleInstallClick}>
-                <DownloadIcon className="h-4 w-4 mr-2" />
-                Install App (Chrome)
-              </Button>
+                <DownloadIcon className="h-4 w-4 mr-2" /><TranslatedText text={"Install App (Chrome)"} /></Button>
             )}
             {os === "android" && chromium && installed && (
               <div className="flex items-center gap-2 text-sm text-[var(--c-success)]">
-                <CheckCircle2 className="h-4 w-4" />
-                Already installed
-              </div>
+                <CheckCircle2 className="h-4 w-4" /><TranslatedText text={"Already installed"} /></div>
             )}
 
             {androidUrl ? (
               <Button className="w-full" variant="outline" asChild>
                 <a href={androidUrl} download>
-                  <DownloadIcon className="h-4 w-4 mr-2" />
-                  Download APK
-                </a>
+                  <DownloadIcon className="h-4 w-4 mr-2" /><TranslatedText text={"Download APK"} /></a>
               </Button>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                APK download link not configured yet. Please check back soon.
-              </p>
+              <p className="text-sm text-muted-foreground"><TranslatedText text={"APK download link not configured yet. Please check back soon."} /></p>
             )}
 
             <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
-              <li>Download the APK file.</li>
-              <li>
-                Android will warn{" "}
-                <span className="font-medium text-foreground">
-                  "Install blocked" / "unknown sources"
-                </span>{" "}
-                — this is expected since the app isn't distributed via the Play
-                Store yet. Tap{" "}
-                <span className="font-medium text-foreground">Settings</span>{" "}
-                and allow installs from this source.
-              </li>
-              <li>Return to the download and tap Install.</li>
-              <li>Open TracKasuwa from your app drawer.</li>
+              <li><TranslatedText text={"Download the APK file."} /></li>
+              <li><TranslatedText text={"Android will warn"} />{" "}
+                <span className="font-medium text-foreground"><TranslatedText text={"\"Install blocked\" / \"unknown sources\""} /></span>{" "}<TranslatedText text={"— this is expected since the app isn't distributed via the Play Store yet. Tap"} />{" "}
+                <span className="font-medium text-foreground"><TranslatedText text={"Settings"} /></span>{" "}<TranslatedText text={"and allow installs from this source."} /></li>
+              <li><TranslatedText text={"Return to the download and tap Install."} /></li>
+              <li><TranslatedText text={"Open TracKasuwa from your app drawer."} /></li>
             </ol>
             {unknownSourcesUrl && (
               <a
@@ -244,9 +211,7 @@ export function DownloadClient({
                 target="_blank"
                 rel="noreferrer"
                 className="text-xs text-primary hover:underline"
-              >
-                Need help enabling unknown sources?
-              </a>
+              ><TranslatedText text={"Need help enabling unknown sources?"} /></a>
             )}
           </CardContent>
         </Card>
@@ -256,29 +221,19 @@ export function DownloadClient({
           <CardHeader>
             <div className="flex items-center gap-2">
               <Monitor className="h-5 w-5 text-primary" />
-              <CardTitle>Desktop Browser (Chrome/Edge)</CardTitle>
+              <CardTitle><TranslatedText text={"Desktop Browser (Chrome/Edge)"} /></CardTitle>
             </div>
-            <CardDescription>
-              Install TracKasuwa as an app directly from your browser
-            </CardDescription>
+            <CardDescription><TranslatedText text={"Install TracKasuwa as an app directly from your browser"} /></CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {chromium && canInstallPwa ? (
               <Button className="w-full" onClick={handleInstallClick}>
-                <DownloadIcon className="h-4 w-4 mr-2" />
-                Install App
-              </Button>
+                <DownloadIcon className="h-4 w-4 mr-2" /><TranslatedText text={"Install App"} /></Button>
             ) : chromium && installed ? (
               <div className="flex items-center gap-2 text-sm text-[var(--c-success)]">
-                <CheckCircle2 className="h-4 w-4" />
-                Already installed
-              </div>
+                <CheckCircle2 className="h-4 w-4" /><TranslatedText text={"Already installed"} /></div>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                Open this page in Chrome or Edge, then look for the install icon
-                in your browser's address bar (or this button will appear
-                automatically).
-              </p>
+              <p className="text-sm text-muted-foreground"><TranslatedText text={"Open this page in Chrome or Edge, then look for the install icon in your browser's address bar (or this button will appear automatically)."} /></p>
             )}
           </CardContent>
         </Card>
@@ -288,26 +243,17 @@ export function DownloadClient({
           <CardHeader>
             <div className="flex items-center gap-2">
               <Apple className="h-5 w-5 text-muted-foreground" />
-              <CardTitle>iOS &amp; macOS</CardTitle>
+              <CardTitle><TranslatedText text={"iOS & macOS"} /></CardTitle>
               <Badge variant="outline">
-                <Clock className="h-3 w-3 mr-1" />
-                Coming Soon
-              </Badge>
+                <Clock className="h-3 w-3 mr-1" /><TranslatedText text={"Coming Soon"} /></Badge>
               {(os === "ios" || os === "macos") && (
-                <Badge variant="info">Detected</Badge>
+                <Badge variant="info"><TranslatedText text={"Detected"} /></Badge>
               )}
             </div>
-            <CardDescription>
-              Native iOS and macOS apps are not available yet.
-            </CardDescription>
+            <CardDescription><TranslatedText text={"Native iOS and macOS apps are not available yet."} /></CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
-              We don't have an iOS or macOS build to offer right now — we'd
-              rather say that plainly than give you a link that doesn't work. In
-              the meantime, you can use TracKasuwa directly in Safari at your
-              usual web address.
-            </p>
+            <p className="text-sm text-muted-foreground"><TranslatedText text={"We don't have an iOS or macOS build to offer right now — we'd rather say that plainly than give you a link that doesn't work. In the meantime, you can use TracKasuwa directly in Safari at your usual web address."} /></p>
           </CardContent>
         </Card>
       </div>
@@ -319,7 +265,6 @@ function RecommendedBanner({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg px-4 py-2 w-fit mx-auto">
       <CheckCircle2 className="h-4 w-4 text-[var(--c-success)]" />
-      {label} — showing the best option for your device below.
-    </div>
+      {label}{" "}<TranslatedText text={"— showing the best option for your device below."} /></div>
   );
 }

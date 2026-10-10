@@ -1,4 +1,6 @@
 'use client';
+import { TranslatedText, useCopy } from '@/i18n/text';
+
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -110,6 +112,7 @@ export default function SalesPage() {
 }
 
 function SalesPageInner() {
+  const copy = useCopy();
   const router = useRouter();
   const { t } = useI18n();
   const [search, setSearch] = useState('');
@@ -149,7 +152,7 @@ function SalesPageInner() {
 
   return (
     <div className="min-w-0 space-y-6">
-      {pageError && <ErrorState title="Could not load this page" body={pageError.message} onRetry={() => retryPage()} />}
+      {pageError && <ErrorState title={copy("Could not load this page")} body={pageError.message} onRetry={() => retryPage()} />}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="tt-page-title">{t.sales.title}</h1>
@@ -163,9 +166,7 @@ function SalesPageInner() {
             {t.sales.export_csv}
           </Button>
           <Button variant="outline" onClick={() => exportToPDF(sales)}>
-            <Download className="h-4 w-4 mr-2" strokeWidth={1.75} />
-            PDF
-          </Button>
+            <Download className="h-4 w-4 mr-2" strokeWidth={1.75} /><TranslatedText text={"PDF"} /></Button>
         </div>
       </div>
 

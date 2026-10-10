@@ -69,6 +69,15 @@ const RECOMMENDED_VARS: VarSpec[] = [
   },
 ];
 
+const ZAINPAY_PROFILE_SUFFIXES = [
+  'PUBLIC_KEY',
+  'PRIVATE_KEY',
+  'DEFAULT_ZAINBOX',
+  'WEBHOOK_SECRET',
+  'SECRET_KEY',
+  'ZAINBOX_CODE',
+];
+
 function check(vars: VarSpec[]): VarSpec[] {
   return vars.filter((v) => {
     const val = process.env[v.name];
@@ -80,7 +89,30 @@ function main() {
   console.log('🔎  Verifying environment variables...\n');
 
   const missingRequired = check(REQUIRED_VARS);
-  const missingRecommended = check(RECOMMENDED_VARS);
+  const configuredMode = process.env.ZAINPAY_MODE?.trim().toLowerCase();
+  if (configuredMode && configuredMode !== 'test' && configuredMode !== 'live') {
+    console.error('❌  ZAINPAY_MODE must be either "test" or "live".\n');
+    process.exitCode = 1;
+    return;
+  }
+  const legacyBaseUrl = process.env.ZAINPAY_BASE_URL?.trim();
+  const mode =
+    configuredMode === 'live' ||
+    (!configuredMode && legacyBaseUrl && !legacyBaseUrl.toLowerCase().includes('sandbox'))
+      ? 'LIVE'
+      : 'TEST';
+  const hasModeCredentials = ['TEST', 'LIVE'].some((profile) =>
+    ZAINPAY_PROFILE_SUFFIXES.some((suffix) =>
+      Boolean(process.env[`ZAINPAY_${profile}_${suffix}`]?.trim())
+    )
+  );
+  const recommendedVars = hasModeCredentials
+    ? ZAINPAY_PROFILE_SUFFIXES.map((suffix) => ({
+        name: `ZAINPAY_${mode}_${suffix}`,
+        description: `Selected ${mode.toLowerCase()}-mode Zainpay setting`,
+      }))
+    : RECOMMENDED_VARS;
+  const missingRecommended = check(recommendedVars);
 
   if (missingRequired.length === 0) {
     console.log('✅  All required environment variables are set.\n');

@@ -1,0 +1,30 @@
+Inventory Management|Manage stock|Sarrafa haja|Ìṣàkóso ọjà|Njikwa ngwaahịa
+Basic Reports|Basic reports|Rahotanni na asali|Ìròyìn ìpilẹ̀|Akụkọ isi
+Receipt Printing|Print receipts|Buga rasit|Títẹ rísíìtì|Mbipụta risit
+Advanced Reports|Advanced reports|Rahotanni masu zurfi|Ìròyìn jíjinlẹ̀|Akụkọ dị elu
+Multiple Warehouses|Different warehouses|Ma'ajiyoyi da yawa|Ilé ìpamọ́ púpọ̀|Ọtụtụ ụlọ nkwakọba
+Barcode Label Printing|Print barcode labels|Buga alamun barcode|Títẹ àmì barcode|Mbipụta akara barcode
+Custom Role Permissions|Choose permissions for roles|Izinin matsayi na musamman|Àṣẹ ipò àkànṣe|Ikike ọrụ ahaziri
+Priority Support|Support wey come first|Taimako na fifiko|Ìrànlọ́wọ́ àkọ́kọ́|Nkwado mbụ
+API Access|API access|Damar API|Àṣẹ API|Ohere API
+Webhooks|Webhooks|Webhooks|Webhooks|Webhooks
+Dedicated Account Manager|Account manager for you|Manajan asusu na musamman|Alákòóso àkọọ́lẹ̀ pàtó|Onye njikwa akaụntụ pụrụ iche
+Best for getting started|Best when you just dey start|Mafi kyau don farawa|Ó dára fún ìbẹ̀rẹ̀|Kacha mma maka ịmalite
+Best for a single shop finding its rhythm|Best for one shop wey dey find im feet|Mafi kyau ga shago ɗaya mai farawa|Ó dára fún ṣọ́ọ̀bù kan tó ń bẹ̀rẹ̀|Kacha mma maka otu ụlọ ahịa na-amalite
+Best for multi-cashier shops that need real oversight|Best for shop with plenty cashiers wey need proper monitoring|Mafi kyau ga shago da masu karɓar kuɗi da yawa masu buƙatar kulawa|Ó dára fún ṣọ́ọ̀bù tó ní olùgbà owó púpọ̀ tó nílò àbójútó|Kacha mma maka ụlọ ahịa nwere ọtụtụ ndị na-anata ego chọrọ nlekọta
+Best for growing operations with multiple staff roles|Best for growing business with different staff roles|Mafi kyau ga kasuwanci mai girma da matsayi da yawa|Ó dára fún iṣẹ́ tó ń dàgbà pẹ̀lú ipò òṣìṣẹ́ púpọ̀|Kacha mma maka azụmahịa na-eto nwere ọrụ dị iche iche
+Best for custom multi-branch operations|Best for business with plenty branches and special needs|Mafi kyau ga kasuwanci na musamman da rassa da yawa|Ó dára fún iṣẹ́ àkànṣe tó ní ẹ̀ka púpọ̀|Kacha mma maka azụmahịa pụrụ iche nwere ọtụtụ alaka
+Unlimited locations|No limit for locations|Wurare marasa iyaka|Ibi láìní ààlà|Ebe enweghị oke
+Unlimited cashiers|No limit for cashiers|Masu karɓar kuɗi marasa iyaka|Olùgbà owó láìní ààlà|Ndị na-anata ego enweghị oke
+{count} cashiers|{count} cashiers|Masu karɓar kuɗi {count}|Olùgbà owó {count}|Ndị na-anata ego {count}
+Custom|Custom|Na musamman|Àkànṣe|Pụrụ iche
+Free|Free|Kyauta|Lọ́fẹ̀ẹ́|N'efu
+Daily sales|Daily sales|Sayarwar kullum|Títà ojoojúmọ́|Ahịa kwa ụbọchị
+Vendor payment reconciliation|Match vendor payments|Daidaita biyan dillali|Ìmúdọ́gba ìsanwó olùtajà|Mmekọrịta ịkwụ ụgwọ onye na-ere
+Voids, discounts and adjustments|Voids, discounts and corrections|Sokewa, rangwame da gyare-gyare|Ìfagilé, ẹ̀dínwó àti àtúnṣe|Nkagbu, mbelata na mmezi
+Stock movements|How stock move|Motsin haja|Ìgbé ọjà|Mmegharị ngwaahịa
+Cash-up closes|Cash-up closures|Rufe lissafin kuɗi|Pípa àkójọ owó|Mmechi nchịkọta ego
+Sales and reversals|Sales and reversals|Sayarwa da juyawa|Títà àti ìyípadà|Ahịa na ntụgharị
+void|Cancel sale|Soke sayarwa|Fagilé títà|Kagbuo ahịa
+refund|Return money|Mayar da kuɗi|Dá owó padà|Weghachi ego
+return|Return goods|Mayar da kaya|Dá ọjà padà|Weghachi ngwaahịa

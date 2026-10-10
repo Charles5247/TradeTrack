@@ -1,3 +1,5 @@
+
+import { TranslatedLabel } from '@/i18n/text';
 import { Reveal } from "@/components/marketing/reveal";
 
 /**
@@ -32,7 +34,7 @@ export function StatsBand() {
                 <div className="tt-head" style={{ fontSize: 48, color: "var(--c-primary)", lineHeight: 1 }}>
                   {s.n}
                 </div>
-                <div className="tt-muted mt-2 text-sm">{s.l}</div>
+                <div className="tt-muted mt-2 text-sm"><TranslatedLabel>{s.l}</TranslatedLabel></div>
               </div>
             </Reveal>
           ))}

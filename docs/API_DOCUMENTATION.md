@@ -157,6 +157,8 @@ Delete a user account. Cannot delete yourself.
 ### `POST /api/payments/initialize`
 
 Initialize a Zainpay card payment for a subscription purchase.
+Gateway credentials and endpoint are selected by the server-only
+`ZAINPAY_MODE` environment setting (`test` or `live`).
 
 **Request:**
 
@@ -288,10 +290,15 @@ Returns gateway configuration status. No auth required.
 {
   "endpoint": "POST /api/payments/initialize",
   "gateway": "Zainpay",
-  "environment": "sandbox",
+  "environment": "test",
   "configured": true
 }
 ```
+
+### `GET /api/health`
+
+Lightweight public uptime probe. Returns HTTP `200` with plain-text `ok`;
+it does not query Supabase or expose application configuration.
 
 ---
 

@@ -1,4 +1,6 @@
 'use client';
+import { TranslatedText, useCopy } from '@/i18n/text';
+
 
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -58,6 +60,7 @@ const colorTokenMap: Record<string, string> = {
 };
 
 export default function NotificationsPage() {
+  const copy = useCopy();
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState("all");
@@ -105,10 +108,10 @@ export default function NotificationsPage() {
         )}
       </div>
 
-      <Tabs value={filter} onValueChange={setFilter}><TabsList aria-label="Notification filters"><TabsTrigger value="all">All ({notifications.length})</TabsTrigger><TabsTrigger value="unread">Unread ({unreadCount})</TabsTrigger><TabsTrigger value="inventory">Inventory</TabsTrigger><TabsTrigger value="payments">Payments</TabsTrigger></TabsList></Tabs>
-      {(markAllReadMutation.error || markOneMutation.error) && <p role="alert" className="text-sm text-destructive">Could not update notifications. Try again.</p>}
+      <Tabs value={filter} onValueChange={setFilter}><TabsList aria-label={copy("Notification filters")}><TabsTrigger value="all"><TranslatedText text={"All ("} />{notifications.length})</TabsTrigger><TabsTrigger value="unread"><TranslatedText text={"Unread ("} />{unreadCount})</TabsTrigger><TabsTrigger value="inventory"><TranslatedText text={"Inventory"} /></TabsTrigger><TabsTrigger value="payments"><TranslatedText text={"Payments"} /></TabsTrigger></TabsList></Tabs>
+      {(markAllReadMutation.error || markOneMutation.error) && <p role="alert" className="text-sm text-destructive"><TranslatedText text={"Could not update notifications. Try again."} /></p>}
       <div className="overflow-hidden rounded-lg border bg-card [&>div]:rounded-none [&>div]:border-x-0 [&>div]:border-t-0 [&>div]:shadow-none">
-        {error ? <ErrorState title="Could not load notifications" body={error.message} onRetry={() => refetch()} /> : isLoading ? (
+        {error ? <ErrorState title={copy("Could not load notifications")} body={error.message} onRetry={() => refetch()} /> : isLoading ? (
           [...Array(5)].map((_, i) => (
             <Card key={i}>
               <CardContent className="p-4 flex gap-4">

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useCopy } from '@/i18n/text';
 import Image from "next/image";
 import { Store, ShoppingCart, Warehouse, Receipt } from "lucide-react";
 
@@ -44,6 +45,7 @@ const SLIDES: Slide[] = [
 const SLIDE_INTERVAL_MS = 5000;
 
 export function AuthCarousel() {
+  const copy = useCopy();
   const [index, setIndex] = React.useState(0);
   const [paused, setPaused] = React.useState(false);
 
@@ -99,14 +101,14 @@ export function AuthCarousel() {
           className="tt-head text-white"
           style={{ fontSize: 22, lineHeight: 1.3, maxWidth: 360, textShadow: "0 2px 12px rgba(0,0,0,0.35)" }}
         >
-          {SLIDES[index].sub}
+          {copy(SLIDES[index].sub)}
         </p>
         <div className="mt-5 flex items-center gap-2">
           {SLIDES.map((slide, i) => (
             <button
               key={slide.key}
               type="button"
-              aria-label={`Show slide ${i + 1}: ${slide.sub}`}
+              aria-label={`${i + 1}: ${copy(slide.sub)}`}
               onClick={() => setIndex(i)}
               className="h-11 min-w-11 rounded-full border border-white/30 transition-all"
               style={{

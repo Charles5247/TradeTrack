@@ -13,6 +13,7 @@ import { ha } from "./locales/ha";
 import { yo } from "./locales/yo";
 import { ig } from "./locales/ig";
 import { pcm } from "./locales/pcm";
+import { isLocale, LOCALE_STORAGE_KEY } from './locale';
 
 type TranslationSet = typeof en;
 
@@ -21,20 +22,18 @@ const translations: Record<Locale, TranslationSet> = {
   ha,
   yo,
   ig,
-  pcm, // Currently mirrors English - see src/i18n/locales/pcm.ts
+  pcm,
 };
 
-const LOCALE_STORAGE_KEY = "TracKasuwa-locale";
-
-function getInitialLocale(): Locale {
-  if (typeof window === "undefined") return "en";
+function getStoredLocale(): Locale | null {
+  if (typeof window === "undefined") return null;
   try {
     const stored = localStorage.getItem(LOCALE_STORAGE_KEY);
-    if (stored && stored in translations) return stored as Locale;
+    if (isLocale(stored)) return stored;
   } catch {
     // localStorage unavailable
   }
-  return "en";
+  return null;
 }
 
 // ── Context ───────────────────────────────────────────────────
@@ -63,19 +62,19 @@ export function I18nProvider({
   // Use the cookie‑based defaultLocale for the initial render.
   // If no cookie exists, fall back to localStorage (client) or 'en'.
   const [locale, setLocaleState] = useState<Locale>(() => {
-    if (defaultLocale) return defaultLocale;
-    return getInitialLocale();
+    return isLocale(defaultLocale) ? defaultLocale : 'en';
   });
 
   // After mount, sync with localStorage (in case it was changed in another tab)
   useEffect(() => {
-    const stored = getInitialLocale();
-    if (stored !== locale) {
+    const stored = getStoredLocale();
+    if (stored && stored !== locale) {
       setLocaleState(stored);
     }
   }, []);
 
   const setLocale = useCallback((newLocale: Locale) => {
+    if (!isLocale(newLocale)) return;
     setLocaleState(newLocale);
     try {
       localStorage.setItem(LOCALE_STORAGE_KEY, newLocale);
@@ -96,6 +95,19 @@ export function I18nProvider({
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    document.documentElement.lang = locale;
+    document.cookie = `NEXT_LOCALE=${locale};path=/;max-age=31536000;SameSite=Lax`;
+  }, [locale]);
+
+  useEffect(() => {
+    const sync = (event: StorageEvent) => {
+      if (event.key === LOCALE_STORAGE_KEY && isLocale(event.newValue)) setLocaleState(event.newValue);
+    };
+    window.addEventListener('storage', sync);
+    return () => window.removeEventListener('storage', sync);
+  }, []);
+
   const value: I18nContextType = {
     locale,
     t: translations[locale] ?? en,
@@ -113,14 +125,4 @@ export function useI18n() {
 
 // ── Supported locales ─────────────────────────────────────────
 
-export const SUPPORTED_LOCALES: {
-  code: Locale;
-  name: string;
-  native: string;
-}[] = [
-  { code: "en", name: "English", native: "English" },
-  { code: "ha", name: "Hausa", native: "Hausa" },
-  { code: "yo", name: "Yoruba", native: "Yorùbá" },
-  { code: "ig", name: "Igbo", native: "Igbo" },
-  { code: "pcm", name: "Pidgin English", native: "Pidgin" },
-];
+export { SUPPORTED_LOCALES } from './locale';

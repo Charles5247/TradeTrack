@@ -1,4 +1,6 @@
 "use client";
+import { TranslatedText } from '@/i18n/text';
+
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -152,7 +154,7 @@ export default function LoginPage() {
 
   return (
     <AuthShell variant="login">
-      <div className="tt-eyebrow mb-2">Sign in</div>
+      <div className="tt-eyebrow mb-2"><TranslatedText text={"Sign in"} /></div>
       <h1 className="tt-head text-3xl mb-2">{t.auth.welcome_back}</h1>
       <p className="tt-muted text-sm mb-8">{t.auth.sign_in_subtitle}</p>
 
@@ -284,15 +286,12 @@ export default function LoginPage() {
         </Card>
       )}
 
-      <p className="tt-muted text-center text-sm mt-6">
-        New to TracKasuwa?{" "}
+      <p className="tt-muted text-center text-sm mt-6"><TranslatedText text={"New to TracKasuwa?"} />{" "}
         <a
           href="/signup"
           className="font-semibold"
           style={{ color: "var(--c-primary)" }}
-        >
-          Create your merchant account
-        </a>
+        ><TranslatedText text={"Create your merchant account"} /></a>
       </p>
     </AuthShell>
   );

@@ -1,3 +1,5 @@
+
+import { TranslatedLabel, TranslatedText } from '@/i18n/text';
 import Image from "next/image";
 import { Store, ChefHat, Building2, ShoppingBasket, Croissant, Building } from "lucide-react";
 import { Reveal } from "@/components/marketing/reveal";
@@ -56,16 +58,10 @@ export function IndustriesBand() {
         <Reveal>
           <div className="flex flex-wrap justify-between items-end gap-10 mb-12">
             <div>
-              <div className="tt-eyebrow mb-3">Industries · one platform</div>
-              <h2 className="tt-head" style={{ fontSize: "clamp(28px, 4vw, 48px)", margin: 0, maxWidth: 640, lineHeight: 1.05 }}>
-                Retail today. Restaurants &amp; hotels are on the way.
-              </h2>
+              <div className="tt-eyebrow mb-3"><TranslatedText text={"Industries · one platform"} /></div>
+              <h2 className="tt-head" style={{ fontSize: "clamp(28px, 4vw, 48px)", margin: 0, maxWidth: 640, lineHeight: 1.05 }}><TranslatedText text={"Retail today. Restaurants & hotels are on the way."} /></h2>
             </div>
-            <p style={{ fontSize: 15, color: "var(--c-textMuted)", maxWidth: 380, lineHeight: 1.6 }}>
-              A Production &amp; Hospitality extension is planned on top of
-              the core platform — same login, same audit trail. Not
-              available yet.
-            </p>
+            <p style={{ fontSize: 15, color: "var(--c-textMuted)", maxWidth: 380, lineHeight: 1.6 }}><TranslatedText text={"A Production & Hospitality extension is planned on top of the core platform — same login, same audit trail. Not available yet."} /></p>
           </div>
         </Reveal>
 
@@ -81,17 +77,17 @@ export function IndustriesBand() {
                 </div>
                 <div className="p-5">
                   <div className="flex items-center gap-2 mb-1.5">
-                    <div className="tt-head text-lg">{ind.label}</div>
+                    <div className="tt-head text-lg"><TranslatedLabel>{ind.label}</TranslatedLabel></div>
                   </div>
                   <div className="flex items-center gap-2 mb-2">
                     <ind.Icon className="h-3.5 w-3.5" style={{ color: "var(--c-primary)" }} strokeWidth={1.75} />
                     {ind.live ? (
-                      <Badge variant="success">Available</Badge>
+                      <Badge variant="success"><TranslatedText text={"Available"} /></Badge>
                     ) : (
-                      <Badge variant="outline">Coming soon</Badge>
+                      <Badge variant="outline"><TranslatedText text={"Coming soon"} /></Badge>
                     )}
                   </div>
-                  <div className="tt-muted text-[13px]" style={{ lineHeight: 1.55 }}>{ind.desc}</div>
+                  <div className="tt-muted text-[13px]" style={{ lineHeight: 1.55 }}><TranslatedLabel>{ind.desc}</TranslatedLabel></div>
                 </div>
               </div>
             </Reveal>

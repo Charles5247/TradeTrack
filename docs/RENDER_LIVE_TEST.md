@@ -32,6 +32,9 @@ in this UI batch. Use Zainpay sandbox for payment integration work.
 3. Settings: root `.`, Node `22`, build
    `npm ci --include=dev && npm run verify:env && npm run build`, start
    `npm start`, health check `/`. Next starts on Render's injected `PORT`.
+   To reduce Free-instance sleeping during a test, configure a Cron-job.org
+   GET request to `https://YOUR-SERVICE.onrender.com/api/health` every
+   10 minutes; this is not a production-availability guarantee.
 4. Enter the variables below in **Environment**. They must be present before
    the build. Use Render's assigned HTTPS hostname for `NEXT_PUBLIC_APP_URL`.
 5. Deploy, confirm the build succeeds and the service becomes Live, then visit
@@ -52,21 +55,21 @@ See [Render's Next.js deployment guide](https://render.com/docs/deploy-nextjs-ap
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://ajrflgewbsosthsjtvuj.supabase.co` **only if intentionally using the existing live database** |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Publishable/anon key from that same Supabase project's API settings |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server-only service-role key from the same project; never prefix with `NEXT_PUBLIC_` |
-| `ZAINPAY_BASE_URL` | `https://sandbox.zainpay.ng` for sandbox; `https://api.zainpay.ng` only after real-payment readiness |
-| `ZAINPAY_PUBLIC_KEY` | Matching-environment key used by checkout initialization and verification |
-| `ZAINPAY_PRIVATE_KEY` | Matching-environment private credential; currently checked by the gateway health probe, while initialize/verify requests use `ZAINPAY_PUBLIC_KEY` |
-| `ZAINPAY_DEFAULT_ZAINBOX` | Sandbox Zainbox code for checkout |
-| `ZAINPAY_WEBHOOK_SECRET` | Secret matching the provider's webhook signing configuration; never leave blank on a public deployment |
-| `ZAINPAY_SECRET_KEY` | Server-only bearer credential used by dedicated virtual-account onboarding |
-| `ZAINPAY_ZAINBOX_CODE` | Zainbox used by virtual-account onboarding (same box as the checkout box if that is your intended setup) |
+| `ZAINPAY_MODE` | `test` for this test deployment; switch to `live` only when ready for real payments |
+| `ZAINPAY_TEST_PUBLIC_KEY` | Test-mode key used by checkout initialization and verification |
+| `ZAINPAY_TEST_PRIVATE_KEY` | Test-mode private credential |
+| `ZAINPAY_TEST_DEFAULT_ZAINBOX` | Test Zainbox code for checkout |
+| `ZAINPAY_TEST_WEBHOOK_SECRET` | Test webhook signing secret; configure for signed test callbacks |
+| `ZAINPAY_TEST_SECRET_KEY` | Server-only test bearer credential for virtual-account onboarding |
+| `ZAINPAY_TEST_ZAINBOX_CODE` | Test Zainbox used by virtual-account onboarding |
 | `AI_PROVIDER` | `mock`; external AI providers are not implemented |
 
-The two Zainpay key/box naming pairs are both needed by the current code paths;
-do not assume that one environment variable automatically aliases the other.
-Confirm which credential Zainpay expects for each endpoint. Keep every sandbox
-credential and Zainbox in the same environment. Do not paste secrets into chat,
-source files or a committed `.env`. Use a separate Supabase test project for
-destructive tests; a sandbox payment gateway alone does not isolate live data.
+Use the selected mode's variables consistently for the gateway, checkout,
+virtual-account and webhook credentials. The runtime routes all use the same
+mode configuration. Keep test and live keys in separate Vercel/Render
+environment scopes, and never add them to a committed `.env`. Use a separate
+Supabase test project for destructive tests; a sandbox gateway alone does not
+isolate live data.
 
 The webhook currently skips signature validation when its secret is absent.
 Until that behavior is hardened, configure a nonempty secret even for an

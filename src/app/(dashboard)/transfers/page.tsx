@@ -1,4 +1,6 @@
 'use client';
+import { TranslatedText, useCopy } from '@/i18n/text';
+
 
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -145,6 +147,7 @@ export default function TransfersPage() {
 }
 
 function TransfersPageInner() {
+  const copy = useCopy();
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
@@ -295,7 +298,7 @@ function TransfersPageInner() {
 
   return (
     <div className="space-y-6">
-      {pageError && <ErrorState title="Could not load this page" body={pageError.message} onRetry={() => retryPage()} />}
+      {pageError && <ErrorState title={copy("Could not load this page")} body={pageError.message} onRetry={() => retryPage()} />}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="tt-page-title">{t.transfers.title}</h1>
@@ -520,7 +523,7 @@ function TransfersPageInner() {
                 <p className="tt-muted">
                   {receiptData.fromWarehouse} <ArrowRight className="inline h-3 w-3" /> {receiptData.toWarehouse}
                 </p>
-                <p className="tt-muted">{receiptData.productName} &times; {receiptData.quantity}</p>
+                <p className="tt-muted">{receiptData.productName}{" "}<TranslatedText text={"&times;"} />{" "}{receiptData.quantity}</p>
               </div>
               <div className="flex gap-3">
                 <Button variant="outline" className="flex-1" onClick={handleBrowserPrintTransfer}>
@@ -528,9 +531,7 @@ function TransfersPageInner() {
                   {t.common.print}
                 </Button>
                 <Button variant="outline" className="flex-1" onClick={handleDownloadTransferPDF}>
-                  <Download className="h-4 w-4 mr-2" />
-                  PDF
-                </Button>
+                  <Download className="h-4 w-4 mr-2" /><TranslatedText text={"PDF"} /></Button>
               </div>
               {(printer.usbSupported || printer.bluetoothSupported) && (
                 <div className="border rounded-lg p-3 bg-muted/30">
@@ -549,21 +550,17 @@ function TransfersPageInner() {
                           <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
                         ) : (
                           <Printer className="h-4 w-4 mr-1.5" />
-                        )}
-                        Print to device
-                      </Button>
+                        )}<TranslatedText text={"Print to device"} /></Button>
                     </div>
                   ) : (
                     <div className="flex gap-2">
                       {printer.usbSupported && (
                         <Button size="sm" variant="outline" className="flex-1" onClick={printer.connectUsb}>
-                          <Usb className="h-4 w-4 mr-1.5" /> USB
-                        </Button>
+                          <Usb className="h-4 w-4 mr-1.5" />{" "}<TranslatedText text={"USB"} /></Button>
                       )}
                       {printer.bluetoothSupported && (
                         <Button size="sm" variant="outline" className="flex-1" onClick={printer.connectBluetooth}>
-                          <Bluetooth className="h-4 w-4 mr-1.5" /> Bluetooth
-                        </Button>
+                          <Bluetooth className="h-4 w-4 mr-1.5" />{" "}<TranslatedText text={"Bluetooth"} /></Button>
                       )}
                     </div>
                   )}

@@ -1,4 +1,6 @@
 "use client";
+import { TranslatedText, useCopy } from '@/i18n/text';
+
 
 import React, { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -36,6 +38,7 @@ import {
  * design_files/auth.jsx's `Signup`) — form logic/fields unchanged.
  */
 function SignupForm() {
+  const copy = useCopy();
   const router = useRouter();
   const searchParams = useSearchParams();
   const planId = searchParams.get("plan") ?? undefined;
@@ -123,20 +126,20 @@ function SignupForm() {
 
   return (
     <AuthShell variant="signup">
-      <div className="tt-eyebrow mb-2">Create your merchant</div>
-      <h1 className="tt-head text-3xl mb-2">Create your account</h1>
+      <div className="tt-eyebrow mb-2"><TranslatedText text={"Create your merchant"} /></div>
+      <h1 className="tt-head text-3xl mb-2"><TranslatedText text={"Create your account"} /></h1>
       <p className="tt-muted text-sm mb-8">
-        {planId
+        <TranslatedText text={planId
           ? "You're one step away from your selected plan."
-          : "Start free — no card required."}
+          : "Start free — no card required."} />
       </p>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="business_name">Business name</Label>
+          <Label htmlFor="business_name"><TranslatedText text={"Business name"} /></Label>
           <Input
             id="business_name"
-            placeholder="e.g. Adaeze General Stores"
+            placeholder={copy("e.g. Adaeze General Stores")}
             {...register("business_name")}
             error={errors.business_name?.message}
             disabled={isLoading}
@@ -144,10 +147,10 @@ function SignupForm() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="full_name">Your name</Label>
+          <Label htmlFor="full_name"><TranslatedText text={"Your name"} /></Label>
           <Input
             id="full_name"
-            placeholder="e.g. Adaeze Okonkwo"
+            placeholder={copy("e.g. Adaeze Okonkwo")}
             {...register("full_name")}
             error={errors.full_name?.message}
             disabled={isLoading}
@@ -155,7 +158,7 @@ function SignupForm() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email"><TranslatedText text={"Email"} /></Label>
           <Input
             id="email"
             type="email"
@@ -167,7 +170,7 @@ function SignupForm() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="phone">Phone (optional)</Label>
+          <Label htmlFor="phone"><TranslatedText text={"Phone (optional)"} /></Label>
           <Input
             id="phone"
             type="tel"
@@ -178,11 +181,11 @@ function SignupForm() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password"><TranslatedText text={"Password"} /></Label>
           <Input
             id="password"
             type={showPassword ? "text" : "password"}
-            placeholder="At least 8 characters"
+            placeholder={copy("At least 8 characters")}
             {...register("password")}
             error={errors.password?.message}
             disabled={isLoading}
@@ -203,11 +206,11 @@ function SignupForm() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="confirmPassword">Confirm password</Label>
+          <Label htmlFor="confirmPassword"><TranslatedText text={"Confirm password"} /></Label>
           <Input
             id="confirmPassword"
             type={showPassword ? "text" : "password"}
-            placeholder="Re-enter your password"
+            placeholder={copy("Re-enter your password")}
             {...register("confirmPassword")}
             error={errors.confirmPassword?.message}
             disabled={isLoading}
@@ -222,10 +225,7 @@ function SignupForm() {
                 style={{ color: "var(--c-success)" }}
                 strokeWidth={1.75}
               />
-              <span>
-                Your selected plan will be applied to your new account
-                automatically after signup.
-              </span>
+              <span><TranslatedText text={"Your selected plan will be applied to your new account automatically after signup."} /></span>
             </CardContent>
           </Card>
         )}
@@ -233,24 +233,19 @@ function SignupForm() {
         <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
           {isLoading ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              Creating account...
-            </>
+              <Loader2 className="h-4 w-4 animate-spin mr-2" /><TranslatedText text={"Creating account..."} /></>
           ) : (
             "Create account"
           )}
         </Button>
       </form>
 
-      <p className="tt-muted text-center text-sm mt-6">
-        Already have an account?{" "}
+      <p className="tt-muted text-center text-sm mt-6"><TranslatedText text={"Already have an account?"} />{" "}
         <a
           href="/login"
           className="font-semibold"
           style={{ color: "var(--c-primary)" }}
-        >
-          Sign in
-        </a>
+        ><TranslatedText text={"Sign in"} /></a>
       </p>
     </AuthShell>
   );

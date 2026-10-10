@@ -1,4 +1,6 @@
 'use client';
+import { TranslatedText } from '@/i18n/text';
+
 
 import React from 'react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
@@ -94,7 +96,7 @@ export function StatsCard({
                     change > 0 ? 'text-[var(--c-success)]' : change < 0 ? 'text-[var(--c-danger)]' : 'text-muted-foreground'
                   )}
                 >
-                  {change > 0 ? '+' : ''}{change}%
+                  <TranslatedText text={change > 0 ? '+' : ''} />{change}%
                 </span>
                 {changeLabel && (
                   <span className="text-xs text-muted-foreground">{changeLabel}</span>

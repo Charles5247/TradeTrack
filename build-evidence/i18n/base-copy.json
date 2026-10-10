@@ -1,0 +1,3634 @@
+[
+  [
+    "common.save",
+    "Save"
+  ],
+  [
+    "common.cancel",
+    "Cancel"
+  ],
+  [
+    "common.delete",
+    "Delete"
+  ],
+  [
+    "common.edit",
+    "Edit"
+  ],
+  [
+    "common.add",
+    "Add"
+  ],
+  [
+    "common.search",
+    "Search"
+  ],
+  [
+    "common.filter",
+    "Filter"
+  ],
+  [
+    "common.export",
+    "Export"
+  ],
+  [
+    "common.print",
+    "Print"
+  ],
+  [
+    "common.loading",
+    "Loading..."
+  ],
+  [
+    "common.confirm",
+    "Confirm"
+  ],
+  [
+    "common.back",
+    "Back"
+  ],
+  [
+    "common.next",
+    "Next"
+  ],
+  [
+    "common.submit",
+    "Submit"
+  ],
+  [
+    "common.close",
+    "Close"
+  ],
+  [
+    "common.yes",
+    "Yes"
+  ],
+  [
+    "common.no",
+    "No"
+  ],
+  [
+    "common.all",
+    "All"
+  ],
+  [
+    "common.none",
+    "None"
+  ],
+  [
+    "common.status",
+    "Status"
+  ],
+  [
+    "common.actions",
+    "Actions"
+  ],
+  [
+    "common.date",
+    "Date"
+  ],
+  [
+    "common.total",
+    "Total"
+  ],
+  [
+    "common.quantity",
+    "Quantity"
+  ],
+  [
+    "common.price",
+    "Price"
+  ],
+  [
+    "common.name",
+    "Name"
+  ],
+  [
+    "common.email",
+    "Email"
+  ],
+  [
+    "common.phone",
+    "Phone"
+  ],
+  [
+    "common.address",
+    "Address"
+  ],
+  [
+    "common.description",
+    "Description"
+  ],
+  [
+    "common.notes",
+    "Notes"
+  ],
+  [
+    "common.required",
+    "Required"
+  ],
+  [
+    "common.optional",
+    "Optional"
+  ],
+  [
+    "common.active",
+    "Active"
+  ],
+  [
+    "common.inactive",
+    "Inactive"
+  ],
+  [
+    "common.suspended",
+    "Suspended"
+  ],
+  [
+    "common.success",
+    "Success"
+  ],
+  [
+    "common.error",
+    "Error"
+  ],
+  [
+    "common.warning",
+    "Warning"
+  ],
+  [
+    "common.info",
+    "Information"
+  ],
+  [
+    "common.access_denied",
+    "Access Denied"
+  ],
+  [
+    "common.access_denied_desc",
+    "You don't have permission to view this page."
+  ],
+  [
+    "auth.login",
+    "Login"
+  ],
+  [
+    "auth.logout",
+    "Logout"
+  ],
+  [
+    "auth.email",
+    "Email Address"
+  ],
+  [
+    "auth.password",
+    "Password"
+  ],
+  [
+    "auth.forgot_password",
+    "Forgot Password?"
+  ],
+  [
+    "auth.reset_password",
+    "Reset Password"
+  ],
+  [
+    "auth.remember_me",
+    "Remember me"
+  ],
+  [
+    "auth.sign_in",
+    "Sign In"
+  ],
+  [
+    "auth.welcome_back",
+    "Welcome Back"
+  ],
+  [
+    "auth.sign_in_subtitle",
+    "Sign in to your TracKasuwa account"
+  ],
+  [
+    "auth.reset_sent",
+    "Password reset email sent"
+  ],
+  [
+    "auth.password_updated",
+    "Password updated successfully"
+  ],
+  [
+    "auth.tagline",
+    "POS & Inventory Management"
+  ],
+  [
+    "auth.signing_in",
+    "Signing in..."
+  ],
+  [
+    "auth.remember_me_30_days",
+    "Keep me signed in on this device (enables offline sign-in for 30 days)"
+  ],
+  [
+    "auth.invalid_credentials",
+    "Invalid email or password"
+  ],
+  [
+    "auth.sign_in_success",
+    "Signed in successfully"
+  ],
+  [
+    "auth.unexpected_error",
+    "An unexpected error occurred"
+  ],
+  [
+    "auth.demo_credentials_label",
+    "Demo Credentials:"
+  ],
+  [
+    "auth.copyright",
+    "TracKasuwa. All rights reserved."
+  ],
+  [
+    "auth.role_platform_owner",
+    "Platform Owner"
+  ],
+  [
+    "auth.role_business_owner",
+    "Business Owner"
+  ],
+  [
+    "auth.role_admin",
+    "Admin"
+  ],
+  [
+    "auth.role_cashier",
+    "Cashier"
+  ],
+  [
+    "forcedPasswordChange.title",
+    "Set a New Password"
+  ],
+  [
+    "forcedPasswordChange.desc",
+    "For security, you must set your own password before continuing. This replaces the temporary password you were given at onboarding."
+  ],
+  [
+    "forcedPasswordChange.new_password",
+    "New Password"
+  ],
+  [
+    "forcedPasswordChange.confirm_password",
+    "Confirm Password"
+  ],
+  [
+    "forcedPasswordChange.submit",
+    "Set Password & Continue"
+  ],
+  [
+    "forcedPasswordChange.submitting",
+    "Setting password…"
+  ],
+  [
+    "forcedPasswordChange.success",
+    "Password updated — welcome to TracKasuwa!"
+  ],
+  [
+    "forcedPasswordChange.password_required",
+    "New password is required"
+  ],
+  [
+    "forcedPasswordChange.password_min_length",
+    "Password must be at least 8 characters"
+  ],
+  [
+    "forcedPasswordChange.passwords_do_not_match",
+    "Passwords do not match"
+  ],
+  [
+    "forcedPasswordChange.update_failed",
+    "Failed to update password. Please try again."
+  ],
+  [
+    "nav.dashboard",
+    "Dashboard"
+  ],
+  [
+    "nav.products",
+    "Products"
+  ],
+  [
+    "nav.inventory",
+    "Inventory"
+  ],
+  [
+    "nav.pos",
+    "Point of Sale"
+  ],
+  [
+    "nav.sales",
+    "Sales History"
+  ],
+  [
+    "nav.warehouses",
+    "Warehouses"
+  ],
+  [
+    "nav.transfers",
+    "Transfers"
+  ],
+  [
+    "nav.purchaseOrders",
+    "Purchase Orders"
+  ],
+  [
+    "nav.receiptLookup",
+    "Scan Receipt"
+  ],
+  [
+    "nav.vendors",
+    "Vendor Sales"
+  ],
+  [
+    "nav.reports",
+    "Reports"
+  ],
+  [
+    "nav.audit",
+    "Audit Trail"
+  ],
+  [
+    "nav.notifications",
+    "Notifications"
+  ],
+  [
+    "nav.settings",
+    "Settings"
+  ],
+  [
+    "nav.users",
+    "Users"
+  ],
+  [
+    "nav.subscriptions",
+    "Subscriptions"
+  ],
+  [
+    "nav.admin",
+    "Dashboard"
+  ],
+  [
+    "nav.merchants",
+    "Merchants"
+  ],
+  [
+    "nav.platform",
+    "Platform"
+  ],
+  [
+    "app.name",
+    "TracKasuwa"
+  ],
+  [
+    "app.tagline",
+    "POS & Inventory"
+  ],
+  [
+    "app.search_placeholder",
+    "Search products, sales, invoices..."
+  ],
+  [
+    "app.demo_credentials",
+    "Demo Credentials"
+  ],
+  [
+    "app.demo_admin",
+    "Admin"
+  ],
+  [
+    "app.demo_cashier",
+    "Cashier"
+  ],
+  [
+    "app.demo_super_admin",
+    "Platform Owner"
+  ],
+  [
+    "dashboard.greeting",
+    "Good {time}, {name}"
+  ],
+  [
+    "dashboard.subtitle",
+    "Here's what's happening with your business today"
+  ],
+  [
+    "dashboard.morning",
+    "morning"
+  ],
+  [
+    "dashboard.afternoon",
+    "afternoon"
+  ],
+  [
+    "dashboard.evening",
+    "evening"
+  ],
+  [
+    "dashboard.today_sales",
+    "Today's Sales"
+  ],
+  [
+    "dashboard.weekly_revenue",
+    "Weekly Revenue"
+  ],
+  [
+    "dashboard.monthly_revenue",
+    "Monthly Revenue"
+  ],
+  [
+    "dashboard.total_products",
+    "Total Products"
+  ],
+  [
+    "dashboard.low_stock",
+    "Low Stock Items"
+  ],
+  [
+    "dashboard.out_of_stock",
+    "Out of Stock"
+  ],
+  [
+    "dashboard.pending_debts",
+    "Pending Vendor Debts"
+  ],
+  [
+    "dashboard.pending_transfers",
+    "Pending Transfers"
+  ],
+  [
+    "dashboard.recent_transactions",
+    "Recent Transactions"
+  ],
+  [
+    "dashboard.recent_transactions_desc",
+    "Latest sales activity"
+  ],
+  [
+    "dashboard.top_products",
+    "Top Selling Products"
+  ],
+  [
+    "dashboard.revenue_chart",
+    "Revenue Overview"
+  ],
+  [
+    "dashboard.revenue_chart_desc",
+    "Last 7 days revenue trend"
+  ],
+  [
+    "dashboard.need_restocking",
+    "Need restocking soon"
+  ],
+  [
+    "dashboard.requires_attention",
+    "Requires immediate attention"
+  ],
+  [
+    "dashboard.awaiting_payment",
+    "Awaiting payment"
+  ],
+  [
+    "dashboard.warehouse_transfers",
+    "Warehouse transfers"
+  ],
+  [
+    "dashboard.no_sales_today",
+    "No sales yet today"
+  ],
+  [
+    "dashboard.quick_actions",
+    "Quick Actions"
+  ],
+  [
+    "dashboard.quick_actions_desc",
+    "Common tasks for today"
+  ],
+  [
+    "dashboard.new_sale",
+    "New Sale"
+  ],
+  [
+    "dashboard.stock_in",
+    "Stock In"
+  ],
+  [
+    "dashboard.transfer",
+    "Transfer"
+  ],
+  [
+    "dashboard.view_reports",
+    "Reports"
+  ],
+  [
+    "dashboard.no_transactions",
+    "No recent transactions"
+  ],
+  [
+    "dashboard.transactions",
+    "transactions"
+  ],
+  [
+    "products.title",
+    "Products"
+  ],
+  [
+    "products.add_product",
+    "Add Product"
+  ],
+  [
+    "products.edit_product",
+    "Edit Product"
+  ],
+  [
+    "products.product_name",
+    "Product Name"
+  ],
+  [
+    "products.make",
+    "Make/Brand"
+  ],
+  [
+    "products.sku",
+    "SKU"
+  ],
+  [
+    "products.barcode",
+    "Barcode"
+  ],
+  [
+    "products.selling_price",
+    "Selling Price"
+  ],
+  [
+    "products.cost_price",
+    "Cost Price"
+  ],
+  [
+    "products.category",
+    "Category"
+  ],
+  [
+    "products.supplier",
+    "Supplier"
+  ],
+  [
+    "products.product_image",
+    "Product Image"
+  ],
+  [
+    "products.product_status",
+    "Status"
+  ],
+  [
+    "products.in_stock",
+    "In Stock"
+  ],
+  [
+    "products.no_products",
+    "No products found"
+  ],
+  [
+    "products.subtitle",
+    "Manage your product catalogue ({count} products)"
+  ],
+  [
+    "products.search_placeholder",
+    "Search by name, SKU, or barcode..."
+  ],
+  [
+    "products.all_categories",
+    "All Categories"
+  ],
+  [
+    "products.image",
+    "Image"
+  ],
+  [
+    "products.add_first_product",
+    "Add your first product"
+  ],
+  [
+    "products.view_details",
+    "View Details"
+  ],
+  [
+    "products.edit",
+    "Edit"
+  ],
+  [
+    "products.delete",
+    "Delete"
+  ],
+  [
+    "products.delete_confirm",
+    "Delete \"{name}\"? This action cannot be undone."
+  ],
+  [
+    "products.deleted_success",
+    "Product deleted successfully"
+  ],
+  [
+    "products.delete_failed",
+    "Failed to delete product"
+  ],
+  [
+    "products.product_details",
+    "Product Details"
+  ],
+  [
+    "products.margin",
+    "Margin"
+  ],
+  [
+    "products.added",
+    "Added"
+  ],
+  [
+    "products.description",
+    "Description"
+  ],
+  [
+    "inventory.title",
+    "Inventory"
+  ],
+  [
+    "inventory.adjust_stock",
+    "Adjust Stock"
+  ],
+  [
+    "inventory.stock_in",
+    "Stock In"
+  ],
+  [
+    "inventory.stock_out",
+    "Stock Out"
+  ],
+  [
+    "inventory.current_stock",
+    "Current Stock"
+  ],
+  [
+    "inventory.warehouse",
+    "Warehouse"
+  ],
+  [
+    "inventory.min_stock",
+    "Minimum Stock"
+  ],
+  [
+    "inventory.low_stock_alert",
+    "Low Stock Alert"
+  ],
+  [
+    "inventory.subtitle",
+    "Track stock levels across all warehouses"
+  ],
+  [
+    "inventory.total_items",
+    "Total Items"
+  ],
+  [
+    "inventory.in_stock",
+    "In Stock"
+  ],
+  [
+    "inventory.low_stock",
+    "Low Stock"
+  ],
+  [
+    "inventory.out_of_stock",
+    "Out of Stock"
+  ],
+  [
+    "inventory.search_placeholder",
+    "Search product..."
+  ],
+  [
+    "inventory.all_warehouses",
+    "All Warehouses"
+  ],
+  [
+    "inventory.all_stock",
+    "All Stock"
+  ],
+  [
+    "inventory.product",
+    "Product"
+  ],
+  [
+    "inventory.sku",
+    "SKU"
+  ],
+  [
+    "inventory.quantity",
+    "Quantity"
+  ],
+  [
+    "inventory.last_updated",
+    "Last Updated"
+  ],
+  [
+    "inventory.no_inventory",
+    "No inventory records found"
+  ],
+  [
+    "inventory.stock_in_plus",
+    "Stock In (+)"
+  ],
+  [
+    "inventory.stock_out_minus",
+    "Stock Out (-)"
+  ],
+  [
+    "inventory.manual_adjustment",
+    "Manual Adjustment"
+  ],
+  [
+    "inventory.movement_type",
+    "Movement Type"
+  ],
+  [
+    "inventory.quantity_required",
+    "Quantity *"
+  ],
+  [
+    "inventory.enter_quantity",
+    "Enter quantity"
+  ],
+  [
+    "inventory.reason_required",
+    "Reason (required for audit)"
+  ],
+  [
+    "inventory.reason_placeholder",
+    "e.g., New delivery, damaged goods"
+  ],
+  [
+    "inventory.notes_placeholder",
+    "Additional notes..."
+  ],
+  [
+    "inventory.confirm_adjustment",
+    "Confirm Adjustment"
+  ],
+  [
+    "inventory.adjusted_success",
+    "Stock adjusted successfully"
+  ],
+  [
+    "inventory.adjust_failed",
+    "Failed to adjust stock"
+  ],
+  [
+    "inventory.invalid_quantity",
+    "Please enter a valid quantity"
+  ],
+  [
+    "inventory.product_label",
+    "Product:"
+  ],
+  [
+    "inventory.current_stock_label",
+    "Current Stock:"
+  ],
+  [
+    "pos.title",
+    "Point of Sale"
+  ],
+  [
+    "pos.search_product",
+    "Search product or scan barcode..."
+  ],
+  [
+    "pos.cart",
+    "Cart"
+  ],
+  [
+    "pos.checkout",
+    "Checkout"
+  ],
+  [
+    "pos.empty_cart",
+    "Cart is empty"
+  ],
+  [
+    "pos.add_to_cart",
+    "Add to Cart"
+  ],
+  [
+    "pos.payment_method",
+    "Payment Method"
+  ],
+  [
+    "pos.cash",
+    "Cash"
+  ],
+  [
+    "pos.transfer",
+    "Transfer"
+  ],
+  [
+    "pos.pos_terminal",
+    "POS Terminal"
+  ],
+  [
+    "pos.split",
+    "Split Payment"
+  ],
+  [
+    "pos.partial",
+    "Partial Payment"
+  ],
+  [
+    "pos.amount_paid",
+    "Amount Paid"
+  ],
+  [
+    "pos.change",
+    "Change"
+  ],
+  [
+    "pos.discount",
+    "Discount"
+  ],
+  [
+    "pos.tax",
+    "Tax"
+  ],
+  [
+    "pos.subtotal",
+    "Subtotal"
+  ],
+  [
+    "pos.complete_sale",
+    "Complete Sale"
+  ],
+  [
+    "pos.print_receipt",
+    "Print Receipt"
+  ],
+  [
+    "pos.new_sale",
+    "New Sale"
+  ],
+  [
+    "pos.customer_name",
+    "Customer Name (Optional)"
+  ],
+  [
+    "pos.customer_phone",
+    "Customer Phone (Optional)"
+  ],
+  [
+    "pos.select_warehouse",
+    "Select warehouse"
+  ],
+  [
+    "pos.no_products_found",
+    "No products found"
+  ],
+  [
+    "pos.select_warehouse_prompt",
+    "Select a warehouse to see products"
+  ],
+  [
+    "pos.units_left",
+    "left"
+  ],
+  [
+    "pos.click_products_to_add",
+    "Click products to add them"
+  ],
+  [
+    "pos.customer_name_short",
+    "Customer name"
+  ],
+  [
+    "pos.phone_short",
+    "Phone"
+  ],
+  [
+    "pos.bank_transfer",
+    "Bank Transfer"
+  ],
+  [
+    "pos.amount_paid_currency",
+    "Amount Paid (₦)"
+  ],
+  [
+    "pos.processing",
+    "Processing..."
+  ],
+  [
+    "pos.sale_complete",
+    "Sale Complete!"
+  ],
+  [
+    "pos.invoice_label",
+    "Invoice"
+  ],
+  [
+    "pos.not_authenticated",
+    "Not authenticated"
+  ],
+  [
+    "pos.cart_is_empty_toast",
+    "Cart is empty"
+  ],
+  [
+    "pos.amount_less_than_total",
+    "Amount paid is less than the total"
+  ],
+  [
+    "pos.sale_completed_toast",
+    "Sale completed! Invoice: {invoice}"
+  ],
+  [
+    "pos.complete_sale_failed",
+    "Failed to complete sale"
+  ],
+  [
+    "pos.only_units_available",
+    "Only {count} units available"
+  ],
+  [
+    "pos.proof_of_payment",
+    "Proof of Payment (optional)"
+  ],
+  [
+    "pos.upload_receipt",
+    "Upload receipt image"
+  ],
+  [
+    "pos.receipt_uploaded",
+    "Receipt uploaded"
+  ],
+  [
+    "pos.remove",
+    "Remove"
+  ],
+  [
+    "pos.upload_failed",
+    "Upload failed"
+  ],
+  [
+    "sales.title",
+    "Sales History"
+  ],
+  [
+    "sales.invoice",
+    "Invoice"
+  ],
+  [
+    "sales.cashier",
+    "Cashier"
+  ],
+  [
+    "sales.customer",
+    "Customer"
+  ],
+  [
+    "sales.items",
+    "Items"
+  ],
+  [
+    "sales.payment",
+    "Payment"
+  ],
+  [
+    "sales.sale_details",
+    "Sale Details"
+  ],
+  [
+    "sales.no_sales",
+    "No sales found"
+  ],
+  [
+    "sales.subtitle",
+    "{count} transactions · {revenue} revenue"
+  ],
+  [
+    "sales.export_csv",
+    "Export CSV"
+  ],
+  [
+    "sales.search_placeholder",
+    "Search invoice, customer..."
+  ],
+  [
+    "sales.all_status",
+    "All Status"
+  ],
+  [
+    "sales.status_completed",
+    "Completed"
+  ],
+  [
+    "sales.status_pending",
+    "Pending"
+  ],
+  [
+    "sales.status_cancelled",
+    "Cancelled"
+  ],
+  [
+    "sales.status_refunded",
+    "Refunded"
+  ],
+  [
+    "sales.all_payments",
+    "All Payments"
+  ],
+  [
+    "sales.payment_cash",
+    "Cash"
+  ],
+  [
+    "sales.payment_transfer",
+    "Transfer"
+  ],
+  [
+    "sales.payment_pos_terminal",
+    "POS Terminal"
+  ],
+  [
+    "sales.payment_split",
+    "Split"
+  ],
+  [
+    "sales.payment_partial",
+    "Partial"
+  ],
+  [
+    "sales.to_separator",
+    "to"
+  ],
+  [
+    "sales.total",
+    "Total"
+  ],
+  [
+    "sales.date",
+    "Date"
+  ],
+  [
+    "sales.actions",
+    "Actions"
+  ],
+  [
+    "sales.walk_in",
+    "Walk-in"
+  ],
+  [
+    "sales.items_count",
+    "{count} items"
+  ],
+  [
+    "sales.sale_details_title",
+    "Sale Details - {invoice}"
+  ],
+  [
+    "sales.phone",
+    "Phone"
+  ],
+  [
+    "sales.item_product",
+    "Product"
+  ],
+  [
+    "sales.item_qty",
+    "Qty"
+  ],
+  [
+    "sales.item_price",
+    "Price"
+  ],
+  [
+    "sales.item_total",
+    "Total"
+  ],
+  [
+    "sales.subtotal",
+    "Subtotal"
+  ],
+  [
+    "sales.discount",
+    "Discount"
+  ],
+  [
+    "sales.tax",
+    "Tax"
+  ],
+  [
+    "sales.amount_paid",
+    "Amount Paid"
+  ],
+  [
+    "sales.change",
+    "Change"
+  ],
+  [
+    "warehouse.title",
+    "Warehouses"
+  ],
+  [
+    "warehouse.add_warehouse",
+    "Add Warehouse"
+  ],
+  [
+    "warehouse.main_warehouse",
+    "Main Warehouse"
+  ],
+  [
+    "warehouse.transfer_stock",
+    "Transfer Stock"
+  ],
+  [
+    "warehouse.from",
+    "From"
+  ],
+  [
+    "warehouse.to",
+    "To"
+  ],
+  [
+    "warehouse.pending_transfers",
+    "Pending Transfers"
+  ],
+  [
+    "warehouse.receive_transfer",
+    "Receive Transfer"
+  ],
+  [
+    "warehouse.locations_count",
+    "{count} locations"
+  ],
+  [
+    "warehouse.main_badge",
+    "Main"
+  ],
+  [
+    "warehouse.delete_confirm",
+    "Delete \"{name}\"?"
+  ],
+  [
+    "warehouse.updated_success",
+    "Warehouse updated"
+  ],
+  [
+    "warehouse.created_success",
+    "Warehouse created"
+  ],
+  [
+    "warehouse.save_failed",
+    "Failed to save warehouse"
+  ],
+  [
+    "warehouse.deleted_success",
+    "Warehouse deleted"
+  ],
+  [
+    "warehouse.delete_failed_inventory",
+    "Cannot delete — warehouse may have inventory"
+  ],
+  [
+    "warehouse.total_stock",
+    "Total Stock"
+  ],
+  [
+    "warehouse.edit_warehouse",
+    "Edit Warehouse"
+  ],
+  [
+    "warehouse.create_warehouse",
+    "Create Warehouse"
+  ],
+  [
+    "warehouse.warehouse_name_required",
+    "Warehouse Name *"
+  ],
+  [
+    "warehouse.description",
+    "Description"
+  ],
+  [
+    "warehouse.address",
+    "Address"
+  ],
+  [
+    "warehouse.main_warehouse_checkbox",
+    "Main warehouse"
+  ],
+  [
+    "warehouse.cancel",
+    "Cancel"
+  ],
+  [
+    "warehouse.update",
+    "Update"
+  ],
+  [
+    "warehouse.create",
+    "Create"
+  ],
+  [
+    "transfers.title",
+    "Warehouse Transfers"
+  ],
+  [
+    "transfers.subtitle_pending",
+    "{count} pending transfer(s)"
+  ],
+  [
+    "transfers.new_transfer",
+    "New Transfer"
+  ],
+  [
+    "transfers.product",
+    "Product"
+  ],
+  [
+    "transfers.from",
+    "From"
+  ],
+  [
+    "transfers.to",
+    "To"
+  ],
+  [
+    "transfers.quantity",
+    "Quantity"
+  ],
+  [
+    "transfers.sent_by",
+    "Sent By"
+  ],
+  [
+    "transfers.received_by",
+    "Received By"
+  ],
+  [
+    "transfers.date_sent",
+    "Date Sent"
+  ],
+  [
+    "transfers.status",
+    "Status"
+  ],
+  [
+    "transfers.actions",
+    "Actions"
+  ],
+  [
+    "transfers.no_transfers",
+    "No transfers found"
+  ],
+  [
+    "transfers.receive",
+    "Receive"
+  ],
+  [
+    "transfers.cancel_action",
+    "Cancel"
+  ],
+  [
+    "transfers.create_dialog_title",
+    "Create Warehouse Transfer"
+  ],
+  [
+    "transfers.from_warehouse",
+    "From Warehouse *"
+  ],
+  [
+    "transfers.to_warehouse",
+    "To Warehouse *"
+  ],
+  [
+    "transfers.select_placeholder",
+    "Select..."
+  ],
+  [
+    "transfers.product_required",
+    "Product *"
+  ],
+  [
+    "transfers.select_product",
+    "Select product"
+  ],
+  [
+    "transfers.quantity_required",
+    "Quantity *"
+  ],
+  [
+    "transfers.enter_quantity",
+    "Enter quantity"
+  ],
+  [
+    "transfers.notes",
+    "Notes"
+  ],
+  [
+    "transfers.notes_placeholder",
+    "Optional notes..."
+  ],
+  [
+    "transfers.cancel",
+    "Cancel"
+  ],
+  [
+    "transfers.create_transfer",
+    "Create Transfer"
+  ],
+  [
+    "transfers.fill_required",
+    "Please fill all required fields"
+  ],
+  [
+    "transfers.different_warehouses",
+    "From and To warehouses must be different"
+  ],
+  [
+    "transfers.valid_quantity",
+    "Enter a valid quantity"
+  ],
+  [
+    "transfers.created_success",
+    "Transfer created successfully"
+  ],
+  [
+    "transfers.create_failed",
+    "Failed to create transfer"
+  ],
+  [
+    "transfers.updated_success",
+    "Transfer updated successfully"
+  ],
+  [
+    "transfers.update_failed",
+    "Failed to update transfer"
+  ],
+  [
+    "transfers.status_pending",
+    "Pending"
+  ],
+  [
+    "transfers.status_received",
+    "Received"
+  ],
+  [
+    "transfers.status_cancelled",
+    "Cancelled"
+  ],
+  [
+    "transfers.initiated_by",
+    "Initiated By"
+  ],
+  [
+    "transfers.approved_by",
+    "Approved By"
+  ],
+  [
+    "transfers.coordinated_by",
+    "Coordinated By"
+  ],
+  [
+    "transfers.initiated_by_placeholder",
+    "Who requested this transfer"
+  ],
+  [
+    "transfers.approved_by_placeholder",
+    "Who approved this transfer"
+  ],
+  [
+    "transfers.coordinated_by_placeholder",
+    "Who coordinates this transfer"
+  ],
+  [
+    "transfers.view_receipt",
+    "View Receipt"
+  ],
+  [
+    "transfers.print_receipt",
+    "Print Receipt"
+  ],
+  [
+    "transfers.download_pdf",
+    "Download PDF"
+  ],
+  [
+    "transfers.transfer_note_title",
+    "Stock Transfer Note"
+  ],
+  [
+    "purchaseOrders.title",
+    "Purchase Orders"
+  ],
+  [
+    "purchaseOrders.subtitle",
+    "{draft} draft · {sent} awaiting delivery"
+  ],
+  [
+    "purchaseOrders.new_po",
+    "New Purchase Order"
+  ],
+  [
+    "purchaseOrders.supplier",
+    "Supplier"
+  ],
+  [
+    "purchaseOrders.items_count",
+    "Items"
+  ],
+  [
+    "purchaseOrders.total_value",
+    "Total Value"
+  ],
+  [
+    "purchaseOrders.expected_date",
+    "Expected Date"
+  ],
+  [
+    "purchaseOrders.no_purchase_orders",
+    "No purchase orders found"
+  ],
+  [
+    "purchaseOrders.send",
+    "Send"
+  ],
+  [
+    "purchaseOrders.receive",
+    "Receive"
+  ],
+  [
+    "purchaseOrders.cancel_action",
+    "Cancel"
+  ],
+  [
+    "purchaseOrders.create_dialog_title",
+    "Create Purchase Order"
+  ],
+  [
+    "purchaseOrders.details_dialog_title",
+    "Purchase Order Details"
+  ],
+  [
+    "purchaseOrders.supplier_required",
+    "Supplier *"
+  ],
+  [
+    "purchaseOrders.select_supplier",
+    "Select supplier"
+  ],
+  [
+    "purchaseOrders.select_supplier_required",
+    "Please select a supplier"
+  ],
+  [
+    "purchaseOrders.line_items_required",
+    "Line Items *"
+  ],
+  [
+    "purchaseOrders.add_item_required",
+    "Please add at least one line item"
+  ],
+  [
+    "purchaseOrders.valid_item_values",
+    "Enter a valid quantity and unit cost for each item"
+  ],
+  [
+    "purchaseOrders.product",
+    "Product"
+  ],
+  [
+    "purchaseOrders.qty",
+    "Qty"
+  ],
+  [
+    "purchaseOrders.unit_cost",
+    "Unit Cost"
+  ],
+  [
+    "purchaseOrders.line_total",
+    "Line Total"
+  ],
+  [
+    "purchaseOrders.add_item",
+    "Add Item"
+  ],
+  [
+    "purchaseOrders.notes",
+    "Notes"
+  ],
+  [
+    "purchaseOrders.notes_placeholder",
+    "Optional notes..."
+  ],
+  [
+    "purchaseOrders.cancel",
+    "Cancel"
+  ],
+  [
+    "purchaseOrders.save_draft",
+    "Save as Draft"
+  ],
+  [
+    "purchaseOrders.created_success",
+    "Purchase order created successfully"
+  ],
+  [
+    "purchaseOrders.create_failed",
+    "Failed to create purchase order"
+  ],
+  [
+    "purchaseOrders.sent_success",
+    "Purchase order sent to supplier"
+  ],
+  [
+    "purchaseOrders.cancelled_success",
+    "Purchase order cancelled"
+  ],
+  [
+    "purchaseOrders.received_success",
+    "Purchase order received — inventory updated"
+  ],
+  [
+    "purchaseOrders.update_failed",
+    "Failed to update purchase order"
+  ],
+  [
+    "purchaseOrders.no_warehouse",
+    "No warehouse found to receive stock into"
+  ],
+  [
+    "purchaseOrders.created_by_label",
+    "Created by"
+  ],
+  [
+    "purchaseOrders.received_by_label",
+    "Received by"
+  ],
+  [
+    "vendors.stock_check_title",
+    "This stock update needs a quick check"
+  ],
+  [
+    "vendors.stock_check_instruction",
+    "Count the items below and ask the shop owner to compare the count with Inventory. Your saved updates are kept for review."
+  ],
+  [
+    "vendors.stock_check_quantity",
+    "saved quantity {quantity}"
+  ],
+  [
+    "vendors.stock_check_link",
+    "Open Inventory to check stock"
+  ],
+  [
+    "vendors.title",
+    "Vendor Sales"
+  ],
+  [
+    "vendors.add_vendor",
+    "Add Vendor Transaction"
+  ],
+  [
+    "vendors.vendor_name",
+    "Vendor Name"
+  ],
+  [
+    "vendors.date_issued",
+    "Date Issued"
+  ],
+  [
+    "vendors.expected_payment",
+    "Expected Payment Date"
+  ],
+  [
+    "vendors.pending",
+    "Pending"
+  ],
+  [
+    "vendors.completed",
+    "Completed"
+  ],
+  [
+    "vendors.partial",
+    "Partial Payment"
+  ],
+  [
+    "vendors.overdue",
+    "Overdue"
+  ],
+  [
+    "vendors.mark_paid",
+    "Mark as Paid"
+  ],
+  [
+    "vendors.debt_amount",
+    "Debt Amount"
+  ],
+  [
+    "vendors.amount_paid",
+    "Amount Paid"
+  ],
+  [
+    "vendors.balance",
+    "Balance"
+  ],
+  [
+    "vendors.subtitle_debt",
+    "Outstanding debt: {amount}"
+  ],
+  [
+    "vendors.new_transaction",
+    "New Vendor Transaction"
+  ],
+  [
+    "vendors.alert_banner",
+    "You have {amount} in outstanding vendor payments. Follow up to collect."
+  ],
+  [
+    "vendors.phone",
+    "Phone"
+  ],
+  [
+    "vendors.total_value",
+    "Total Value"
+  ],
+  [
+    "vendors.status",
+    "Status"
+  ],
+  [
+    "vendors.actions",
+    "Actions"
+  ],
+  [
+    "vendors.no_transactions",
+    "No vendor transactions found"
+  ],
+  [
+    "vendors.view",
+    "View"
+  ],
+  [
+    "vendors.pay",
+    "Pay"
+  ],
+  [
+    "vendors.record_payment_prompt",
+    "Enter payment amount"
+  ],
+  [
+    "vendors.vendor_name_required",
+    "Vendor Name *"
+  ],
+  [
+    "vendors.products_required",
+    "Products *"
+  ],
+  [
+    "vendors.product",
+    "Product"
+  ],
+  [
+    "vendors.qty",
+    "Qty"
+  ],
+  [
+    "vendors.unit_price",
+    "Unit Price"
+  ],
+  [
+    "vendors.add_item",
+    "Add Item"
+  ],
+  [
+    "vendors.notes",
+    "Notes"
+  ],
+  [
+    "vendors.cancel",
+    "Cancel"
+  ],
+  [
+    "vendors.create_transaction",
+    "Create Transaction"
+  ],
+  [
+    "vendors.view_dialog_title",
+    "{name} — Transaction"
+  ],
+  [
+    "vendors.issued",
+    "Issued"
+  ],
+  [
+    "vendors.expected",
+    "Expected"
+  ],
+  [
+    "vendors.total",
+    "Total"
+  ],
+  [
+    "vendors.paid",
+    "Paid"
+  ],
+  [
+    "vendors.products_label",
+    "Products:"
+  ],
+  [
+    "vendors.payment_method",
+    "Payment Method"
+  ],
+  [
+    "vendors.select_payment_method",
+    "Select payment method"
+  ],
+  [
+    "vendors.proof_of_payment",
+    "Proof of Payment (optional)"
+  ],
+  [
+    "vendors.upload_receipt",
+    "Upload receipt image"
+  ],
+  [
+    "vendors.receipt_uploaded",
+    "Receipt uploaded"
+  ],
+  [
+    "reports.title",
+    "Reports"
+  ],
+  [
+    "reports.generate",
+    "Generate Report"
+  ],
+  [
+    "reports.daily",
+    "Daily"
+  ],
+  [
+    "reports.weekly",
+    "Weekly"
+  ],
+  [
+    "reports.monthly",
+    "Monthly"
+  ],
+  [
+    "reports.quarterly",
+    "Quarterly"
+  ],
+  [
+    "reports.yearly",
+    "Yearly"
+  ],
+  [
+    "reports.inventory_report",
+    "Inventory Report"
+  ],
+  [
+    "reports.sales_report",
+    "Sales Report"
+  ],
+  [
+    "reports.profit_report",
+    "Profit Report"
+  ],
+  [
+    "reports.stock_movement",
+    "Stock Movement"
+  ],
+  [
+    "reports.vendor_debts",
+    "Vendor Debts"
+  ],
+  [
+    "reports.transfers",
+    "Warehouse Transfers"
+  ],
+  [
+    "reports.export_pdf",
+    "Export PDF"
+  ],
+  [
+    "reports.export_excel",
+    "Export Excel"
+  ],
+  [
+    "reports.export_csv",
+    "Export CSV"
+  ],
+  [
+    "reports.total_revenue",
+    "Total Revenue"
+  ],
+  [
+    "reports.total_cost",
+    "Total Cost"
+  ],
+  [
+    "reports.gross_profit",
+    "Gross Profit"
+  ],
+  [
+    "reports.profit_margin",
+    "Profit Margin"
+  ],
+  [
+    "audit.title",
+    "Audit Trail"
+  ],
+  [
+    "audit.action",
+    "Action"
+  ],
+  [
+    "audit.resource",
+    "Resource"
+  ],
+  [
+    "audit.old_value",
+    "Old Value"
+  ],
+  [
+    "audit.new_value",
+    "New Value"
+  ],
+  [
+    "audit.performed_by",
+    "Performed By"
+  ],
+  [
+    "audit.ip_address",
+    "IP Address"
+  ],
+  [
+    "audit.timestamp",
+    "Timestamp"
+  ],
+  [
+    "audit.reason",
+    "Reason"
+  ],
+  [
+    "audit.no_logs",
+    "No audit logs found"
+  ],
+  [
+    "audit.subtitle",
+    "Complete immutable history of all system changes"
+  ],
+  [
+    "audit.export_csv",
+    "Export CSV"
+  ],
+  [
+    "audit.search_placeholder",
+    "Search action, user..."
+  ],
+  [
+    "audit.all_resources",
+    "All Resources"
+  ],
+  [
+    "audit.resource_products",
+    "Products"
+  ],
+  [
+    "audit.resource_inventory",
+    "Inventory"
+  ],
+  [
+    "audit.resource_sales",
+    "Sales"
+  ],
+  [
+    "audit.resource_users",
+    "Users"
+  ],
+  [
+    "audit.resource_warehouses",
+    "Warehouses"
+  ],
+  [
+    "audit.resource_vendor_transactions",
+    "Vendor Transactions"
+  ],
+  [
+    "audit.resource_transfers",
+    "Transfers"
+  ],
+  [
+    "audit.to_separator",
+    "to"
+  ],
+  [
+    "audit.user",
+    "User"
+  ],
+  [
+    "audit.changes",
+    "Changes"
+  ],
+  [
+    "audit.details",
+    "Details"
+  ],
+  [
+    "audit.fields_changed",
+    "{count} field(s) changed"
+  ],
+  [
+    "audit.new_record",
+    "New record created"
+  ],
+  [
+    "audit.view",
+    "View"
+  ],
+  [
+    "audit.dialog_title",
+    "Audit Log Details"
+  ],
+  [
+    "audit.browser",
+    "Browser"
+  ],
+  [
+    "audit.previous_values",
+    "Previous Values"
+  ],
+  [
+    "audit.new_values",
+    "New Values"
+  ],
+  [
+    "users.title",
+    "User Management"
+  ],
+  [
+    "users.add_user",
+    "Add User"
+  ],
+  [
+    "users.role",
+    "Role"
+  ],
+  [
+    "users.platform_owner",
+    "Platform Owner"
+  ],
+  [
+    "users.business_owner",
+    "Business Owner"
+  ],
+  [
+    "users.admin",
+    "Admin"
+  ],
+  [
+    "users.cashier",
+    "Cashier"
+  ],
+  [
+    "users.reset_password",
+    "Reset Password"
+  ],
+  [
+    "users.suspend_user",
+    "Suspend User"
+  ],
+  [
+    "users.activate_user",
+    "Activate User"
+  ],
+  [
+    "users.last_login",
+    "Last Login"
+  ],
+  [
+    "users.no_users",
+    "No users found"
+  ],
+  [
+    "users.access_denied",
+    "Access Denied"
+  ],
+  [
+    "users.access_denied_desc",
+    "Only business owners can manage users."
+  ],
+  [
+    "users.subtitle",
+    "{count} user(s) in your organization"
+  ],
+  [
+    "users.phone",
+    "Phone"
+  ],
+  [
+    "users.status",
+    "Status"
+  ],
+  [
+    "users.joined",
+    "Joined"
+  ],
+  [
+    "users.actions",
+    "Actions"
+  ],
+  [
+    "users.no_users_desc",
+    "No users found. Create one to get started."
+  ],
+  [
+    "users.edit",
+    "Edit"
+  ],
+  [
+    "users.delete",
+    "Delete"
+  ],
+  [
+    "users.never",
+    "Never"
+  ],
+  [
+    "users.create_dialog_title",
+    "Add User"
+  ],
+  [
+    "users.create_dialog_desc",
+    "Create a new team member account."
+  ],
+  [
+    "users.full_name",
+    "Full Name"
+  ],
+  [
+    "users.email",
+    "Email"
+  ],
+  [
+    "users.password",
+    "Password"
+  ],
+  [
+    "users.cancel",
+    "Cancel"
+  ],
+  [
+    "users.create_user",
+    "Create User"
+  ],
+  [
+    "users.fill_required",
+    "Please fill in all required fields"
+  ],
+  [
+    "users.edit_dialog_title",
+    "Edit User"
+  ],
+  [
+    "users.edit_dialog_desc",
+    "Update this team member's details."
+  ],
+  [
+    "users.save_changes",
+    "Save Changes"
+  ],
+  [
+    "users.reset_password_title",
+    "Reset Password"
+  ],
+  [
+    "users.reset_password_desc",
+    "Set a new password for this user."
+  ],
+  [
+    "users.new_password",
+    "New Password"
+  ],
+  [
+    "users.confirm_password",
+    "Confirm Password"
+  ],
+  [
+    "users.password_min_length",
+    "Password must be at least 8 characters"
+  ],
+  [
+    "users.passwords_do_not_match",
+    "Passwords do not match"
+  ],
+  [
+    "users.delete_title",
+    "Delete User"
+  ],
+  [
+    "users.delete_warning",
+    "Are you sure you want to delete this user? This action cannot be undone."
+  ],
+  [
+    "users.delete_user",
+    "Delete User"
+  ],
+  [
+    "notifications.title",
+    "Notifications"
+  ],
+  [
+    "notifications.mark_all_read",
+    "Mark All as Read"
+  ],
+  [
+    "notifications.no_notifications",
+    "No notifications"
+  ],
+  [
+    "notifications.low_stock",
+    "Low Stock Alert"
+  ],
+  [
+    "notifications.out_of_stock",
+    "Out of Stock"
+  ],
+  [
+    "notifications.pending_payment",
+    "Pending Payment"
+  ],
+  [
+    "notifications.pending_transfer",
+    "Pending Transfer"
+  ],
+  [
+    "notifications.subscription_expiry",
+    "Subscription Expiry"
+  ],
+  [
+    "notifications.unread_count",
+    "{count} unread notification(s)"
+  ],
+  [
+    "notifications.all_caught_up",
+    "All caught up!"
+  ],
+  [
+    "notifications.empty_state",
+    "No notifications yet"
+  ],
+  [
+    "settings.title",
+    "Settings"
+  ],
+  [
+    "settings.subtitle",
+    "Manage your account and application preferences"
+  ],
+  [
+    "settings.organization",
+    "Organization"
+  ],
+  [
+    "settings.profile",
+    "My Profile"
+  ],
+  [
+    "settings.language",
+    "Language"
+  ],
+  [
+    "settings.theme",
+    "Theme"
+  ],
+  [
+    "settings.receipt",
+    "Receipt Settings"
+  ],
+  [
+    "settings.notifications_pref",
+    "Notification Preferences"
+  ],
+  [
+    "settings.tax_rate",
+    "Tax Rate"
+  ],
+  [
+    "settings.currency",
+    "Currency"
+  ],
+  [
+    "settings.tab_profile",
+    "Profile"
+  ],
+  [
+    "settings.tab_business",
+    "Business"
+  ],
+  [
+    "settings.tab_display",
+    "Display"
+  ],
+  [
+    "settings.tab_security",
+    "Security"
+  ],
+  [
+    "settings.personal_information",
+    "Personal Information"
+  ],
+  [
+    "settings.personal_information_desc",
+    "Update your name and contact details"
+  ],
+  [
+    "settings.full_name",
+    "Full Name *"
+  ],
+  [
+    "settings.full_name_placeholder",
+    "Your full name"
+  ],
+  [
+    "settings.phone_number",
+    "Phone Number"
+  ],
+  [
+    "settings.phone_placeholder",
+    "+234 800 000 0000"
+  ],
+  [
+    "settings.email_address",
+    "Email Address"
+  ],
+  [
+    "settings.email_cannot_change",
+    "Email cannot be changed here"
+  ],
+  [
+    "settings.save_changes",
+    "Save Changes"
+  ],
+  [
+    "settings.full_name_required",
+    "Full name is required"
+  ],
+  [
+    "settings.profile_updated",
+    "Profile updated successfully"
+  ],
+  [
+    "settings.profile_update_failed",
+    "Failed to update profile. Please try again."
+  ],
+  [
+    "settings.business_information",
+    "Business Information"
+  ],
+  [
+    "settings.business_information_desc",
+    "Update your business details and preferences"
+  ],
+  [
+    "settings.business_name",
+    "Business Name *"
+  ],
+  [
+    "settings.business_name_placeholder",
+    "Your business name"
+  ],
+  [
+    "settings.business_email_placeholder",
+    "business@email.com"
+  ],
+  [
+    "settings.business_address",
+    "Address"
+  ],
+  [
+    "settings.business_address_placeholder",
+    "Business address"
+  ],
+  [
+    "settings.timezone",
+    "Timezone"
+  ],
+  [
+    "settings.save_business_settings",
+    "Save Business Settings"
+  ],
+  [
+    "settings.business_name_required",
+    "Business name is required"
+  ],
+  [
+    "settings.org_settings_saved",
+    "Organization settings saved"
+  ],
+  [
+    "settings.org_settings_save_failed",
+    "Failed to save organization settings"
+  ],
+  [
+    "settings.display_preferences",
+    "Display Preferences"
+  ],
+  [
+    "settings.display_preferences_desc",
+    "Customize how TracKasuwa looks and feels"
+  ],
+  [
+    "settings.theme_light",
+    "Light"
+  ],
+  [
+    "settings.theme_dark",
+    "Dark"
+  ],
+  [
+    "settings.theme_system",
+    "System"
+  ],
+  [
+    "settings.language_hint",
+    "Language changes apply immediately and are saved automatically."
+  ],
+  [
+    "settings.change_password",
+    "Change Password"
+  ],
+  [
+    "settings.change_password_desc",
+    "Update your account password. Use at least 8 characters."
+  ],
+  [
+    "settings.new_password",
+    "New Password"
+  ],
+  [
+    "settings.confirm_new_password",
+    "Confirm New Password"
+  ],
+  [
+    "settings.passwords_do_not_match",
+    "Passwords do not match"
+  ],
+  [
+    "settings.password_required",
+    "New password is required"
+  ],
+  [
+    "settings.password_min_length",
+    "Password must be at least 8 characters"
+  ],
+  [
+    "settings.password_changed",
+    "Password changed successfully"
+  ],
+  [
+    "settings.password_change_failed",
+    "Failed to change password"
+  ],
+  [
+    "header.search_placeholder",
+    "Search products, sales, invoices..."
+  ],
+  [
+    "header.online",
+    "Online"
+  ],
+  [
+    "header.offline",
+    "Offline"
+  ],
+  [
+    "header.online_tooltip",
+    "Connected to internet"
+  ],
+  [
+    "header.offline_tooltip",
+    "Working offline — changes will sync when reconnected"
+  ],
+  [
+    "header.working_offline",
+    "Working offline"
+  ],
+  [
+    "header.toggle_theme",
+    "Toggle theme"
+  ],
+  [
+    "header.notifications",
+    "Notifications"
+  ],
+  [
+    "header.profile",
+    "Profile"
+  ],
+  [
+    "header.settings",
+    "Settings"
+  ],
+  [
+    "header.sign_out",
+    "Sign out"
+  ],
+  [
+    "header.syncing",
+    "Syncing..."
+  ],
+  [
+    "admin.title",
+    "Owner Dashboard"
+  ],
+  [
+    "admin.subtitle",
+    "Platform-wide analytics, merchant management, and system health"
+  ],
+  [
+    "admin.refresh",
+    "Refresh"
+  ],
+  [
+    "admin.systems_operational",
+    "All systems operational"
+  ],
+  [
+    "admin.last_checked",
+    "Last checked"
+  ],
+  [
+    "admin.total_merchants",
+    "Total Merchants"
+  ],
+  [
+    "admin.active_subscriptions",
+    "Active Subscriptions"
+  ],
+  [
+    "admin.mrr",
+    "MRR"
+  ],
+  [
+    "admin.arr",
+    "ARR"
+  ],
+  [
+    "admin.monthly_recurring_revenue",
+    "Monthly Recurring Revenue"
+  ],
+  [
+    "admin.total_collected",
+    "Total collected"
+  ],
+  [
+    "admin.overview",
+    "Overview"
+  ],
+  [
+    "admin.merchants",
+    "Merchants"
+  ],
+  [
+    "admin.revenue",
+    "Revenue"
+  ],
+  [
+    "admin.audit_log",
+    "Audit Log"
+  ],
+  [
+    "admin.revenue_growth",
+    "Revenue Growth"
+  ],
+  [
+    "admin.revenue_growth_desc",
+    "Monthly recurring revenue over time (NGN)"
+  ],
+  [
+    "admin.merchant_acquisition",
+    "Merchant Acquisition"
+  ],
+  [
+    "admin.merchant_acquisition_desc",
+    "New merchants registered per month"
+  ],
+  [
+    "admin.active",
+    "Active"
+  ],
+  [
+    "admin.pending",
+    "Pending"
+  ],
+  [
+    "admin.suspended",
+    "Suspended"
+  ],
+  [
+    "admin.onboarded",
+    "Onboarded"
+  ],
+  [
+    "admin.all_merchants",
+    "All Merchants"
+  ],
+  [
+    "admin.merchant_list_desc",
+    "Platform-wide merchant list"
+  ],
+  [
+    "admin.business",
+    "Business"
+  ],
+  [
+    "admin.email",
+    "Email"
+  ],
+  [
+    "admin.status",
+    "Status"
+  ],
+  [
+    "admin.verification",
+    "Verification"
+  ],
+  [
+    "admin.joined",
+    "Joined"
+  ],
+  [
+    "admin.actions",
+    "Actions"
+  ],
+  [
+    "admin.no_merchants",
+    "No merchants registered yet"
+  ],
+  [
+    "admin.complete",
+    "Complete"
+  ],
+  [
+    "admin.in_progress",
+    "In Progress"
+  ],
+  [
+    "admin.total_revenue",
+    "Total Revenue"
+  ],
+  [
+    "admin.current_mrr",
+    "Current MRR"
+  ],
+  [
+    "admin.arr_projection",
+    "ARR Projection"
+  ],
+  [
+    "admin.revenue_trend",
+    "Revenue Trend (12 months)"
+  ],
+  [
+    "admin.live_audit_stream",
+    "Live Audit Stream"
+  ],
+  [
+    "admin.live_audit_desc",
+    "Latest 20 platform events · auto-refreshes every 30s"
+  ],
+  [
+    "admin.live",
+    "Live"
+  ],
+  [
+    "admin.no_audit_events",
+    "No audit events yet"
+  ],
+  [
+    "admin.access_restricted",
+    "Access Restricted"
+  ],
+  [
+    "admin.access_restricted_desc",
+    "This dashboard is restricted to TracKasuwa platform owners only."
+  ],
+  [
+    "admin.no_revenue_title",
+    "No Revenue Data Yet"
+  ],
+  [
+    "admin.no_revenue_desc",
+    "This chart will populate automatically once paid invoices start coming in."
+  ],
+  [
+    "admin.no_merchant_data_title",
+    "No Merchant Data Yet"
+  ],
+  [
+    "admin.no_merchant_data_desc",
+    "New merchant sign-ups will appear here as they register on the platform."
+  ],
+  [
+    "admin.no_data_disclaimer",
+    "This chart is not showing demo or simulated data"
+  ],
+  [
+    "merchants.title",
+    "Merchants"
+  ],
+  [
+    "merchants.add_merchant",
+    "Add Merchant"
+  ],
+  [
+    "merchants.edit_merchant",
+    "Edit Merchant"
+  ],
+  [
+    "merchants.business_name",
+    "Business Name"
+  ],
+  [
+    "merchants.subscription",
+    "Subscription"
+  ],
+  [
+    "merchants.status",
+    "Status"
+  ],
+  [
+    "merchants.devices",
+    "Devices"
+  ],
+  [
+    "merchants.max_devices",
+    "Max Devices"
+  ],
+  [
+    "merchants.onboarding",
+    "Onboarding"
+  ],
+  [
+    "merchants.verification_status",
+    "Verification Status"
+  ],
+  [
+    "merchants.verified",
+    "Verified"
+  ],
+  [
+    "merchants.pending",
+    "Pending"
+  ],
+  [
+    "merchants.suspended",
+    "Suspended"
+  ],
+  [
+    "merchants.subtitle",
+    "Manage merchant accounts, onboarding, and device limits"
+  ],
+  [
+    "merchants.search_placeholder",
+    "Search merchants…"
+  ],
+  [
+    "merchants.all_label",
+    "All ({count})"
+  ],
+  [
+    "merchants.active_label",
+    "Active ({count})"
+  ],
+  [
+    "merchants.pending_label",
+    "Pending ({count})"
+  ],
+  [
+    "merchants.suspended_label",
+    "Suspended ({count})"
+  ],
+  [
+    "merchants.deactivated_label",
+    "Deactivated ({count})"
+  ],
+  [
+    "merchants.contact",
+    "Contact"
+  ],
+  [
+    "merchants.verification",
+    "Verification"
+  ],
+  [
+    "merchants.registered",
+    "Registered"
+  ],
+  [
+    "merchants.actions",
+    "Actions"
+  ],
+  [
+    "merchants.no_merchants",
+    "No merchants found"
+  ],
+  [
+    "merchants.try_adjusting_search",
+    "Try adjusting your search"
+  ],
+  [
+    "merchants.add_first_merchant",
+    "Add your first merchant to get started"
+  ],
+  [
+    "merchants.view_details",
+    "View Details"
+  ],
+  [
+    "merchants.activate",
+    "Activate"
+  ],
+  [
+    "merchants.mark_verified",
+    "Mark Verified"
+  ],
+  [
+    "merchants.suspend",
+    "Suspend"
+  ],
+  [
+    "merchants.delete",
+    "Delete"
+  ],
+  [
+    "merchants.done",
+    "Done"
+  ],
+  [
+    "merchants.step1_title",
+    "Step 1: Business Information"
+  ],
+  [
+    "merchants.business_type",
+    "Business Type"
+  ],
+  [
+    "merchants.type_retail",
+    "Retail"
+  ],
+  [
+    "merchants.type_wholesale",
+    "Wholesale"
+  ],
+  [
+    "merchants.type_restaurant",
+    "Restaurant / Food"
+  ],
+  [
+    "merchants.type_services",
+    "Services"
+  ],
+  [
+    "merchants.type_ecommerce",
+    "E-Commerce"
+  ],
+  [
+    "merchants.type_other",
+    "Other"
+  ],
+  [
+    "merchants.registration_number",
+    "Registration Number"
+  ],
+  [
+    "merchants.tax_id",
+    "Tax ID (TIN)"
+  ],
+  [
+    "merchants.country",
+    "Country"
+  ],
+  [
+    "merchants.step2_title",
+    "Step 2: Contact & Address"
+  ],
+  [
+    "merchants.contact_phone",
+    "Contact Phone"
+  ],
+  [
+    "merchants.street_address",
+    "Street Address"
+  ],
+  [
+    "merchants.city",
+    "City"
+  ],
+  [
+    "merchants.state",
+    "State"
+  ],
+  [
+    "merchants.step3_title",
+    "Step 3: Review & Confirm"
+  ],
+  [
+    "merchants.business_label",
+    "Business"
+  ],
+  [
+    "merchants.contact_label",
+    "Contact"
+  ],
+  [
+    "merchants.email_label",
+    "Email"
+  ],
+  [
+    "merchants.location_label",
+    "Location"
+  ],
+  [
+    "merchants.internal_notes",
+    "Internal Notes (optional)"
+  ],
+  [
+    "merchants.back",
+    "Back"
+  ],
+  [
+    "merchants.create_merchant",
+    "Create Merchant"
+  ],
+  [
+    "merchants.business_details",
+    "Business Details"
+  ],
+  [
+    "merchants.onboarding_progress",
+    "Onboarding Progress"
+  ],
+  [
+    "merchants.device_limits",
+    "Device Limits"
+  ],
+  [
+    "merchants.max_devices_label",
+    "Max devices:"
+  ],
+  [
+    "merchants.no_device_limit",
+    "No device limit data"
+  ],
+  [
+    "merchants.close",
+    "Close"
+  ],
+  [
+    "merchants.activate_confirm",
+    "Activate \"{name}\"? This will enable full platform access."
+  ],
+  [
+    "merchants.suspend_confirm",
+    "Suspend \"{name}\"? They will lose access until re-activated."
+  ],
+  [
+    "merchants.verify_confirm",
+    "Mark \"{name}\" as verified?"
+  ],
+  [
+    "merchants.delete_confirm",
+    "Permanently delete \"{name}\"? This cannot be undone."
+  ],
+  [
+    "merchants.delete_merchant_title",
+    "Delete Merchant"
+  ],
+  [
+    "merchants.activate_title",
+    "Activate Merchant"
+  ],
+  [
+    "merchants.suspend_title",
+    "Suspend Merchant"
+  ],
+  [
+    "merchants.verify_title",
+    "Verify Merchant"
+  ],
+  [
+    "merchants.created_success",
+    "Merchant created successfully"
+  ],
+  [
+    "merchants.updated_success",
+    "Merchant updated successfully"
+  ],
+  [
+    "merchants.action_failed",
+    "Action failed"
+  ],
+  [
+    "merchants.devices_updated",
+    "Device limits updated"
+  ],
+  [
+    "merchants.devices_update_failed",
+    "Failed to update device limits"
+  ],
+  [
+    "merchants.name_email_required",
+    "Business name, contact name, and email are required"
+  ],
+  [
+    "merchants.create_failed",
+    "Failed to create merchant"
+  ],
+  [
+    "merchants.dialog_title",
+    "Register New Merchant"
+  ],
+  [
+    "merchants.dialog_desc",
+    "Complete all steps to onboard a new merchant to the platform."
+  ],
+  [
+    "merchants.onboard_success_title",
+    "Merchant Onboarded Successfully"
+  ],
+  [
+    "merchants.onboard_success_desc",
+    "A new organization and Business Owner account have been created. Share these sign-in details with the merchant — this temporary password is shown only once and cannot be retrieved again."
+  ],
+  [
+    "merchants.temp_password_label",
+    "Temporary Password"
+  ],
+  [
+    "merchants.temp_password_copy",
+    "Copy"
+  ],
+  [
+    "merchants.temp_password_copied",
+    "Copied to clipboard"
+  ],
+  [
+    "merchants.temp_password_warning",
+    "The merchant must change this password on first login."
+  ],
+  [
+    "merchants.business_owner_email_label",
+    "Business Owner Login Email"
+  ],
+  [
+    "merchants.virtual_account_created",
+    "A dedicated Zainpay virtual account was created for automatic payment reconciliation."
+  ],
+  [
+    "merchants.virtual_account_not_created",
+    "No virtual account was created (Zainpay not configured) — payment reconciliation can be set up later."
+  ],
+  [
+    "merchants.plan_updated",
+    "Merchant subscription plan updated"
+  ],
+  [
+    "merchants.plan_update_failed",
+    "Failed to update subscription plan"
+  ],
+  [
+    "merchants.business_name_placeholder",
+    "ACME Stores Ltd"
+  ],
+  [
+    "merchants.select_type_placeholder",
+    "Select type"
+  ],
+  [
+    "merchants.registration_number_placeholder",
+    "RC-12345678"
+  ],
+  [
+    "merchants.tax_id_placeholder",
+    "12345678-0001"
+  ],
+  [
+    "merchants.contact_person_name",
+    "Contact Person Name"
+  ],
+  [
+    "merchants.contact_email_label",
+    "Contact Email"
+  ],
+  [
+    "merchants.contact_email_placeholder",
+    "john@business.com"
+  ],
+  [
+    "merchants.contact_phone_placeholder",
+    "+2348012345678"
+  ],
+  [
+    "merchants.full_name_placeholder",
+    "John Doe"
+  ],
+  [
+    "merchants.address_placeholder",
+    "123 Business Street"
+  ],
+  [
+    "merchants.city_placeholder",
+    "Lagos"
+  ],
+  [
+    "merchants.state_placeholder",
+    "Lagos State"
+  ],
+  [
+    "merchants.notes_placeholder",
+    "Any additional notes about this merchant..."
+  ],
+  [
+    "merchants.next",
+    "Next"
+  ],
+  [
+    "merchants.creating",
+    "Creating..."
+  ],
+  [
+    "merchants.merchant_header",
+    "Merchant"
+  ],
+  [
+    "merchants.plan_suffix",
+    "plan"
+  ],
+  [
+    "merchants.edit",
+    "Edit"
+  ],
+  [
+    "merchants.saving",
+    "Saving…"
+  ],
+  [
+    "merchants.save",
+    "Save"
+  ],
+  [
+    "merchants.devices_suffix",
+    "devices"
+  ],
+  [
+    "merchants.notes_header",
+    "Notes"
+  ],
+  [
+    "merchants.processing",
+    "Processing…"
+  ],
+  [
+    "merchants.confirm",
+    "Confirm"
+  ],
+  [
+    "merchants.cancel",
+    "Cancel"
+  ],
+  [
+    "merchants.onboard_step_business_info",
+    "Business Information"
+  ],
+  [
+    "merchants.onboard_step_contact_address",
+    "Contact & Address"
+  ],
+  [
+    "merchants.onboard_step_doc_verification",
+    "Document Verification"
+  ],
+  [
+    "merchants.onboard_step_payment_setup",
+    "Payment Setup"
+  ],
+  [
+    "merchants.onboard_step_complete",
+    "Complete"
+  ],
+  [
+    "merchants.subscription_plan",
+    "Subscription Plan"
+  ],
+  [
+    "merchants.select_plan_placeholder",
+    "Select a subscription plan (optional)"
+  ],
+  [
+    "merchants.subscription_plan_hint",
+    "Assign a plan now, or leave unset and assign it later from Subscriptions."
+  ],
+  [
+    "subscriptions.title",
+    "Subscription Management"
+  ],
+  [
+    "subscriptions.subtitle",
+    "Manage your TracKasuwa subscription and billing"
+  ],
+  [
+    "subscriptions.refresh",
+    "Refresh"
+  ],
+  [
+    "subscriptions.tab_overview",
+    "Overview"
+  ],
+  [
+    "subscriptions.tab_plans",
+    "Plans"
+  ],
+  [
+    "subscriptions.tab_billing",
+    "Billing"
+  ],
+  [
+    "subscriptions.current_plan",
+    "Current Plan"
+  ],
+  [
+    "subscriptions.no_plan",
+    "No Plan"
+  ],
+  [
+    "subscriptions.subscription_expires",
+    "Subscription Expires"
+  ],
+  [
+    "subscriptions.monthly_cost",
+    "Monthly Cost"
+  ],
+  [
+    "subscriptions.per_month",
+    "Per month"
+  ],
+  [
+    "subscriptions.unsubscribed",
+    "Unsubscribed"
+  ],
+  [
+    "subscriptions.days_remaining",
+    "{count} days remaining"
+  ],
+  [
+    "subscriptions.expired",
+    "Expired"
+  ],
+  [
+    "subscriptions.expiring_soon",
+    "Subscription Expiring Soon"
+  ],
+  [
+    "subscriptions.expiring_soon_desc",
+    "Your subscription expires in {count} days. Renew now to avoid interruption."
+  ],
+  [
+    "subscriptions.renew_now",
+    "Renew Now"
+  ],
+  [
+    "subscriptions.no_active_subscription",
+    "No Active Subscription"
+  ],
+  [
+    "subscriptions.choose_plan_unlock",
+    "Choose a plan to unlock all TracKasuwa features"
+  ],
+  [
+    "subscriptions.view_plans",
+    "View Plans"
+  ],
+  [
+    "subscriptions.current_plan_features",
+    "Current Plan Features"
+  ],
+  [
+    "subscriptions.plan_inclusions",
+    "{name} plan inclusions"
+  ],
+  [
+    "subscriptions.upgrade_plan",
+    "Upgrade Plan"
+  ],
+  [
+    "subscriptions.cancel_subscription",
+    "Cancel Subscription"
+  ],
+  [
+    "subscriptions.choose_a_plan",
+    "Choose a Plan"
+  ],
+  [
+    "subscriptions.select_plan_desc",
+    "Select the plan that best fits your business needs"
+  ],
+  [
+    "subscriptions.all_plans_notice",
+    "All plans include offline-first functionality, multi-device support, and automatic data sync. Prices are billed monthly in Nigerian Naira (₦)."
+  ],
+  [
+    "subscriptions.payment_history",
+    "Payment History"
+  ],
+  [
+    "subscriptions.all_transactions",
+    "All payment transactions"
+  ],
+  [
+    "subscriptions.export",
+    "Export"
+  ],
+  [
+    "subscriptions.no_payment_records",
+    "No Payment Records"
+  ],
+  [
+    "subscriptions.no_payment_records_desc",
+    "Payment history will appear here after your first transaction"
+  ],
+  [
+    "subscriptions.date",
+    "Date"
+  ],
+  [
+    "subscriptions.plan",
+    "Plan"
+  ],
+  [
+    "subscriptions.reference",
+    "Reference"
+  ],
+  [
+    "subscriptions.amount",
+    "Amount"
+  ],
+  [
+    "subscriptions.method",
+    "Method"
+  ],
+  [
+    "subscriptions.status",
+    "Status"
+  ],
+  [
+    "subscriptions.access_restricted",
+    "Access Restricted"
+  ],
+  [
+    "subscriptions.super_admin_only",
+    "Only business owners and platform owners can access subscriptions."
+  ],
+  [
+    "subscriptions.could_not_load",
+    "Could not load subscription data"
+  ],
+  [
+    "subscriptions.fallback_notice",
+    "Showing fallback plan information. Connect to internet to see live data."
+  ],
+  [
+    "subscriptions.most_popular",
+    "Most Popular"
+  ],
+  [
+    "subscriptions.current_plan_badge",
+    "Current Plan"
+  ],
+  [
+    "subscriptions.select_plan",
+    "Select Plan"
+  ],
+  [
+    "subscriptions.cashiers_count",
+    "cashier(s)"
+  ],
+  [
+    "subscriptions.products_count",
+    "{count} products"
+  ],
+  [
+    "subscriptions.unlimited",
+    "Unlimited"
+  ],
+  [
+    "subscriptions.unlimited_products",
+    "Unlimited products"
+  ],
+  [
+    "subscriptions.talk_to_sales",
+    "Talk to Sales"
+  ],
+  [
+    "subscriptions.yearly_savings_line",
+    "You'll save {savings}, billed at {yearly}/yr"
+  ],
+  [
+    "subscriptions.rolling_out_soon",
+    "Rolling out soon"
+  ],
+  [
+    "subscriptions.rolling_out_soon_tooltip",
+    "This feature is actively being built and not yet available to use. You won't be charged extra for it — it will unlock automatically on your plan once it ships."
+  ],
+  [
+    "subscriptions.updated_success",
+    "Subscription updated successfully"
+  ],
+  [
+    "subscriptions.update_failed",
+    "Failed to update subscription"
+  ],
+  [
+    "subscriptions.add_plan",
+    "Add Plan"
+  ],
+  [
+    "subscriptions.edit_plan",
+    "Edit Plan"
+  ],
+  [
+    "subscriptions.delete_plan",
+    "Delete Plan"
+  ],
+  [
+    "subscriptions.create_plan",
+    "Create Plan"
+  ],
+  [
+    "subscriptions.plan_form_desc",
+    "Set the pricing and limits for this subscription package."
+  ],
+  [
+    "subscriptions.plan_name",
+    "Plan Name"
+  ],
+  [
+    "subscriptions.plan_name_placeholder",
+    "e.g., Standard"
+  ],
+  [
+    "subscriptions.plan_price",
+    "Price"
+  ],
+  [
+    "subscriptions.billing_cycle",
+    "Billing Cycle"
+  ],
+  [
+    "subscriptions.monthly",
+    "Monthly"
+  ],
+  [
+    "subscriptions.yearly",
+    "Yearly"
+  ],
+  [
+    "subscriptions.max_cashiers_label",
+    "Max Cashiers"
+  ],
+  [
+    "subscriptions.max_products_label",
+    "Max Products"
+  ],
+  [
+    "subscriptions.max_warehouses_label",
+    "Max Warehouses"
+  ],
+  [
+    "subscriptions.features_label",
+    "Features (one per line)"
+  ],
+  [
+    "subscriptions.features_placeholder",
+    "Inventory Management\nSales Reports\nOffline Mode"
+  ],
+  [
+    "subscriptions.plan_is_active",
+    "Active (visible to merchants)"
+  ],
+  [
+    "subscriptions.plan_is_popular",
+    "Mark as Most Popular"
+  ],
+  [
+    "subscriptions.inactive_plan",
+    "Inactive"
+  ],
+  [
+    "subscriptions.cancel_action",
+    "Cancel"
+  ],
+  [
+    "subscriptions.saving",
+    "Saving..."
+  ],
+  [
+    "subscriptions.deleting",
+    "Deleting..."
+  ],
+  [
+    "subscriptions.save_changes",
+    "Save Changes"
+  ],
+  [
+    "subscriptions.plan_name_price_required",
+    "Plan name and price are required"
+  ],
+  [
+    "subscriptions.plan_price_invalid",
+    "Please enter a valid price"
+  ],
+  [
+    "subscriptions.plan_created",
+    "Plan created successfully"
+  ],
+  [
+    "subscriptions.plan_updated",
+    "Plan updated successfully"
+  ],
+  [
+    "subscriptions.plan_save_failed",
+    "Failed to save plan"
+  ],
+  [
+    "subscriptions.plan_deleted",
+    "Plan deleted successfully"
+  ],
+  [
+    "subscriptions.plan_delete_failed",
+    "Failed to delete plan"
+  ],
+  [
+    "subscriptions.delete_plan_title",
+    "Delete this plan?"
+  ],
+  [
+    "subscriptions.delete_plan_confirm",
+    "Are you sure you want to delete the \"{name}\" plan? This cannot be undone."
+  ],
+  [
+    "receiptLookup.title",
+    "Scan Receipt"
+  ],
+  [
+    "receiptLookup.subtitle",
+    "Scan or type the barcode value printed on a receipt to view its full item list."
+  ],
+  [
+    "receiptLookup.placeholder",
+    "Scan barcode or type invoice/reference number..."
+  ],
+  [
+    "receiptLookup.lookup",
+    "Look Up"
+  ],
+  [
+    "receiptLookup.looking_up",
+    "Looking up..."
+  ],
+  [
+    "receiptLookup.not_found",
+    "No receipt found for this barcode"
+  ],
+  [
+    "receiptLookup.error",
+    "Something went wrong looking up this receipt"
+  ],
+  [
+    "receiptLookup.sale_title",
+    "Cash Receipt"
+  ],
+  [
+    "receiptLookup.transfer_title",
+    "Stock Transfer Note"
+  ],
+  [
+    "receiptLookup.invoice",
+    "Invoice"
+  ],
+  [
+    "receiptLookup.reference",
+    "Reference"
+  ],
+  [
+    "receiptLookup.date",
+    "Date"
+  ],
+  [
+    "receiptLookup.cashier",
+    "Cashier"
+  ],
+  [
+    "receiptLookup.customer",
+    "Customer"
+  ],
+  [
+    "receiptLookup.status",
+    "Status"
+  ],
+  [
+    "receiptLookup.payment_method",
+    "Payment Method"
+  ],
+  [
+    "receiptLookup.items",
+    "Items"
+  ],
+  [
+    "receiptLookup.item",
+    "Item"
+  ],
+  [
+    "receiptLookup.qty",
+    "Qty"
+  ],
+  [
+    "receiptLookup.unit_price",
+    "Unit Price"
+  ],
+  [
+    "receiptLookup.total",
+    "Total"
+  ],
+  [
+    "receiptLookup.subtotal",
+    "Subtotal"
+  ],
+  [
+    "receiptLookup.discount",
+    "Discount"
+  ],
+  [
+    "receiptLookup.tax",
+    "Tax"
+  ],
+  [
+    "receiptLookup.grand_total",
+    "Grand Total"
+  ],
+  [
+    "receiptLookup.amount_paid",
+    "Amount Paid"
+  ],
+  [
+    "receiptLookup.change",
+    "Change"
+  ],
+  [
+    "receiptLookup.from_warehouse",
+    "From Warehouse"
+  ],
+  [
+    "receiptLookup.to_warehouse",
+    "To Warehouse"
+  ],
+  [
+    "receiptLookup.initiated_by",
+    "Initiated By"
+  ],
+  [
+    "receiptLookup.approved_by",
+    "Approved By"
+  ],
+  [
+    "receiptLookup.coordinated_by",
+    "Coordinated By"
+  ],
+  [
+    "receiptLookup.sent_by",
+    "Sent By"
+  ],
+  [
+    "receiptLookup.received_by",
+    "Received By"
+  ],
+  [
+    "receiptLookup.scan_another",
+    "Scan Another"
+  ]
+]

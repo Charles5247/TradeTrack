@@ -1,4 +1,6 @@
 "use client";
+import { TranslatedText, useCopy } from '@/i18n/text';
+
 
 import React, { useState } from "react";
 import Link from "next/link";
@@ -115,6 +117,7 @@ interface AcquisitionPoint {
 
 // ─── Page Component ───────────────────────────────────────────────────────────
 export default function AdminPage() {
+  const copy = useCopy();
   const { user } = useAuthStore();
   const { t } = useI18n();
   const [activeTab, setActiveTab] = useState("overview");
@@ -278,7 +281,7 @@ export default function AdminPage() {
   }
 
   const loadError = merchantsError || countsError || revenueError || acquisitionError || auditError;
-  if (loadError) return <div className="space-y-6"><h1 className="tt-page-title">Platform overview</h1><ErrorState title="Could not load platform data" body={loadError.message} onRetry={() => setRefreshKey(k => k + 1)} /></div>;
+  if (loadError) return <div className="space-y-6"><h1 className="tt-page-title"><TranslatedText text={"Platform overview"} /></h1><ErrorState title={copy("Could not load platform data")} body={loadError.message} onRetry={() => setRefreshKey(k => k + 1)} /></div>;
 
   return (
     <div className="space-y-6">
@@ -290,10 +293,8 @@ export default function AdminPage() {
               className="h-6 w-6"
               style={{ color: "var(--c-primary)" }}
               strokeWidth={1.75}
-            />
-            Platform overview
-          </h1>
-          <p className="tt-muted mt-1">Merchant operations, subscription collections, and platform activity.</p>
+            /><TranslatedText text={"Platform overview"} /></h1>
+          <p className="tt-muted mt-1"><TranslatedText text={"Merchant operations, subscription collections, and platform activity."} /></p>
         </div>
         <Button
           variant="outline"
@@ -307,22 +308,22 @@ export default function AdminPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Total merchants" value={totalMerchants} sub="Across the platform" icon={Building2} loading={countsLoading} />
-        <StatCard label="Active merchants" value={activeMerchants} sub="Across the platform" icon={Users} loading={countsLoading} />
-        <StatCard label="Latest month collected" value={formatCurrency(mrr)} sub={revenueData?.slice(-1)[0]?.month ?? 'No paid invoices loaded'} icon={DollarSign} loading={revenueLoading} />
-        <StatCard label="Pending merchants" value={pendingMerchants} sub="Awaiting review" icon={Clock} loading={countsLoading} />
+        <StatCard label={copy("Total merchants")} value={totalMerchants} sub="Across the platform" icon={Building2} loading={countsLoading} />
+        <StatCard label={copy("Active merchants")} value={activeMerchants} sub="Across the platform" icon={Users} loading={countsLoading} />
+        <StatCard label={copy("Latest month collected")} value={formatCurrency(mrr)} sub={revenueData?.slice(-1)[0]?.month ?? 'No paid invoices loaded'} icon={DollarSign} loading={revenueLoading} />
+        <StatCard label={copy("Pending merchants")} value={pendingMerchants} sub="Awaiting review" icon={Clock} loading={countsLoading} />
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <Link href="/merchants" className="tt-card-flat flex min-h-20 items-center gap-4 rounded-[var(--radius-lg)] border border-border p-4 transition-colors hover:bg-accent">
           <Building2 className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.75} />
-          <div><p className="font-semibold">Manage merchants</p><p className="text-sm tt-muted">Onboarding, verification, and account access</p></div>
+          <div><p className="font-semibold"><TranslatedText text={"Manage merchants"} /></p><p className="text-sm tt-muted"><TranslatedText text={"Onboarding, verification, and account access"} /></p></div>
         </Link>
         <Link href="/subscriptions" className="tt-card-flat flex min-h-20 items-center gap-4 rounded-[var(--radius-lg)] border border-border p-4 transition-colors hover:bg-accent">
           <ShieldCheck className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.75} />
-          <div><p className="font-semibold">Manage subscription plans</p><p className="text-sm tt-muted">Platform pricing, features, and usage limits</p></div>
+          <div><p className="font-semibold"><TranslatedText text={"Manage subscription plans"} /></p><p className="text-sm tt-muted"><TranslatedText text={"Platform pricing, features, and usage limits"} /></p></div>
         </Link>
       </div>
-      <p className="text-xs tt-muted">Charts use up to 200 loaded records. Collections are paid invoice amounts, not recurring revenue. Service health is not monitored on this page.</p>
+      <p className="text-xs tt-muted"><TranslatedText text={"Charts use up to 200 loaded records. Collections are paid invoice amounts, not recurring revenue. Service health is not monitored on this page."} /></p>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex w-full overflow-x-auto [&>button]:min-h-11 [&>button]:shrink-0">
@@ -488,8 +489,7 @@ export default function AdminPage() {
             <CardHeader>
               <CardTitle className="tt-section-title">{t.admin.all_merchants}</CardTitle>
               <CardDescription>
-                {t.admin.merchant_list_desc} ({merchants?.length ?? 0} recent records)
-              </CardDescription>
+                {t.admin.merchant_list_desc} ({merchants?.length ?? 0}{" "}<TranslatedText text={"recent records)"} /></CardDescription>
             </CardHeader>
             <CardContent className="p-0">
               {merchantsLoading ? (
@@ -567,7 +567,7 @@ export default function AdminPage() {
                               className="min-h-11 px-3"
                               asChild
                             >
-                              <Link href="/merchants">Manage merchants<Eye className="ml-2 h-4 w-4" /></Link>
+                              <Link href="/merchants"><TranslatedText text={"Manage merchants"} /><Eye className="ml-2 h-4 w-4" /></Link>
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -585,7 +585,7 @@ export default function AdminPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card>
               <CardContent className="p-6 text-center">
-                <p className="text-sm tt-muted mb-1">Loaded invoice collections</p>
+                <p className="text-sm tt-muted mb-1"><TranslatedText text={"Loaded invoice collections"} /></p>
                 <p
                   className="text-2xl font-bold tt-tabular"
                   style={{ color: "var(--c-success)" }}
@@ -596,7 +596,7 @@ export default function AdminPage() {
             </Card>
             <Card>
               <CardContent className="p-6 text-center">
-                <p className="text-sm tt-muted mb-1">Latest month collected</p>
+                <p className="text-sm tt-muted mb-1"><TranslatedText text={"Latest month collected"} /></p>
                 <p
                   className="text-2xl font-bold tt-tabular"
                   style={{ color: "var(--c-primary)" }}
@@ -607,9 +607,7 @@ export default function AdminPage() {
             </Card>
             <Card>
               <CardContent className="p-6 text-center">
-                <p className="text-sm tt-muted mb-1">
-                  Annualized collection estimate
-                </p>
+                <p className="text-sm tt-muted mb-1"><TranslatedText text={"Annualized collection estimate"} /></p>
                 <p
                   className="text-2xl font-bold tt-tabular"
                   style={{ color: "var(--c-info)" }}
@@ -752,8 +750,7 @@ export default function AdminPage() {
                               </span>
                             )}
                           </p>
-                          <p className="text-xs tt-muted truncate">
-                            User: {log.user_id?.slice(0, 8)}…
+                          <p className="text-xs tt-muted truncate"><TranslatedText text={"User:"} />{" "}{log.user_id?.slice(0, 8)}…
                           </p>
                         </div>
                         <div className="text-xs tt-muted whitespace-nowrap">

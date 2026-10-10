@@ -120,17 +120,14 @@ NEXT_PUBLIC_APP_URL=https://your-domain.com
 NEXT_PUBLIC_APP_VERSION=1.0.0
 NODE_ENV=production
 
-# Zainpay payment gateway (required for subscription/billing features)
-ZAINPAY_BASE_URL=https://api.zainpay.ng   # sandbox.zainpay.ng for testing
-ZAINPAY_PUBLIC_KEY=your-zainpay-public-key
-ZAINPAY_PRIVATE_KEY=your-zainpay-private-key
-ZAINPAY_DEFAULT_ZAINBOX=your-default-zainbox-code
-ZAINPAY_WEBHOOK_SECRET=your-zainpay-webhook-secret
-
-# Zainpay dedicated virtual accounts (required for per-merchant NUBAN
-# creation at onboarding time)
-ZAINPAY_SECRET_KEY=your-zainpay-secret-key
-ZAINPAY_ZAINBOX_CODE=your-zainbox-code
+# Zainpay mode is test or live; use only the selected mode's credentials
+ZAINPAY_MODE=test
+ZAINPAY_TEST_PUBLIC_KEY=your-test-public-key
+ZAINPAY_TEST_PRIVATE_KEY=your-test-private-key
+ZAINPAY_TEST_DEFAULT_ZAINBOX=your-test-checkout-zainbox
+ZAINPAY_TEST_WEBHOOK_SECRET=your-test-webhook-secret
+ZAINPAY_TEST_SECRET_KEY=your-test-server-secret
+ZAINPAY_TEST_ZAINBOX_CODE=your-test-virtual-account-zainbox
 
 # Update-check / download page metadata (see docs/DOWNLOAD_FLOW.md) —
 # optional; leave *_DOWNLOAD_URL blank until real installers are hosted
@@ -199,6 +196,25 @@ Render Dashboard → your service → **Environment** tab → add/edit variables
 then **Save Changes** (this triggers a redeploy so the new values take
 effect).
 
+### Keeping a free instance warm
+
+Render Free web services spin down after 15 minutes without inbound traffic.
+If you accept the limitations of a free instance, use
+[Cron-job.org](https://cron-job.org/) to request the lightweight health
+endpoint every 10 minutes:
+
+```text
+https://YOUR-SERVICE.onrender.com/api/health
+```
+
+Create a job with method **GET**, a 10-minute schedule, and expect HTTP `200`
+with body `ok`. The endpoint performs no database or gateway work and does not
+expose configuration. A ping can wake a service that has already spun down,
+so this reduces sleep but does not guarantee uninterrupted availability or
+avoid cold starts. Free instances share a 750-hour monthly allowance per
+workspace; an always-running service can use nearly all of it. Render
+recommends paid instances for production workloads.
+
 ---
 
 ## 4. Deploying to Vercel
@@ -243,12 +259,18 @@ SUPABASE_SERVICE_ROLE_KEY=your-server-only-service-role-key
 NEXT_PUBLIC_APP_URL=https://your-production-domain.com
 ```
 
-Add the Zainpay variables from section 2 to enable payment features. For a
-public deployment, configure a nonempty `ZAINPAY_WEBHOOK_SECRET`; the current
-webhook handler skips signature validation if it is missing. Use matching
-sandbox credentials and the sandbox API URL while testing. Keep
-`SUPABASE_SERVICE_ROLE_KEY`, all Zainpay credentials, and other private values
-server-side: do not give them a `NEXT_PUBLIC_` prefix.
+Add the Zainpay variables from section 2 to enable payment features. Set
+`ZAINPAY_MODE=test` for development and Preview, or `ZAINPAY_MODE=live` only
+for a production deployment that is ready to accept real payments. The mode
+selects the corresponding `ZAINPAY_TEST_*` or `ZAINPAY_LIVE_*` credentials
+and defaults to `https://sandbox.zainpay.ng` or `https://api.zainpay.ng`.
+For backwards compatibility, existing unprefixed `ZAINPAY_*` credentials
+continue to work when no mode-prefixed credentials are configured; keep those
+credentials matched to the selected mode. Live webhooks require a configured
+`ZAINPAY_LIVE_WEBHOOK_SECRET`; they are rejected when the selected mode's
+signing secret is absent. Keep `SUPABASE_SERVICE_ROLE_KEY`, all Zainpay
+credentials, and other private values server-side: do not give them a
+`NEXT_PUBLIC_` prefix.
 
 `NEXT_PUBLIC_*` values are embedded into the client bundle at build time. If
 one changes, deploy again. Use Vercel's separate environment scopes when
@@ -349,7 +371,7 @@ server {
 □ Storage buckets created with correct policies
 □ Supabase Auth redirect URLs updated to production domain
 □ Zainpay webhook URL registered only when production payments are ready
-□ ZAINPAY_BASE_URL set to the live endpoint (not sandbox) for production
+□ ZAINPAY_MODE set to `live` only for production payment processing
 □ npm run build passes with no errors
 □ Test login flow works
 □ Test POS sale end-to-end

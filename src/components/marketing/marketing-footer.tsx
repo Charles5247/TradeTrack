@@ -1,3 +1,5 @@
+
+import { TranslatedLabel, TranslatedText } from '@/i18n/text';
 import Link from "next/link";
 import { Logo } from "@/components/layout/logo";
 
@@ -52,15 +54,12 @@ export function MarketingFooter() {
             <p
               className="mt-4 max-w-[320px] text-[13px] leading-[1.6]"
               style={{ color: "var(--c-textMuted)" }}
-            >
-              Offline-first POS &amp; inventory management for Nigerian market
-              traders. Made in Nigeria, deployed everywhere.
-            </p>
+            ><TranslatedText text={"Offline-first POS & inventory management for Nigerian market traders. Made in Nigeria, deployed everywhere."} /></p>
           </div>
 
           {FOOTER_COLUMNS.map((col) => (
             <div key={col.title}>
-              <div className="tt-eyebrow mb-3">{col.title}</div>
+              <div className="tt-eyebrow mb-3"><TranslatedLabel>{col.title}</TranslatedLabel></div>
               <div className="flex flex-col gap-2">
                 {col.links.map((link) =>
                   link.href ? (
@@ -70,7 +69,7 @@ export function MarketingFooter() {
                       className="text-[13px] hover:text-[var(--c-text)]"
                       style={{ color: "var(--c-textMuted)" }}
                     >
-                      {link.label}
+                      <TranslatedText text={link.label} />
                     </Link>
                   ) : (
                     <span
@@ -78,7 +77,7 @@ export function MarketingFooter() {
                       className="text-[13px]"
                       style={{ color: "var(--c-textFaint)" }}
                     >
-                      {link.label}
+                      <TranslatedText text={link.label} />
                     </span>
                   ),
                 )}
@@ -89,12 +88,8 @@ export function MarketingFooter() {
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-6">
           <div className="text-xs" style={{ color: "var(--c-textFaint)" }}>
-            © {new Date().getFullYear()} TracKasuwa Nigeria Ltd | Powered by
-            CAXiE Technologies Ltd
-          </div>
-          <div className="text-xs" style={{ color: "var(--c-textFaint)" }}>
-            Made in Nigeria 🇳🇬
-          </div>
+            © {new Date().getFullYear()}{" "}<TranslatedText text={"TracKasuwa Nigeria Ltd | Powered by CAXiE Technologies Ltd"} /></div>
+          <div className="text-xs" style={{ color: "var(--c-textFaint)" }}><TranslatedText text={"Made in Nigeria 🇳🇬"} /></div>
         </div>
       </div>
     </footer>

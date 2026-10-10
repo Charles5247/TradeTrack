@@ -1,4 +1,6 @@
 'use client';
+import { TranslatedText, useCopy } from '@/i18n/text';
+
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Loader2, ArrowRight, ScanLine, ReceiptText, Download, Printer } from 'lucide-react';
@@ -29,6 +31,7 @@ interface TransferLookupResult {
 }
 
 export default function ReceiptLookupPage() {
+  const copy = useCopy();
   const { t } = useI18n();
   const { user } = useAuthStore();
   const org = useOrgStore();
@@ -100,16 +103,16 @@ export default function ReceiptLookupPage() {
 
       <div className="grid items-start gap-5 lg:grid-cols-[1.2fr_1fr]">
       <div className="space-y-5 no-print">
-        <Card><CardContent className="space-y-5 p-6 sm:p-8"><h2 className="tt-eyebrow">Look up a receipt</h2><form className="flex flex-col gap-3 sm:flex-row" onSubmit={e => { e.preventDefault(); if (!isLoading) void handleLookup(); }}><Input autoFocus aria-label="Receipt number" className="h-12" value={code} onChange={e => setCode(e.target.value)} placeholder={t.receiptLookup.placeholder} /><Button className="h-12" disabled={isLoading || !code.trim()}>{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}{t.receiptLookup.lookup}</Button></form>
-        <div className="flex items-center gap-3 text-xs text-muted-foreground"><span className="h-px flex-1 bg-border" />OR<span className="h-px flex-1 bg-border" /></div>
-        <Button variant="outline" className="h-12 w-full" disabled={isLoading || !supportsBarcodeDetection()} onClick={() => scan.current?.click()}><ScanLine className="h-4 w-4" />Scan barcode or QR</Button>
-        <input ref={scan} className="hidden" type="file" accept="image/*" capture="environment" aria-label="Receipt barcode photo" onChange={async e => { const file = e.target.files?.[0]; e.target.value=''; if (!file) return; try { await handleLookup(await detectProductCode(file)); } catch (err) { setLookupError((err as Error).message); } }} />
-        <p className="text-xs text-muted-foreground">Use a receipt number or a connected barcode scanner. Photo scanning requires a supported browser.</p>{lookupError && <p role="alert" className="rounded-lg bg-destructive/5 p-3 text-sm text-destructive">{lookupError}</p>}</CardContent></Card>
-        <Card><CardContent className="p-6"><h2 className="tt-eyebrow mb-3">Recent lookups</h2>{recent.length ? recent.map(value => <div key={value} className="flex items-center justify-between gap-3 border-b border-dashed py-3"><span className="font-mono text-sm">{value}</span><Button variant="ghost" size="sm" disabled={isLoading} onClick={() => handleLookup(value)}>Open</Button></div>) : <p className="text-sm text-muted-foreground">Your successful lookups in this session will appear here.</p>}</CardContent></Card>
+        <Card><CardContent className="space-y-5 p-6 sm:p-8"><h2 className="tt-eyebrow"><TranslatedText text={"Look up a receipt"} /></h2><form className="flex flex-col gap-3 sm:flex-row" onSubmit={e => { e.preventDefault(); if (!isLoading) void handleLookup(); }}><Input autoFocus aria-label={copy("Receipt number")} className="h-12" value={code} onChange={e => setCode(e.target.value)} placeholder={t.receiptLookup.placeholder} /><Button className="h-12" disabled={isLoading || !code.trim()}>{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}{t.receiptLookup.lookup}</Button></form>
+        <div className="flex items-center gap-3 text-xs text-muted-foreground"><span className="h-px flex-1 bg-border" /><TranslatedText text={"OR"} /><span className="h-px flex-1 bg-border" /></div>
+        <Button variant="outline" className="h-12 w-full" disabled={isLoading || !supportsBarcodeDetection()} onClick={() => scan.current?.click()}><ScanLine className="h-4 w-4" /><TranslatedText text={"Scan barcode or QR"} /></Button>
+        <input ref={scan} className="hidden" type="file" accept="image/*" capture="environment" aria-label={copy("Receipt barcode photo")} onChange={async e => { const file = e.target.files?.[0]; e.target.value=''; if (!file) return; try { await handleLookup(await detectProductCode(file)); } catch (err) { setLookupError((err as Error).message); } }} />
+        <p className="text-xs text-muted-foreground"><TranslatedText text={"Use a receipt number or a connected barcode scanner. Photo scanning requires a supported browser."} /></p>{lookupError && <p role="alert" className="rounded-lg bg-destructive/5 p-3 text-sm text-destructive">{lookupError}</p>}</CardContent></Card>
+        <Card><CardContent className="p-6"><h2 className="tt-eyebrow mb-3"><TranslatedText text={"Recent lookups"} /></h2>{recent.length ? recent.map(value => <div key={value} className="flex items-center justify-between gap-3 border-b border-dashed py-3"><span className="font-mono text-sm">{value}</span><Button variant="ghost" size="sm" disabled={isLoading} onClick={() => handleLookup(value)}><TranslatedText text={"Open"} /></Button></div>) : <p className="text-sm text-muted-foreground"><TranslatedText text={"Your successful lookups in this session will appear here."} /></p>}</CardContent></Card>
       </div>
       <div className="min-w-0 space-y-4">
-      {!result && <Card className="flex min-h-80 flex-col items-center justify-center gap-3 p-8 text-center"><ReceiptText className="h-10 w-10 text-muted-foreground" /><h2 className="tt-head">Receipt preview</h2><p className="text-sm text-muted-foreground">Look up a receipt to review its items, totals and payment details.</p></Card>}
-      {receipt && <div className="flex flex-wrap justify-end gap-2 no-print"><Button variant="outline" onClick={() => window.print()}><Printer className="h-4 w-4" />Print receipt</Button><Button onClick={() => downloadReceiptPDF(receipt).catch(() => toast.error('Could not download receipt.'))}><Download className="h-4 w-4" />Download PDF</Button></div>}
+      {!result && <Card className="flex min-h-80 flex-col items-center justify-center gap-3 p-8 text-center"><ReceiptText className="h-10 w-10 text-muted-foreground" /><h2 className="tt-head"><TranslatedText text={"Receipt preview"} /></h2><p className="text-sm text-muted-foreground"><TranslatedText text={"Look up a receipt to review its items, totals and payment details."} /></p></Card>}
+      {receipt && <div className="flex flex-wrap justify-end gap-2 no-print"><Button variant="outline" onClick={() => window.print()}><Printer className="h-4 w-4" /><TranslatedText text={"Print receipt"} /></Button><Button onClick={() => downloadReceiptPDF(receipt).catch(() => toast.error('Could not download receipt.'))}><Download className="h-4 w-4" /><TranslatedText text={"Download PDF"} /></Button></div>}
       {result?.kind === 'sale' && (
         <Card>
           <CardContent className="p-4 space-y-4">

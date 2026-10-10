@@ -1,0 +1,57 @@
+Naira-priced plans, Free to Enterprise|Plans priced in Naira, from Free to Enterprise|Tsare-tsare da Naira, daga Free zuwa Enterprise|Ètò ní Naira, láti Free sí Enterprise|Atụmatụ na Naira, site na Free ruo Enterprise
+Roles with dedicated permissions|Roles wey get their own permissions|Matsayi da izini na musamman|Ipò pẹ̀lú àṣẹ pàtó|Ọrụ nwere ikike pụrụ iche
+Sales lost when your connection drops|Sales wey lost when internet cut|Sayarwar da aka rasa idan haɗi ya yanke|Títà tó sọnù nígbà tí ìsopọ̀ dáwọ́ dúró|Ahịa furu mgbe njikọ dara
+Actions logged to an audit trail|Actions wey enter audit record|Ayyukan da aka rubuta a tarihi|Iṣẹ́ tí a kọ sí àkọsílẹ̀ àyẹ̀wò|Omume e dekọrọ n'akụkọ nyocha
+Sales lost|Sales wey lost|Sayarwar da aka rasa|Títà tó sọnù|Ahịa furu
+Reconnect sync|Sync when internet return|Daidaitawa bayan sake haɗi|Ìdọ́gba nígbà ìsopọ̀|Mmekọrịta mgbe njikọ lọghachiri
+Local cache|Records for this device|Ajiyar na'ura|Ìpamọ́ ẹ̀rọ|Nchekwa igwe
+Every sale is timestamped and tied to the cashier who made it — no more guessing who sold what.|Every sale get time and cashier wey make am — no need guess who sell wetin.|Kowace sayarwa tana da lokaci da sunan mai karɓar kuɗi — babu hasashen wanda ya sayar.|Gbogbo títà ní àkókò àti olùgbà owó tó ṣe é — kò sí fífi àròsọ mọ ẹni tó tà.|Ahịa ọ bụla nwere oge na onye na-anata ego mere ya — enweghị ịkọ onye rere ihe.
+Stock adjustments require a reason, so shrinkage and errors are visible, not hidden.|Stock corrections need reason, so missing stock and errors go show.|Gyaran haja yana buƙatar dalili, don asara da kurakurai su bayyana.|Àtúnṣe ọjà nílò ìdí, kí àdánù àti aṣìṣe lè hàn.|Mmezi ngwaahịa chọrọ ihe kpatara ya ka mfu na njehie pụta ìhè.
+Warehouse transfers are logged both ways, so nothing goes missing between locations.|Warehouse transfers get record for both sides, so nothing go miss between locations.|Ana rubuta canjin ma'ajiya a ɓangarorin biyu, don kada kaya su ɓace.|A kọ ìgbé ọjà sílẹ̀ ní ẹgbẹ́ méjèèjì kí ohun kankan má sọnù láàárín ibi.|A na-edekọ mbufe ụlọ nkwakọba n'akụkụ abụọ ka ihe ghara ifu n'etiti ebe.
+An audit trail records who changed what, and when — for owners who need to know what happened while they weren't looking.|Audit record show who change wetin and when — so owner go know wetin happen when e no dey.|Tarihin bincike yana rubuta wanda ya canja me da lokacin — domin mai shago ya san abin da ya faru ba ya nan.|Àkọsílẹ̀ àyẹ̀wò ń fi ẹni tó yí ohun padà àti ìgbà hàn — fún oníṣẹ́ láti mọ ohun tó ṣẹlẹ̀ nígbà tí kò sí.|Ndekọ nyocha na-egosi onye gbanwere ihe na mgbe — ka onye nwe mara ihe mere mgbe ọ na-anọghị.
+Search or scan products to build a sale in seconds|Find or scan products to make sale in seconds|Nemo ko duba kaya don yin sayarwa cikin daƙiƙu|Wá tàbí ṣàyẹ̀wò ọjà láti tà ní ìṣẹ́jú-àáyá|Chọọ ma ọ bụ nyochaa ngwaahịa iji ree n'ime sekọnd
+Apply discounts and accept cash or other payment methods|Reduce price and collect cash or other payment|Yi rangwame ka karɓi kuɗi ko wasu hanyoyin biya|Lo ẹ̀dínwó kí o gba owó tàbí ọ̀nà ìsanwó mìíràn|Belata ọnụahịa ma nata ego nkịtị ma ọ bụ ụzọ ịkwụ ụgwọ ọzọ
+Works on a phone, tablet, or desktop browser|E work for phone, tablet or computer browser|Yana aiki a waya, tablet ko burauzar kwamfuta|Ó ṣiṣẹ́ lórí fóònù, tablet tàbí ẹ̀rọ aṣàwákiri kọ̀ǹpútà|Ọ na-arụ ọrụ na ekwentị, tablet ma ọ bụ ihe nchọgharị kọmputa
+Sales and stock changes are saved locally the instant they happen|Sales and stock changes save for device immediately|Ana ajiye sayarwa da sauyin haja a na'ura nan take|A fipamọ́ títà àti ìyípadà ọjà lẹ́sẹ̀kẹsẹ̀ lórí ẹ̀rọ|Ahịa na mgbanwe ngwaahịa na-echekwa n'igwe ozugbo
+A background sync queue pushes everything to the cloud once you're back online|Background sync send everything to cloud when internet return|Jerin daidaitawa yana aika komai zuwa gajimare idan intanet ta dawo|Ìlà ìdọ́gba ń rán gbogbo ohun sí cloud nígbà tí ìsopọ̀ bá padà|Ahịrị mmekọrịta na-eziga ihe niile na cloud mgbe ịntanetị lọghachiri
+No double-entry, no lost sales when the connection blips|No double records, no lost sales when network cut|Babu rubutawa sau biyu ko asarar sayarwa idan haɗi ya yanke|Kò sí àkọsílẹ̀ méjì tàbí títà tó sọnù nígbà ìṣòro ìsopọ̀|Enweghị ndekọ ugboro abụọ ma ọ bụ ahịa furu mgbe njikọ dara
+Generate PDF receipts you can print or share|Create PDF receipts wey you fit print or share|Ƙirƙiri rasit PDF don bugawa ko rabawa|Ṣẹ̀dá rísíìtì PDF tí o lè tẹ̀ tàbí pín|Mepụta risit PDF ị nwere ike ibipụta ma ọ bụ kesaa
+Each receipt includes a scannable QR code|Each receipt get QR code wey you fit scan|Kowace rasit tana da lambar QR|Rísíìtì kọ̀ọ̀kan ní kóòdù QR tí a lè ṣàyẹ̀wò|Risit ọ bụla nwere koodu QR a ga-enyocha
+Works with standard printers — no special hardware required|E work with normal printer — no special hardware needed|Yana aiki da firintoci na yau da kullum — ba sai na musamman ba|Ó ṣiṣẹ́ pẹ̀lú ẹ̀rọ ìtẹ̀wé déédéé — kò nílò ẹ̀rọ pàtó|Ọ na-arụ ọrụ na igwe mbipụta nkịtị — igwe pụrụ iche adịghị mkpa
+Track quantities per warehouse, not just one global number|Track quantity for each warehouse, no be only one total|Bi adadin kowace ma'ajiya, ba jimilla ɗaya kawai ba|Tọpasẹ̀ iye fún ilé ìpamọ́ kọ̀ọ̀kan, kì í ṣe àpapọ̀ nìkan|Soro ọnụọgụ n'ụlọ nkwakọba ọ bụla, ọ bụghị naanị ngụkọta
+Move stock between warehouses with a full transfer record|Move stock between warehouses with full record|Matsar da haja tsakanin ma'ajiyoyi da cikakken tarihi|Gbé ọjà láàárín ilé ìpamọ́ pẹ̀lú àkọsílẹ̀ kíkún|Bufee ngwaahịa n'etiti ụlọ nkwakọba na ndekọ zuru ezu
+Number of warehouses allowed scales with your plan|Number of warehouses depend on your plan|Adadin ma'ajiyoyi ya danganta da tsarinka|Iye ilé ìpamọ́ dá lórí ètò rẹ|Ọnụọgụ ụlọ nkwakọba dabere na atụmatụ gị
+Set a reorder threshold per product|Set when to reorder each product|Saita iyakar sake oda ga kowace haja|Ṣètò ààlà àtúnrà fún ọjà kọ̀ọ̀kan|Tọọ oke ịzụta ọzọ maka ngwaahịa ọ bụla
+In-app notifications when stock drops below it|App go alert you when stock pass the low limit|Sanarwa idan haja ta sauka ƙasa da iyaka|Ìfitónilétí nígbà tí ọjà bá kéré ju ààlà lọ|Ozi mgbe ngwaahịa dara n'okpuru oke
+Helps prevent lost sales from unnoticed stockouts|E help stop lost sales because stock finish without notice|Yana hana asarar sayarwa saboda ƙarewar haja ba a sani ba|Ó dènà àdánù títà nítorí ọjà tó tán láìmọ̀|Ọ na-enyere igbochi ahịa furu n'ihi ngwaahịa gwụrụ na-amaghị
+Daily sales summaries|Summary of sales every day|Taƙaitaccen sayarwar kullum|Àkópọ̀ títà ojoojúmọ́|Nchịkọta ahịa kwa ụbọchị
+Inventory and stock-movement reports|Stock and stock movement reports|Rahoton haja da motsinta|Ìròyìn ọjà àti ìgbé ọjà|Akụkọ ngwaahịa na mmegharị ya
+Advanced reports on higher-tier plans|Advanced reports dey bigger plans|Rahotanni masu zurfi a manyan tsare-tsare|Ìròyìn jíjinlẹ̀ lórí ètò gíga|Akụkọ dị elu n'atụmatụ ka elu
+Record vendor transactions and payments|Record vendor transactions and payments|Rubuta cinikin dillali da biyan kuɗi|Kọ ìṣòwò àti ìsanwó olùtajà|Dekọọ azụmahịa na ịkwụ ụgwọ onye na-ere
+Keep consignment stock separate from your own inventory|Keep goods wey dem give you to sell separate from your own|Raba kayan amana da hajarka|Ya ọjà àfúnni-síta sọ́tọ̀ kúrò nínú tirẹ|Debe ngwaahịa e nyere ire iche na nke gị
+Business owner, admin, and cashier roles|Business owner, admin and cashier roles|Matsayin mai kasuwanci, admin da mai karɓar kuɗi|Ipò oníṣẹ́, admin àti olùgbà owó|Ọrụ onye nwe azụmahịa, admin na onye na-anata ego
+Number of cashier seats scales with your plan|Number of cashiers depend on plan|Adadin masu karɓar kuɗi ya danganta da tsari|Iye olùgbà owó dá lórí ètò|Ọnụọgụ ndị na-anata ego dabere na atụmatụ
+Key actions across the app are logged for accountability|Important actions for app get record so you fit trace am|Ana rubuta muhimman ayyuka don riƙon amana|A kọ iṣẹ́ pàtàkì sílẹ̀ fún jíjíhìn|A na-edekọ omume dị mkpa maka ịza ajụjụ
+Helps identify the source of stock discrepancies or unusual changes|E help find where stock mismatch or strange changes come from|Yana gano tushen bambancin haja ko sauyi ba na al'ada ba|Ó ń tọ́ka sí orísun àìdọ́gba ọjà tàbí ìyípadà àjèjì|Ọ na-enyere ịchọta ebe ngwaahịa na-adaghị ma ọ bụ mgbanwe pụrụ iche si bịa
+Installable as a Progressive Web App on Android and desktop Chromium browsers|You fit install as PWA for Android and computer Chromium browser|Ana iya shigarwa a matsayin PWA a Android da burauzar Chromium|A lè fi sí ẹ̀rọ bí PWA lórí Android àti Chromium kọ̀ǹpútà|Enwere ike iwunye dịka PWA na Android na Chromium kọmputa
+Dedicated Windows desktop and Android builds available — see /download|Windows and Android apps dey — check /download|Apps na Windows da Android suna nan — duba /download|App Windows àti Android wà — wo /download|Ngwa Windows na Android dị — lee /download
+Operate|Run business|Gudanarwa|Ṣiṣẹ́|Rụọ ọrụ
+Insights|Business insights|Nazari|Ìmọ̀|Nghọta
+Imports|Imports|Shigo da bayanai|Gbígbé wọlé|Mbubata
+Accounting|Accounts|Lissafi|Ìṣirò owó|Akaụntụ
+Assistant|Assistant|Mataimaki|Olùrànlọ́wọ́|Onye enyemaka
+Search platform navigation…|Find platform page…|Nemi shafin dandali…|Wá ojú-ewé ètò…|Chọọ ibe nyiwe…
+Something went wrong|Something no work|Wani abu ya faru ba daidai ba|Ohun kan kùnà|Ihe adịghị mma
+Photo: shop owner at the counter|Picture: shop owner for counter|Hoto: mai shago a wurin sayarwa|Fọ́tò: oníṣòwò níbi ìtajà|Foto: onye nwe ụlọ ahịa n'ebe ire
+Photo: cashier ringing up a sale|Picture: cashier dey record sale|Hoto: mai karɓar kuɗi yana sayarwa|Fọ́tò: olùgbà owó ń ṣe títà|Foto: onye na-anata ego na-ere
+Photo: stock check across warehouses|Picture: stock check for warehouses|Hoto: duba haja a ma'ajiyoyi|Fọ́tò: àyẹ̀wò ọjà ilé ìpamọ́|Foto: nyocha ngwaahịa n'ụlọ nkwakọba
+Photo: printed receipt with QR code|Picture: printed receipt with QR code|Hoto: rasit da QR|Fọ́tò: rísíìtì tí a tẹ̀ pẹ̀lú QR|Foto: risit e bipụtara na QR
+Pending changes|Changes wey never sync|Canje-canjen da ke jira|Ìyípadà tó ń dúró|Mgbanwe na-eche
+Last synced|Last time e sync|Daidaitawa ta ƙarshe|Ìdọ́gba tó gbẹ̀yìn|Mmekọrịta ikpeazụ
+Not yet synced|E never sync|Ba a daidaita ba tukuna|Kò tíì dọ́gba|Emekọrịtaghị
+Checking…|We dey check…|Ana dubawa…|A ń ṣàyẹ̀wò…|A na-enyocha…
+No printer connected|No printer connect|Babu firinta da aka haɗa|Kò sí ẹ̀rọ ìtẹ̀wé tó sopọ̀|Enweghị igwe mbipụta ejikọrọ
+No plan|No plan yet|Babu tsari|Kò sí ètò|Enweghị atụmatụ
+No address added|No address yet|Ba a ƙara adireshi ba|A kò tíì fi àdírẹ́sì kún|Etinyebeghị adreesị
+Not provided|Dem never provide am|Ba a bayar ba|A kò pèsè|Enyeghị
+Receipt history|Receipt history|Tarihin rasit|Ìtàn rísíìtì|Akụkọ risit

@@ -1,4 +1,6 @@
 'use client';
+import { useCopy } from '@/i18n/text';
+
 
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -46,6 +48,7 @@ interface AppScreenProps {
  * to every page beneath it.
  */
 export function AppScreen({ children, pos, dense, noPadding }: AppScreenProps) {
+  const copy = useCopy();
   const router = useRouter();
   const { user, isLoading } = useAuthStore();
   const density = useUIStore((s) => s.density);
@@ -68,7 +71,7 @@ export function AppScreen({ children, pos, dense, noPadding }: AppScreenProps) {
   }, [user, isLoading, router]);
 
   if (isLoading) {
-    return <div className="p-6" role="status" aria-label="Loading workspace"><LoadingState /></div>;
+    return <div className="p-6" role="status" aria-label={copy("Loading workspace")}><LoadingState /></div>;
   }
 
   if (user?.must_change_password) {

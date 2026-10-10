@@ -1,4 +1,6 @@
 "use client";
+import { TranslatedLabel } from '@/i18n/text';
+
 
 import * as React from "react";
 import { StatCard, type StatCardProps } from "@/components/ui/stat-card";
@@ -61,7 +63,7 @@ export function DetailTemplate({
                 {meta.map((m) => (
                   <div key={m.label}>
                     <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      {m.label}
+                      <TranslatedLabel>{m.label}</TranslatedLabel>
                     </div>
                     <div className="text-sm font-medium text-foreground">{m.value}</div>
                   </div>

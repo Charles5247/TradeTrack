@@ -1,4 +1,6 @@
 "use client";
+import { TranslatedText, useCopy } from '@/i18n/text';
+
 
 import Link from "next/link";
 import Image from "next/image";
@@ -53,6 +55,7 @@ function MiniBars() {
 
 /* Supplied design photography; replace with licensed launch assets. */
 function HeroCompositePhoto() {
+  const copy = useCopy();
   return (
     <div className="relative" style={{ aspectRatio: "1 / 1.05" }}>
       <div
@@ -62,7 +65,7 @@ function HeroCompositePhoto() {
             "0 40px 100px -20px color-mix(in oklch, var(--c-primary), transparent 75%)",
         }}
       >
-        <Image src="/images/retail/photo-aba-traders.jpg" alt="Traders at a Nigerian market" fill sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" preload />
+        <Image src="/images/retail/photo-aba-traders.jpg" alt={copy("Traders at a Nigerian market")} fill sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" preload />
       </div>
 
       {/* Floating dashboard mockup */}
@@ -95,14 +98,10 @@ function HeroCompositePhoto() {
           <span
             className="tt-mono ml-1.5 text-[9px]"
             style={{ color: "var(--c-textMuted)" }}
-          >
-            TracKasuwa.ng
-          </span>
+          ><TranslatedText text={"TracKasuwa.ng"} /></span>
         </div>
         <div className="p-3.5" style={{ background: "var(--c-surface)" }}>
-          <div className="text-[10px]" style={{ color: "var(--c-textMuted)" }}>
-            Today · Lagos HQ
-          </div>
+          <div className="text-[10px]" style={{ color: "var(--c-textMuted)" }}><TranslatedText text={"Today · Lagos HQ"} /></div>
           <div className="tt-head text-[26px] mt-0.5 leading-none">
             ₦482,190
           </div>
@@ -110,9 +109,7 @@ function HeroCompositePhoto() {
             className="flex items-center gap-1 mt-0.5 text-[10px]"
             style={{ color: "var(--c-success)" }}
           >
-            <ArrowUp className="h-2.5 w-2.5" strokeWidth={1.75} /> +18% vs
-            yesterday
-          </div>
+            <ArrowUp className="h-2.5 w-2.5" strokeWidth={1.75} />{" "}<TranslatedText text={"+18% vs yesterday"} /></div>
           <MiniBars />
         </div>
       </div>
@@ -139,13 +136,11 @@ function HeroCompositePhoto() {
           />
         </div>
         <div>
-          <div className="text-xs font-semibold">Sale complete</div>
+          <div className="text-xs font-semibold"><TranslatedText text={"Sale complete"} /></div>
           <div
             className="tt-mono text-[10px]"
             style={{ color: "var(--c-textMuted)" }}
-          >
-            ₦14,500 · Cash · #A00248
-          </div>
+          ><TranslatedText text={"₦14,500 · Cash · #A00248"} /></div>
         </div>
       </div>
 
@@ -161,7 +156,7 @@ function HeroCompositePhoto() {
           className="tt-dot-pulse w-2 h-2 rounded-full"
           style={{ background: "var(--c-success)" }}
         />
-        <span className="text-xs font-semibold">147 sales today</span>
+        <span className="text-xs font-semibold"><TranslatedText text={"147 sales today"} /></span>
       </div>
     </div>
   );
@@ -215,7 +210,7 @@ export function Hero() {
                   className="tt-dot-pulse w-1.5 h-1.5 rounded-full"
                   style={{ background: "var(--c-success)" }}
                 />
-                {HERO_COPY.eyebrow}
+                <TranslatedText text={HERO_COPY.eyebrow} />
               </div>
             </Reveal>
 
@@ -229,7 +224,7 @@ export function Hero() {
                   lineHeight: 1.02,
                 }}
               >
-                {HERO_COPY.title}
+                <TranslatedText text={HERO_COPY.title} />
               </h1>
             </Reveal>
 
@@ -243,7 +238,7 @@ export function Hero() {
                   maxWidth: 540,
                 }}
               >
-                {HERO_COPY.sub}
+                <TranslatedText text={HERO_COPY.sub} />
               </p>
             </Reveal>
 
@@ -256,8 +251,7 @@ export function Hero() {
                     background: "var(--c-primary)",
                     color: "var(--c-primaryFg)",
                   }}
-                >
-                  Start free — no card{" "}
+                ><TranslatedText text={"Start free — no card"} />{" "}
                   <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
                 </Link>
                 <Link
@@ -268,9 +262,7 @@ export function Hero() {
                     color: "var(--c-text)",
                   }}
                 >
-                  <Download className="h-4 w-4" strokeWidth={1.75} /> Download
-                  for Windows
-                </Link>
+                  <Download className="h-4 w-4" strokeWidth={1.75} />{" "}<TranslatedText text={"Download for Windows"} /></Link>
               </div>
             </Reveal>
 
@@ -318,9 +310,7 @@ export function Hero() {
           <div
             className="tt-eyebrow text-center mb-6"
             style={{ color: "var(--c-textFaint)" }}
-          >
-            Trusted by thousands of traders &amp; merchants across Nigeria
-          </div>
+          ><TranslatedText text={"Trusted by thousands of traders & merchants across Nigeria"} /></div>
           <LogoMarquee items={TRUST_LOGOS} />
         </div>
       </Reveal>

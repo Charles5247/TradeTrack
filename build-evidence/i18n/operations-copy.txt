@@ -1,0 +1,178 @@
+Suppliers|Suppliers|Masu samar da kaya|Àwọn olùpèsè|Ndị na-ebunye
+Add supplier|Add supplier|Ƙara mai kaya|Fi olùpèsè kún|Tinye onye na-ebunye
+Edit supplier|Edit supplier|Gyara mai kaya|Ṣàtúnṣe olùpèsè|Dezie onye na-ebunye
+Supplier details|Supplier details|Bayanan mai kaya|Àlàyé olùpèsè|Nkọwa onye na-ebunye
+Supply history|Supplies wey don come|Tarihin samar da kaya|Ìtàn ìpèsè|Akụkọ mbunye
+Who supplies your products, what you ordered, and what arrived.|Who supply your products, wetin you order and wetin arrive.|Masu kawo kayanka, abin da ka oda da abin da ya iso.|Ẹni tó pèsè ọjà, ohun tí o rà àti ohun tó dé.|Onye na-ebunye gị, ihe ị tụrụ na ihe bịarutere.
+Products with suppliers|Products wey get supplier|Kayan da ke da masu samarwa|Ọjà tó ní olùpèsè|Ngwaahịa nwere ndị na-ebunye
+Products supplied|Products wey dem supply|Kayan da aka samar|Ọjà tí a pèsè|Ngwaahịa e bunyere
+Product to link|Product wey you wan link|Kayan da za a haɗa|Ọjà láti so pọ̀|Ngwaahịa a ga-ejikọta
+Link product|Link product|Haɗa kaya|So ọjà pọ̀|Jikọta ngwaahịa
+Unlink|Remove link|Cire haɗin|Yọ àsopọ̀|Wepụ njikọ
+Primary|Main one|Na farko|Àkọ́kọ́|Nke mbụ
+Choose a product|Choose product|Zaɓi kaya|Yan ọjà|Họrọ ngwaahịa
+No suppliers found|We no see supplier|Ba a sami masu kaya ba|A kò rí olùpèsè|Ahụghị ndị na-ebunye
+Add your first supplier or change your search.|Add your first supplier or change wetin you search.|Ƙara mai kaya na farko ko canja bincikenka.|Fi olùpèsè àkọ́kọ́ kún tàbí yí ìwádìí padà.|Tinye onye na-ebunye mbụ ma ọ bụ gbanwee nchọta.
+Select a supplier to manage its product catalog and see supply history.|Choose supplier to manage im products and see supplies wey don come.|Zaɓi mai kaya don sarrafa jerin kayansa da tarihin samarwa.|Yan olùpèsè láti ṣàkóso ọjà rẹ̀ àti wo ìtàn ìpèsè.|Họrọ onye na-ebunye ka ị jikwaa ngwaahịa ya ma hụ akụkọ mbunye.
+No purchase orders for this supplier yet.|No order dey for this supplier yet.|Babu odar saye ga wannan mai kaya tukuna.|Kò sí àṣẹ rírà fún olùpèsè yìí síbẹ̀.|Enweghị oda maka onye na-ebunye a.
+Search suppliers|Find suppliers|Nemi masu kaya|Wá olùpèsè|Chọọ ndị na-ebunye
+Search supplier, phone or email…|Find supplier, phone or email…|Nemi mai kaya, waya ko imel…|Wá olùpèsè, fóònù tàbí ímeèlì…|Chọọ onye na-ebunye, ekwentị ma ọ bụ email…
+Could not load suppliers|We no fit load suppliers|An kasa loda masu kaya|Kò ṣeé gbé olùpèsè wọlé|Enweghị ike ibunye ndị na-ebunye
+Locations|Locations|Wurare|Àwọn ibi|Ebe dị iche iche
+Add location|Add location|Ƙara wuri|Fi ibi kún|Tinye ebe
+Add your first location|Add your first location|Ƙara wurinka na farko|Fi ibi àkọ́kọ́ kún|Tinye ebe mbụ gị
+Main shops|Main shops|Manyan shaguna|Àwọn ṣọ́ọ̀bù pàtàkì|Isi ụlọ ahịa
+Stock units|How many stock dey|Adadin haja|Iye ọjà|Ọnụọgụ ngwaahịa
+Products stocked|Products wey dey stock|Kayan da ke ajiye|Ọjà tí a kó pamọ́|Ngwaahịa echekwara
+View inventory|See stock|Duba haja|Wo ọjà|Lee ngwaahịa
+Create your main shop or a warehouse, then assign its team.|Create main shop or warehouse, then assign team.|Ƙirƙiri babban shago ko ma'ajiya, sannan sanya ma'aikata.|Ṣẹ̀dá ṣọ́ọ̀bù pàtàkì tàbí ilé ìpamọ́, kí o yan ẹgbẹ́ rẹ̀.|Mepụta isi ụlọ ahịa ma ọ bụ ụlọ nkwakọba, kenye otu ya.
+Assign staff|Assign staff|Sanya ma'aikata|Yan òṣìṣẹ́|Kenye ndị ọrụ
+Assign to location|Assign to this location|Sanya a wannan wuri|Yan sí ibi yìí|Kenye n'ebe a
+Manager|Manager|Manaja|Alákòóso|Onye njikwa
+Manager or cashier|Manager or cashier|Manaja ko mai karɓar kuɗi|Alákòóso tàbí olùgbà owó|Onye njikwa ma ọ bụ onye na-anata ego
+Select team member|Choose team member|Zaɓi ma'aikaci|Yan ọmọ ẹgbẹ́|Họrọ onye otu
+Team at|Team for|Ma'aikatan|Ẹgbẹ́ ní|Otu nọ na
+Add a team member|Add team member|Ƙara ma'aikaci|Fi ọmọ ẹgbẹ́ kún|Tinye onye otu
+first. A person can work at more than one location.|first. One person fit work for different locations.|da farko. Mutum zai iya aiki a wurare da yawa.|kọ́kọ́. Ẹnìkan lè ṣiṣẹ́ ní ibi púpọ̀.|mbụ. Otu onye nwere ike ịrụ ọrụ n'ọtụtụ ebe.
+Assign existing managers and cashiers to this location. Managers use the Admin account role. Assignments record responsibility; account permissions remain unchanged.|Assign managers and cashiers wey already get account. Managers dey use Admin role. Assignment record who responsible; e no change account permissions.|Sanya manajoji da masu karɓar kuɗi a wannan wuri. Manajoji suna amfani da matsayin Admin. Wannan yana rubuta nauyi; izinin asusu bai canja ba.|Yan alákòóso àti olùgbà owó tó wà sí ibi yìí. Alákòóso ń lo ipò Admin. Àṣàyàn ń kọ ojúṣe sílẹ̀; àṣẹ àkọọ́lẹ̀ kò yí padà.|Kenye ndị njikwa na ndị na-anata ego dị adị n'ebe a. Ndị njikwa na-eji ọrụ Admin. Nke a na-edekọ ọrụ; ikike akaụntụ anaghị agbanwe.
+Could not load assignments. Retry|We no fit load assignments. Try again|An kasa loda rabon aiki. Sake gwadawa|Kò ṣeé gbé àṣàyàn wọlé. Gbìyànjú lẹ́ẹ̀kan sí i|Enweghị ike ibunye ọrụ. Nwaa ọzọ
+Receipts|Receipts|Rasitoci|Àwọn rísíìtì|Risit niile
+Receipt|Receipt|Rasit|Rísíìtì|Risit
+Receipt lookup|Find receipt|Neman rasit|Wíwá rísíìtì|Chọta risit
+Receipt number|Receipt number|Lambar rasit|Nọ́mbà rísíìtì|Nọmba risit
+Receipt preview|See how receipt go look|Duban rasit|Àwòkọ́ṣe rísíìtì|Nlele risit
+Receipt template|Receipt style|Tsarin rasit|Àpẹẹrẹ rísíìtì|Ụdị risit
+RECEIPT PREVIEW|RECEIPT PREVIEW|DUBAN RASIT|ÀWÒKỌ́ṢE RÍSÍÌTÌ|NLELE RISIT
+Find, review and reprint your recorded sales.|Find saved sales, check them and print receipt again.|Nemo, duba kuma sake buga sayarwar da aka rubuta.|Wá, ṣàyẹ̀wò, tún tẹ títà tí o ti kọ sílẹ̀.|Chọta, nyochaa ma bipụtakwa ahịa e dekọrọ.
+All payment methods|All payment methods|Duk hanyoyin biya|Gbogbo ọ̀nà ìsanwó|Ụzọ ịkwụ ụgwọ niile
+Search receipt number|Find receipt number|Nemi lambar rasit|Wá nọ́mbà rísíìtì|Chọọ nọmba risit
+Search receipt number…|Find receipt number…|Nemi lambar rasit…|Wá nọ́mbà rísíìtì…|Chọọ nọmba risit…
+No receipts found|We no see receipt|Ba a sami rasit ba|A kò rí rísíìtì|Ahụghị risit
+Completed sales will appear here. Try a different receipt number or payment method.|Sales wey finish go show here. Try another receipt number or payment method.|Sayarwar da ta kammala za ta bayyana a nan. Gwada wata lambar rasit ko hanyar biya.|Títà tó parí yóò hàn níbí. Gbìyànjú nọ́mbà rísíìtì tàbí ọ̀nà ìsanwó mìíràn.|Ahịa agwụchara ga-apụta ebe a. Nwaa nọmba risit ma ọ bụ ụzọ ịkwụ ụgwọ ọzọ.
+Look up a receipt|Find receipt|Nemo rasit|Wá rísíìtì|Chọta risit
+Look up a receipt to review its items, totals and payment details.|Find receipt to check items, total and payment details.|Nemo rasit don duba kaya, jimilla da bayanan biya.|Wá rísíìtì láti ṣàyẹ̀wò ọjà, àpapọ̀ àti ìsanwó.|Chọta risit iji lelee ngwaahịa, ngụkọta na nkọwa ịkwụ ụgwọ.
+Recent lookups|Receipts wey you just check|Binciken baya-bayan nan|Àwọn ìwádìí tuntun|Nchọta ọhụrụ
+Your successful lookups in this session will appear here.|Receipts wey you find for this session go show here.|Rasitocin da ka samo a wannan zaman za su bayyana a nan.|Àwọn rísíìtì tí o rí ní àkókò yìí yóò hàn níbí.|Risit ị chọtara n'oge a ga-apụta ebe a.
+Use a receipt number or a connected barcode scanner. Photo scanning requires a supported browser.|Use receipt number or barcode scanner wey connect. Photo scan need browser wey support am.|Yi amfani da lambar rasit ko na'urar barcode. Duba hoto yana buƙatar burauza mai goyon baya.|Lo nọ́mbà rísíìtì tàbí ẹ̀rọ barcode. Àyẹ̀wò fọ́tò nílò ẹ̀rọ aṣàwákiri tó ṣe é.|Jiri nọmba risit ma ọ bụ igwe barcode ejikọrọ. Nyocha foto chọrọ ihe nchọgharị na-akwado ya.
+Barcode photo|Barcode picture|Hoton barcode|Fọ́tò barcode|Foto barcode
+Receipt barcode photo|Receipt barcode picture|Hoton barcode na rasit|Fọ́tò barcode rísíìtì|Foto barcode risit
+Download receipt|Download receipt|Sauke rasit|Ṣe ìgbàsílẹ̀ rísíìtì|Budata risit
+View & print receipts|See and print receipts|Duba ka buga rasit|Wo kí o tẹ rísíìtì|Lee ma bipụta risit
+Print to device|Print for printer|Buga zuwa na'ura|Tẹ sí ẹ̀rọ|Bipụta n'igwe
+Connect a receipt printer (USB / Bluetooth)|Connect receipt printer (USB / Bluetooth)|Haɗa firintar rasit (USB / Bluetooth)|So ẹ̀rọ ìtẹ̀wé rísíìtì pọ̀ (USB / Bluetooth)|Jikọọ igwe risit (USB / Bluetooth)
+Connect USB|Connect USB|Haɗa USB|So USB pọ̀|Jikọọ USB
+Connect Bluetooth|Connect Bluetooth|Haɗa Bluetooth|So Bluetooth pọ̀|Jikọọ Bluetooth
+Connecting…|E dey connect…|Ana haɗawa…|Ó ń sopọ̀…|Ọ na-ejikọ…
+Disconnect|Disconnect|Yanke haɗi|Já àsopọ̀|Kwupu njikọ
+Thank you for your purchase|Thank you as you buy from us|Na gode da sayayya|Ẹ ṣé fún rírà|Daalụ maka ịzụta
+Thank you!|Thank you!|Na gode!|Ẹ ṣé!|Daalụ!
+Business profile|Business profile|Bayanan kasuwanci|Àkọọ́lẹ̀ iṣẹ́|Profaịlụ azụmahịa
+Business logo|Business logo|Tambarin kasuwanci|Àmì iṣẹ́|Akara azụmahịa
+Brand|Brand|Tambari|Àmì|Akara
+Language & currency|Language and currency|Harshe da kuɗi|Èdè àti owó|Asụsụ na ego
+Localization|Language and local settings|Saitin yanki|Ètò agbègbè|Ntọala mpaghara
+Date format|How date go show|Tsarin kwanan wata|Ọ̀nà fífi ọjọ́ hàn|Ụdị ụbọchị
+Language applies to this device. Currency and timezone belong to your business.|Language na for this device. Currency and timezone na for your business.|Harshe na wannan na'ura ne. Kuɗi da yankin lokaci na kasuwancinka ne.|Èdè kan ẹ̀rọ yìí. Owó àti agbègbè àkókò jẹ́ ti iṣẹ́ rẹ.|Asụsụ bụ maka igwe a. Ego na mpaghara oge bụ nke azụmahịa gị.
+Shown on receipts, invoices, and your Zainpay account.|E go show for receipts, invoices and your Zainpay account.|Ana nunawa a rasit, invoice da asusun Zainpay.|A fi hàn lórí rísíìtì, ìwé owó àti àkọọ́lẹ̀ Zainpay.|A na-egosi ya na risit, akwụkwọ ụgwọ na akaụntụ Zainpay.
+PNG, JPEG or WebP · up to 256 KB · saved with your business profile|PNG, JPEG or WebP · no pass 256 KB · save with business profile|PNG, JPEG ko WebP · har 256 KB · ajiye da bayanan kasuwanci|PNG, JPEG tàbí WebP · tó 256 KB · a fipamọ́ pẹ̀lú àkọọ́lẹ̀ iṣẹ́|PNG, JPEG ma ọ bụ WebP · ruo 256 KB · echekwara na profaịlụ azụmahịa
+Upload business logo|Upload business logo|Loda tambarin kasuwanci|Gbé àmì iṣẹ́ sókè|Bulite akara azụmahịa
+Loading business settings|Business settings dey load|Ana loda saitin kasuwanci|A ń gbé ètò iṣẹ́ wọlé|A na-ebunye ntọala azụmahịa
+Settings sections|Settings sections|Sassan saituna|Àwọn apá ètò|Akụkụ ntọala
+Devices & printers|Devices and printers|Na'urori da firintoci|Ẹ̀rọ àti ẹ̀rọ ìtẹ̀wé|Igwe na igwe mbipụta
+Pair a receipt printer with this browser. Connect it again from the receipt screen when you are ready to print.|Pair receipt printer with this browser. Connect am again from receipt screen when you ready to print.|Haɗa firintar rasit da wannan burauza. Sake haɗawa daga allon rasit idan ka shirya bugawa.|So ẹ̀rọ rísíìtì pọ̀ mọ́ ẹ̀rọ aṣàwákiri yìí. Tún sopọ̀ láti ojú rísíìtì nígbà tí o ṣetán láti tẹ̀.|Jikọọ igwe risit na ihe nchọgharị a. Jikọọ ya ọzọ site na ibe risit mgbe ị dị njikere ibipụta.
+Browser printing and downloadable PDF receipts remain available when USB or Bluetooth is unsupported.|You still fit print from browser or download PDF if USB or Bluetooth no work.|Bugawa daga burauza da sauke PDF suna nan idan USB ko Bluetooth ba su samu ba.|O lè tẹ̀ láti ẹ̀rọ aṣàwákiri tàbí gba PDF bí USB tàbí Bluetooth kò bá ṣiṣẹ́.|Ị ka nwere ike ibipụta site na ihe nchọgharị ma ọ bụ budata PDF ma USB ma ọ bụ Bluetooth anaghị akwado.
+Offline sync|Sync when internet return|Daidaita bayanai ba intanet|Mímú dọ́gba láìsí intanẹẹti|Mmekọrịta na-enweghị ịntanetị
+Your sales and stock changes stay on this device until they sync.|Your sales and stock changes go stay for this device until dem sync.|Sayarwa da sauyin haja suna nan a na'ura har sai an daidaita su.|Títà àti ìyípadà ọjà rẹ dúró lórí ẹ̀rọ yìí títí tí wọn yóò fi dọ́gba.|Ahịa na mgbanwe ngwaahịa gị na-anọ n'igwe a ruo mgbe ha mekọrịtara.
+Sync now|Sync now|Daidaita yanzu|Mú dọ́gba nísinsìnyí|Mekọrịta ugbu a
+Syncing…|E dey sync…|Ana daidaitawa…|A ń mú dọ́gba…|A na-emekọrịta…
+Keep this tab open while syncing. Clearing browser storage removes changes that have not reached the server.|Leave this tab open while e dey sync. If you clear browser storage, changes wey never reach server go comot.|Bar wannan shafi a buɗe yayin daidaitawa. Goge ajiyar burauza zai cire canje-canjen da ba su kai uwar garke ba.|Fi taabu yìí sílẹ̀ nígbà ìdọ́gba. Pípa ìpamọ́ ẹ̀rọ aṣàwákiri rẹ́ yóò yọ ìyípadà tí kò tíì dé olupin.|Hapụ taabụ a mepere mgbe a na-emekọrịta. Ihichapụ nchekwa ihe nchọgharị na-ewepụ mgbanwe na-erubeghị sava.
+Your business profile supplies the receipt header. Saved sales retain their original totals and payment details.|Your business profile supply receipt header. Saved sales go keep original totals and payment details.|Bayanan kasuwancinka suna ba rasit kanun. Sayarwar da aka ajiye tana riƙe jimilla da bayanan biyanta.|Àkọọ́lẹ̀ iṣẹ́ rẹ pèsè orí rísíìtì. Títà tí a fipamọ́ pa àpapọ̀ àti ìsanwó àkọ́kọ́ mọ́.|Profaịlụ azụmahịa gị na-enye isi risit. Ahịa echekwara na-edobe ngụkọta na nkọwa ịkwụ ụgwọ mbụ.
+The standard invoice includes item quantities, prices, discount, tax, payment, change and a scannable receipt code.|Standard invoice get quantities, prices, discount, tax, payment, change and receipt code wey you fit scan.|Invoice na yau da kullum yana da adadi, farashi, rangwame, haraji, biya, canji da lambar rasit.|Ìwé owó ní iye ọjà, iye owó, ẹ̀dínwó, owó-orí, ìsanwó, owó-padà àti kóòdù rísíìtì.|Akwụkwọ ụgwọ nwere ọnụọgụ, ọnụahịa, mbelata, ụtụ, ịkwụ ụgwọ, mgbanwe na koodu risit.
+Manage notifications|Manage updates|Sarrafa sanarwa|Ṣàkóso ìfitónilétí|Jikwaa ozi
+Review stock alerts, subscription updates and team activity in one place.|Check stock alerts, subscription updates and team activity for one place.|Duba faɗakarwar haja, rajista da aikin ma'aikata a wuri ɗaya.|Ṣàyẹ̀wò ìkìlọ̀ ọjà, ìmúdójúìwọ̀n ètò àti iṣẹ́ ẹgbẹ́ ní ibi kan.|Nyochaa ozi ngwaahịa, atụmatụ na ọrụ otu n'otu ebe.
+Data & export|Data and download|Bayanai da fitarwa|Dátà àti gbígbé jáde|Data na mbupụ
+Download your business records using the filters on each report.|Use filters for each report to download business records.|Sauke bayanan kasuwanci da matatun kowane rahoto.|Lo àlẹ̀mọ́ ìròyìn kọ̀ọ̀kan láti gba àkọsílẹ̀ iṣẹ́ rẹ.|Jiri nzacha akụkọ ọ bụla budata ndekọ azụmahịa gị.
+Sales & financial reports|Sales and money reports|Rahoton sayarwa da kuɗi|Ìròyìn títà àti owó|Akụkọ ahịa na ego
+Inventory & stock|Inventory and stock|Haja da kaya|Ọjà àti ìpamọ́|Ngwaahịa na nchekwa
+Import products|Import products|Shigo da kaya|Gbé ọjà wọlé|Bubata ngwaahịa
+Current|Current|Na yanzu|Lọ́wọ́lọ́wọ́|Ugbu a
+Change plan|Change plan|Canja tsari|Yí ètò padà|Gbanwee atụmatụ
+Renewal|Renewal|Sabunta rajista|Àtúnṣe ètò|Mmegharị atụmatụ
+Manual payment|Pay by yourself|Biyan kuɗi da hannu|Ìsanwó fúnra rẹ|Ịkwụ ụgwọ n'onwe gị
+Valid until|E valid till|Yana aiki har|Ó wúlò títí dé|Ọ dị ruo
+Choose a plan to renew.|Choose plan to renew.|Zaɓi tsari don sabuntawa.|Yan ètò láti tún ṣe.|Họrọ atụmatụ iji megharịa.
+Cancel subscription?|Cancel subscription?|Soke rajista?|Fagilé ṣíṣe-alábápín?|Kagbuo ndebanye?
+This ends subscription access immediately. Existing sales and records are retained. This does not issue a refund.|This go stop subscription access now. Saved sales and records go remain. E no go refund money.|Wannan zai dakatar da rajista nan take. Sayarwa da bayanai suna nan. Ba a mayar da kuɗi.|Èyí dá àṣẹ ètò dúró lẹ́sẹ̀kẹsẹ̀. Títà àti àkọsílẹ̀ wà. Kò dá owó padà.|Nke a na-akwụsị ohere atụmatụ ozugbo. Ahịa na ndekọ na-adị. Ọ naghị eweghachi ego.
+Keep subscription|Keep subscription|Riƙe rajista|Pa ètò mọ́|Debe ndebanye
+Confirm cancellation|Confirm say you wan cancel|Tabbatar da sokewa|Fìdí ìfagilé múlẹ̀|Kwenye nkagbu
+Cancelling?|E dey cancel…|Ana sokewa…|A ń fagilé…|A na-akagbu…
+Subscription sections|Subscription sections|Sassan rajista|Àwọn apá ètò|Akụkụ ndebanye
+Payment methods|Payment methods|Hanyoyin biya|Àwọn ọ̀nà ìsanwó|Ụzọ ịkwụ ụgwọ
+Usage|How much you don use|Amfani|Ìlò|Ojiji
+Usage unavailable|We no fit load usage|Bayanan amfani ba su samu ba|Àlàyé ìlò kò sí|Ojiji adịghị
+Your Zainpay Naira account|Your Zainpay Naira account|Asusun Naira naka na Zainpay|Àkọọ́lẹ̀ Naira Zainpay rẹ|Akaụntụ Naira Zainpay gị
+Bank|Bank|Banki|Báńkì|Ụlọ akụ
+Account number (NUBAN)|Account number (NUBAN)|Lambar asusu (NUBAN)|Nọ́mbà àkọọ́lẹ̀ (NUBAN)|Nọmba akaụntụ (NUBAN)
+Account name|Account name|Sunan asusu|Orúkọ àkọọ́lẹ̀|Aha akaụntụ
+Copy account number|Copy account number|Kwafi lambar asusu|Ṣe ẹ̀dà nọ́mbà àkọọ́lẹ̀|Detuo nọmba akaụntụ
+Account unavailable|Account no dey available|Asusu bai samu ba|Àkọọ́lẹ̀ kò sí|Akaụntụ adịghị
+Could not load your bank account.|We no fit load your bank account.|An kasa loda asusun bankinka.|Kò ṣeé gbé àkọọ́lẹ̀ báńkì rẹ wọlé.|Enweghị ike ibunye akaụntụ ụlọ akụ gị.
+No account assigned yet|Dem never assign account|Ba a sanya asusu ba tukuna|A kò tíì yan àkọọ́lẹ̀|E kenyebeghị akaụntụ
+Your payment account will appear here after merchant onboarding is complete.|Your payment account go show here when business setup finish.|Asusun biyanka zai bayyana bayan kammala saitin kasuwanci.|Àkọọ́lẹ̀ ìsanwó rẹ yóò hàn lẹ́yìn tí ìṣètò iṣẹ́ parí.|Akaụntụ ịkwụ ụgwọ gị ga-apụta mgbe nhazi azụmahịa gwụchara.
+Payments appear in billing history after confirmation.|Payments go show for billing history after confirmation.|Biyan kuɗi yana bayyana a tarihi bayan tabbatarwa.|Ìsanwó yóò hàn nínú ìtàn lẹ́yìn ìmúdájú.|Ịkwụ ụgwọ na-apụta n'akụkọ mgbe ekwenyesịrị ya.
+Check again|Check again|Sake dubawa|Tún ṣàyẹ̀wò|Lelee ọzọ
+Outstanding|Money never complete|Bashin da ya rage|Owó tó kù|Ego fọdụrụ
+Outstanding balance|Money wey remain to pay|Bashin da ya rage|Owó tí a kò tíì san|Ego a na-akwụbeghị
+Collected|Money wey don come|An karɓa|A ti gbà|Anatala
+All sales|All sales|Duk sayarwa|Gbogbo títà|Ahịa niile
+Search vendor sales|Find vendor sales|Nemi sayarwar dillali|Wá títà olùtajà|Chọọ ahịa onye na-ere
+Search vendor name or phone?|Find vendor name or phone…|Nemi sunan dillali ko waya…|Wá orúkọ tàbí fóònù olùtajà…|Chọọ aha onye na-ere ma ọ bụ ekwentị…
+Vendor sales status|Vendor sales status|Halin sayarwar dillali|Ipò títà olùtajà|Ọnọdụ ahịa onye na-ere
+Record payment|Record payment|Rubuta biyan kuɗi|Kọ ìsanwó sílẹ̀|Dekọọ ịkwụ ụgwọ
+Save payment|Save payment|Ajiye biyan kuɗi|Fi ìsanwó pamọ́|Chekwaa ịkwụ ụgwọ
+Reconnect to record payment.|Connect internet to record payment.|Sake haɗawa don rubuta biya.|Tún sopọ̀ láti kọ ìsanwó.|Jikọọ ọzọ iji dekọọ ịkwụ ụgwọ.
+Could not load this page|We no fit load this page|An kasa loda shafin|Kò ṣeé gbé ojú-ewé wọlé|Enweghị ike ibunye ibe a
+This page could not be loaded|We no fit load this page|An kasa loda shafin|Kò ṣeé gbé ojú-ewé wọlé|Enweghị ike ibunye ibe a
+Check your connection and try loading this page again.|Check internet and try load page again.|Duba haɗinka ka sake loda shafin.|Ṣàyẹ̀wò ìsopọ̀ kí o tún gbé ojú-ewé wọlé.|Lelee njikọ gị ma gbalịa ibunye ibe a ọzọ.
+Try again|Try again|Sake gwadawa|Gbìyànjú lẹ́ẹ̀kan sí i|Nwaa ọzọ
+Previous|Previous one|Na baya|Tẹ́lẹ̀|Nke gara aga
+Loading…|E dey load…|Ana lodawa…|A ń gbé wọlé…|A na-ebunye…
+Loading cart…|Cart dey load…|Ana loda kwando…|A ń gbé kẹ̀kẹ́ wọlé…|A na-ebunye nkata…
+Loading workspace|Workspace dey load|Ana loda wurin aiki|A ń gbé ibi iṣẹ́ wọlé|A na-ebunye ebe ọrụ
+Open search|Open search|Buɗe bincike|Ṣí ìwádìí|Mepee nchọta
+Toggle menu|Open or close menu|Buɗe ko rufe menu|Ṣí tàbí pa àtòjọ|Mepee ma ọ bụ mechie ndepụta
+Collapse sidebar|Close sidebar small|Rage gefen menu|Kó àtòjọ ẹ̀gbẹ́ kéré|Belata ogwe akụkụ
+Expand sidebar|Open sidebar full|Faɗaɗa gefen menu|Fẹ àtòjọ ẹ̀gbẹ́|Gbasaa ogwe akụkụ
+Notification filters|Filter updates|Matatun sanarwa|Àlẹ̀mọ́ ìfitónilétí|Nzacha ozi
+Could not load notifications|We no fit load updates|An kasa loda sanarwa|Kò ṣeé gbé ìfitónilétí wọlé|Enweghị ike ibunye ozi
+Could not update notifications. Try again.|We no fit update notifications. Try again.|An kasa sabunta sanarwa. Sake gwadawa.|Kò ṣeé ṣe ìmúdójúìwọ̀n ìfitónilétí. Gbìyànjú lẹ́ẹ̀kan sí i.|Enweghị ike imelite ozi. Nwaa ọzọ.
+Payments|Payments|Biyan kuɗi|Àwọn ìsanwó|Ịkwụ ụgwọ
+Review updates requiring your attention.|Check updates wey need your attention.|Duba sanarwar da ke buƙatar hankalinka.|Ṣàyẹ̀wò ìfitónilétí tó nílò àkíyèsí rẹ.|Nyochaa ozi chọrọ nlebara anya gị.
+Account recovery|Recover account|Maido da asusu|Ìgbàpadà àkọọ́lẹ̀|Weghachite akaụntụ
+Account security|Account security|Tsaron asusu|Ààbò àkọọ́lẹ̀|Nchekwa akaụntụ
+Let's get you back in.|Make we get you back inside.|Bari mu mayar da kai ciki.|Jẹ́ kí a mú ọ padà wọlé.|Ka anyị weghachite gị.
+Let's get you back in, safely.|Make we get you back inside safely.|Bari mu mayar da kai ciki cikin tsaro.|Jẹ́ kí a mú ọ padà wọlé láìléwu.|Ka anyị weghachite gị n'enweghị nsogbu.
+Enter the email tied to your merchant account. We'll send a reset link.|Enter email wey dey your business account. We go send reset link.|Shigar da imel na asusun kasuwanci. Za mu aika mahaɗin sake saita kalmar sirri.|Tẹ ímeèlì àkọọ́lẹ̀ iṣẹ́ rẹ. A ó rán ọ̀nà àtúntò sí ọ.|Tinye email akaụntụ azụmahịa gị. Anyị ga-eziga njikọ nrụgharị.
+We have sent a password reset link to your email address.|We don send reset password link to your email.|Mun aika mahaɗin sake saita kalmar sirri zuwa imel ɗinka.|A ti rán ọ̀nà àtúntò ọ̀rọ̀ aṣínà sí ímeèlì rẹ.|Anyị ezipụla njikọ nrụgharị paswọọdụ na email gị.
+Back to Login|Go back to sign in|Koma shiga|Padà sí ìwọlé|Laghachi na nbanye
+Sending...|E dey send...|Ana aikawa...|A ń ránṣẹ́...|A na-eziga...
+Cashier or admin account?|Na cashier or admin account?|Asusun mai karɓar kuɗi ko admin?|Àkọọ́lẹ̀ olùgbà owó tàbí admin?|Akaụntụ onye na-anata ego ma ọ bụ admin?
+Ask your business owner to reset your password from Settings → Team. We only send resets directly to business owners.|Ask business owner to reset password from Settings → Team. Na only business owners we dey send reset directly.|Nemi mai kasuwanci ya sake saita kalmar sirri daga Settings → Team. Masu kasuwanci kawai muke aikawa kai tsaye.|Béèrè lọ́wọ́ oníṣẹ́ láti tún ọ̀rọ̀ aṣínà ṣe ní Settings → Team. Oníṣẹ́ nìkan ni a ń rán àtúntò sí.|Rịọ onye nwe azụmahịa ka ọ tọgharịa paswọọdụ na Settings → Team. Anyị na-ezigara naanị ndị nwe azụmahịa ozugbo.
+New to TracKasuwa?|You new for TracKasuwa?|Sabon zuwa TracKasuwa?|Ṣé o jẹ́ tuntun sí TracKasuwa?|Ị bụ onye ọhụrụ na TracKasuwa?
+Create your merchant account|Open your business account|Buɗe asusun kasuwanci|Ṣí àkọọ́lẹ̀ iṣẹ́ rẹ|Mepee akaụntụ azụmahịa gị
+Create your merchant|Set up your business|Ƙirƙiri kasuwancinka|Ṣẹ̀dá iṣẹ́ rẹ|Mepụta azụmahịa gị
+Create your account|Open your account|Buɗe asusunka|Ṣí àkọọ́lẹ̀ rẹ|Mepee akaụntụ gị
+Your name|Your name|Sunanka|Orúkọ rẹ|Aha gị
+Phone (optional)|Phone (if you want)|Waya (na zaɓi)|Fóònù (bí o bá fẹ́)|Ekwentị (nhọrọ)
+At least 8 characters|At least 8 characters|Aƙalla haruffa 8|Ó kéré tán àmì 8|Ọ dịkarịa ala mkpụrụedemede 8
+Min. 8 characters|At least 8 characters|Aƙalla haruffa 8|Ó kéré tán àmì 8|Ọ dịkarịa ala mkpụrụedemede 8
+Re-enter your password|Enter password again|Sake shigar da kalmar sirri|Tún tẹ ọ̀rọ̀ aṣínà rẹ|Tinye paswọọdụ ọzọ
+Repeat password|Enter password again|Maimaita kalmar sirri|Tún ọ̀rọ̀ aṣínà tẹ̀|Tinye paswọọdụ ọzọ
+Creating account...|We dey create account...|Ana ƙirƙirar asusu...|A ń ṣẹ̀dá àkọọ́lẹ̀...|A na-emepụta akaụntụ...
+Already have an account?|You don get account?|Kana da asusu?|Ṣé o ní àkọọ́lẹ̀ tẹ́lẹ̀?|Ị nwere akaụntụ?
+Your selected plan will be applied to your new account automatically after signup.|Plan wey you choose go apply for your new account after signup.|Za a saita tsarin da ka zaɓa a sabon asusunka bayan rajista.|Ètò tí o yàn yóò ṣiṣẹ́ fún àkọọ́lẹ̀ tuntun lẹ́yìn ìforúkọsílẹ̀.|Atụmatụ ị họọrọ ga-adị na akaụntụ ọhụrụ gị mgbe ị debanyere aha.
+You're one step away from your selected plan.|Na one step remain before your selected plan.|Mataki ɗaya ya rage zuwa tsarin da ka zaɓa.|Ìgbésẹ̀ kan ló kù sí ètò tí o yàn.|Otu nzọụkwụ fọdụrụ ruo atụmatụ ị họọrọ.
+Need a new account?|You need new account?|Kana buƙatar sabon asusu?|Ṣé o nílò àkọọ́lẹ̀ tuntun?|Ị chọrọ akaụntụ ọhụrụ?
+Required · First-time login|You must do am · first login|Dole · shiga na farko|Ó ṣe pàtàkì · ìwọlé àkọ́kọ́|Achọrọ · nbanye mbụ
+One quick step before you continue.|One quick step before you continue.|Mataki ɗaya kafin ka ci gaba.|Ìgbésẹ̀ kan kí o tó tẹ̀síwájú.|Otu nzọụkwụ tupu ị gaa n'ihu.
+Your profile is not loaded. Refresh the page and sign in again if needed.|Your profile never load. Refresh page and sign in again if e need am.|Bayananka ba su loda ba. Sabunta shafin, sake shiga idan an buƙata.|Àkọọ́lẹ̀ rẹ kò wọlé. Tún ojú-ewé ṣí, wọlé lẹ́ẹ̀kan sí i bí ó bá yẹ.|Profaịlụ gị ebughị. Mee ka ibe ọhụrụ ma banye ọzọ ma ọ dị mkpa.

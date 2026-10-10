@@ -1,4 +1,6 @@
 "use client";
+import { TranslatedText } from '@/i18n/text';
+
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
@@ -61,7 +63,7 @@ export function CommandPalette() {
     <CommandDialog open={open} onOpenChange={setOpen}>
       <CommandInput placeholder={user?.role === "platform_owner" ? "Search platform navigation…" : "Search navigation…"} />
       <CommandList>
-        <CommandEmpty>No results found.</CommandEmpty>
+        <CommandEmpty><TranslatedText text={"No results found."} /></CommandEmpty>
         {groups.map((group) => (
           <CommandGroup key={group.title} heading={group.title}>
             {group.items.map((item) => {
@@ -85,18 +87,18 @@ export function CommandPalette() {
         <CommandGroup heading="Theme">
           <CommandItem onSelect={() => runCommand(() => setTheme("light"))}>
             <Sun className="h-4 w-4" />
-            <span>Light</span>
-            {theme === "light" && <CommandShortcut>Active</CommandShortcut>}
+            <span><TranslatedText text={"Light"} /></span>
+            {theme === "light" && <CommandShortcut><TranslatedText text={"Active"} /></CommandShortcut>}
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => setTheme("dark"))}>
             <Moon className="h-4 w-4" />
-            <span>Dark</span>
-            {theme === "dark" && <CommandShortcut>Active</CommandShortcut>}
+            <span><TranslatedText text={"Dark"} /></span>
+            {theme === "dark" && <CommandShortcut><TranslatedText text={"Active"} /></CommandShortcut>}
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => setTheme("system"))}>
             <Monitor className="h-4 w-4" />
-            <span>System</span>
-            {theme === "system" && <CommandShortcut>Active</CommandShortcut>}
+            <span><TranslatedText text={"System"} /></span>
+            {theme === "system" && <CommandShortcut><TranslatedText text={"Active"} /></CommandShortcut>}
           </CommandItem>
         </CommandGroup>
         <CommandSeparator />
@@ -105,13 +107,13 @@ export function CommandPalette() {
             onSelect={() => runCommand(() => router.push(user?.role === "platform_owner" ? "/admin" : "/dashboard"))}
           >
             <LayoutDashboard className="h-4 w-4" />
-            <span>{user?.role === "platform_owner" ? "Platform overview" : "Dashboard"}</span>
+            <span><TranslatedText text={user?.role === "platform_owner" ? "Platform overview" : "Dashboard"} /></span>
           </CommandItem>
           <CommandItem
             onSelect={() => runCommand(() => router.push("/settings"))}
           >
             <LogOut className="h-4 w-4" />
-            <span>Settings</span>
+            <span><TranslatedText text={"Settings"} /></span>
           </CommandItem>
         </CommandGroup>
       </CommandList>

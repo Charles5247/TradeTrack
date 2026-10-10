@@ -1,4 +1,6 @@
 "use client";
+import { TranslatedLabel, TranslatedText, useCopy } from '@/i18n/text';
+
 
 import React from "react";
 import Link from "next/link";
@@ -52,6 +54,7 @@ import type { UserRole } from "@/types";
  * restored as-is when they navigate away from a POS route.
  */
 export function Sidebar() {
+  const copy = useCopy();
   const pathname = usePathname();
   const { sidebarOpen: sidebarOpenPref, setSidebarOpen } = useUIStore();
   const { user } = useAuthStore();
@@ -101,7 +104,7 @@ export function Sidebar() {
             <button
               onClick={() => setSidebarOpen(false)}
               className="ml-auto p-1 rounded-md hover:bg-accent transition-colors shrink-0 tt-muted"
-              aria-label="Collapse sidebar"
+              aria-label={copy("Collapse sidebar")}
             >
               <ChevronLeft className="h-4 w-4" strokeWidth={1.75} />
             </button>
@@ -111,7 +114,7 @@ export function Sidebar() {
           <button
             onClick={() => setSidebarOpen(true)}
             className="mx-auto mt-1 p-1 rounded-md hover:bg-accent transition-colors tt-muted"
-            aria-label="Expand sidebar"
+            aria-label={copy("Expand sidebar")}
           >
             <ChevronRight className="h-4 w-4" strokeWidth={1.75} />
           </button>
@@ -124,9 +127,9 @@ export function Sidebar() {
               <WorkspaceIcon className="h-4 w-4 tt-muted shrink-0" strokeWidth={1.75} />
               <div className="min-w-0 flex-1">
                 <div className="text-[11px] tt-muted leading-none">
-                  {user?.role === "platform_owner"
+                  <TranslatedText text={user?.role === "platform_owner"
                     ? "Platform"
-                    : "Organization"}
+                    : "Organization"} />
                 </div>
                 <div className="text-[13px] font-semibold text-foreground truncate">
                   {orgLabel}
@@ -142,7 +145,7 @@ export function Sidebar() {
             <div key={group.title} className="mb-2">
               {sidebarOpen && (
                 <div className="tt-nav-section-label px-2 pt-3 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--c-textFaint)]">
-                  {group.title}
+                  <TranslatedLabel>{group.title}</TranslatedLabel>
                 </div>
               )}
               <div className="flex flex-col gap-[1px]">
@@ -180,7 +183,7 @@ export function Sidebar() {
                       <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                       {sidebarOpen && (
                         <>
-                          <span className="flex-1 truncate">{label}</span>
+                          <span className="flex-1 truncate"><TranslatedLabel>{label}</TranslatedLabel></span>
                           {item.navKey === "notifications" && (
                             <NotificationBadge />
                           )}
@@ -194,7 +197,7 @@ export function Sidebar() {
                   return (
                     <Tooltip key={item.href} delayDuration={0}>
                       <TooltipTrigger asChild>{link}</TooltipTrigger>
-                      <TooltipContent side="right">{label}</TooltipContent>
+                      <TooltipContent side="right"><TranslatedLabel>{label}</TranslatedLabel></TooltipContent>
                     </Tooltip>
                   );
                 })}

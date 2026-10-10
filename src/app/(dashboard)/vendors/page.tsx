@@ -1,4 +1,6 @@
 "use client";
+import { TranslatedText, useCopy } from '@/i18n/text';
+
 
 import { withTimeout, AUTH_CHECK_TIMEOUT_MS } from "@/lib/utils/timeout";
 import React, { useState } from "react";
@@ -108,6 +110,7 @@ export default function VendorsPage() {
 }
 
 function VendorsPageInner() {
+  const copy = useCopy();
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
@@ -332,7 +335,7 @@ function VendorsPageInner() {
       )}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="tt-page-title">Vendor sales</h1>
+          <h1 className="tt-page-title"><TranslatedText text={"Vendor sales"} /></h1>
           <p className="tt-muted text-sm">
             {t.vendors.subtitle_debt.split(":")[0]}:{" "}
             <span className="font-semibold text-[var(--c-warn)]">
@@ -346,8 +349,8 @@ function VendorsPageInner() {
         </Button>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3"><StatCard label="Vendor transactions" value={vendors.length} loading={isLoading} /><StatCard label="Outstanding balance" value={formatCurrency(totalPending)} loading={isLoading} /><StatCard label="Collected" value={formatCurrency(vendors.reduce((sum,v) => sum+v.amount_paid,0))} loading={isLoading} /></div>
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"><Tabs value={statusFilter} onValueChange={setStatusFilter}><TabsList aria-label="Vendor sales status"><TabsTrigger value="all">All sales</TabsTrigger><TabsTrigger value="outstanding">Outstanding</TabsTrigger><TabsTrigger value="paid">Paid</TabsTrigger></TabsList></Tabs><Input className="lg:max-w-80" aria-label="Search vendor sales" placeholder="Search vendor name or phone?" value={search} onChange={e => setSearch(e.target.value)} /></div>
+      <div className="grid gap-4 sm:grid-cols-3"><StatCard label={copy("Vendor transactions")} value={vendors.length} loading={isLoading} /><StatCard label={copy("Outstanding balance")} value={formatCurrency(totalPending)} loading={isLoading} /><StatCard label={copy("Collected")} value={formatCurrency(vendors.reduce((sum,v) => sum+v.amount_paid,0))} loading={isLoading} /></div>
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"><Tabs value={statusFilter} onValueChange={setStatusFilter}><TabsList aria-label={copy("Vendor sales status")}><TabsTrigger value="all"><TranslatedText text={"All sales"} /></TabsTrigger><TabsTrigger value="outstanding"><TranslatedText text={"Outstanding"} /></TabsTrigger><TabsTrigger value="paid"><TranslatedText text={"Paid"} /></TabsTrigger></TabsList></Tabs><Input className="lg:max-w-80" aria-label={copy("Search vendor sales")} placeholder={copy("Search vendor name or phone?")} value={search} onChange={e => setSearch(e.target.value)} /></div>
       {/* Alert Banner */}
       {totalPending > 0 && (
         <div className="flex items-center gap-3 p-4 bg-[color-mix(in_oklch,var(--c-warn),transparent_92%)] border border-[color-mix(in_oklch,var(--c-warn),transparent_65%)] rounded-lg">
@@ -449,9 +452,9 @@ function VendorsPageInner() {
                               className="text-xs tt-muted mb-1"
                               role="status"
                             >
-                              {!isOnline
+                              <TranslatedText text={!isOnline
                                 ? "Reconnect to record payment."
-                                : "Waiting for this transaction, its items and linked sale to sync."}
+                                : "Waiting for this transaction, its items and linked sale to sync."} />
                             </p>
                           )}
                         <div className="flex items-center justify-end gap-1">
@@ -654,20 +657,19 @@ function VendorsPageInner() {
       >
         <DialogContent className="max-h-[90dvh] overflow-y-auto max-w-md">
           <DialogHeader>
-            <DialogTitle>Record payment</DialogTitle>
+            <DialogTitle><TranslatedText text={"Record payment"} /></DialogTitle>
           </DialogHeader>
           {(!isOnline || !paymentReady) && (
             <p role="status" className="text-sm tt-muted">
-              {!isOnline
+              <TranslatedText text={!isOnline
                 ? "Reconnect to record payment."
-                : "Waiting for this transaction, its items and linked sale to sync."}
+                : "Waiting for this transaction, its items and linked sale to sync."} />
             </p>
           )}
           <div className="space-y-4">
             <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm">
               <p className="font-medium">{paymentDialog.vendor?.vendor_name}</p>
-              <p className="tt-muted">
-                Balance:{" "}
+              <p className="tt-muted"><TranslatedText text={"Balance:"} />{" "}
                 {formatCurrency(
                   (paymentDialog.vendor?.total_value || 0) -
                     (paymentDialog.vendor?.amount_paid || 0),
@@ -675,7 +677,7 @@ function VendorsPageInner() {
               </p>
             </div>
             <div className="space-y-2">
-              <Label>Amount paid</Label>
+              <Label><TranslatedText text={"Amount paid"} /></Label>
               <Input
                 type="number"
                 value={paymentAmount}
@@ -706,9 +708,7 @@ function VendorsPageInner() {
                     size="sm"
                     variant="ghost"
                     onClick={() => setPaymentReceiptUrl("")}
-                  >
-                    Remove
-                  </Button>
+                  ><TranslatedText text={"Remove"} /></Button>
                 </div>
               ) : (
                 <label className="flex items-center gap-2 rounded-md border border-dashed border-border p-2 text-xs cursor-pointer hover:bg-muted/50">
@@ -761,9 +761,7 @@ function VendorsPageInner() {
                 variant="outline"
                 className="flex-1"
                 onClick={() => setPaymentDialog({ open: false, vendor: null })}
-              >
-                Cancel
-              </Button>
+              ><TranslatedText text={"Cancel"} /></Button>
               <Button
                 className="flex-1"
                 onClick={() => {
@@ -790,9 +788,7 @@ function VendorsPageInner() {
                   markPaidMutation.isPending ||
                   isUploadingReceipt
                 }
-              >
-                Save payment
-              </Button>
+              ><TranslatedText text={"Save payment"} /></Button>
             </div>
           </div>
         </DialogContent>
@@ -885,9 +881,9 @@ function VendorsPageInner() {
                       }
                     }}
                   >
-                    {viewVendor.status === "completed"
+                    <TranslatedText text={viewVendor.status === "completed"
                       ? "Download receipt"
-                      : "Generate invoice"}
+                      : "Generate invoice"} />
                   </Button>
                 </div>
               </div>

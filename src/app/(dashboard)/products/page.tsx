@@ -1,4 +1,6 @@
 'use client';
+import { useCopy } from '@/i18n/text';
+
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -71,6 +73,7 @@ export default function ProductsPage() {
 }
 
 function ProductsPageInner() {
+  const copy = useCopy();
   const router = useRouter();
   const { t } = useI18n();
   const queryClient = useQueryClient();
@@ -117,7 +120,7 @@ function ProductsPageInner() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      {pageError && <ErrorState title="Could not load this page" body={pageError.message} onRetry={() => retryPage()} />}
+      {pageError && <ErrorState title={copy("Could not load this page")} body={pageError.message} onRetry={() => retryPage()} />}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="tt-page-title">{t.products.title}</h1>

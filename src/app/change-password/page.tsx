@@ -1,4 +1,6 @@
 "use client";
+import { TranslatedText } from '@/i18n/text';
+
 
 /**
  * TracKasuwa — Forced Password Change Gate
@@ -108,9 +110,7 @@ export default function ChangePasswordPage() {
   return (
     <AuthShell variant="change">
       <Badge variant="warning" className="mb-4">
-        <AlertTriangle className="h-3 w-3" strokeWidth={1.75} />
-        Required · First-time login
-      </Badge>
+        <AlertTriangle className="h-3 w-3" strokeWidth={1.75} /><TranslatedText text={"Required · First-time login"} /></Badge>
       <h1 className="tt-head text-3xl mb-2">{t.forcedPasswordChange.title}</h1>
       <p className="tt-muted text-sm mb-8">{t.forcedPasswordChange.desc}</p>
 

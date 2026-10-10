@@ -1,0 +1,112 @@
+Add a photo or product data|Add picture or product details|Ƙara hoto ko bayanan kaya|Fi fọ́tò tàbí dátà ọjà kún|Tinye foto ma ọ bụ data ngwaahịa
+Photo, scan or import|Picture, scan or import|Hoto, dubawa ko shigowa|Fọ́tò, ṣàyẹ̀wò tàbí gbé wọlé|Foto, nyocha ma ọ bụ mbubata
+Take a photo|Take picture|Ɗauki hoto|Ya fọ́tò|See foto
+Take product photo|Take product picture|Ɗauki hoton kaya|Ya fọ́tò ọjà|See foto ngwaahịa
+Upload a photo|Upload picture|Loda hoto|Gbé fọ́tò sókè|Bulite foto
+Upload product photo|Upload product picture|Loda hoton kaya|Gbé fọ́tò ọjà sókè|Bulite foto ngwaahịa
+Upload|Upload|Loda|Gbé sókè|Bulite
+Upload an inventory list|Upload stock list|Loda jerin haja|Gbé àtòjọ ọjà sókè|Bulite ndepụta ngwaahịa
+Choose an existing image from your device|Choose picture wey already dey your device|Zaɓi hoton da ke kan na'urarka|Yan àwòrán tó wà lórí ẹ̀rọ rẹ|Họrọ foto dị n'igwe gị
+Choose one option. Camera access depends on your device; desktop may open the file picker.|Choose one option. Camera access depend on device; computer fit open file picker.|Zaɓi zaɓi ɗaya. Samun kyamara ya danganta da na'ura; kwamfuta na iya buɗe zaɓin fayil.|Yan ọ̀nà kan. Àṣẹ kámẹ́rà dá lórí ẹ̀rọ; kọ̀ǹpútà lè ṣí olùyàn fáìlì.|Họrọ otu. Ikike igwefoto dabere n'igwe; kọmputa nwere ike imepe nhọrọ faịlụ.
+Open your camera · up to 2 MB|Open camera · no pass 2 MB|Buɗe kyamara · har 2 MB|Ṣí kámẹ́rà · tó 2 MB|Mepee igwefoto · ruo 2 MB
+CSV / Excel · opens bulk import in a new tab|CSV / Excel · open bulk import for new tab|CSV / Excel · yana buɗe shigo da yawa a sabon shafi|CSV / Excel · ṣí gbígbé púpọ̀ wọlé ní taabu tuntun|CSV / Excel · na-emepe mbubata n'ọtụtụ na taabụ ọhụrụ
+Product image and capture options|Product picture options|Zaɓin hoton kaya|Àwọn ọ̀nà àwòrán ọjà|Nhọrọ foto ngwaahịa
+Remove image|Comot picture|Cire hoto|Yọ àwòrán|Wepụ foto
+Replace image|Change picture|Sauya hoto|Rọ́pò àwòrán|Dochie foto
+JPG, PNG, WebP · Max|JPG, PNG, WebP · no pass|JPG, PNG, WebP · iyaka|JPG, PNG, WebP · tó pọ̀ jù|JPG, PNG, WebP · oke
+Back to options|Go back to options|Koma zaɓuɓɓuka|Padà sí àṣàyàn|Laghachi na nhọrọ
+Scan barcode / QR|Scan barcode / QR|Duba barcode / QR|Ṣàyẹ̀wò barcode / QR|Nyochaa barcode / QR
+Scan barcode or QR|Scan barcode or QR|Duba barcode ko QR|Ṣàyẹ̀wò barcode tàbí QR|Nyochaa barcode ma ọ bụ QR
+Scan with a photo|Use picture scan|Duba ta hoto|Ṣàyẹ̀wò pẹ̀lú fọ́tò|Jiri foto nyochaa
+Find a product by code|Find product with code|Nemo kaya ta lamba|Wá ọjà pẹ̀lú kóòdù|Chọta ngwaahịa site na koodu
+Find product|Find product|Nemo kaya|Wá ọjà|Chọta ngwaahịa
+Find and prefill a product · manual entry available|Find product and fill details · you fit enter by hand|Nemo ka cika bayanan kaya · za a iya rubuta da hannu|Wá ọjà kí o kún àlàyé · o lè tẹ̀ fúnra rẹ|Chọta ma jupụta ngwaahịa · ị nwere ike itinye n'onwe gị
+Barcode, QR value or SKU|Barcode, QR value or SKU|Barcode, ƙimar QR ko SKU|Barcode, iye QR tàbí SKU|Barcode, uru QR ma ọ bụ SKU
+Photograph one barcode or QR code, or enter its value below. We search your business catalog; no photo is attached.|Take picture of one barcode or QR, or type value below. We go search your business products; no picture go attach.|Ɗauki hoton barcode ko QR ɗaya, ko rubuta ƙimarsa. Muna binciken kayan kasuwancinka; ba a haɗa hoto.|Ya fọ́tò barcode tàbí QR kan, tàbí tẹ iye rẹ̀. A wá nínú ọjà iṣẹ́ rẹ; a kò so fọ́tò mọ́ ọn.|See otu barcode ma ọ bụ QR, ma ọ bụ tinye uru ya n'okpuru. Anyị na-achọ ndepụta ngwaahịa gị; foto anaghị etinye.
+Barcode scanning is not supported by this browser. Enter the barcode, QR value or SKU manually below.|This browser no support barcode scanning. Type barcode, QR value or SKU below.|Wannan burauza ba ta goyon bayan barcode. Rubuta barcode, ƙimar QR ko SKU a ƙasa.|Ẹ̀rọ aṣàwákiri yìí kò ṣe àyẹ̀wò barcode. Tẹ barcode, iye QR tàbí SKU ní ìsàlẹ̀.|Ihe nchọgharị a anaghị akwado nyocha barcode. Tinye barcode, uru QR ma ọ bụ SKU n'okpuru.
+Looking up product…|We dey find product…|Ana neman kaya…|A ń wá ọjà…|A na-achọ ngwaahịa…
+Look up an existing product before filling the form.|Find existing product before you fill form.|Nemo kayan da ke akwai kafin cika fom.|Wá ọjà tó wà kí o tó kún fọ́ọ̀mù.|Chọta ngwaahịa dị adị tupu ị jupụta fọm.
+No product found in your business catalog.|We no see product for your business list.|Ba a sami kaya a jerin kasuwancinka ba.|A kò rí ọjà nínú àtòjọ iṣẹ́ rẹ.|Ahụghị ngwaahịa n'akwụkwọ ngwaahịa azụmahịa gị.
+No match in the offline cache. Reconnect to check the full catalog.|No match for offline records. Connect internet to check full list.|Babu daidaito a ajiyar na'ura. Sake haɗawa don duba cikakken jerin.|Kò sí ohun tó bá a mu nínú ìpamọ́. Tún sopọ̀ láti ṣàyẹ̀wò gbogbo àtòjọ.|Enweghị ihe dakọtara n'ihe echekwara. Jikọọ ọzọ lelee ndepụta niile.
+Cached match. Reconnect before saving. |Na cached product. Connect internet before save. |Daidaito daga ajiya. Sake haɗawa kafin ajiyewa. |Ó wá láti ìpamọ́. Tún sopọ̀ kí o tó fipamọ́. |Ọ si na nchekwa. Jikọọ ọzọ tupu ị chekwaa. 
+Use this product|Use this product|Yi amfani da wannan kaya|Lo ọjà yìí|Jiri ngwaahịa a
+Use code in form|Use code for form|Yi amfani da lamba a fom|Lo kóòdù nínú fọ́ọ̀mù|Jiri koodu n'ime fọm
+Use this product to replace the form fields. Saving will update this existing product, not create a duplicate.|Use this product replace form details. When you save, e go update existing product, no be create duplicate.|Yi amfani da wannan kaya don maye gurbin fom. Ajiye zai sabunta kayan da ke akwai, ba ƙirƙiri kwafi ba.|Lo ọjà yìí rọ́pò àlàyé fọ́ọ̀mù. Fífipamọ́ yóò ṣàtúnṣe ọjà tó wà, kì í ṣẹ̀dá àdàkọ.|Jiri ngwaahịa a dochie mpaghara fọm. Ichekwa ga-emelite ngwaahịa dị adị, ọ bụghị imepụta oyiri.
+Create another record|Create another record|Ƙirƙiri wani rubutu|Ṣẹ̀dá àkọsílẹ̀ mìíràn|Mepụta ndekọ ọzọ
+Editing existing product:|You dey edit existing product:|Ana gyara kayan da ke akwai:|A ń ṣàtúnṣe ọjà tó wà:|A na-edezi ngwaahịa dị adị:
+Create Product|Create product|Ƙirƙiri kaya|Ṣẹ̀dá ọjà|Mepụta ngwaahịa
+Update Product|Update product|Sabunta kaya|Ṣàtúnṣe ọjà|Melite ngwaahịa
+Product information|Product details|Bayanan kaya|Àlàyé ọjà|Nkọwa ngwaahịa
+Product unavailable|Product no dey available|Kaya bai samu ba|Ọjà kò sí|Ngwaahịa adịghị
+Check your connection and product access.|Check internet and product access.|Duba haɗinka da damar kaya.|Ṣàyẹ̀wò ìsopọ̀ àti àṣẹ ọjà.|Lelee njikọ na ikike ngwaahịa gị.
+Optional product description|Product description (if you want)|Bayanin kaya (na zaɓi)|Àlàyé ọjà (bí o bá fẹ́)|Nkọwa ngwaahịa (nhọrọ)
+Select category|Choose category|Zaɓi rukuni|Yan ẹ̀ka|Họrọ ngalaba
+Make / Brand|Make or brand|Kamfani / tambari|Olùṣe / àmì|Ụlọ ọrụ / akara
+Selling Price (₦) *|Price wey you dey sell (₦) *|Farashin sayarwa (₦) *|Iye títà (₦) *|Ọnụahịa ire (₦) *
+Cost Price (₦) *|Price wey you buy (₦) *|Farashin saye (₦) *|Iye rírà (₦) *|Ọnụahịa ịzụta (₦) *
+e.g., Rice (50kg bag)|Like Rice (50kg bag)|Misali, shinkafa (buhu 50kg)|Fún àpẹẹrẹ, ìrẹsì (àpò 50kg)|Dịka osikapa (akpa 50kg)
+e.g., Samsung, Nike|Like Samsung, Nike|Misali, Samsung, Nike|Fún àpẹẹrẹ, Samsung, Nike|Dịka Samsung, Nike
+e.g. Adaeze General Stores|Like Adaeze General Stores|Misali Adaeze General Stores|Fún àpẹẹrẹ Adaeze General Stores|Dịka Adaeze General Stores
+e.g. Adaeze Okonkwo|Like Adaeze Okonkwo|Misali Adaeze Okonkwo|Fún àpẹẹrẹ Adaeze Okonkwo|Dịka Adaeze Okonkwo
+e.g. 3, -1 for unlimited|Like 3, -1 mean no limit|Misali 3, -1 na nufin babu iyaka|Fún àpẹẹrẹ 3, -1 fún àìní ààlà|Dịka 3, -1 maka enweghị oke
+Open|Open am|Buɗe|Ṣí|Mepee
+Skip|Skip am|Tsallake|Fò ó|Mafee
+Available|E dey available|Akwai|Ó wà|Ọ dị
+Detected|We don detect am|An gano|A ti rí|Achọpụtara
+Failed|E no work|An gaza|Ó kùnà|Ọ dara
+Deactivated|Dem deactivate am|An kashe|A ti dá dúró|Akwụsịla
+Discontinued|Dem no dey sell am again|An daina|A ti dáwọ́ dúró|Akwụsịla ire
+Trial|Trial period|Gwaji|Ìdánwò|Nnwale
+Unverified|Never verify|Ba a tabbatar ba|A kò tíì fìdí múlẹ̀|Ekwenyebeghị
+Unpaid|Never pay|Ba a biya ba|A kò tíì san|Akwụbeghị
+Plan price|Plan price|Farashin tsari|Iye ètò|Ọnụahịa atụmatụ
+Yearly · save 20%|Yearly · save 20%|Shekara-shekara · rage 20%|Lọ́dọọdún · fi 20% pamọ́|Kwa afọ · chekwaa 20%
+month|month|wata|oṣù|ọnwa
+year|year|shekara|ọdún|afọ
+per|per|kowace|fún|kwa
+Current Bill|Bill wey dey now|Lissafin yanzu|Ìwé owó lọ́wọ́lọ́wọ́|Ụgwọ ugbu a
+Current sale|Sale wey dey now|Sayarwar yanzu|Títà lọ́wọ́lọ́wọ́|Ahịa ugbu a
+Sale complete|Sale don complete|Sayarwa ta kammala|Títà ti parí|Ahịa agwụla
+Generate invoice|Create invoice|Ƙirƙiri invoice|Ṣẹ̀dá ìwé owó|Mepụta akwụkwọ ụgwọ
+Bank card:|Bank card:|Katin banki:|Káàdì báńkì:|Kaadị ụlọ akụ:
+Approval Code:|Approval code:|Lambar amincewa:|Kóòdù ìfọwọ́sí:|Koodu nkwado:
+POS card|POS card|Katin POS|Káàdì POS|Kaadị POS
+Ref:|Ref:|Madogara:|Ìtọ́kasí:|Ntụaka:
+Amt|Money|Kuɗi|Owó|Ego
+Item × 1|Item × 1|Kaya × 1|Ọjà × 1|Ngwaahịa × 1
+Tel.|Phone|Waya|Fóònù|Ekwentị
+Telp.|Phone|Waya|Fóònù|Ekwentị
+% of Total|% of total|% na jimilla|% àpapọ̀|% nke ngụkọta
+147 sales today|147 sales today|Sayarwa 147 yau|Títà 147 lónìí|Ahịa 147 taa
+4 queued|4 dey wait|4 suna jira|4 ń dúró|4 na-eche
++18% vs yesterday|+18% compared to yesterday|+18% idan aka kwatanta da jiya|+18% ju àná lọ|+18% karịa ụnyaahụ
+Charge ₦14,500|Collect ₦14,500|Karɓi ₦14,500|Gba ₦14,500|Nara ₦14,500
+Today · Lagos HQ|Today · Lagos HQ|Yau · Hedikwatar Legas|Lónìí · Orílé-iṣẹ́ Èkó|Taa · Isi ụlọ ọrụ Lagos
+receipts · Page|receipts · Page|rasit · Shafi|rísíìtì · Ojú-ewé|risit · Ibe
+recent records)|latest records)|bayanan baya-bayan nan)|àkọsílẹ̀ tuntun)|ndekọ ọhụrụ)
+All (|All (|Duka (|Gbogbo (|Niile (
+Unread (|Never read (|Ba a karanta ba (|A kò tíì kà (|Agụbeghị (
+to continue.|to continue.|don ci gaba.|láti tẹ̀síwájú.|iji gaa n'ihu.
+OR|OR|KO|TÀBÍ|MA Ọ BỤ
+ (coming soon)| (e dey come soon)| (yana zuwa)| (ó ń bọ̀)| (ọ na-abịa)
+ (disabled)| (e no dey active)| (an kashe)| (a ti dá dúró)| (akwụsịrị)
+ — adapter not configured| — adapter never set up| — ba a saita adafta ba| — a kò tíì ṣètò ohun àsopọ̀| — ahaziebeghị njikọ
+Powered by TracKasuwa|Powered by TracKasuwa|TracKasuwa ne ya samar|TracKasuwa ló ń ṣiṣẹ́ rẹ̀|TracKasuwa na-akwado ya
+TracKasuwa home|TracKasuwa home|Gidan TracKasuwa|Ilé TracKasuwa|Ụlọ TracKasuwa
+Traders at a Nigerian market|Traders for Naija market|Ƴan kasuwa a kasuwar Najeriya|Àwọn oníṣòwò ní ọjà Nàìjíríà|Ndị na-ere ahịa n'ahịa Naịjirịa
+Multiple Cashiers & Roles|Different cashiers and roles|Masu karɓar kuɗi da matsayi da yawa|Olùgbà owó púpọ̀ àti ipò|Ọtụtụ ndị na-anata ego na ọrụ
+Receipt Printing with QR Codes|Print receipt with QR code|Buga rasit da QR|Títẹ rísíìtì pẹ̀lú QR|Ibipụta risit na koodu QR
+Offline-First Sync|Sync wey support no internet|Daidaitawa ba intanet|Ìdọ́gba láìsí intanẹẹti|Mmekọrịta na-enweghị ịntanetị
+Reports & Analytics|Reports and analysis|Rahotanni da nazari|Ìròyìn àti ìtúpalẹ̀|Akụkọ na nyocha
+Vendor Consignment|Goods wey vendors collect to sell|Kayan amana na dillali|Ọjà tí olùtajà gbà láti tà|Ngwaahịa e nyere onye na-ere
+Retail and grocery tools, with planned hospitality and production extensions.|Retail and grocery tools, with hospitality and production extensions wey we plan.|Kayan aikin retail da abinci, tare da shirin ƙarin karɓar baƙi da samarwa.|Ohun èlò ìtajà àti oúnjẹ, pẹ̀lú àfikún iṣẹ́ àlejò àti iṣelọpọ tí a ń gbero.|Ngwaahịa ahịa na nri, yana atụmatụ mgbakwunye ile ọbịa na mmepụta.
+We ship this list — not aspirational marketing. What's not built yet is either coming soon, or hidden until it is.|Na features wey ready we list. Wetin never ready dey marked coming soon or hidden till e ready.|Abubuwan da muka gina ne a nan. Abin da bai shirya ba yana da alamar zuwa ko a ɓoye yake.|Iṣẹ́ tí a ti kọ́ ló wà níbí. Ohun tí kò tíì wà ní àmì pé ó ń bọ̀ tàbí a fi pamọ́.|Ihe anyị wurula dị ebe a. Ihe na-adịbeghị njikere ka akara na-abịa ma ọ bụ e zoro ya.
+, pricing and product details.|, prices and product details.|, farashi da bayanan kaya.|, iye owó àti àlàyé ọjà.|, ọnụahịa na nkọwa ngwaahịa.
+All plans include offline-first functionality, multi-device support, and automatic data sync. Prices are billed monthly in Nigerian Naira (₦). Enterprise pricing is custom — talk to sales.|All plans fit work without internet, support different devices and sync automatically. You pay monthly in Naira (₦). Enterprise price na custom — talk to sales.|Duk tsare-tsare suna aiki ba intanet, na'urori da yawa da daidaitawa. Ana biya kowane wata da Naira (₦). Farashin Enterprise na musamman ne — tuntuɓi tallace-tallace.|Gbogbo ètò ṣiṣẹ́ láìsí intanẹẹti, lórí ẹ̀rọ púpọ̀, pẹ̀lú ìdọ́gba. Ìsanwó jẹ́ oṣooṣù ní Naira (₦). Iye Enterprise dá lórí ìbéèrè — bá ẹgbẹ́ títà sọ̀rọ̀.|Atụmatụ niile na-arụ ọrụ na-enweghị ịntanetị, n'ọtụtụ igwe ma mekọrịta. A na-akwụ kwa ọnwa na Naira (₦). Ọnụahịa Enterprise bụ pụrụ iche — kpọtụrụ ndị ahịa.
+Windows SmartScreen may show|Windows SmartScreen fit show|Windows SmartScreen na iya nunawa|Windows SmartScreen lè fi hàn|Windows SmartScreen nwere ike igosi
+Android will warn|Android go warn you|Android zai yi gargaɗi|Android yóò kìlọ̀|Android ga-adọ aka ná ntị
+and allow installs from this source.|and allow installation from this source.|kuma ba da izinin shigarwa daga wannan tushe.|kí o gba ìfisí láti orísun yìí láàyè.|ma kwe ka a wụnye site na ebe a.
+— showing the best option for your device below.|— best option for your device dey below.|— ana nuna mafi kyawun zaɓi ga na'urarka a ƙasa.|— àṣàyàn tó dára fún ẹ̀rọ rẹ wà ní ìsàlẹ̀.|— nhọrọ kacha mma maka igwe gị dị n'okpuru.
+— this is expected for a new, unsigned app. Click|— this fit happen for new app wey never sign. Click|— ana tsammanin wannan ga sabon app da ba a sanya hannu ba. Danna|— èyí sábà máa ń ṣẹlẹ̀ fún app tuntun tí kò ní ìfọwọ́sí. Tẹ|— nke a nwere ike ime maka ngwa ọhụrụ na-enweghị mbinye aka. Pịa
+— this is expected since the app isn't distributed via the Play Store yet. Tap|— this fit happen because app never dey Play Store. Tap|— wannan saboda app bai shiga Play Store ba tukuna. Danna|— èyí jẹ́ nítorí app kò tíì wà ní Play Store. Tẹ|— nke a bụ n'ihi na ngwa adịghị na Play Store ugbu a. Pịa
+This warning appears because the installer isn't yet signed with a commercial code-signing certificate — it does not mean the app is unsafe.|This warning show because installer never get commercial code-signing certificate — warning alone no mean say app unsafe.|Wannan gargaɗi yana bayyana saboda installer ba shi da takardar sa hannun lamba ta kasuwanci tukuna — gargaɗin kaɗai ba ya nufin app ba shi da tsaro.|Ìkìlọ̀ yìí hàn nítorí fáìlì ìfisí kò tíì ní ìwé ìfọwọ́sí kóòdù — ìkìlọ̀ nìkan kò túmọ̀ sí pé app léwu.|Ịdọ aka ná ntị a pụtara n'ihi na ihe nrụnye enweghị asambodo mbinye koodu azụmahịa — ozi ahụ naanị apụtaghị na ngwa adịghị nchekwa.

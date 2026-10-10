@@ -1,3 +1,5 @@
+
+import { TranslatedText } from '@/i18n/text';
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Reveal } from "@/components/marketing/reveal";
@@ -27,28 +29,20 @@ export function CTABand() {
               className="tt-blob-float-2 absolute rounded-full blur-3xl pointer-events-none"
               style={{ bottom: -80, left: -80, width: 350, height: 350, background: "var(--c-primaryFg)", opacity: 0.05 }}
             />
-            <h2 className="tt-head relative" style={{ fontSize: "clamp(32px, 5vw, 56px)", margin: "0 0 16px", lineHeight: 1.05 }}>
-              Start selling smarter today.
-            </h2>
-            <p className="relative mx-auto mb-9" style={{ fontSize: 18, opacity: 0.85, maxWidth: 560 }}>
-              Free forever for one shop. Upgrade when your business does. No
-              card required to start.
-            </p>
+            <h2 className="tt-head relative" style={{ fontSize: "clamp(32px, 5vw, 56px)", margin: "0 0 16px", lineHeight: 1.05 }}><TranslatedText text={"Start selling smarter today."} /></h2>
+            <p className="relative mx-auto mb-9" style={{ fontSize: 18, opacity: 0.85, maxWidth: 560 }}><TranslatedText text={"Free forever for one shop. Upgrade when your business does. No card required to start."} /></p>
             <div className="relative flex flex-wrap items-center justify-center gap-4">
               <Link
                 href="/signup"
                 className="inline-flex items-center gap-2 rounded-lg h-[52px] px-6 text-base font-medium"
                 style={{ background: "var(--c-primaryFg)", color: "var(--c-primary)" }}
-              >
-                Create your merchant account <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
+              ><TranslatedText text={"Create your merchant account"} />{" "}<ArrowRight className="h-4 w-4" strokeWidth={1.75} />
               </Link>
               <Link
                 href="/pricing"
                 className="inline-flex items-center gap-2 rounded-lg h-[52px] px-6 text-base font-medium border"
                 style={{ borderColor: "color-mix(in oklch, var(--c-primaryFg), transparent 70%)", color: "var(--c-primaryFg)" }}
-              >
-                See pricing
-              </Link>
+              ><TranslatedText text={"See pricing"} /></Link>
             </div>
           </div>
         </Reveal>

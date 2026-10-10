@@ -1,4 +1,6 @@
 'use client';
+import { TranslatedText, useCopy } from '@/i18n/text';
+
 
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -69,6 +71,7 @@ export default function AuditPage() {
 }
 
 function AuditPageInner() {
+  const copy = useCopy();
   const { t } = useI18n();
   const [search, setSearch] = useState('');
   const [resourceType, setResourceType] = useState('all');
@@ -120,8 +123,8 @@ function AuditPageInner() {
 
   return (
     <div className="space-y-6">
-      <a className="underline" href="/accounting">Accounting, cash-up and reconciliation reports</a>
-      {pageError && <ErrorState title="Could not load this page" body={pageError.message} onRetry={() => retryPage()} />}
+      <a className="underline" href="/accounting"><TranslatedText text={"Accounting, cash-up and reconciliation reports"} /></a>
+      {pageError && <ErrorState title={copy("Could not load this page")} body={pageError.message} onRetry={() => retryPage()} />}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="tt-page-title">{t.audit.title}</h1>
@@ -135,9 +138,7 @@ function AuditPageInner() {
             {t.audit.export_csv}
           </Button>
           <Button variant="outline" onClick={exportLogsPDF}>
-            <Download className="h-4 w-4 mr-2" strokeWidth={1.75} />
-            PDF
-          </Button>
+            <Download className="h-4 w-4 mr-2" strokeWidth={1.75} /><TranslatedText text={"PDF"} /></Button>
         </div>
       </div>
 

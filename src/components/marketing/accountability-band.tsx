@@ -1,3 +1,5 @@
+
+import { TranslatedLabel, TranslatedText } from '@/i18n/text';
 import Image from "next/image";
 import { CheckCircle2 } from "lucide-react";
 import { Reveal } from "@/components/marketing/reveal";
@@ -41,7 +43,7 @@ export function AccountabilityBand() {
         </div>
         <div className="grid gap-14 md:grid-cols-2 items-center">
           <Reveal>
-            <div className="tt-eyebrow mb-3">Built for accountability</div>
+            <div className="tt-eyebrow mb-3"><TranslatedText text={"Built for accountability"} /></div>
             <h2
               className="tt-head"
               style={{
@@ -49,9 +51,7 @@ export function AccountabilityBand() {
                 margin: "0 0 16px",
                 lineHeight: 1.08,
               }}
-            >
-              Know exactly what happened in your shop.
-            </h2>
+            ><TranslatedText text={"Know exactly what happened in your shop."} /></h2>
             <p
               style={{
                 fontSize: 16,
@@ -59,12 +59,7 @@ export function AccountabilityBand() {
                 lineHeight: 1.6,
                 maxWidth: 480,
               }}
-            >
-              Cash businesses lose money to more than theft — unrecorded sales,
-              unexplained stock loss, and &quot;I forgot&quot; add up fast.
-              TracKasuwa builds accountability into every action, so you can
-              trust your numbers.
-            </p>
+            ><TranslatedText text={"Cash businesses lose money to more than theft — unrecorded sales, unexplained stock loss, and \"I forgot\" add up fast. TracKasuwa builds accountability into every action, so you can trust your numbers."} /></p>
           </Reveal>
           <Reveal delay={100}>
             <ul className="flex flex-col gap-5">
@@ -76,7 +71,7 @@ export function AccountabilityBand() {
                     strokeWidth={1.75}
                   />
                   <span className="text-sm" style={{ lineHeight: 1.6 }}>
-                    {point}
+                    <TranslatedLabel>{point}</TranslatedLabel>
                   </span>
                 </li>
               ))}

@@ -1,4 +1,6 @@
 "use client";
+import { TranslatedText, useCopy } from '@/i18n/text';
+
 
 import * as React from "react";
 import Link from "next/link";
@@ -7,6 +9,7 @@ import { Moon, Sun } from "lucide-react";
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
 import { AuthCarousel } from "@/components/layout/auth-carousel";
+import { LanguageSelect } from '@/components/shared/language-select';
 
 /**
  * Shared split-panel shell for every auth screen (Login / Signup /
@@ -61,6 +64,7 @@ export function AuthShell({
   children: React.ReactNode;
   variant?: AuthVariant;
 }) {
+  const copy = useCopy();
   const { theme, setTheme } = useTheme();
 
   return (
@@ -70,14 +74,15 @@ export function AuthShell({
     >
       <div className="flex flex-col p-6 sm:p-10">
         <div className="flex items-center justify-between">
-          <Link href="/" aria-label="TracKasuwa home">
+          <Link href="/" aria-label={copy("TracKasuwa home")}>
             <Logo size={30} />
           </Link>
+          <LanguageSelect />
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            aria-label="Toggle theme"
+            aria-label={copy("Toggle theme")}
           >
             <Sun
               className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
@@ -95,9 +100,7 @@ export function AuthShell({
         </div>
 
         <p className="tt-muted text-center text-xs">
-          © {new Date().getFullYear()} TracKasuwa Nigeria · Powered by CAXiE
-          Technologies Ltd
-        </p>
+          © {new Date().getFullYear()}{" "}<TranslatedText text={"TracKasuwa Nigeria · Powered by CAXiE Technologies Ltd"} /></p>
       </div>
 
       <AuthBrandPanel variant={variant} />
@@ -106,6 +109,7 @@ export function AuthShell({
 }
 
 function AuthBrandPanel({ variant }: { variant: AuthVariant }) {
+  const copy = useCopy();
   const panel = PANEL_CONTENT[variant];
   return (
     <div
@@ -141,7 +145,7 @@ function AuthBrandPanel({ variant }: { variant: AuthVariant }) {
             textShadow: "0 1px 8px rgba(0,0,0,0.35)",
           }}
         >
-          {panel.eyebrow}
+          {copy(panel.eyebrow)}
         </div>
         <div
           className="tt-head"
@@ -154,7 +158,7 @@ function AuthBrandPanel({ variant }: { variant: AuthVariant }) {
             textShadow: "0 2px 16px rgba(0,0,0,0.4)",
           }}
         >
-          {panel.heading}
+          {copy(panel.heading)}
         </div>
       </div>
 
