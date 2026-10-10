@@ -54,18 +54,13 @@ const RECOMMENDED_VARS: VarSpec[] = [
     description: 'Zainpay private API key — required for server-to-server calls',
   },
   {
-    name: 'ZAINPAY_BASE_URL',
-    description:
-      'Zainpay API base URL (defaults to sandbox https://sandbox.zainpay.ng if unset)',
-  },
-  {
     name: 'ZAINPAY_DEFAULT_ZAINBOX',
     description: 'Default Zainbox code used when initializing payments',
   },
   {
     name: 'ZAINPAY_WEBHOOK_SECRET',
     description:
-      'HMAC secret used to verify Zainpay webhook signatures (skipped if unset — insecure for production)',
+      'Selected-mode HMAC secret for Zainpay webhook signature validation',
   },
 ];
 

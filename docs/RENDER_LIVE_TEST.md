@@ -71,11 +71,11 @@ environment scopes, and never add them to a committed `.env`. Use a separate
 Supabase test project for destructive tests; a sandbox gateway alone does not
 isolate live data.
 
-The webhook currently skips signature validation when its secret is absent.
-Until that behavior is hardened, configure a nonempty secret even for an
-app-only public test deployment and leave Zainpay callbacks unregistered if
-payments are not being tested. For actual sandbox callbacks, confirm the
-provider's signing contract matches the implemented HMAC-SHA512 header handling.
+In test mode, webhook signature validation is skipped if the test signing
+secret is absent; do not use this for real payments. Live-mode webhooks are
+rejected if the live signing secret is missing. Configure the matching test
+secret before registering sandbox callbacks, and confirm the provider's
+signing contract matches the implemented HMAC-SHA512 header handling.
 
 For local development, copy `.env.example` to untracked `.env.local` and fill
 the values. Next loads it automatically. To run the standalone environment

@@ -60,9 +60,9 @@ SUPABASE_SERVICE_ROLE_KEY
 ### Zainpay Keys
 
 ```
-ZAINPAY_PUBLIC_KEY   — used in server-side requests only
-ZAINPAY_PRIVATE_KEY  — kept server-side, not currently sent to Zainpay
-ZAINPAY_WEBHOOK_SECRET — HMAC-SHA512 webhook validation
+ZAINPAY_TEST_* / ZAINPAY_LIVE_* — mode-specific credentials, server-side only
+ZAINPAY_* (unprefixed) — legacy single-mode fallback credentials
+*_WEBHOOK_SECRET — HMAC-SHA512 webhook validation; required for live callbacks
 ```
 
 ---

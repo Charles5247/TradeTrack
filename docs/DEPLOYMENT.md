@@ -129,6 +129,9 @@ ZAINPAY_TEST_WEBHOOK_SECRET=your-test-webhook-secret
 ZAINPAY_TEST_SECRET_KEY=your-test-server-secret
 ZAINPAY_TEST_ZAINBOX_CODE=your-test-virtual-account-zainbox
 
+# For production, set ZAINPAY_MODE=live and configure ZAINPAY_LIVE_* credentials.
+# See .env.example for all variables and legacy fallback settings.
+
 # Update-check / download page metadata (see docs/DOWNLOAD_FLOW.md) —
 # optional; leave *_DOWNLOAD_URL blank until real installers are hosted
 TracKasuwa_WINDOWS_LATEST_VERSION=1.0.0
@@ -198,7 +201,9 @@ effect).
 
 ### Keeping a free instance warm
 
-Render Free web services spin down after 15 minutes without inbound traffic.
+According to [Render's Free instance documentation](https://render.com/docs/free),
+Free web services spin down after 15 minutes without inbound traffic and are
+not intended for production.
 If you accept the limitations of a free instance, use
 [Cron-job.org](https://cron-job.org/) to request the lightweight health
 endpoint every 10 minutes:
@@ -212,8 +217,7 @@ with body `ok`. The endpoint performs no database or gateway work and does not
 expose configuration. A ping can wake a service that has already spun down,
 so this reduces sleep but does not guarantee uninterrupted availability or
 avoid cold starts. Free instances share a 750-hour monthly allowance per
-workspace; an always-running service can use nearly all of it. Render
-recommends paid instances for production workloads.
+workspace; an always-running service can use nearly all of it.
 
 ---
 
@@ -358,7 +362,8 @@ server {
 1. Log into your Zainpay merchant dashboard.
 2. Go to Settings → Webhooks.
 3. Add webhook URL: `https://your-domain.com/api/webhooks/zainpay`.
-4. Copy the webhook secret and set it as `ZAINPAY_WEBHOOK_SECRET`.
+4. Copy the signing secret into `ZAINPAY_TEST_WEBHOOK_SECRET` or
+   `ZAINPAY_LIVE_WEBHOOK_SECRET`, matching the configured mode.
 5. Select events: `deposit.successful`, `deposit.failed`, `card.payment`.
 
 ---

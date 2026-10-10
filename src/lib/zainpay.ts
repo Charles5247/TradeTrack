@@ -31,7 +31,7 @@ export class ZainpayNotConfiguredError extends Error {
   constructor() {
     super(
       "Zainpay is not configured (the selected mode's secret key / Zainbox code " +
-        "missing). Merchant onboarding will proceed WITHOUT a dedicated " +
+        "are missing). Merchant onboarding will proceed WITHOUT a dedicated " +
         "virtual account — it can be created later once Zainpay credentials " +
         "are added.",
     );

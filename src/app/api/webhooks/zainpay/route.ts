@@ -41,7 +41,7 @@ interface ZainpayWebhookPayload {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Validate webhook signature — HMAC-SHA512 if secret is configured */
+/** Validate HMAC-SHA512; live mode rejects callbacks without a signing secret. */
 function validateSignature(rawBody: string, headers: Headers): boolean {
   const { webhookSecret, mode } = getZainpayConfig();
   if (!webhookSecret) {

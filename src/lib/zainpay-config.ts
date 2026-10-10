@@ -49,8 +49,8 @@ export function getZainpayConfig(): ZainpayConfig {
   const hasModeCredentials = MODE_CREDENTIAL_SUFFIXES.some(
     (suffix) =>
       Boolean(
-        process.env[`${prefix}_${suffix}`] ||
-          process.env[`${otherPrefix}_${suffix}`],
+        process.env[`${prefix}_${suffix}`]?.trim() ||
+          process.env[`${otherPrefix}_${suffix}`]?.trim(),
       ),
   );
 
