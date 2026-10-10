@@ -240,9 +240,13 @@ runtime for its API routes, authentication, and server-rendered pages.
    values during the build. Set `NEXT_PUBLIC_APP_URL` to the intended
    production HTTPS URL (the Vercel-provided `.vercel.app` domain or your
    custom domain).
-4. Use `npm ci` as the install command and
-   `npm run verify:env && npm run build` as the build command. Leave the output
-   directory and start command at their Next.js defaults.
+4. The checked-in `vercel.json` sets the install command to
+   `npm ci --include=dev`. This is required because the build-time
+   `verify:env` script runs `tsx`, which is a development dependency. Set the
+   build command to `npm run verify:env && npm run build`; leave the output
+   directory and start command at their Next.js defaults. If the Vercel
+   dashboard has a custom install command that overrides the project config,
+   change it to `npm ci --include=dev` or clear that override.
 5. Select **Deploy**. When deployment completes, confirm the production
    domain matches `NEXT_PUBLIC_APP_URL`. If you change the URL, update the
    variable and redeploy so the built app uses the correct canonical URL.
