@@ -3,12 +3,12 @@
 # TracKasuwa — Deployment Guide
 
 > **This replaces the older `docs/DEPLOYMENT_GUIDE.md`**, which described a
-> Vercel deployment. TracKasuwa is actually deployed on **Render** — see
-> `render.yaml` at the repo root, which is the live, checked-in source of
-> truth for the production build/start commands and required env vars.
-> `DEPLOYMENT_GUIDE.md` is kept only for its still-accurate Supabase/Storage/
-> Zainpay setup steps; anything about the hosting platform itself should be
-> read from this file instead.
+> Vercel deployment from an earlier project snapshot. TracKasuwa's current
+> production deployment is **Render** — see `render.yaml` at the repo root
+> for its checked-in build/start commands and environment variables. This
+> guide also includes steps for deploying a separate instance on Vercel.
+> `DEPLOYMENT_GUIDE.md` is kept for its still-accurate Supabase/Storage/
+> Zainpay setup steps; use this file for current hosting instructions.
 
 ## Prerequisites
 
@@ -105,7 +105,8 @@ cp .env.example .env.local
 ```
 
 For production, set the same variables in your hosting platform's
-dashboard (Render → your service → Environment) rather than committing
+environment settings (for example, Render → your service → Environment or
+Vercel → Project → Settings → Environment Variables) rather than committing
 `.env.local`. The required/recommended variables are:
 
 ```env
@@ -200,7 +201,82 @@ effect).
 
 ---
 
-## 4. Deploying elsewhere (self-hosted / other platforms)
+## 4. Deploying to Vercel
+
+Vercel detects Next.js automatically and runs the app as a Next.js deployment.
+No `vercel.json` or static export is required; this app needs a Node.js
+runtime for its API routes, authentication, and server-rendered pages.
+
+### Initial setup
+
+1. Push the repository to GitHub, then in the
+   [Vercel Dashboard](https://vercel.com/dashboard) select **Add New → Project**
+   and import the repository.
+2. Keep the **Root Directory** set to `.` and the **Framework Preset** set to
+   Next.js. Use Node.js **22.x** in the project's Build & Development Settings.
+3. In **Environment Variables**, add the values listed below for the
+   environments you intend to deploy (Production, Preview, and/or Development).
+   Set them before the first deployment because `verify:env` checks required
+   values during the build. Set `NEXT_PUBLIC_APP_URL` to the intended
+   production HTTPS URL (the Vercel-provided `.vercel.app` domain or your
+   custom domain).
+4. Use `npm ci` as the install command and
+   `npm run verify:env && npm run build` as the build command. Leave the output
+   directory and start command at their Next.js defaults.
+5. Select **Deploy**. When deployment completes, confirm the production
+   domain matches `NEXT_PUBLIC_APP_URL`. If you change the URL, update the
+   variable and redeploy so the built app uses the correct canonical URL.
+
+Vercel deploys new commits pushed to the connected branch and creates Preview
+Deployments for other branches and pull requests. Changes to environment
+variables take effect after a new deployment; redeploy the relevant
+environment after editing them.
+
+### Environment variables
+
+At minimum, set the required variables from `npm run verify:env`:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-publishable-or-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-server-only-service-role-key
+NEXT_PUBLIC_APP_URL=https://your-production-domain.com
+```
+
+Add the Zainpay variables from section 2 to enable payment features. For a
+public deployment, configure a nonempty `ZAINPAY_WEBHOOK_SECRET`; the current
+webhook handler skips signature validation if it is missing. Use matching
+sandbox credentials and the sandbox API URL while testing. Keep
+`SUPABASE_SERVICE_ROLE_KEY`, all Zainpay credentials, and other private values
+server-side: do not give them a `NEXT_PUBLIC_` prefix.
+
+`NEXT_PUBLIC_*` values are embedded into the client bundle at build time. If
+one changes, deploy again. Use Vercel's separate environment scopes when
+Production and Preview need different Supabase projects or app URLs. Only
+register Preview URLs in Supabase Auth's redirect allow list if you intend to
+test authentication from those deployments.
+
+### Supabase and webhook configuration
+
+After assigning the production domain:
+
+1. In Supabase **Authentication → URL Configuration**, set the Site URL to
+   the production HTTPS domain and add the required auth callback/redirect
+   URLs for that domain. Add Preview deployment URLs only if needed.
+2. Register the Zainpay webhook at
+   `https://your-production-domain.com/api/webhooks/zainpay` only when the
+   matching production payment credentials and callback behavior are ready.
+   For sandbox testing, use the sandbox credentials and that deployment's
+   webhook URL.
+3. Apply database migrations and configure Storage policies as described in
+   section 1. Vercel deployments do not run Supabase migrations automatically.
+
+Do not run demo-user setup or seed scripts against a production Supabase
+project just to deploy. Deployment does not create or reset user accounts.
+
+---
+
+## 5. Deploying elsewhere (self-hosted / other platforms)
 
 `render.yaml` is Render-specific, but the app itself is a standard Next.js
 production build and will run anywhere Node.js 20+ runs:
@@ -249,14 +325,13 @@ server {
 }
 ```
 
-> If you deploy to a different platform (Railway, Fly.io, a bare VM, etc.),
-> port the `buildCommand`/`startCommand`/env vars from `render.yaml` — it
-> remains the single source of truth for what production actually needs,
-> regardless of which platform hosts it.
+> For platforms other than Render or Vercel (Railway, Fly.io, a bare VM,
+> etc.), adapt the build/start commands and environment variables above.
+> `render.yaml` is the source of truth for the Render deployment only.
 
 ---
 
-## 5. Zainpay Webhook Configuration
+## 6. Zainpay Webhook Configuration
 
 1. Log into your Zainpay merchant dashboard.
 2. Go to Settings → Webhooks.
@@ -266,14 +341,14 @@ server {
 
 ---
 
-## 6. Post-Deployment Checklist
+## 7. Post-Deployment Checklist
 
 ```
-□ All env vars are set in Render (or your chosen platform)
+□ All env vars are set in Render, Vercel, or your chosen platform
 □ Database migrations ran successfully, in order (see section 1)
 □ Storage buckets created with correct policies
 □ Supabase Auth redirect URLs updated to production domain
-□ Zainpay webhook URL registered
+□ Zainpay webhook URL registered only when production payments are ready
 □ ZAINPAY_BASE_URL set to the live endpoint (not sandbox) for production
 □ npm run build passes with no errors
 □ Test login flow works
@@ -286,7 +361,7 @@ server {
 
 ---
 
-## 7. Build Verification
+## 8. Build Verification
 
 ```bash
 npm ci
@@ -307,7 +382,7 @@ npm run deploy:check
 
 ---
 
-## 8. Performance Recommendations
+## 9. Performance Recommendations
 
 - Configure Supabase connection pooling (pgBouncer) for high traffic.
 - Set up Supabase database backups (automatic on paid plans).

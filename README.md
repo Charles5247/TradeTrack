@@ -38,7 +38,7 @@ This README is a concise entry point. Deeper documentation lives in
 | Backend          | Supabase (PostgreSQL, Auth, Storage, Realtime) |
 | Offline          | IndexedDB (idb), Service Worker                |
 | Payments         | Zainpay                                        |
-| Deployment       | **Render** (see `render.yaml`)                 |
+| Deployment       | **Render** (primary; see `render.yaml`) or Vercel |
 
 ## ⚡ Quick Start
 
@@ -139,15 +139,16 @@ validation. Details: [`docs/SECURITY.md`](./docs/SECURITY.md).
 
 ## 🚀 Deployment
 
-TracKasuwa is deployed on **Render** (see the checked-in `render.yaml`),
-not Vercel. Full setup (Supabase, Storage, Auth, env vars, Render
-Blueprint deploy, self-hosting alternative): **[`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md)**.
+TracKasuwa's current production deployment is **Render** (see the checked-in
+`render.yaml`); **Vercel is also supported**. Supabase, Storage, Auth,
+environment variables, and step-by-step Render/Vercel deployment:
+**[`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md)**.
 
 ## 📚 Documentation Index
 
 | Doc                                                              | Covers                                                                                                       |
 | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md)                     | Render deployment (current platform), Supabase setup, env vars, self-hosting                                 |
+| [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md)                     | Render deployment (current platform), Vercel alternative, Supabase setup, env vars, self-hosting              |
 | [`docs/LOCAL_DEV_SETUP.md`](./docs/LOCAL_DEV_SETUP.md)           | Local database setup, `supabase db reset`, `npm run verify:plans`, troubleshooting stale/duplicate plan data |
 | [`docs/DOWNLOAD_FLOW.md`](./docs/DOWNLOAD_FLOW.md)               | `/download` page, Windows/Android shells, update-check API                                                   |
 | [`docs/SUBSCRIPTION_SYSTEM.md`](./docs/SUBSCRIPTION_SYSTEM.md)   | 5-tier plans, feature-flag gating, legacy plans                                                              |
@@ -165,10 +166,9 @@ Blueprint deploy, self-hosting alternative): **[`docs/DEPLOYMENT.md`](./docs/DEP
 
 > **Note on `docs/README.md` and `docs/DEPLOYMENT_GUIDE.md`:** these are
 > older documents from an earlier project snapshot (they describe Next.js
-> 15, a `super_admin`/`owner`/`manager` role model, and Vercel deployment —
-> all superseded). They're kept for historical reference but should not be
-> treated as current; this root README and `docs/DEPLOYMENT.md` are the
-> up-to-date sources.
+> 15, a `super_admin`/`owner`/`manager` role model, and an outdated Vercel
+> setup). They're kept for historical reference; use this README and
+> `docs/DEPLOYMENT.md` for current project and deployment guidance.
 
 ## 📝 License
 
