@@ -1,6 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { toast } from 'sonner';
+import { useI18n } from '@/i18n';
 import { registerServiceWorker } from '@/lib/offline/register-sw';
 
 /**
@@ -9,8 +11,22 @@ import { registerServiceWorker } from '@/lib/offline/register-sw';
  * declaratively in the root layout tree.
  */
 export function ServiceWorkerRegister() {
+  const { t } = useI18n();
+  const common = useRef(t.common);
+  common.current = t.common;
+
   useEffect(() => {
-    registerServiceWorker();
+    return registerServiceWorker((activateUpdate) => {
+      const copy = common.current;
+      toast.info(copy.app_update_available, {
+        description: copy.app_update_description,
+        duration: Infinity,
+        action: {
+          label: copy.app_update_now,
+          onClick: activateUpdate,
+        },
+      });
+    });
   }, []);
 
   return null;

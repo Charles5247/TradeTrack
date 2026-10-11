@@ -79,6 +79,7 @@ the entire "check for update" story today.
 ```json
 {
   "api_version": "1.0.0",
+  "deployment_id": "deployed-commit-sha",
   "latest": {
     "windows": { "version": "1.0.0", "download_url": "" },
     "android": {
@@ -96,6 +97,20 @@ any binary itself, and it does not trigger an automatic download/install —
 both shells only _notify_ the user that an update exists; the user must
 still download and run/install the new build manually (see "Known
 limitations" in each shell's README).
+
+### Browser and PWA update prompt
+
+Each production client registers the service worker with a deployment ID.
+On Vercel this is the deployed commit SHA, so a new deployment triggers a
+service-worker update even when `public/sw.js` itself did not change. The
+new worker installs in the background and waits; the app then shows a
+localized **Update ready** prompt. Choosing **Update now** activates the
+worker and refreshes open tabs. Clients check for updates when the app
+loads or returns to the foreground, and periodically while it stays open.
+
+This applies to browser and installed-PWA clients on supported devices.
+It does not install new Windows `.exe` or Android `.apk` binaries; those
+remain on the native-shell update flow described above.
 
 ---
 

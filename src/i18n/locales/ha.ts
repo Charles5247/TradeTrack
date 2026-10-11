@@ -43,6 +43,9 @@ export const ha = {
     info: "Bayani",
     access_denied: "An Hana Shiga",
     access_denied_desc: "Ba ku da izinin duba wannan shafin.",
+    app_update_available: "Sabuntawa ya shirya",
+    app_update_description: "Sabon sigar ya shirya. Sabunta shafin don saukewa da amfani da shi.",
+    app_update_now: "Sabunta yanzu",
   },
   auth: {
     login: "Shiga",

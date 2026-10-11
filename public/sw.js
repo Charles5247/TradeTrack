@@ -25,7 +25,8 @@
  *    has its own online/offline + retry logic.
  */
 
-const CACHE_VERSION = "v6";
+const CACHE_VERSION =
+  new URL(self.location.href).searchParams.get("build") || "v6";
 const STATIC_CACHE = `TracKasuwa-static-${CACHE_VERSION}`;
 const PAGES_CACHE = `TracKasuwa-pages-${CACHE_VERSION}`;
 const OFFLINE_URL = "/offline.html";
@@ -46,9 +47,14 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(STATIC_CACHE)
-      .then((cache) => cache.addAll(PRECACHE_URLS))
-      .then(() => self.skipWaiting()),
+      .then((cache) => cache.addAll(PRECACHE_URLS)),
   );
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    event.waitUntil(self.skipWaiting());
+  }
 });
 
 self.addEventListener("activate", (event) => {

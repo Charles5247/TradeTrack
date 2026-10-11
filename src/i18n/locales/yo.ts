@@ -43,6 +43,9 @@ export const yo = {
     info: "Ìsọfúnni",
     access_denied: "Wọ̀n kọ̀ ọ́ lọ́wọ́",
     access_denied_desc: "O kò ní ìyọ̀ǹda láti wo ojú-ewé yìí.",
+    app_update_available: "Ìmúdójúìwọ̀n ti ṣetán",
+    app_update_description: "Ẹ̀dà tuntun ti ṣetán. Tún ojú-ewé ṣe láti gbà á kí o sì lò ó.",
+    app_update_now: "Ṣàtúnṣe báyìí",
   },
   auth: {
     login: "Wọlé",

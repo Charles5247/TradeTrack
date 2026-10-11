@@ -42,6 +42,9 @@ export const en = {
     info: "Information",
     access_denied: "Access Denied",
     access_denied_desc: "You don't have permission to view this page.",
+    app_update_available: "Update ready",
+    app_update_description: "A new version is ready. Refresh to download and apply it.",
+    app_update_now: "Update now",
   },
   auth: {
     login: "Login",

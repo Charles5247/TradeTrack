@@ -2,15 +2,12 @@
  * TracKasuwa — Version / Update-Check API
  * GET /api/version
  *
- * Lightweight, public, always-on endpoint that the future Electron
- * (Windows .exe) and React Native (Android APK) clients can poll to check
- * whether a newer build is available. Both clients side-load their
- * installers (no Play/App Store), so there's no platform-provided update
- * mechanism — this is the "check for update" call referenced in the
- * distribution-strategy spec.
+ * Lightweight, public, always-on endpoint for browser/PWA clients and
+ * packaged shells to check the currently deployed build. The shells also
+ * use the platform-specific metadata below to check for binary releases.
  *
  * NOTE: This endpoint currently only reports metadata sourced from
- * environment variables set at deploy time — it does NOT yet serve actual
+ * environment variables set at deploy time — it does NOT serve actual
  * installer binaries or auto-download update packages. Wiring real
  * per-platform download URLs (e.g. to a releases bucket/CDN) is deferred
  * to the Electron/React Native scaffolding work itself, which has not
@@ -27,6 +24,7 @@ export async function GET() {
     // compare their own bundled app version against `latest.*` below,
     // not against this field (this just reflects the backend/web build).
     api_version: process.env.NEXT_PUBLIC_APP_VERSION ?? "0.1.0",
+    deployment_id: process.env.NEXT_PUBLIC_DEPLOYMENT_ID ?? "local",
     latest: {
       windows: {
         version: process.env.TracKasuwa_WINDOWS_LATEST_VERSION ?? null,
@@ -43,5 +41,9 @@ export async function GET() {
       },
     },
     checked_at: new Date().toISOString(),
+  }, {
+    headers: {
+      "Cache-Control": "no-store, no-cache, must-revalidate",
+    },
   });
 }

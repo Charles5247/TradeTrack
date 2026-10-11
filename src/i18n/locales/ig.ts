@@ -49,6 +49,9 @@ export const ig: typeof en = {
     info: "Ozi",
     access_denied: "Amachibidoro",
     access_denied_desc: "Ị nweghị ikike ileta peeji a.",
+    app_update_available: "Mmelite adịla njikere",
+    app_update_description: "Ụdị ọhụrụ adịla njikere. Mee ka ibe a dị ọhụrụ ka ibudata ma jiri ya.",
+    app_update_now: "Melite ugbu a",
   },
   // ── Auth ─────────────────────────────────────────────────
   auth: {
