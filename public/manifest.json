@@ -1,7 +1,7 @@
 {
   "name": "TracKasuwa - POS & Inventory",
   "short_name": "TracKasuwa",
-  "description": "Enterprise offline-first POS and inventory management system",
+  "description": "Offline-first point of sale and inventory management for retailers",
   "start_url": "/dashboard",
   "display": "standalone",
   "orientation": "portrait-primary",

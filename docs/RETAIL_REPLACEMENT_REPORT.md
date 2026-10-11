@@ -24,28 +24,26 @@ Exact route inventory: `build-evidence/retail/audit.json` (35 page routes). Dire
 - Product edit: FormTemplate wraps the existing validated ProductForm, preserving image capture, lookup and save behavior.
 - PO Create: the list and standalone creation route share the original query/form/mutation implementation. The protected offline writer and pull implementation are unchanged.
 - Missing data: real product records without product photos retain their intentional product fallback. Handoff photos depict people/industries, not the merchant's actual products.
-- Testimonials: the three supplied portrait assets appear with the existing accountability content. Invented named customer quotes were not presented as verified endorsements.
+- Customer-story and testimonial portraits are not shown. Social proof remains disabled until customers and permissions are available.
 - Imports, Accounting, Assistant and role variants inherit the Retail shell and components while retaining their existing permissions and workflows.
 - Fonts: the exact Inter, Space Grotesk and JetBrains Mono files already cached by Next.js are now self-hosted, preserving weights and Unicode subsets. SIL Open Font licenses are included. This removes a Google Fonts build-time network failure.
 
 ## Assets
 
-All 17 supplied JPEGs were copied unchanged to `public/images/retail/`. Each was decoded and byte-compared with the design source; no supplied asset is missing or corrupt.
+The handoff originally supplied 17 JPEGs copied to `public/images/retail/`. The seven stock testimonial/merchant portrait photos have since been removed from both the public image directory and the archived prototype assets; 10 non-testimonial images remain.
 
 | Previous slot | Supplied file |
 | --- | --- |
 | Landing hero text placeholder | `photo-aba-traders.jpg` |
-| Offline-first feature placeholder | `photo-testimonial-nigerian-woman.jpg` |
 | Retail industry placeholder | `photo-market.jpg` |
 | Restaurant industry placeholder | `photo-restaurant.jpg` |
 | Bakery industry slot | `photo-bakery.jpg` |
 | Hotel industry placeholder | `photo-african-hotel-women.jpg` |
 | Grocery industry placeholder | `photo-african-spices-market.jpg` |
 | Mall industry slot | `photo-mall.jpg` |
-| Merchant/accountability portraits | `photo-testimonial-african-corp-woman.jpg`, `photo-testimonial-man1.jpg`, `photo-testimonial-african-man-restaurant.jpg` |
-| Four auth carousel placeholders | `photo-market.jpg`, `photo-aba-traders.jpg`, `photo-african-spices-market.jpg`, `photo-testimonial-nigerian-woman.jpg` |
+| Four auth carousel placeholders | `photo-market.jpg`, `photo-aba-traders.jpg`, `photo-african-spices-market.jpg`, brand-colour gradient |
 
-The other six supplied photographs remain available as standby assets. Production branding and PWA icons use the approved assets supplied in `docs/logo/`, `docs/icons/`, and `docs/favicon/`. Prototype JSX remains documentation, not served production code. The pre-existing relocation from `public/design_handoff_trackasuwa/` to `docs/design_handoff_trackasuwa/` is included.
+The remaining supplied photographs include standby assets. Production branding and PWA icons use the approved assets supplied in `docs/logo/`, `docs/icons/`, and `docs/favicon/`. Prototype JSX remains documentation, not served production code. The pre-existing relocation from `public/design_handoff_trackasuwa/` to `docs/design_handoff_trackasuwa/` is included.
 
 These photographs remain the handoff's Creative Commons/public-domain placeholder photography, **not final commissioned/licensed launch photography**. Product-image URLs supplied by merchants were not replaced with unrelated stock images.
 
@@ -55,7 +53,7 @@ These photographs remain the handoff's Creative Commons/public-domain placeholde
 - Typecheck: `build-evidence/retail/typecheck-output.log` contains the exact command, output and exit code.
 - Production build: `build-evidence/retail/build-output.log` contains the exact command, complete route output and exit code.
 - Two focused UI/offline PO regression files also passed (3 tests).
-- `node scripts/verify-retail.cjs`: 46 exact palette values; density profiles checked; four protected hashes unchanged; 17 photos decoded and byte-matched; 35 routes inventoried.
+- The prior retail verification checked 17 photos before this cleanup; after removal, the remaining image count is 10. That historical check is not a verification of the current image set.
 - HTTP checks: all nine public/auth pages and the hero JPEG returned 200. Initial compilation timeouts were retried; combined results are in `build-evidence/retail/http-final.json`.
 - Earlier diagnostic logs are retained. The first sandboxed suite hit worker-startup errors; a full run outside the sandbox passed. The first build failed to fetch Google Fonts; self-hosting fixed that failure.
 
@@ -101,7 +99,7 @@ da3ad8c4bf22bd6ce50504808b0cc4d0ffdd035aef11ce321a9e3ac706e4be93
 
 - No browser provider was available in this session. Source, build, HTTP and automated checks were completed, but screenshots, authenticated visual inspection, real Android hardware and pixel-by-pixel fidelity were **not verified**. This report does not certify those checks as passed.
 - Production/Hospitality backend modules are not implemented by this UI replacement. Their industry cards accurately say Coming soon. Shipping those modules requires a separate schema/feature rollout; the handoff itself identifies their schema as out of scope.
-- Decide final licensed photography and obtain approved customer testimonials before launch.
+- Decide final licensed photography and add customer stories only after obtaining customer permission.
 - Decide whether platform-wide locale enforcement, retention, MFA policy or other new global configuration is required. The Settings page exposes existing supported platform operations and account preferences; it does not pretend that unimplemented global controls persist.
 - Merchant management remains available through the directory dialog as well as the new read-only detail page. This preserves existing administration behavior rather than duplicating mutations.
 - Next.js emits its existing middleware-to-proxy deprecation warning. Migrating auth middleware is outside this visual change.

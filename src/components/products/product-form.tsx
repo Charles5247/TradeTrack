@@ -81,7 +81,7 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
 
       const orgId = profile?.organization_id ?? '';
 
-      // Enforce the FREE plan's max_products ceiling (and any other
+      // Enforce the legacy no-cost plan's max_products ceiling (and any other
       // tier's cap) before creating a NEW product. Updates to existing
       // products are never blocked. Fails open if subscription data is
       // unavailable (offline-first: never block on a transient fetch).

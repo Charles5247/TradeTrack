@@ -4,7 +4,7 @@ const path = require('node:path');
 const ts = require('typescript');
 const copies = new Set();
 const decoder = text => text.replace(/&apos;|&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ');
-const readable = text => /[A-Za-z]{2}/.test(text) && !/^\S+@\S+/.test(text) && !/^https?:|^\//.test(text) && !/^TracKasuwa$|^CAXiE/.test(text);
+const readable = text => /[A-Za-z]{2}/.test(text) && !/^\S+@\S+/.test(text) && !/^https?:|^\//.test(text) && !/^TracKasuwa$/.test(text);
 const displayKeys = new Set(['title','label','description','desc','body','text','eyebrow','sub','subtitle','detail','heading','quote']);
 function run(file) {
   const source = fs.readFileSync(file, 'utf8');

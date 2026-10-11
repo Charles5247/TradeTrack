@@ -1,7 +1,6 @@
 
 import { TranslatedLabel, TranslatedText } from '@/i18n/text';
 import Link from "next/link";
-import Image from "next/image";
 import {
   ShoppingCart,
   WifiOff,
@@ -17,7 +16,7 @@ import { Button } from "@/components/ui/button";
 
 /**
  * Feature grid — ported from the handoff's `FeatureGrid` layout
- * (flagship photo-backed card + 3-column grid below). Content is the
+ * (flagship feature card + 3-column grid below). Content is the
  * SAME verified, already-shipped feature set used by the old page.tsx/
  * /features (POS, offline sync, receipt QR, multi-warehouse, low-stock
  * alerts, reports) — no new/fabricated capabilities introduced, only
@@ -62,8 +61,8 @@ export function FeatureGrid() {
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <Reveal>
           <div className="tt-eyebrow mb-3"><TranslatedText text={"Everything you need. Nothing you don't."} /></div>
-          <h2 className="tt-head" style={{ fontSize: "clamp(32px, 4vw, 48px)", margin: "0 0 12px", maxWidth: 780, lineHeight: 1.05 }}><TranslatedText text={"Built by shopkeepers, for shopkeepers."} /></h2>
-          <p className="mb-14" style={{ fontSize: 17, color: "var(--c-textMuted)", maxWidth: 620 }}><TranslatedText text={"Every feature earned its place by solving a real problem for a real trader. If it wasn't shipped, it isn't listed here — see"} />{" "}<Link href="/features" className="underline"><TranslatedText text={"the full feature list"} /></Link>.
+          <h2 className="tt-head" style={{ fontSize: "clamp(32px, 4vw, 48px)", margin: "0 0 12px", maxWidth: 780, lineHeight: 1.05 }}><TranslatedText text={"Tools for everyday shopkeeping."} /></h2>
+          <p className="mb-14" style={{ fontSize: 17, color: "var(--c-textMuted)", maxWidth: 620 }}><TranslatedText text={"Explore the features available today. If it isn't shipped, it isn't listed here — see"} />{" "}<Link href="/features" className="underline"><TranslatedText text={"the full feature list"} /></Link>.
           </p>
         </Reveal>
 
@@ -87,8 +86,7 @@ export function FeatureGrid() {
                 ))}
               </div>
             </div>
-            <div className="relative min-h-[300px]">
-              <Image src="/images/retail/photo-testimonial-nigerian-woman.jpg" alt="Women preparing produce at a market stall" fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" />
+            <div className="relative min-h-[300px] bg-gradient-to-br from-primary/10 via-[var(--c-surfaceAlt)] to-[var(--c-accent)]/20">
               <div
                 className="absolute right-6 bottom-6 rounded-xl p-4 w-[220px]"
                 style={{ background: "var(--c-surface)", boxShadow: "0 20px 40px rgba(0,0,0,0.2)" }}

@@ -45,7 +45,7 @@ const PANEL_CONTENT: Record<AuthVariant, { eyebrow: string; heading: string }> =
     },
     signup: {
       eyebrow: "Get started",
-      heading: "Set up your shop in minutes — no card required.",
+      heading: "Set up your shop in minutes.",
     },
     forgot: {
       eyebrow: "Account recovery",
@@ -100,7 +100,7 @@ export function AuthShell({
         </div>
 
         <p className="tt-muted text-center text-xs">
-          © {new Date().getFullYear()}{" "}<TranslatedText text={"TracKasuwa Nigeria · Powered by CAXiE Technologies Ltd"} /></p>
+          © {new Date().getFullYear()}{" "}<TranslatedText text={"TracKasuwa Limited"} /></p>
       </div>
 
       <AuthBrandPanel variant={variant} />

@@ -35,23 +35,17 @@
     "yo": "Bẹ̀rẹ̀ nísinsìnyí",
     "ig": "Malite ugbu a"
   },
-  "Start free": {
-    "pcm": "Start for free",
-    "ha": "Fara kyauta",
-    "yo": "Bẹ̀rẹ̀ lọ́fẹ̀ẹ́",
-    "ig": "Malite n'efu"
+  "View paid plans": {
+    "pcm": "Check paid plans",
+    "ha": "Duba tsare-tsaren da ake biya",
+    "yo": "Wo àwọn ètò ìsanwó",
+    "ig": "Lee atụmatụ akwụ ụgwọ"
   },
-  "Start free — no card": {
-    "pcm": "Start free — no card needed",
-    "ha": "Fara kyauta — ba sai kati ba",
-    "yo": "Bẹ̀rẹ̀ lọ́fẹ̀ẹ́ — kò nílò káàdì",
-    "ig": "Malite n'efu — kaadị adịghị mkpa"
-  },
-  "Start free — no card required.": {
-    "pcm": "Start free — you no need card.",
-    "ha": "Fara kyauta — ba a buƙatar kati.",
-    "yo": "Bẹ̀rẹ̀ lọ́fẹ̀ẹ́ — kò nílò káàdì.",
-    "ig": "Malite n'efu — kaadị adịghị mkpa."
+  "Install on your phone": {
+    "pcm": "Install am for your phone",
+    "ha": "Sanya shi a wayarka",
+    "yo": "Fi sori fóònù rẹ",
+    "ig": "Wụnye ya na ekwentị gị"
   },
   "See pricing": {
     "pcm": "See prices",
@@ -118,12 +112,6 @@
     "ha": "Hajar ma'ajiyoyi da yawa, koyaushe tana daidaita.",
     "yo": "Ọjà inú ilé ìpamọ́ púpọ̀ ń bá ara wọn mu.",
     "ig": "Ngwaahịa n'ọtụtụ ụlọ nkwakọba na-adakọ mgbe niile."
-  },
-  "Trusted by thousands of traders & merchants across Nigeria": {
-    "pcm": "Traders and business owners across Nigeria trust am",
-    "ha": "Dubban 'yan kasuwa a Najeriya sun amince da shi",
-    "yo": "Ẹgbẹẹgbẹ̀rún oníṣòwò ní Nàìjíríà gbẹ́kẹ̀ lé e",
-    "ig": "Ọtụtụ puku ndị ahịa na Naịjirịa tụkwasịrị ya obi"
   },
   "Everything you need. Nothing you don't.": {
     "pcm": "Everything wey you need. No extra wahala.",
@@ -341,18 +329,6 @@
     "yo": "Bẹ̀rẹ̀ sí í tà pẹ̀lú ọgbọ́n lónìí.",
     "ig": "Malite ire n'amamihe taa."
   },
-  "Set up your shop in minutes — no card required.": {
-    "pcm": "Set up your shop in few minutes — you no need card.",
-    "ha": "Kafa shagonka cikin mintuna — ba sai kati ba.",
-    "yo": "Ṣètò ṣọ́ọ̀bù rẹ láàárín ìṣẹ́jú — kò nílò káàdì.",
-    "ig": "Hazie ụlọ ahịa gị n'ime nkeji — kaadị adịghị mkpa."
-  },
-  "Free forever for one shop. Upgrade when your business does. No card required to start.": {
-    "pcm": "Free forever for one shop. Upgrade when business grow. No card needed to start.",
-    "ha": "Kyauta har abada ga shago ɗaya. Ɗaukaka idan kasuwanci ya girma. Ba sai kati don farawa ba.",
-    "yo": "Lọ́fẹ̀ẹ́ títí láé fún ṣọ́ọ̀bù kan. Gbé ètò ga bí iṣẹ́ rẹ ṣe ń dàgbà. Kò nílò káàdì láti bẹ̀rẹ̀.",
-    "ig": "N'efu ruo mgbe ebighị ebi maka otu ụlọ ahịa. Bulie atụmatụ mgbe azụmahịa toro. Kaadị adịghị mkpa iji malite."
-  },
   "Product": {
     "pcm": "Product",
     "ha": "Kaya",
@@ -430,12 +406,6 @@
     "ha": "Biya da Naira. Ɗaukaka yayin da ka girma.",
     "yo": "San ní Naira. Gbé ètò ga bí o ṣe ń dàgbà.",
     "ig": "Kwụọ na Naira. Bulie atụmatụ ka ị na-eto."
-  },
-  "Start free. Upgrade only when you need more cashiers, products, or warehouses. No hidden fees.": {
-    "pcm": "Start free. Upgrade only when you need more cashiers, products or warehouses. No hidden charge.",
-    "ha": "Fara kyauta. Ɗaukaka idan kana buƙatar ƙarin masu karɓar kuɗi, kaya ko ma'ajiyoyi. Babu kuɗin ɓoye.",
-    "yo": "Bẹ̀rẹ̀ lọ́fẹ̀ẹ́. Gbé ètò ga nígbà tí o nílò olùgbà owó, ọjà tàbí ilé ìpamọ́ sí i. Kò sí owó ìkọ̀kọ̀.",
-    "ig": "Malite n'efu. Bulie naanị mgbe ị chọrọ ndị na-anata ego, ngwaahịa ma ọ bụ ụlọ nkwakọba ọzọ. Enweghị ụgwọ zoro ezo."
   },
   "TracKasuwa for your business": {
     "pcm": "TracKasuwa for your business",
@@ -3041,12 +3011,6 @@
     "yo": "% àpapọ̀",
     "ig": "% nke ngụkọta"
   },
-  "147 sales today": {
-    "pcm": "147 sales today",
-    "ha": "Sayarwa 147 yau",
-    "yo": "Títà 147 lónìí",
-    "ig": "Ahịa 147 taa"
-  },
   "4 queued": {
     "pcm": "4 dey wait",
     "ha": "4 suna jira",
@@ -3065,11 +3029,11 @@
     "yo": "Gba ₦14,500",
     "ig": "Nara ₦14,500"
   },
-  "Today · Lagos HQ": {
-    "pcm": "Today · Lagos HQ",
-    "ha": "Yau · Hedikwatar Legas",
-    "yo": "Lónìí · Orílé-iṣẹ́ Èkó",
-    "ig": "Taa · Isi ụlọ ọrụ Lagos"
+  "Today · Kano HQ": {
+    "pcm": "Today · Kano HQ",
+    "ha": "Yau · Babban ofishi a Kano",
+    "yo": "Lónìí · Orílé-iṣẹ́ Kano",
+    "ig": "Taa · Isi ụlọ ọrụ Kano"
   },
   "receipts · Page": {
     "pcm": "receipts · Page",
@@ -3239,11 +3203,23 @@
     "yo": "Ìkìlọ̀ yìí hàn nítorí fáìlì ìfisí kò tíì ní ìwé ìfọwọ́sí kóòdù — ìkìlọ̀ nìkan kò túmọ̀ sí pé app léwu.",
     "ig": "Ịdọ aka ná ntị a pụtara n'ihi na ihe nrụnye enweghị asambodo mbinye koodu azụmahịa — ozi ahụ naanị apụtaghị na ngwa adịghị nchekwa."
   },
-  "Naira-priced plans, Free to Enterprise": {
-    "pcm": "Plans priced in Naira, from Free to Enterprise",
-    "ha": "Tsare-tsare da Naira, daga Free zuwa Enterprise",
-    "yo": "Ètò ní Naira, láti Free sí Enterprise",
-    "ig": "Atụmatụ na Naira, site na Free ruo Enterprise"
+  "Paid plans available": {
+    "pcm": "Paid plans dey available",
+    "ha": "Akwai tsare-tsaren da ake biya",
+    "yo": "Àwọn ètò ìsanwó wà",
+    "ig": "Atụmatụ akwụ ụgwọ dị"
+  },
+  "Sales-ready POS": {
+    "pcm": "POS wey ready for sales",
+    "ha": "POS mai shirye don sayarwa",
+    "yo": "POS tó ṣe tán fún títà",
+    "ig": "POS dị njikere maka ire ahịa"
+  },
+  "Action history": {
+    "pcm": "Action history",
+    "ha": "Tarihin ayyuka",
+    "yo": "Àkọsílẹ̀ iṣẹ́",
+    "ig": "Akụkọ omume"
   },
   "Roles with dedicated permissions": {
     "pcm": "Roles wey get their own permissions",
@@ -3760,5 +3736,137 @@
     "ha": "Mayar da kaya",
     "yo": "Dá ọjà padà",
     "ig": "Weghachi ngwaahịa"
+  },
+  "Sales today": {
+    "pcm": "Sales today",
+    "ha": "Sayarwa yau",
+    "yo": "Títà lónìí",
+    "ig": "Ahịa taa"
+  },
+  "Choose a monthly plan that fits your shop and team.": {
+    "pcm": "Choose monthly plan wey fit your shop and team.",
+    "ha": "Zaɓi tsarin wata-wata da ya dace da shago da ma'aikatan ka.",
+    "yo": "Yan ètò oṣooṣù tó bá ṣọ́ọ̀bù àti ẹgbẹ́ rẹ mu.",
+    "ig": "Họrọ atụmatụ kwa ọnwa dabara ụlọ ahịa na ndị ọrụ gị."
+  },
+  "All listed plans are paid monthly in Nigerian Naira (₦). Enterprise pricing is custom — talk to sales. Offline-first access and automatic data sync are included.": {
+    "pcm": "All plans dey paid monthly in Naira. Enterprise price na by agreement — talk to sales. Offline use and automatic data sync dey included.",
+    "ha": "Ana biyan duk tsare-tsaren da aka lissafa kowane wata da Naira. Farashin Enterprise na musamman ne — tuntuɓi tallace-tallace. An haɗa amfani ba tare da intanet da daidaita bayanai ta atomatik ba.",
+    "yo": "A ń sanwó gbogbo ètò wọ̀nyí lóṣooṣù ní Naira. Iye Enterprise jẹ́ àdéhùn — bá ẹgbẹ́ títà sọ̀rọ̀. A ti fi lílo láìsí intanẹẹti àti ìdọ́gba dátà aládàáṣiṣẹ́ kún un.",
+    "ig": "A na-akwụ ụgwọ atụmatụ niile a kwa ọnwa na Naira. Ọnụahịa Enterprise bụ nke a ga-ekwekọrịta — kpọtụrụ ndị ahịa. E tinyere ojiji na-enweghị ịntanetị na mmekọrịta data akpaka."
+  },
+  "Use TracKasuwa on the phone or computer you already have. Install the web app from your browser, or get the Windows app when available.": {
+    "pcm": "Use TracKasuwa for the phone or computer wey you get. Install the web app from your browser, or get Windows app when e ready.",
+    "ha": "Yi amfani da TracKasuwa a wayar ko kwamfutar da kake da ita. Sanya manhajar yanar gizo daga burauzarka, ko sauke manhajar Windows idan ta samu.",
+    "yo": "Lo TracKasuwa lórí fóònù tàbí kọ̀ǹpútà tí o ti ní. Fi app wẹ́ẹ̀bù sí ẹ̀rọ láti inú aṣàwákiri rẹ, tàbí gba app Windows nígbà tó bá wà.",
+    "ig": "Jiri TracKasuwa na ekwentị ma ọ bụ kọmputa i nwere. Wụnye ngwa webụ site na ihe nchọgharị gị, ma ọ bụ nweta ngwa Windows mgbe ọ dị."
+  },
+  "Android phone": {
+    "pcm": "Android phone",
+    "ha": "Wayar Android",
+    "yo": "Fóònù Android",
+    "ig": "Ekwentị Android"
+  },
+  "Install the web app from Chrome on your Android phone.": {
+    "pcm": "Install the web app from Chrome for your Android phone.",
+    "ha": "Sanya manhajar yanar gizo daga Chrome a wayar Android.",
+    "yo": "Fi app wẹ́ẹ̀bù sí fóònù Android rẹ láti inú Chrome.",
+    "ig": "Wụnye ngwa webụ site na Chrome na ekwentị Android gị."
+  },
+  "Install on this phone": {
+    "pcm": "Install am for this phone",
+    "ha": "Sanya shi a wannan waya",
+    "yo": "Fi sí fóònù yìí",
+    "ig": "Wụnye ya na ekwentị a"
+  },
+  "In Chrome, tap the menu ⋮, then tap Install app or Add to Home screen.": {
+    "pcm": "For Chrome, tap menu ⋮, then tap Install app or Add to Home screen.",
+    "ha": "A Chrome, taɓa menu ⋮, sannan taɓa Sanya manhaja ko Ƙara zuwa allon gida.",
+    "yo": "Nínú Chrome, tẹ àkójọ aṣàyàn ⋮, lẹ́yìn náà tẹ Fi app sí ẹ̀rọ tàbí Fi kún Ojú-ìbòjú Ilé.",
+    "ig": "Na Chrome, pịa menu ⋮, pịa Wụnye ngwa ma ọ bụ Tinye na ihuenyo mbụ."
+  },
+  "Open this page in Chrome on your Android phone.": {
+    "pcm": "Open this page for Chrome for your Android phone.",
+    "ha": "Buɗe wannan shafi a Chrome a wayar Android.",
+    "yo": "Ṣí ojú-ewé yìí nínú Chrome lórí fóònù Android rẹ.",
+    "ig": "Mepee ibe a na Chrome na ekwentị Android gị."
+  },
+  "Tap the menu ⋮, then tap Install app or Add to Home screen.": {
+    "pcm": "Tap menu ⋮, then tap Install app or Add to Home screen.",
+    "ha": "Taɓa menu ⋮, sannan taɓa Sanya manhaja ko Ƙara zuwa allon gida.",
+    "yo": "Tẹ àkójọ aṣàyàn ⋮, lẹ́yìn náà tẹ Fi app sí ẹ̀rọ tàbí Fi kún Ojú-ìbòjú Ilé.",
+    "ig": "Pịa menu ⋮, pịa Wụnye ngwa ma ọ bụ Tinye na ihuenyo mbụ."
+  },
+  "Tap Install or Add, then open TracKasuwa from your Home screen.": {
+    "pcm": "Tap Install or Add, then open TracKasuwa from your Home screen.",
+    "ha": "Taɓa Sanya ko Ƙara, sannan buɗe TracKasuwa daga allon gidanka.",
+    "yo": "Tẹ Fi sí ẹ̀rọ tàbí Fi kún un, lẹ́yìn náà ṣí TracKasuwa láti Ojú-ìbòjú Ilé rẹ.",
+    "ig": "Pịa Wụnye ma ọ bụ Tinye, mepee TracKasuwa na ihuenyo mbụ gị."
+  },
+  "Android app download coming soon": {
+    "pcm": "Android app download dey come soon",
+    "ha": "Sauke manhajar Android zai zo nan ba da jimawa ba",
+    "yo": "Ìgbàsílẹ̀ app Android yóò dé láìpẹ́",
+    "ig": "Nbudata ngwa Android na-abịa n'oge na-adịghị anya"
+  },
+  "Install from your browser": {
+    "pcm": "Install am from your browser",
+    "ha": "Sanya daga burauzarka",
+    "yo": "Fi sí ẹ̀rọ láti inú aṣàwákiri rẹ",
+    "ig": "Wụnye site na ihe nchọgharị gị"
+  },
+  "Add TracKasuwa to your device so it opens like an app.": {
+    "pcm": "Add TracKasuwa to your device make e open like app.",
+    "ha": "Ƙara TracKasuwa a na'urarka domin ta buɗe kamar manhaja.",
+    "yo": "Fi TracKasuwa kún ẹ̀rọ rẹ kí ó lè ṣí bí app.",
+    "ig": "Tinye TracKasuwa na ngwaọrụ gị ka ọ na-emeghe ka ngwa."
+  },
+  "Open this page in Chrome or Edge. Tap the install icon in the address bar, or choose Install app from the browser menu.": {
+    "pcm": "Open this page for Chrome or Edge. Tap install icon for address bar, or choose Install app from browser menu.",
+    "ha": "Buɗe wannan shafi a Chrome ko Edge. Taɓa alamar sakawa a sandar adireshi, ko zaɓi Sanya manhaja daga menu na burauza.",
+    "yo": "Ṣí ojú-ewé yìí nínú Chrome tàbí Edge. Tẹ àmì fífi-sí-ẹ̀rọ nínú pẹpẹ àdírẹ́sì, tàbí yan Fi app sí ẹ̀rọ láti inú àkójọ aṣàyàn aṣàwákiri.",
+    "ig": "Mepee ibe a na Chrome ma ọ bụ Edge. Pịa akara wụnye dị n'ahịrị adreesị, ma ọ bụ họrọ Wụnye ngwa na menu ihe nchọgharị."
+  },
+  "iPhone, iPad & Mac": {
+    "pcm": "iPhone, iPad & Mac",
+    "ha": "iPhone, iPad da Mac",
+    "yo": "iPhone, iPad àti Mac",
+    "ig": "iPhone, iPad na Mac"
+  },
+  "On Mac, open this site in Safari and choose File, then Add to Dock.": {
+    "pcm": "For Mac, open this site for Safari and choose File, then Add to Dock.",
+    "ha": "A Mac, buɗe wannan shafi a Safari, zaɓi File sannan Add to Dock.",
+    "yo": "Lórí Mac, ṣí ojúlé yìí nínú Safari, yan File, lẹ́yìn náà Add to Dock.",
+    "ig": "Na Mac, mepee saịtị a na Safari, họrọ File, wee họrọ Add to Dock."
+  },
+  "Enter your details to create an account.": {
+    "pcm": "Enter your details to create account.",
+    "ha": "Shigar da bayananka don ƙirƙirar asusu.",
+    "yo": "Tẹ àwọn àlàyé rẹ sí i láti ṣẹ̀dá àkọọ́lẹ̀.",
+    "ig": "Tinye nkọwa gị iji mepụta akaụntụ."
+  },
+  "We detected Android": {
+    "pcm": "We see say na Android you dey use",
+    "ha": "Mun gano kana amfani da Android",
+    "yo": "A rí i pé o ń lo Android",
+    "ig": "Anyị chọpụtara na ị na-eji Android"
+  },
+  "We detected Windows": {
+    "pcm": "We see say na Windows you dey use",
+    "ha": "Mun gano kana amfani da Windows",
+    "yo": "A rí i pé o ń lo Windows",
+    "ig": "Anyị chọpụtara na ị na-eji Windows"
+  },
+  "We detected iOS": {
+    "pcm": "We see say na iPhone or iPad you dey use",
+    "ha": "Mun gano kana amfani da iPhone ko iPad",
+    "yo": "A rí i pé o ń lo iPhone tàbí iPad",
+    "ig": "Anyị chọpụtara na ị na-eji iPhone ma ọ bụ iPad"
+  },
+  "We detected macOS": {
+    "pcm": "We see say na Mac you dey use",
+    "ha": "Mun gano kana amfani da Mac",
+    "yo": "A rí i pé o ń lo Mac",
+    "ig": "Anyị chọpụtara na ị na-eji Mac"
   }
 }

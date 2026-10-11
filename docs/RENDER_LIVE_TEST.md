@@ -113,7 +113,7 @@ current passwords still match the live database:
 
 | Role | Seed email | Seed password |
 |---|---|---|
-| Platform owner | `platformowner@TracKasuwa.ng` | `demo1234` |
+| Platform owner | `platformowner@trackasuwa.com` | `demo1234` |
 | Business owner | `owner@demo.com` | `demo1234` |
 | Admin | `admin@demo.com` | `demo1234` |
 | Cashier | `cashier@demo.com` | `demo1234` |

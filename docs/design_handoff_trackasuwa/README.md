@@ -211,7 +211,7 @@ Every screen is a live route in the prototype (see `TradeTrack Design Proposal.h
 
 | Screen | Route | Prototype file | Notes |
 |---|---|---|---|
-| Landing | `/` | `marketing.jsx` → `Landing` | Hero + stats + featured card + feature grid + industries + testimonials + CTA + footer |
+| Landing | `/` | `marketing.jsx` → `Landing` | Hero + stats + featured card + feature grid + industries + CTA + footer |
 | Features | `/features` | `marketing.jsx` → `Features` | 6 category cards |
 | Industries (NEW) | `/industries` | `production.jsx` → `IndustriesPage` | Introduces the Production/Hospitality extension |
 | Pricing | `/pricing` | `marketing.jsx` → `Pricing` | 5 base tiers + 4 extension packs |
@@ -224,7 +224,6 @@ Every screen is a live route in the prototype (see `TradeTrack Design Proposal.h
 - Hero photo has parallax translate (0.3× scroll)
 - Floating mockup card (rotate -2deg), floating toast (rotate 3deg), floating stat pill — all entrance-animated
 - `IntersectionObserver` reveals every section as it enters viewport (700ms fade + 24px translateY, 60-100ms stagger for grid children)
-- Logo marquee scrolls continuously
 - Feature/Industry cards hover-lift 4-6px
 
 ### 5.2 Auth (`src/app/(auth)/`)
@@ -236,7 +235,7 @@ Every screen is a live route in the prototype (see `TradeTrack Design Proposal.h
 | Forgot password | `/forgot-password` | `auth.jsx` → `Forgot` |
 | Change password (forced) | `/change-password` | `auth.jsx` → `ChangePassword` |
 
-All use a **split-panel shell**: form on the left, brand panel (primary bg + testimonial + stats) on the right. `AuthPanel` component swaps its content per screen.
+All use a **split-panel shell**: form on the left, brand panel (primary background + product copy + stats) on the right. `AuthPanel` component swaps its content per screen.
 
 ### 5.3 Business Owner dashboard (`src/app/(dashboard)/`)
 
@@ -370,9 +369,9 @@ The mocks use Creative-Commons and public-domain photos as **placeholders** to s
 
 Photo slots in the design (see `assets/` folder in the prototype for placeholder references):
 - **Hero (landing)**: `assets/photo-aba-traders.jpg` — Nigerian market-women scene. Replace with a shot of an actual TradeTrack customer's shop.
-- **"Offline-first" featured card**: `assets/photo-testimonial-nigerian-woman.jpg` — Nigerian women preparing produce at market stall.
+- **"Offline-first" featured card**: now uses a brand-colour gradient; no photo is required.
 - **Industries grid**: 6 images (retail, restaurants, bakeries, hotels, malls, grocery) — replace each with in-context photography of that vertical using TradeTrack.
-- **Testimonial cards**: 3 portrait shots of merchants + quote.
+- **Customer stories**: keep hidden until real customers have provided permissioned content.
 - **Auth right-panel**: no photo currently, but a subtle brand illustration or shop photo would add warmth.
 
 **Placeholder styling** (until real photos arrive): the prototype ships a `.tt-placeholder` utility (striped diagonal SVG background, dashed border, mono explainer text). Use anywhere an image is missing.
@@ -449,17 +448,13 @@ All asset files ship in `assets/`:
 | File | Where used | Notes |
 |---|---|---|
 | `photo-aba-traders.jpg` | Landing hero | Nigerian market · placeholder |
-| `photo-testimonial-nigerian-woman.jpg` | Featured "offline-first" card | Nigerian trader · placeholder |
-| `photo-testimonial-african-corp-woman.jpg` | Testimonial 1 | Professional woman · placeholder |
-| `photo-testimonial-man1.jpg` | Testimonial 2 | Trader portrait · placeholder |
-| `photo-testimonial-african-man-restaurant.jpg` | Testimonial 3 | Café owner · placeholder |
 | `photo-market.jpg` | Industries: Retail | Trader in shop · placeholder |
 | `photo-restaurant.jpg` | Industries: Restaurants + Production module hero | Restaurant scene · placeholder |
 | `photo-bakery.jpg` | Industries: Bakeries + Production module hero | Bakery scene · placeholder |
 | `photo-african-hotel-women.jpg` | Industries: Hotels + Production module hero | Hotel staff · placeholder |
 | `photo-african-spices-market.jpg` | Industries: Grocery | Market spices · placeholder |
 | `photo-mall.jpg` | Industries: Shopping malls + Production hero | Mall interior · placeholder |
-| `photo-hotel.jpg`, `photo-phone.jpg`, `photo-testimonial-woman1.jpg`, `photo-testimonial-woman2.jpg`, `photo-testimonial-central-african-man.jpg`, `photo-restaurant-culinary-team.jpg` | Additional slots | Standby placeholders |
+| `photo-hotel.jpg`, `photo-phone.jpg`, `photo-restaurant-culinary-team.jpg` | Additional slots | Standby placeholders |
 
 **All must be replaced with licensed/commissioned photography for production launch.**
 
@@ -518,7 +513,7 @@ All source files copied under `design_handoff_tradetrack/design_files/`:
 1. **Tokens first.** Replace `src/app/globals.css` with the token block from §4. Verify the app still boots.
 2. **Re-skin existing shadcn components** (§6.1). This alone will visually transform 80% of the app.
 3. **Update layout** (§6.3): Sidebar nav groups, Header structure.
-4. **Landing page.** Highest visual leverage. Build hero + featured card + industry grid + testimonials + CTA.
+4. **Landing page.** Highest visual leverage. Build hero + featured card + industry grid + CTA; keep customer stories hidden until they are permissioned.
 5. **Dashboard + POS.** Highest product leverage. POS in particular should get its own layout wrapper that forces `data-pos-mode="true"`.
 6. **Add new components** (§6.2): StatCard, DetailTemplate, FormTemplate, EmptyState, LoadingState, ErrorState.
 7. **Fill in missing screens** using the templates (SaleDetail, MerchantDetail, ProductEdit, Warehouses, ReceiptLookup).

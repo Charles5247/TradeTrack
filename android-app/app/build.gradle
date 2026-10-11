@@ -15,11 +15,10 @@ android {
 
         // ─────────────────────────────────────────────────────────
         // Production domain — the ONLY hardcoded copy of it in this
-        // module. Do NOT assume TracKasuwa.com is secured yet; keep
-        // TracKasuwa.ng as the fallback until told otherwise.
+        // module. Use the configured TracKasuwa deployment by default.
         //
         // Override at build time without touching any source file:
-        //   ./gradlew assembleRelease -PappUrl=https://TracKasuwa.com
+        //   ./gradlew assembleRelease -PappUrl=https://trackasuwa.com
         //
         // MainActivity.java reads this via BuildConfig.APP_URL instead
         // of a literal string constant. The path is "/login" (not the

@@ -76,7 +76,7 @@ from the exact same code path — see
 
 | Role           | Email                         | Password   |
 | -------------- | ----------------------------- | ---------- |
-| Platform Owner | `platformowner@TracKasuwa.ng` | `demo1234` |
+| Platform Owner | `platformowner@trackasuwa.com` | `demo1234` |
 | Business Owner | `owner@demo.com`              | `demo1234` |
 | Admin          | `admin@demo.com`              | `demo1234` |
 | Cashier        | `cashier@demo.com`            | `demo1234` |

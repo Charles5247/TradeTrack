@@ -252,7 +252,7 @@ export default function LoginPage() {
                 >
                   {t.auth.role_platform_owner}:
                 </span>{" "}
-                platformowner@TracKasuwa.ng / demo1234
+                platformowner@trackasuwa.com / demo1234
               </p>
               <p>
                 <span

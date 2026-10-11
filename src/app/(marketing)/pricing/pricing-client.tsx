@@ -1,13 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { PlanCard, type Plan } from "@/components/subscriptions/plan-card";
-import { Segmented } from "@/components/ui/segmented";
 import { Reveal } from "@/components/marketing/reveal";
 
 /**
- * Client-side plan grid for the public Pricing page. Owns only the
- * monthly/yearly toggle UI state — `plans` (plain, serializable data)
+ * Client-side plan grid for the public Pricing page. `plans` (plain, serializable data)
  * is fetched server-side in page.tsx and passed in as a prop, so the
  * live-DB fetch itself still happens on the server on every request
  * (see `dynamic = "force-dynamic"` in page.tsx).
@@ -24,34 +21,17 @@ import { Reveal } from "@/components/marketing/reveal";
  * Components — only serializable data may cross that boundary.
  */
 export function PricingClient({ plans }: { plans: Plan[] }) {
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">(
-    "monthly",
-  );
-
   return (
     <div>
-      <Reveal delay={300}>
-        <div className="flex items-center justify-center">
-          <Segmented
-            value={billingCycle}
-            onChange={setBillingCycle}
-            options={[
-              { value: "monthly", label: "Monthly" },
-              { value: "yearly", label: "Yearly · save 20%" },
-            ]}
-          />
-        </div>
-      </Reveal>
-
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 mt-12">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {plans.map((plan, i) => (
           <Reveal key={plan.id} delay={i * 80} className="h-full">
             <PlanCard
               plan={plan}
               allPlans={plans}
-              billingCycle={billingCycle}
+              billingCycle="monthly"
               selectHref={`/signup?plan=${plan.id}`}
-              selectLabel={plan.price === 0 ? "Start Free" : "Get Started"}
+              selectLabel="Get Started"
             />
           </Reveal>
         ))}

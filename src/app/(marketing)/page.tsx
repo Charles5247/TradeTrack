@@ -5,6 +5,9 @@ import { FeatureGrid } from "@/components/marketing/feature-grid";
 import { IndustriesBand } from "@/components/marketing/industries-band";
 import { AccountabilityBand } from "@/components/marketing/accountability-band";
 import { CTABand } from "@/components/marketing/cta-band";
+import { SocialProofBand } from "@/components/marketing/social-proof-band";
+import { showSocialProof } from "@/content/social-proof";
+import { siteImages } from "@/content/images";
 
 export const metadata: Metadata = {
   title: "Offline POS & Inventory Built for Accountability",
@@ -14,21 +17,25 @@ export const metadata: Metadata = {
     title: "TracKasuwa | POS & Inventory for Nigerian Retailers",
     description:
       "Offline-first POS and inventory management built for Nigerian retailers. Record sales, track stock, and keep your business moving, even without internet.",
-    images: [
+    ...(siteImages.socialPreview.src
+      ? { images: [
       {
-        url: "/brand/social-preview.png",
+        url: siteImages.socialPreview.src,
         width: 1200,
         height: 630,
-        alt: "TracKasuwa — Point of sale and inventory management",
+        alt: siteImages.socialPreview.alt,
       },
-    ],
+      ] }
+      : {}),
   },
   twitter: {
     card: "summary_large_image",
     title: "TracKasuwa | POS & Inventory for Nigerian Retailers",
     description:
       "Offline-first POS and inventory management built for Nigerian retailers. Record sales, track stock, and keep your business moving, even without internet.",
-    images: ["/brand/social-preview.png"],
+    ...(siteImages.socialPreview.src
+      ? { images: [siteImages.socialPreview.src] }
+      : {}),
   },
 };
 
@@ -52,6 +59,7 @@ export default function MarketingHomePage() {
   return (
     <>
       <Hero />
+      {showSocialProof ? <SocialProofBand /> : null}
       <StatsBand />
       <FeatureGrid />
       <IndustriesBand />

@@ -7,7 +7,7 @@ import { Reveal } from "@/components/marketing/reveal";
 export const metadata: Metadata = {
   title: "Download",
   description:
-    "Download TracKasuwa for Windows or Android, or install the offline-first web app on iPhone and iPad from Safari.",
+    "Install TracKasuwa on Android, iPhone, iPad, Mac, or Windows with the web app or available desktop download.",
 };
 
 export const dynamic = "force-dynamic";
@@ -15,12 +15,10 @@ export const dynamic = "force-dynamic";
 /**
  * Public download page — resolves to /download. Detects OS/browser
  * client-side (see download-client.tsx) to surface the right install
- * path: Android + desktop Chromium get a `beforeinstallprompt`-driven
- * PWA install button PLUS a direct APK/EXE download link (URLs sourced
- * from env vars — see render.yaml's TracKasuwa_*_DOWNLOAD_URL, never
- * committed binaries to git). iPhone and iPad users get Safari
- * Add-to-Home-Screen steps because iOS does not fire the install prompt
- * event used by Chromium browsers.
+ * path: supported Android and desktop Chromium browsers get a
+ * `beforeinstallprompt` PWA action; iPhone and iPad get Safari
+ * Add-to-Home-Screen steps. Native installers are shown only when their
+ * real download URL is configured.
  */
 async function getVersionInfo() {
   try {
@@ -76,7 +74,7 @@ export default async function DownloadPage() {
                 maxWidth: 620,
                 margin: "0 auto",
               }}
-            ><TranslatedText text={"Get TracKasuwa on the devices you already use — as an installed app on Windows and Android, or straight from your browser."} /></p>
+            ><TranslatedText text={"Use TracKasuwa on the phone or computer you already have. Install the web app from your browser, or get the Windows app when available."} /></p>
           </Reveal>
         </div>
       </section>

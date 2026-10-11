@@ -2,42 +2,36 @@
 
 import * as React from "react";
 import { useCopy } from '@/i18n/text';
-import Image from "next/image";
-import { Store, ShoppingCart, Warehouse, Receipt } from "lucide-react";
 
-/* Supplied design photography for the authentication brand panel. */
+import type { SiteImage as SiteImageData } from "@/content/images";
+import { SiteImage } from "@/components/shared/site-image";
+import { siteImages } from "@/content/images";
 
 interface Slide {
   key: string;
-  image: string;
-  Icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>;
-  caption: string;
+  image: SiteImageData;
   sub: string;
 }
 
 const SLIDES: Slide[] = [
   {
-    key: "counter", image: "photo-market.jpg",
-    Icon: Store,
-    caption: "Photo: shop owner at the counter",
+    key: "counter",
+    image: siteImages.authCarousel.counter,
     sub: "Every retail counter, tracked from one dashboard.",
   },
   {
-    key: "pos", image: "photo-aba-traders.jpg",
-    Icon: ShoppingCart,
-    caption: "Photo: cashier ringing up a sale",
+    key: "pos",
+    image: siteImages.authCarousel.pos,
     sub: "Barcode-scan checkout, even with no signal.",
   },
   {
-    key: "warehouse", image: "photo-african-spices-market.jpg",
-    Icon: Warehouse,
-    caption: "Photo: stock check across warehouses",
+    key: "warehouse",
+    image: siteImages.authCarousel.warehouse,
     sub: "Multi-warehouse inventory, always in sync.",
   },
   {
-    key: "receipt", image: "photo-testimonial-nigerian-woman.jpg",
-    Icon: Receipt,
-    caption: "Photo: printed receipt with QR code",
+    key: "receipt",
+    image: siteImages.authCarousel.receipt,
     sub: "Every sale recorded, every receipt traceable.",
   },
 ];
@@ -80,7 +74,7 @@ export function AuthCarousel() {
               padding: 0,
             }}
           >
-            <Image src={`/images/retail/${slide.image}`} alt="" fill sizes="50vw" className="object-cover" />
+            <SiteImage image={slide.image} sizes="50vw" />
           </div>
         );
       })}

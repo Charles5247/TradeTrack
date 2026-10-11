@@ -287,7 +287,7 @@ export function isEnterprisePlan(plan: Plan): boolean {
   return plan.name === "Enterprise";
 }
 
-export const SALES_CONTACT_EMAIL = "sales@TracKasuwa.ng";
+export const SALES_CONTACT_EMAIL = "sales@trackasuwa.com";
 
 // ── PlanCard ──────────────────────────────────────────────────
 export function PlanCard({
@@ -310,8 +310,7 @@ export function PlanCard({
    *  usage — upgrades in place). Mutually exclusive with `selectHref`. */
   onSelect?: (planId: string) => void;
   isLoading?: boolean;
-  /** Overrides the default "Select Plan" button label (e.g. "Start Free"
-   *  or "Get Started" on the public pricing page). */
+  /** Overrides the default "Select Plan" button label on the public pricing page. */
   selectLabel?: string;
   /** If provided, the CTA renders as a link (e.g. `/signup?plan=...`)
    *  instead of a button calling `onSelect` — used by the logged-out

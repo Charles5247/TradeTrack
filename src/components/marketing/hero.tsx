@@ -3,11 +3,11 @@ import { TranslatedText, useCopy } from '@/i18n/text';
 
 
 import Link from "next/link";
-import Image from "next/image";
 import { ArrowRight, Download, Check, ArrowUp } from "lucide-react";
 import { Reveal } from "@/components/marketing/reveal";
-import { LogoMarquee } from "@/components/marketing/logo-marquee";
 import { useScrollY } from "@/hooks/use-scroll-y";
+import { SiteImage } from "@/components/shared/site-image";
+import { siteImages } from "@/content/images";
 
 /**
  * Hero copy — ported from the design handoff's `HERO_COPY` (4 brand-
@@ -19,19 +19,6 @@ const HERO_COPY = {
   title: "Sell faster. Restock smarter. Never lose a sale.",
   sub: "Barcode-scan checkout, split payments, offline-ready — plus a dedicated Naira account for every merchant. TracKasuwa is retail, unlocked.",
 };
-
-const TRUST_LOGOS = [
-  "Aliko Stores",
-  "Umeh & Sons",
-  "Mama Nkechi",
-  "Balogun Textiles",
-  "Kano Grains",
-  "Chuka Auto Parts",
-  "Kilimanjaro Kitchen",
-  "Nikkoos Bakery",
-  "Onyeka Provisions",
-  "Lekki Grand Hotel",
-];
 
 function MiniBars() {
   const values = [12, 20, 15, 28, 32, 24, 38];
@@ -53,9 +40,7 @@ function MiniBars() {
   );
 }
 
-/* Supplied design photography; replace with licensed launch assets. */
 function HeroCompositePhoto() {
-  const copy = useCopy();
   return (
     <div className="relative" style={{ aspectRatio: "1 / 1.05" }}>
       <div
@@ -65,7 +50,7 @@ function HeroCompositePhoto() {
             "0 40px 100px -20px color-mix(in oklch, var(--c-primary), transparent 75%)",
         }}
       >
-        <Image src="/images/retail/photo-aba-traders.jpg" alt={copy("Traders at a Nigerian market")} fill sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" preload />
+        <SiteImage image={siteImages.heroMarket} sizes="(min-width: 1024px) 50vw, 100vw" preload />
       </div>
 
       {/* Floating dashboard mockup */}
@@ -98,10 +83,10 @@ function HeroCompositePhoto() {
           <span
             className="tt-mono ml-1.5 text-[9px]"
             style={{ color: "var(--c-textMuted)" }}
-          ><TranslatedText text={"TracKasuwa.ng"} /></span>
+          ><TranslatedText text={"trackasuwa.com"} /></span>
         </div>
         <div className="p-3.5" style={{ background: "var(--c-surface)" }}>
-          <div className="text-[10px]" style={{ color: "var(--c-textMuted)" }}><TranslatedText text={"Today · Lagos HQ"} /></div>
+          <div className="text-[10px]" style={{ color: "var(--c-textMuted)" }}><TranslatedText text={"Today · Kano HQ"} /></div>
           <div className="tt-head text-[26px] mt-0.5 leading-none">
             ₦482,190
           </div>
@@ -156,7 +141,7 @@ function HeroCompositePhoto() {
           className="tt-dot-pulse w-2 h-2 rounded-full"
           style={{ background: "var(--c-success)" }}
         />
-        <span className="text-xs font-semibold"><TranslatedText text={"147 sales today"} /></span>
+        <span className="text-xs font-semibold"><TranslatedText text={"Sales today"} /></span>
       </div>
     </div>
   );
@@ -245,13 +230,13 @@ export function Hero() {
             <Reveal delay={500}>
               <div className="flex flex-wrap items-center gap-3">
                 <Link
-                  href="/signup"
+                  href="/pricing"
                   className="inline-flex items-center gap-2 rounded-lg h-[52px] px-6 text-base font-medium"
                   style={{
                     background: "var(--c-primary)",
                     color: "var(--c-primaryFg)",
                   }}
-                ><TranslatedText text={"Start free — no card"} />{" "}
+                ><TranslatedText text={"Explore paid plans"} />{" "}
                   <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
                 </Link>
                 <Link
@@ -262,14 +247,14 @@ export function Hero() {
                     color: "var(--c-text)",
                   }}
                 >
-                  <Download className="h-4 w-4" strokeWidth={1.75} />{" "}<TranslatedText text={"Download for Windows"} /></Link>
+                  <Download className="h-4 w-4" strokeWidth={1.75} />{" "}<TranslatedText text={"Install on your phone"} /></Link>
               </div>
             </Reveal>
 
             <Reveal delay={650}>
               <div className="flex flex-wrap items-center gap-6 mt-8">
                 {[
-                  "Free plan forever",
+                  "Paid monthly plans",
                   "Offline-ready",
                   "Works on any phone",
                 ].map((c) => (
@@ -302,18 +287,6 @@ export function Hero() {
         </div>
       </div>
 
-      <Reveal delay={800}>
-        <div
-          className="mx-auto max-w-6xl px-4 sm:px-6"
-          style={{ marginTop: 100 }}
-        >
-          <div
-            className="tt-eyebrow text-center mb-6"
-            style={{ color: "var(--c-textFaint)" }}
-          ><TranslatedText text={"Trusted by thousands of traders & merchants across Nigeria"} /></div>
-          <LogoMarquee items={TRUST_LOGOS} />
-        </div>
-      </Reveal>
     </section>
   );
 }

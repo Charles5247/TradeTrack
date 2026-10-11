@@ -104,13 +104,13 @@ accept as coming from the same app.
 production domain can be changed without touching any Java source file:
 
 ```bash
-# Default build — uses the fallback domain (TracKasuwa.ng) baked into
+# Default build — uses the configured TracKasuwa deployment baked into
 # build.gradle:
 gradle assembleRelease --no-daemon
 
-# Point a specific build at a different domain, e.g. once TracKasuwa.com
-# is secured and ready to go live, WITHOUT editing any source file:
-gradle assembleRelease --no-daemon -PappUrl=https://TracKasuwa.com
+# Point a specific build at a different deployment without editing any
+# source file:
+gradle assembleRelease --no-daemon -PappUrl=https://trackasuwa.com
 ```
 
 Both commands produce `app/build/outputs/apk/release/app-release-unsigned.apk`
@@ -123,9 +123,8 @@ public marketing site — sending the shell straight to `/login` means
 an already-authenticated trader is forwarded on to `/dashboard`
 automatically by the web app's own auth middleware, with no extra step.
 
-**Do not assume `TracKasuwa.com` is secured yet.** The default
-fallback baked into `build.gradle` (when `-PappUrl` is not passed)
-remains `https://trackasuwa.vercel.app` until told otherwise — this
+The default deployment baked into `build.gradle` (when `-PappUrl` is not passed)
+remains `https://trackasuwa.vercel.app` — this
 mechanism only makes the domain swappable at build time, it does not
 perform any actual domain change.
 

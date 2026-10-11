@@ -132,7 +132,7 @@ You can also spot-check visually once `npm run dev` is running:
 - **Dashboard**: sign in as `owner@demo.com` (see the demo credentials
   table in the root `README.md`) → Subscriptions ▸ Plans tab. It must
   render the exact same 5 plans, same names, same prices, as `/pricing`.
-  (Signing in as `platformowner@TracKasuwa.ng` instead will show the
+  (Signing in as `platformowner@trackasuwa.com` instead will show the
   same 5 active plans PLUS the deactivated legacy rows, each with an
   "Inactive" badge and Edit/Delete controls — that is the
   platform-owner-only catalog-management view, by design; see

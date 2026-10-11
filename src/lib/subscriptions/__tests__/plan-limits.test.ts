@@ -136,15 +136,15 @@ describe("resolveSubscriptionPlan", () => {
   });
 });
 
-describe("canAddProduct / FREE plan product-count enforcement", () => {
-  it("allows creating products #1 through #50 on the FREE plan", () => {
+describe("canAddProduct / legacy zero-price product-count enforcement", () => {
+  it("allows creating products #1 through #50 on the legacy zero-price tier", () => {
     for (let count = 0; count < 50; count++) {
       expect(canAddProduct(count, FREE_PLAN)).toBe(true);
     }
   });
 
-  it("blocks creating product #51 on the FREE plan (max_products: 50)", () => {
-    // Explicit validation requirement: FREE plan blocks product #51.
+  it("blocks creating product #51 on the legacy zero-price tier (max_products: 50)", () => {
+    // Explicit validation requirement: the legacy tier blocks product #51.
     // `currentProductCount` is the count BEFORE the new insert, so the
     // org already has 50 products when attempting to create the 51st.
     expect(canAddProduct(50, FREE_PLAN)).toBe(false);

@@ -12,8 +12,7 @@ import { Reveal } from "@/components/marketing/reveal";
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description:
-    "Simple, transparent pricing for TracKasuwa — Free, Starter, Growth, Business, and Enterprise plans. No card required to start.",
+  description: "Transparent monthly plans for Nigerian retailers. Choose the paid TracKasuwa plan that fits your shop.",
 };
 
 // Always fetch live from the DB — pricing must reflect a plan change
@@ -39,23 +38,16 @@ export const revalidate = 0;
  * dashboard's Plans tab calls for non-platform_owner roles — so this
  * page cannot silently drift out of sync with the dashboard.
  *
- * IMPORTANT (Step 4 re-skin note): this page's *visual* treatment was
- * rebuilt against the design handoff's Pricing mockup
- * (design_files/marketing.jsx's `Pricing` component), but that
- * mockup's hardcoded `PLANS` array (Free/₦0, Starter/₦3,500,
- * Growth/₦7,500, Business/₦18,000, Enterprise) is FICTIONAL — it does
- * not match this app's real 5-tier catalog (migration 010: Free/₦0,
- * Starter/₦5,000, Growth/₦15,000 [popular], Business/₦30,000,
- * Enterprise/custom) and was deliberately NOT ported, to preserve the
- * pricing-governance single-source-of-truth requirement: the platform
- * owner edits the catalog in one place (Subscriptions ▸ Plans tab) and
- * this page must always reflect exactly that DB state — never a
- * separate hardcoded number.
+ * The catalog remains database-managed. The public view excludes the
+ * legacy Free row and presents only paid plans, including custom-priced
+ * Enterprise.
  */
 async function getActivePlans(): Promise<Plan[]> {
   const supabase = await createClient();
   const plans = await getActiveSubscriptionPlans(supabase);
-  return plans ?? FALLBACK_PLANS;
+  return (plans ?? FALLBACK_PLANS).filter(
+    (plan) => plan.name !== "Free" && (plan.price > 0 || plan.name === "Enterprise"),
+  );
 }
 
 export default async function PricingPage() {
@@ -86,7 +78,7 @@ export default async function PricingPage() {
                 maxWidth: 620,
                 margin: "0 auto",
               }}
-            ><TranslatedText text={"Start free. Upgrade only when you need more cashiers, products, or warehouses. No hidden fees."} /></p>
+            ><TranslatedText text={"Choose a monthly plan that fits your shop and team."} /></p>
           </Reveal>
         </div>
       </section>
@@ -98,7 +90,7 @@ export default async function PricingPage() {
           <p
             className="text-center text-xs mx-auto mt-10 max-w-2xl"
             style={{ color: "var(--c-textMuted)" }}
-          ><TranslatedText text={"All plans include offline-first functionality, multi-device support, and automatic data sync. Prices are billed monthly in Nigerian Naira (₦). Enterprise pricing is custom — talk to sales."} /></p>
+          ><TranslatedText text={"All listed plans are paid monthly in Nigerian Naira (₦). Enterprise pricing is custom — talk to sales. Offline-first access and automatic data sync are included."} /></p>
         </div>
       </section>
     </div>

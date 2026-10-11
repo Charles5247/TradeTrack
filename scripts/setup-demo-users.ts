@@ -81,7 +81,7 @@ interface DemoUser {
 const DEMO_USERS: DemoUser[] = [
   {
     id: "22222222-2222-2222-2222-222222222222",
-    email: "platformowner@TracKasuwa.ng",
+    email: "platformowner@trackasuwa.com",
     full_name: "Platform Owner",
     role: "platform_owner",
     organization_id: null,

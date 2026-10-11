@@ -14,10 +14,10 @@ import { Reveal } from "@/components/marketing/reveal";
  * business metrics.
  */
 const STATS = [
-  { n: "5", l: "Naira-priced plans, Free to Enterprise" },
+  { n: "4", l: "Paid plans available" },
   { n: "4", l: "Roles with dedicated permissions" },
-  { n: "0", l: "Sales lost when your connection drops" },
-  { n: "100%", l: "Actions logged to an audit trail" },
+  { n: "Offline", l: "Sales-ready POS" },
+  { n: "Audit", l: "Action history" },
 ];
 
 export function StatsBand() {

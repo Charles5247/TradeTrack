@@ -1,9 +1,10 @@
 
 import { TranslatedLabel, TranslatedText } from '@/i18n/text';
-import Image from "next/image";
 import { Store, ChefHat, Building2, ShoppingBasket, Croissant, Building } from "lucide-react";
 import { Reveal } from "@/components/marketing/reveal";
 import { Badge } from "@/components/ui/badge";
+import { SiteImage } from "@/components/shared/site-image";
+import { siteImages } from "@/content/images";
 
 /**
  * Industries band — ported from the handoff's `IndustriesBand` layout.
@@ -19,31 +20,31 @@ import { Badge } from "@/components/ui/badge";
  * everything else is explicitly "Coming soon" until Step 8 ships.
  */
 const INDUSTRIES = [
- { key: "bakery", image: "photo-bakery.jpg", label: "Bakeries", desc: "Recipes, batches and production planning.", Icon: Croissant, live: false },
- { key: "mall", image: "photo-mall.jpg", label: "Shopping malls", desc: "Tenants, leases and shared utilities.", Icon: Building, live: false },
+ { key: "bakery", image: siteImages.industries.bakery, label: "Bakeries", desc: "Recipes, batches and production planning.", Icon: Croissant, live: false },
+ { key: "mall", image: siteImages.industries.mall, label: "Shopping malls", desc: "Tenants, leases and shared utilities.", Icon: Building, live: false },
   {
-    key: "retail", image: "photo-market.jpg",
+    key: "retail", image: siteImages.industries.retail,
     label: "Retail & wholesale",
     desc: "Provision stores, textiles, auto parts, electronics.",
     Icon: Store,
     live: true,
   },
   {
-    key: "grocery", image: "photo-african-spices-market.jpg",
+    key: "grocery", image: siteImages.industries.grocery,
     label: "Grocery stores",
     desc: "SKU velocity, low-stock alerts, multi-warehouse tracking.",
     Icon: ShoppingBasket,
     live: true,
   },
   {
-    key: "restaurants", image: "photo-restaurant.jpg",
+    key: "restaurants", image: siteImages.industries.restaurants,
     label: "Restaurants & lounges",
     desc: "Menu, kitchen display, table-side ordering.",
     Icon: ChefHat,
     live: false,
   },
   {
-    key: "hotels", image: "photo-african-hotel-women.jpg",
+    key: "hotels", image: siteImages.industries.hotels,
     label: "Hotels & hospitality",
     desc: "Rooms, check-in, folios, restaurant rollup.",
     Icon: Building2,
@@ -73,7 +74,7 @@ export function IndustriesBand() {
                   className="relative"
                   style={{ aspectRatio: "16 / 10" }}
                 >
-                  <Image src={`/images/retail/${ind.image}`} alt={ind.label} fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" className="object-cover" />
+                  <SiteImage image={ind.image} sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" />
                 </div>
                 <div className="p-5">
                   <div className="flex items-center gap-2 mb-1.5">

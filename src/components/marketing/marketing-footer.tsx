@@ -88,7 +88,7 @@ export function MarketingFooter() {
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-6">
           <div className="text-xs" style={{ color: "var(--c-textFaint)" }}>
-            © {new Date().getFullYear()}{" "}<TranslatedText text={"TracKasuwa Nigeria Ltd | Powered by CAXiE Technologies Ltd"} /></div>
+            © {new Date().getFullYear()}{" "}<TranslatedText text={"TracKasuwa Limited"} /></div>
           <div className="text-xs" style={{ color: "var(--c-textFaint)" }}><TranslatedText text={"Made in Nigeria 🇳🇬"} /></div>
         </div>
       </div>

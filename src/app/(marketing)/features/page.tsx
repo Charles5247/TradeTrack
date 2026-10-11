@@ -255,13 +255,13 @@ export default function FeaturesPage() {
             <h2 className="tt-head text-2xl mb-4"><TranslatedText text={"Ready to try it?"} /></h2>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
-                href="/signup"
+                href="/pricing"
                 className="inline-flex items-center gap-2 rounded-lg h-11 px-6 text-sm font-medium"
                 style={{
                   background: "var(--c-primary)",
                   color: "var(--c-primaryFg)",
                 }}
-              ><TranslatedText text={"Start Free"} />{" "}<ArrowRight className="h-4 w-4" strokeWidth={1.75} />
+              ><TranslatedText text={"Explore paid plans"} />{" "}<ArrowRight className="h-4 w-4" strokeWidth={1.75} />
               </Link>
               <Link
                 href="/pricing"

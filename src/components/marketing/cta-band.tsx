@@ -30,19 +30,19 @@ export function CTABand() {
               style={{ bottom: -80, left: -80, width: 350, height: 350, background: "var(--c-primaryFg)", opacity: 0.05 }}
             />
             <h2 className="tt-head relative" style={{ fontSize: "clamp(32px, 5vw, 56px)", margin: "0 0 16px", lineHeight: 1.05 }}><TranslatedText text={"Start selling smarter today."} /></h2>
-            <p className="relative mx-auto mb-9" style={{ fontSize: 18, opacity: 0.85, maxWidth: 560 }}><TranslatedText text={"Free forever for one shop. Upgrade when your business does. No card required to start."} /></p>
+            <p className="relative mx-auto mb-9" style={{ fontSize: 18, opacity: 0.85, maxWidth: 560 }}><TranslatedText text={"Choose a paid monthly plan that fits your shop."} /></p>
             <div className="relative flex flex-wrap items-center justify-center gap-4">
               <Link
-                href="/signup"
+                href="/pricing"
                 className="inline-flex items-center gap-2 rounded-lg h-[52px] px-6 text-base font-medium"
                 style={{ background: "var(--c-primaryFg)", color: "var(--c-primary)" }}
-              ><TranslatedText text={"Create your merchant account"} />{" "}<ArrowRight className="h-4 w-4" strokeWidth={1.75} />
+              ><TranslatedText text={"Explore paid plans"} />{" "}<ArrowRight className="h-4 w-4" strokeWidth={1.75} />
               </Link>
               <Link
-                href="/pricing"
+                href="/download"
                 className="inline-flex items-center gap-2 rounded-lg h-[52px] px-6 text-base font-medium border"
                 style={{ borderColor: "color-mix(in oklch, var(--c-primaryFg), transparent 70%)", color: "var(--c-primaryFg)" }}
-              ><TranslatedText text={"See pricing"} /></Link>
+              ><TranslatedText text={"Install on your phone"} /></Link>
             </div>
           </div>
         </Reveal>

@@ -24,7 +24,7 @@ import {
  * Public self-serve signup page — reachable logged-out, no existing
  * account required. Accepts an optional `?plan=<subscription_plans.id>`
  * query param (set by the marketing Pricing page's "Get Started"/
- * "Start Free" CTAs) and forwards it to POST /api/auth/signup, which
+ * plan-selection CTAs) and forwards it to POST /api/auth/signup, which
  * creates a brand-new organization + business_owner account on that
  * plan (falling back to Free for missing/invalid/Enterprise plan ids —
  * see that route's own comments).
@@ -131,7 +131,7 @@ function SignupForm() {
       <p className="tt-muted text-sm mb-8">
         <TranslatedText text={planId
           ? "You're one step away from your selected plan."
-          : "Start free — no card required."} />
+          : "Enter your details to create an account."} />
       </p>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

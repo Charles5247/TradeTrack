@@ -61,7 +61,7 @@ const supabase = createClient(url, serviceKey, {
 const DEMO_USERS = [
   {
     id: "22222222-2222-2222-2222-222222222222",
-    email: "superadmin@TracKasuwa.ng",
+    email: "superadmin@trackasuwa.com",
     password: "demo1234",
     user_metadata: { full_name: "Super Admin" },
   },
@@ -129,7 +129,7 @@ async function main() {
   }
   console.log("\nDone. Demo logins:");
   console.log(
-    "  superadmin@TracKasuwa.ng / demo1234  (platform super admin → /admin)",
+    "  superadmin@trackasuwa.com / demo1234  (platform super admin → /admin)",
   );
   console.log("  owner@demo.com / demo1234            (org owner → /admin)");
   console.log("  admin@demo.com / demo1234            (org admin)");

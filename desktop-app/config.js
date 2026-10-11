@@ -23,7 +23,7 @@
  * NOTE: this file intentionally has exactly ONE hardcoded domain, in
  * exactly ONE place — the DEFAULT_APP_URL constant immediately below.
  * Nothing else in this file (or main.js) should ever hardcode a second
- * copy of the domain. If TracKasuwa.com (or any other domain) is
+ * copy of the domain. If trackasuwa.com (or any other domain) is
  * secured as the production domain later, this is the only line that
  * needs to change before running `npm run build:win` again — no other
  * hardcode exists anywhere in the desktop shell.
@@ -35,8 +35,7 @@ const path = require("path");
 // ─────────────────────────────────────────────────────────────────
 // >>> UPDATE THIS ONE LINE when the production domain is finalized. <<<
 // This is TracKasuwa's own hosted deployment origin (no trailing slash,
-// no path). Do NOT assume TracKasuwa.com is secured yet — keep
-// TracKasuwa.ng here until told otherwise. Changing this alone (and
+// no path). Changing this alone (and
 // re-running `npm run build:win`) repoints the installer; it can also
 // be overridden without rebuilding via TracKasuwa_APP_URL or
 // TracKasuwa-config.json (see getAppUrl() below).

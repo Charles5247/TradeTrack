@@ -58,20 +58,6 @@ function useScrollY() {
   return y;
 }
 
-/* ─── Marquee for logos ─── */
-function LogoMarquee({ items }) {
-  const doubled = [...items, ...items];
-  return (
-    <div style={{ overflow: "hidden", position: "relative", maskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)", WebkitMaskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)" }}>
-      <div style={{ display: "inline-flex", gap: 60, animation: "tt-marquee 30s linear infinite", whiteSpace: "nowrap" }}>
-        {doubled.map((n, i) => (
-          <div key={i} style={{ fontFamily: "var(--font-head)", fontSize: 16, letterSpacing: "0.02em", color: "var(--c-textMuted)", opacity: 0.7, flexShrink: 0 }}>{n}</div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function MarketingNav({ direction, mode, onToggleMode, active, onNavigate }) {
   const items = [
     { key: "landing", label: "Home" },
@@ -105,7 +91,7 @@ function MarketingNav({ direction, mode, onToggleMode, active, onNavigate }) {
           {mode === "dark" ? <IconSun size={16} /> : <IconMoon size={16} />}
         </button>
         <button className="tt-btn tt-btn-secondary" onClick={() => onNavigate("auth-login")}>Sign in</button>
-        <button className="tt-btn tt-btn-primary" onClick={() => onNavigate("auth-signup")}>Start free <IconArrowRight size={14} /></button>
+        <button className="tt-btn tt-btn-primary" onClick={() => onNavigate("pricing")}>View paid plans <IconArrowRight size={14} /></button>
       </div>
     </nav>
   );
@@ -116,7 +102,7 @@ const HERO_COPY = {
   ledger: {
     eyebrow: "Enterprise POS · Made for Nigeria",
     title: "Run your shop like a bank runs its books.",
-    sub: "Multi-warehouse inventory, offline-first POS, dedicated Zainpay virtual accounts, and immutable audit trails. Trusted infrastructure for Nigerian traders — from a market stall to a chain of hotels.",
+    sub: "Multi-warehouse inventory, offline-first POS, dedicated Zainpay virtual accounts, and immutable audit trails for Nigerian retailers.",
   },
   market: {
     eyebrow: "Your market. Your money. Your control.",
@@ -167,10 +153,10 @@ function Hero({ direction, onNavigate }) {
             <Reveal delay={500}>
               <div className="tt-flex">
                 <button className="tt-btn tt-btn-primary tt-btn-lg" onClick={() => onNavigate("auth-signup")}>
-                  Start free — no card <IconArrowRight size={16} />
+                  View paid plans <IconArrowRight size={16} />
                 </button>
                 <button className="tt-btn tt-btn-secondary tt-btn-lg" onClick={() => onNavigate("download")}>
-                  <IconDownload size={16} /> Download for Windows
+                  <IconDownload size={16} /> Install on your phone
                 </button>
               </div>
             </Reveal>
@@ -178,7 +164,6 @@ function Hero({ direction, onNavigate }) {
             <Reveal delay={650}>
               <div style={{ display: "flex", gap: 24, marginTop: 32, alignItems: "center", flexWrap: "wrap" }}>
                 {[
-                  "Free plan forever",
                   "Offline-ready",
                   "Works on any phone",
                 ].map((c) => (
@@ -197,12 +182,6 @@ function Hero({ direction, onNavigate }) {
         </div>
       </div>
 
-      <Reveal delay={800}>
-        <div className="tt-marketing-wrap" style={{ marginTop: 100 }}>
-          <div className="tt-eyebrow" style={{ color: "var(--c-textFaint)", marginBottom: 24, textAlign: "center" }}>Trusted by 12,400+ traders, restaurateurs & merchants across Nigeria</div>
-          <LogoMarquee items={["Aliko Stores", "Umeh & Sons", "Mama Nkechi", "Balogun Textiles", "Kano Grains", "Chuka Auto Parts", "Kilimanjaro Kitchen", "Nikkoos Bakery", "Onyeka Provisions", "Lekki Grand Hotel", "Abuja Foodhall"]} />
-        </div>
-      </Reveal>
     </section>
   );
 }
@@ -222,10 +201,10 @@ function HeroCompositePhoto() {
           <span style={{ width: 7, height: 7, borderRadius: 999, background: "#ff5f56" }} />
           <span style={{ width: 7, height: 7, borderRadius: 999, background: "#ffbd2e" }} />
           <span style={{ width: 7, height: 7, borderRadius: 999, background: "#27c93f" }} />
-          <span className="tt-mono" style={{ marginLeft: 6, fontSize: 9, color: "var(--c-textMuted)" }}>tradetrack.ng</span>
+          <span className="tt-mono" style={{ marginLeft: 6, fontSize: 9, color: "var(--c-textMuted)" }}>trackasuwa.com</span>
         </div>
         <div style={{ padding: 14, background: "var(--c-surface)" }}>
-          <div style={{ fontSize: 10, color: "var(--c-textMuted)" }}>Today · Aba HQ</div>
+          <div style={{ fontSize: 10, color: "var(--c-textMuted)" }}>Today · Kano HQ</div>
           <div className="tt-head" style={{ fontSize: 26, marginTop: 2, lineHeight: 1 }}>₦482,190</div>
           <div style={{ fontSize: 10, color: "var(--c-success)", display: "flex", alignItems: "center", gap: 3, marginTop: 2 }}>
             <IconArrowUp size={9} /> +18% vs yesterday
@@ -248,7 +227,7 @@ function HeroCompositePhoto() {
       {/* Floating stat pill */}
       <div className="tt-card tt-hero-pill" style={{ position: "absolute", left: 30, top: -20, padding: "8px 14px", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 20px 40px -10px rgba(0,0,0,0.15)" }}>
         <span className="tt-dot-pulse" style={{ width: 8, height: 8, borderRadius: 999, background: "var(--c-success)" }} />
-        <span style={{ fontSize: 12, fontWeight: 600 }}>147 sales today</span>
+        <span style={{ fontSize: 12, fontWeight: 600 }}>Sales today</span>
       </div>
     </div>
   );
@@ -273,10 +252,10 @@ function StatsBand() {
       <div className="tt-marketing-wrap">
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 40 }}>
           {[
-            { n: "12,400+", l: "Merchants onboard" },
-            { n: "₦4.2B", l: "Processed this year" },
-            { n: "99.9%", l: "Uptime SLA" },
-            { n: "5×", l: "Cheaper than legacy POS" },
+            { n: "4", l: "Paid plans available" },
+            { n: "Offline", l: "Sales-ready POS" },
+            { n: "Stock", l: "Location tracking" },
+            { n: "Audit", l: "Action history" },
           ].map((s, i) => (
             <Reveal key={s.l} delay={i * 100}>
               <div>
@@ -323,8 +302,8 @@ function FeatureGrid({ direction, onNavigate }) {
               <div style={{ display: "flex", gap: 32 }}>
                 {[
                   { n: "0", l: "Sales lost" },
-                  { n: "84×", l: "Aba shop record" },
-                  { n: "180ms", l: "Sync latency" },
+                  { n: "Queue", l: "Offline sales" },
+                  { n: "Sync", l: "When connection returns" },
                 ].map((s) => (
                   <div key={s.l}>
                     <div className="tt-head" style={{ fontSize: 24, color: "var(--c-primary)" }}>{s.n}</div>
@@ -333,7 +312,7 @@ function FeatureGrid({ direction, onNavigate }) {
                 ))}
               </div>
             </div>
-            <div style={{ position: "relative", minHeight: 380, backgroundImage: "url('assets/photo-testimonial-nigerian-woman.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}>
+            <div style={{ position: "relative", minHeight: 380, background: "linear-gradient(135deg, var(--c-primary), var(--c-accent))" }}>
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, var(--c-surface) 0%, transparent 30%)" }} />
               {/* Overlay POS card */}
               <div className="tt-card" style={{ position: "absolute", right: 30, bottom: 30, padding: 16, width: 240, boxShadow: "0 20px 40px rgba(0,0,0,0.2)" }}>
@@ -422,46 +401,6 @@ function IndustriesBand({ onNavigate }) {
   );
 }
 
-/* Testimonials — with real photos */
-const TESTIMONIALS = [
-  { q: "Before TradeTrack we used exercise books. Now I know my best-selling SKU by 10am each day.", who: "Amaka Onyeka", role: "Onyeka Provision Stores · Aba", photo: "assets/photo-testimonial-african-corp-woman.jpg" },
-  { q: "The offline mode saved us during the network cut. We rang up 84 sales, everything synced when NEPA came back.", who: "Ibrahim Musa", role: "Musa & Sons Grains · Kano", photo: "assets/photo-testimonial-man1.jpg" },
-  { q: "The restaurant module is a game-changer. Kitchen sees orders live, ingredients deplete automatically. We stopped losing money on wastage.", who: "Tunde Ojo", role: "Kilimanjaro Kitchen · Lekki", photo: "assets/photo-testimonial-african-man-restaurant.jpg" },
-];
-
-function Testimonials() {
-  return (
-    <section style={{ padding: "100px 0", background: "var(--c-bgAlt)" }}>
-      <div className="tt-marketing-wrap">
-        <Reveal>
-          <div className="tt-eyebrow" style={{ marginBottom: 12 }}>Loved by operators</div>
-          <h2 className="tt-head" style={{ fontSize: 44, margin: "0 0 60px", maxWidth: 620, lineHeight: 1.05 }}>Real businesses. Real numbers. Real time saved.</h2>
-        </Reveal>
-
-        <div className="tt-grid tt-grid-3" style={{ gap: 20 }}>
-          {TESTIMONIALS.map((t, i) => (
-            <Reveal key={i} delay={i * 100}>
-              <div className="tt-card" style={{ padding: 0, overflow: "hidden", height: "100%" }}>
-                <div style={{ aspectRatio: "4/3", backgroundImage: `url('${t.photo}')`, backgroundSize: "cover", backgroundPosition: "center top" }} />
-                <div style={{ padding: 28 }}>
-                  <div style={{ display: "flex", gap: 2, marginBottom: 16 }}>
-                    {[1,2,3,4,5].map((s) => <IconStar key={s} size={14} style={{ color: "var(--c-accent)", fill: "var(--c-accent)" }} />)}
-                  </div>
-                  <div style={{ fontSize: 16, lineHeight: 1.55, color: "var(--c-text)", marginBottom: 20, fontFamily: "var(--font-head)", fontWeight: 400 }}>"{t.q}"</div>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 600 }}>{t.who}</div>
-                    <div style={{ fontSize: 11, color: "var(--c-textMuted)", marginTop: 2 }}>{t.role}</div>
-                  </div>
-                </div>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function CTABand({ onNavigate }) {
   return (
     <section style={{ padding: "100px 0" }}>
@@ -471,7 +410,7 @@ function CTABand({ onNavigate }) {
             <div className="tt-blob tt-blob-float-1" style={{ top: -80, right: -80, width: 400, height: 400, background: "var(--c-accent)", opacity: 0.35 }} />
             <div className="tt-blob tt-blob-float-2" style={{ bottom: -80, left: -80, width: 350, height: 350, background: "var(--c-primaryFg)", opacity: 0.05 }} />
             <h2 className="tt-head" style={{ fontSize: 56, margin: "0 0 16px", position: "relative", lineHeight: 1.05 }}>Start selling smarter today.</h2>
-            <p style={{ fontSize: 18, opacity: 0.85, maxWidth: 560, margin: "0 auto 36px", position: "relative" }}>Free forever for one shop. Upgrade when your business does. No card required to start.</p>
+            <p style={{ fontSize: 18, opacity: 0.85, maxWidth: 560, margin: "0 auto 36px", position: "relative" }}>Choose a paid monthly plan that fits your business.</p>
             <div className="tt-flex" style={{ justifyContent: "center", position: "relative" }}>
               <button className="tt-btn tt-btn-lg" onClick={() => onNavigate("auth-signup")} style={{ background: "var(--c-primaryFg)", color: "var(--c-primary)" }}>
                 Create your merchant account <IconArrowRight size={16} />
@@ -510,7 +449,7 @@ function Footer({ direction }) {
           ))}
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 24, borderTop: "1px solid var(--c-border)" }}>
-          <div style={{ fontSize: 12, color: "var(--c-textFaint)" }}>© 2026 TradeTrack Nigeria Ltd. All rights reserved.</div>
+          <div style={{ fontSize: 12, color: "var(--c-textFaint)" }}>© 2026 TracKasuwa Limited. All rights reserved.</div>
           <div style={{ display: "flex", gap: 16, fontSize: 12, color: "var(--c-textFaint)" }}>
             <span>Made in Lagos 🇳🇬</span>
           </div>
@@ -529,7 +468,6 @@ function Landing(props) {
       <StatsBand />
       <FeatureGrid {...props} />
       <IndustriesBand {...props} />
-      <Testimonials />
       <CTABand {...props} />
       <Footer {...props} />
     </div>
@@ -590,10 +528,9 @@ function Features(props) {
 
 /* Pricing page */
 const PLANS = [
-  { name: "Free", price: 0, blurb: "For a single shop finding its feet.", limits: ["1 shop", "50 products", "2 users", "Basic reports"], primary: false },
-  { name: "Starter", price: 3500, blurb: "Growing shop, single location.", limits: ["1 shop", "500 products", "5 users", "PDF/Excel reports", "Barcode POS"], primary: false },
-  { name: "Growth", price: 7500, blurb: "Multi-branch, real momentum.", limits: ["3 shops", "5,000 products", "15 users", "Transfers & consignment", "Priority sync"], primary: true },
-  { name: "Business", price: 18000, blurb: "Serious operations, real teams.", limits: ["10 shops", "Unlimited products", "50 users", "Purchase Orders", "Custom roles"], primary: false },
+  { name: "Starter", price: 5000, blurb: "Growing shop, single location.", limits: ["1 shop", "500 products", "5 users", "PDF/Excel reports", "Barcode POS"], primary: false },
+  { name: "Growth", price: 15000, blurb: "Multi-branch, real momentum.", limits: ["3 shops", "5,000 products", "15 users", "Transfers & consignment", "Priority sync"], primary: true },
+  { name: "Business", price: 30000, blurb: "Serious operations, real teams.", limits: ["10 shops", "Unlimited products", "50 users", "Purchase Orders", "Custom roles"], primary: false },
   { name: "Enterprise", price: null, blurb: "For nationwide chains & distributors.", limits: ["Unlimited shops", "Unlimited users", "SSO & audit exports", "Dedicated CSM", "SLA & migration"], primary: false },
 ];
 
@@ -631,11 +568,10 @@ function Pricing(props) {
                     <div className="tt-muted" style={{ fontSize: 12, marginTop: 4, minHeight: 32 }}>{p.blurb}</div>
                   </div>
                   <div>
-                    {p.price === 0 && <div className="tt-head" style={{ fontSize: 40 }}>Free</div>}
                     {p.price && <div className="tt-head" style={{ fontSize: 40 }}>₦{p.price.toLocaleString()}<span className="tt-muted" style={{ fontSize: 12, fontWeight: 400, fontFamily: "var(--font-body)", letterSpacing: "normal" }}>/mo</span></div>}
                     {p.price === null && <div className="tt-head" style={{ fontSize: 30 }}>Custom</div>}
                   </div>
-                  <button className={`tt-btn ${p.primary ? "tt-btn-primary" : "tt-btn-secondary"}`}>{p.price === null ? "Talk to sales" : "Start free"}</button>
+                  <button className={`tt-btn ${p.primary ? "tt-btn-primary" : "tt-btn-secondary"}`}>{p.price === null ? "Talk to sales" : "Choose plan"}</button>
                   <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 8, fontSize: 13 }}>
                     {p.limits.map((l) => (
                       <li key={l} style={{ display: "flex", gap: 8 }}>

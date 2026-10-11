@@ -99,7 +99,7 @@ export function MarketingNav() {
           <Link href="/login"><TranslatedText text={"Sign in"} /></Link>
         </Button>
         <Button size="sm" asChild>
-          <Link href="/signup"><TranslatedText text={"Start free"} />{" "}<ArrowRight className="h-3.5 w-3.5" strokeWidth={1.75} />
+          <Link href="/pricing"><TranslatedText text={"View paid plans"} />{" "}<ArrowRight className="h-3.5 w-3.5" strokeWidth={1.75} />
           </Link>
         </Button>
 
@@ -136,6 +136,11 @@ export function MarketingNav() {
               onClick={() => setMobileOpen(false)}
               className="rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--c-textMuted)] hover:text-[var(--c-text)] hover:bg-[var(--c-surfaceAlt)]"
             ><TranslatedText text={"Sign in"} /></Link>
+            <Link
+              href="/pricing"
+              onClick={() => setMobileOpen(false)}
+              className="rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--c-primary)] hover:bg-[var(--c-surfaceAlt)]"
+            ><TranslatedText text={"View paid plans"} />{" "}<ArrowRight className="inline h-3.5 w-3.5" strokeWidth={1.75} /></Link>
           </div>
         </div>
       )}

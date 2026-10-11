@@ -6,7 +6,7 @@
  * `/api/merchants/onboard` (which requires an authenticated
  * `platform_owner` caller and is used for staff-initiated onboarding).
  * This route exists specifically for the new public marketing site's
- * "Start Free" / plan-select self-serve flow: any anonymous visitor may
+ * plan-selection self-serve flow: any anonymous visitor may
  * call it to create their own brand-new organization + business_owner
  * account, with no existing session and no platform staff involved.
  *
@@ -20,13 +20,14 @@
  *   - Accepts an optional `plan_id` (from the marketing Pricing page's
  *     `?plan=` query param) and, if it resolves to a real, active
  *     subscription_plans row, immediately creates a `subscriptions` row
- *     for the new org on that plan (defaulting to the Free plan
+ *     for the new org on that plan (defaulting to the legacy zero-price
  *     otherwise, so every new org always has SOME subscription row from
  *     day one — consistent with how canAddProduct()/resolveSubscriptionPlan()
  *     in src/lib/subscriptions/plan-limits.ts expect to find one).
  *   - Enterprise is a "Talk to Sales" plan with no self-serve checkout;
  *     if `plan_id` resolves to the Enterprise plan, this route falls back
- *     to Free rather than silently granting Enterprise limits for free.
+ *     to the legacy zero-price plan rather than silently granting
+ *     Enterprise limits without payment.
  *
  * On ANY failure after organization creation, everything created so far
  * is rolled back (org -> auth user -> users row -> merchants row ->
@@ -103,11 +104,11 @@ export async function POST(request: NextRequest) {
 
     const serviceSupabase = getServiceClient();
 
-    // ── Resolve the requested plan (falls back to Free) ───────────────
+    // ── Resolve the requested plan (legacy zero-price fallback) ───────
     // Enterprise has no self-serve checkout, so it is never granted here
     // even if explicitly requested — only an active, non-Enterprise plan
-    // id (or no plan_id at all) results in that plan; anything else
-    // (missing, inactive, unknown, or Enterprise) falls back to Free.
+    // id results in that plan; anything else (missing, inactive, unknown,
+    // or Enterprise) uses the legacy zero-price fallback.
     let resolvedPlan: PlanRow | null = null;
     if (plan_id) {
       const { data: requestedPlan } = await serviceSupabase
@@ -219,14 +220,14 @@ export async function POST(request: NextRequest) {
       createdMerchantId = merchant.id;
 
       // 5. Create the org's initial `subscriptions` row on the resolved
-      //    plan (Free by default) so plan-limits.ts's
+      //    plan so plan-limits.ts's
       //    resolveSubscriptionPlan() has something to find immediately.
       if (resolvedPlan) {
         const startsAt = new Date();
         const expiresAt = new Date(startsAt);
-        // Free plan: no real expiry pressure, but every subscriptions row
-        // needs a value — give it a long trial window. Paid plans
-        // self-served with no payment step yet default to a 14-day trial
+        // The legacy zero-price plan has no real expiry pressure, but
+        // every subscriptions row needs an expiry. Paid plans self-served
+        // with no payment step yet default to a 14-day trial
         // (see docs/SUBSCRIPTION_SYSTEM.md — full checkout still runs
         // through the authenticated Subscriptions page/Zainpay).
         expiresAt.setDate(

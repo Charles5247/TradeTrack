@@ -9,6 +9,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider } from "@/i18n";
 import { cookies } from "next/headers";
 import { isLocale } from '@/i18n/locale';
+import { siteImages } from "@/content/images";
 import "./fonts.css";
 import "./globals.css";
 
@@ -29,8 +30,8 @@ export const metadata: Metadata = {
     "TracKasuwa",
   ],
   authors: [{ name: "TracKasuwa" }],
-  creator: "CAXiE Technologies Limited",
-  publisher: "CAXiE Technologies Limited",
+  creator: "TracKasuwa Limited",
+  publisher: "TracKasuwa Limited",
   applicationName: "TracKasuwa",
   alternates: {
     canonical: "https://trackasuwa.vercel.app/",
@@ -63,21 +64,25 @@ export const metadata: Metadata = {
     description:
       "Offline-first POS and inventory management built for Nigerian retailers. Record sales, track stock, and keep your business moving, even without internet.",
     siteName: "TracKasuwa",
-    images: [
+    images: siteImages.socialPreview.src
+      ? [
       {
-        url: "/brand/social-preview.png",
+        url: siteImages.socialPreview.src,
         width: 1200,
         height: 630,
-        alt: "TracKasuwa — Point of sale and inventory management",
+        alt: siteImages.socialPreview.alt,
       },
-    ],
+      ]
+      : [],
   },
   twitter: {
     card: "summary_large_image",
     title: "TracKasuwa | POS & Inventory for Nigerian Retailers",
     description:
       "Offline-first POS and inventory management built for Nigerian retailers. Record sales, track stock, and keep your business moving, even without internet.",
-    images: ["/brand/social-preview.png"],
+    images: siteImages.socialPreview.src
+      ? [siteImages.socialPreview.src]
+      : [],
   },
   icons: {
     icon: [
