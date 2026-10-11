@@ -47,7 +47,7 @@ function createWindow() {
 
   Menu.setApplicationMenu(buildMenu(mainWindow, checkForUpdates));
 
-  // targetOrigin (e.g. "https://TracKasuwa.ng") is used ONLY to decide
+  // targetOrigin (e.g. "https://tracKasuwa.vercel.app") is used ONLY to decide
   // whether a link is "in-app" vs. "external" below. launchUrl (the
   // same origin + "/login") is what actually loads first — the app's
   // "/" now serves the public marketing site, so returning traders are

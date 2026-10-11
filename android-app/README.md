@@ -120,7 +120,7 @@ automatically by the web app's own auth middleware, with no extra step.
 
 **Do not assume `TracKasuwa.com` is secured yet.** The default
 fallback baked into `build.gradle` (when `-PappUrl` is not passed)
-remains `https://TracKasuwa.ng` until told otherwise — this
+remains `https://tracKasuwa.vercel.app` until told otherwise — this
 mechanism only makes the domain swappable at build time, it does not
 perform any actual domain change.
 

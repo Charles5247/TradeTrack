@@ -91,7 +91,7 @@ most permanent:
    ```
 
 **Do not assume `TracKasuwa.com` is secured yet.** `DEFAULT_APP_URL`
-remains `https://TracKasuwa.ng` until told otherwise — this mechanism
+remains `https://tracKasuwa.vercel.app` until told otherwise — this mechanism
 only makes the domain swappable, it does not perform any actual
 domain change.
 
