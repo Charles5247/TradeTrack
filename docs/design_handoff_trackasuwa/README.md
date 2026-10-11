@@ -465,7 +465,7 @@ All asset files ship in `assets/`:
 
 ### Logo
 
-The prototype ships **4 logo mark variants** (Ledger diamond, Market crate+leaf, Operator grid, Retail monogram). For the chosen Retail direction, use `LogoRetail` (blue rounded-square with white "TT" monogram + accent dot). SVG source is in `logo.jsx`. Export as SVG and drop into `public/logo.svg` + generate the PWA icon set from it.
+Use the approved brand assets supplied in `docs/logo/`, `docs/icons/`, and `docs/favicon/`. The full color logo is `docs/logo/trackasuwa_primary_color_transparent.png`; the standalone mark is `docs/logo/trackasuwa_mark_color_transparent.png`. The prototype's `logo.jsx` references that supplied mark. Do not recreate superseded branding or generate production icons from the prototype.
 
 ---
 
@@ -477,7 +477,7 @@ All source files copied under `design_handoff_tradetrack/design_files/`:
 - `tokens.js` — full design token JS (4 directions × light/dark, density profiles). Reference for building the Tailwind config.
 - `styles.css` — vanilla CSS mirror of the token system + all `.tt-*` utility classes.
 - `icons.jsx` — inline SVG icon set (Lucide-equivalent).
-- `logo.jsx` — 4 logo variants (use `LogoRetail`).
+- `logo.jsx` — approved supplied TracKasuwa mark.
 
 **Layout & shell**
 - `shell.jsx` — `AppScreen`, `Sidebar`, `Header`, `Page`, nav-group definitions.

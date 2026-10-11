@@ -81,11 +81,11 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon.ico?v=5", sizes: "any" },
-      { url: "/icons/favicon-48x48.png?v=5", sizes: "48x48", type: "image/png" },
-      { url: "/icons/icon-192x192.png?v=5", sizes: "192x192", type: "image/png" },
+      { url: "/favicon.ico?v=6", sizes: "any" },
+      { url: "/icons/favicon-48x48.png?v=6", sizes: "48x48", type: "image/png" },
+      { url: "/icons/icon-192x192.png?v=6", sizes: "192x192", type: "image/png" },
     ],
-    apple: "/icons/apple-touch-icon.png?v=5",
+    apple: "/icons/apple-touch-icon.png?v=6",
   },
 };
 

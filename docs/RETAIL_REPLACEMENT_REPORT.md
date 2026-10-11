@@ -45,7 +45,7 @@ All 17 supplied JPEGs were copied unchanged to `public/images/retail/`. Each was
 | Merchant/accountability portraits | `photo-testimonial-african-corp-woman.jpg`, `photo-testimonial-man1.jpg`, `photo-testimonial-african-man-restaurant.jpg` |
 | Four auth carousel placeholders | `photo-market.jpg`, `photo-aba-traders.jpg`, `photo-african-spices-market.jpg`, `photo-testimonial-nigerian-woman.jpg` |
 
-The other six supplied photographs remain available as standby assets. `public/logo.svg` and all existing PWA PNG icons now use the Retail TT mark; static icon colors are sRGB conversions of the canonical light palette. Prototype JSX remains documentation, not served production code. The pre-existing relocation from `public/design_handoff_trackasuwa/` to `docs/design_handoff_trackasuwa/` is included.
+The other six supplied photographs remain available as standby assets. Production branding and PWA icons use the approved assets supplied in `docs/logo/`, `docs/icons/`, and `docs/favicon/`. Prototype JSX remains documentation, not served production code. The pre-existing relocation from `public/design_handoff_trackasuwa/` to `docs/design_handoff_trackasuwa/` is included.
 
 These photographs remain the handoff's Creative Commons/public-domain placeholder photography, **not final commissioned/licensed launch photography**. Product-image URLs supplied by merchants were not replaced with unrelated stock images.
 

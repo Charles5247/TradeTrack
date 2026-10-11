@@ -24,23 +24,16 @@ function SystemPage(props) {
           <p className="tt-muted" style={{ fontSize: 15, marginTop: 8, maxWidth: 640 }}>Every screen in this proposal is drawn from these tokens. Switch directions or dark/light at the top; every component below re-renders live.</p>
         </div>
 
-        {/* Logo variants */}
+        {/* Approved logo */}
         <section style={{ marginBottom: 40 }}>
-          <div className="tt-section-title" style={{ marginBottom: 8 }}>Logo · 4 options</div>
-          <p className="tt-muted" style={{ fontSize: 13, marginBottom: 20 }}>Each mark is paired with a direction — pick the one you want, or mix & match.</p>
-          <div className="tt-grid tt-grid-4">
-            {[
-              { name: "A · Ledger diamond", Cmp: LogoLedger },
-              { name: "B · Market crate & leaf", Cmp: LogoMarket },
-              { name: "C · Operator grid", Cmp: LogoOperator },
-              { name: "D · Retail monogram", Cmp: LogoRetail },
-            ].map((l) => (
-              <div key={l.name} className="tt-card" style={{ padding: 32, display: "flex", flexDirection: "column", alignItems: "center", gap: 24 }}>
-                <l.Cmp size={56} label={false} />
-                <l.Cmp size={28} />
-                <div className="tt-muted" style={{ fontSize: 11, textAlign: "center" }}>{l.name}</div>
-              </div>
-            ))}
+          <div className="tt-section-title" style={{ marginBottom: 8 }}>Approved TracKasuwa logo</div>
+          <p className="tt-muted" style={{ fontSize: 13, marginBottom: 20 }}>The supplied brand artwork is used consistently across the app, browser icons, and installable apps.</p>
+          <div className="tt-card" style={{ minHeight: 180, padding: 32, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <img
+              src="../../logo/trackasuwa_primary_color_transparent.png"
+              alt="TracKasuwa full logo"
+              style={{ display: "block", width: "100%", maxWidth: 360, height: "auto", objectFit: "contain" }}
+            />
           </div>
         </section>
 

@@ -2,10 +2,7 @@ import * as React from "react";
 import Image from "next/image";
 
 /**
- * TracKasuwa "Retail" logomark — bold TT monogram with an accent dot.
- * Ported from the handoff's `logo.jsx` → `LogoRetail` (README §11 Logo).
- * All colors reference the Retail token set (--c-primary/--c-primaryFg/
- * --c-accent/--c-text) so it automatically adapts across light/dark.
+ * TracKasuwa's supplied brand mark from docs/logo.
  */
 export function Logo({
   size = 32,
@@ -19,7 +16,7 @@ export function Logo({
   return (
     <div className={`inline-flex items-center gap-2.5 ${className ?? ""}`}>
       <Image
-        src="/brand/trackasuwa-icon.png"
+        src="/brand/logos/trackasuwa_mark_color_transparent.png"
         alt=""
         width={size}
         height={size}
