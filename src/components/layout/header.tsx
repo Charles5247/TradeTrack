@@ -74,7 +74,12 @@ export function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
-  const { toggleSidebar, setCommandPaletteOpen } = useUIStore();
+  const {
+    toggleSidebar,
+    mobileSidebarOpen,
+    toggleMobileSidebar,
+    setCommandPaletteOpen,
+  } = useUIStore();
   const { user, setUser } = useAuthStore();
   const { unreadCount } = useNotificationStore();
   const { syncStatus, pendingCount } = useSyncStore();
@@ -120,8 +125,16 @@ export function Header() {
         variant="ghost"
         size="icon"
         className="lg:hidden"
-        onClick={toggleSidebar}
+        onClick={() => {
+          if (window.matchMedia("(max-width: 1023px)").matches) {
+            toggleMobileSidebar();
+          } else {
+            toggleSidebar();
+          }
+        }}
         aria-label={copy("Toggle menu")}
+        aria-expanded={mobileSidebarOpen}
+        aria-controls="app-sidebar"
       >
         <Menu className="h-5 w-5" strokeWidth={1.75} />
       </Button>

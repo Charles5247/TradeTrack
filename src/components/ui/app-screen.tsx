@@ -82,7 +82,7 @@ export function AppScreen({ children, pos, dense, noPadding }: AppScreenProps) {
     <OrganizationProvider>
       <SyncProvider>
         <div
-          className="tt-app flex h-screen bg-background overflow-hidden"
+          className="tt-app flex h-screen h-dvh bg-background overflow-hidden"
           data-density={!pos && !dense && density !== 'balanced' ? density : undefined}
           data-pos-mode={pos ? 'true' : undefined}
           data-dense-mode={dense ? 'true' : undefined}

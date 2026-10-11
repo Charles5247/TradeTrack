@@ -2,7 +2,7 @@
 import { TranslatedLabel, TranslatedText, useCopy } from '@/i18n/text';
 
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronLeft, ChevronRight, Store, Shield, LogOut } from "lucide-react";
@@ -37,32 +37,44 @@ import type { UserRole } from "@/types";
  * active-item highlighting + collapsed-state tooltip, and the
  * organization name / user info footer.
  *
- * data-pos-mode="true" screens (see the POS layout, Step 5) force this
- * sidebar to the same icon-only 64px rail as the manually-collapsed
- * state, per README §9.2 ("Full-screen mode with sidebar collapsed to
- * 64px"). This can't be done with a CSS variable alone: the width
- * (`sidebarOpen ? w-[var(--sidebar-w)] : w-16`) AND every piece of
- * content below it (org card, nav labels, notification badge, user
- * footer) are gated on the same `sidebarOpen` boolean, so simply
- * shrinking `--sidebar-w` to 64px while `sidebarOpen` stayed `true`
- * would cram full-width content into a 64px rail instead of properly
- * switching to icon-only rendering. Forcing a local `collapsed` flag
- * (true on POS routes, otherwise the user's persisted `sidebarOpen`
- * preference) reuses the existing, already-correct icon-only branches
- * instead of adding a parallel narrow-but-not-collapsed layout. The
- * user's `setSidebarOpen` preference itself is left untouched so it's
- * restored as-is when they navigate away from a POS route.
+ * On desktop, POS routes retain the icon-only rail. On mobile, the
+ * drawer uses transient state independent of the persisted desktop
+ * collapse preference, so the header menu can open it on every route.
  */
 export function Sidebar() {
   const copy = useCopy();
   const pathname = usePathname();
-  const { sidebarOpen: sidebarOpenPref, setSidebarOpen } = useUIStore();
+  const {
+    sidebarOpen: sidebarOpenPref,
+    setSidebarOpen,
+    mobileSidebarOpen,
+    setMobileSidebarOpen,
+  } = useUIStore();
   const { user } = useAuthStore();
   const { organization } = useOrganization();
   const { t } = useI18n();
 
+  const [isMobile, setIsMobile] = useState(false);
   const forceCollapsed = isPosRoute(pathname ?? "");
-  const sidebarOpen = forceCollapsed ? false : sidebarOpenPref;
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 1023px)");
+    const updateViewport = () => {
+      setIsMobile(media.matches);
+      if (!media.matches) setMobileSidebarOpen(false);
+    };
+    updateViewport();
+    media.addEventListener("change", updateViewport);
+    return () => media.removeEventListener("change", updateViewport);
+  }, [setMobileSidebarOpen]);
+
+  const sidebarOpen = isMobile
+    ? mobileSidebarOpen
+    : forceCollapsed
+      ? false
+      : sidebarOpenPref;
+  const closeSidebar = () =>
+    isMobile ? setMobileSidebarOpen(false) : setSidebarOpen(false);
 
   const orgLabel = user?.role === "platform_owner"
     ? "TracKasuwa Platform"
@@ -74,15 +86,17 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile overlay */}
-      {sidebarOpen && (
+      {isMobile && sidebarOpen && (
         <div
           className="fixed inset-0 bg-[color-mix(in_oklch,var(--c-text),transparent_60%)] backdrop-blur-[2px] z-20 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
+          onClick={closeSidebar}
+          aria-hidden="true"
         />
       )}
 
       {/* Sidebar */}
       <aside
+        id="app-sidebar"
         data-collapsed={!sidebarOpen}
         className={cn(
           "fixed left-0 top-0 z-30 h-full bg-[var(--c-surface)] border-r border-border transition-all flex flex-col",
@@ -102,7 +116,7 @@ export function Sidebar() {
           )}
           {sidebarOpen && (
             <button
-              onClick={() => setSidebarOpen(false)}
+              onClick={closeSidebar}
               className="ml-auto p-1 rounded-md hover:bg-accent transition-colors shrink-0 tt-muted"
               aria-label={copy("Collapse sidebar")}
             >
@@ -110,7 +124,7 @@ export function Sidebar() {
             </button>
           )}
         </div>
-        {!sidebarOpen && !forceCollapsed && (
+        {!sidebarOpen && !forceCollapsed && !isMobile && (
           <button
             onClick={() => setSidebarOpen(true)}
             className="mx-auto mt-1 p-1 rounded-md hover:bg-accent transition-colors tt-muted"
@@ -171,7 +185,7 @@ export function Sidebar() {
                         !sidebarOpen && "justify-center",
                       )}
                       onClick={() => {
-                        if (window.innerWidth < 1024) setSidebarOpen(false);
+                        if (isMobile) setMobileSidebarOpen(false);
                       }}
                     >
                       {isActive && (

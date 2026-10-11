@@ -48,6 +48,11 @@ Requires: JDK 17+, Android SDK (`platform-tools`, `platforms;android-34`,
 `gradle wrapper` has been run once with network access to
 `services.gradle.org`).
 
+The launcher icons in `app/src/main/res/mipmap-*` use the same TracKasuwa
+Retail mark as the web app. Rebuild and reinstall the APK after an icon
+change; Android may continue showing the previously installed launcher
+icon until the updated package is installed (or the launcher refreshes).
+
 ```bash
 export ANDROID_HOME=/path/to/android-sdk
 cd android-app

@@ -190,6 +190,9 @@ interface UIState {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
   toggleSidebar: () => void;
+  mobileSidebarOpen: boolean;
+  setMobileSidebarOpen: (open: boolean) => void;
+  toggleMobileSidebar: () => void;
   theme: "light" | "dark" | "system";
   setTheme: (theme: "light" | "dark" | "system") => void;
   density: "comfortable" | "balanced" | "dense";
@@ -210,6 +213,10 @@ export const useUIStore = create<UIState>()(
       sidebarOpen: true,
       setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
       toggleSidebar: () => set({ sidebarOpen: !get().sidebarOpen }),
+      mobileSidebarOpen: false,
+      setMobileSidebarOpen: (mobileSidebarOpen) => set({ mobileSidebarOpen }),
+      toggleMobileSidebar: () =>
+        set({ mobileSidebarOpen: !get().mobileSidebarOpen }),
       theme: "light",
       setTheme: (theme) => set({ theme }),
       density: "balanced",

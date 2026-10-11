@@ -431,13 +431,13 @@ function POSPageInner() {
 
   return (
     <div
-      className="flex gap-5 p-5"
-      style={{ minHeight: "calc(100vh - var(--header-h))" }}
+      className="flex min-h-0 flex-col gap-3 p-3 lg:flex-row lg:gap-5 lg:p-5"
+      style={{ minHeight: "calc(100dvh - var(--header-h))" }}
     >
       {/* Left: Products */}
       <div className="flex-1 flex flex-col gap-4 min-w-0">
         {/* Search & Warehouse — big-touch, README §9.2 */}
-        <div className="tt-stat flex flex-col gap-3.5 sm:flex-row sm:items-center">
+        <div className="tt-stat flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="relative flex-1">
             <Search
               className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 tt-muted"
@@ -472,9 +472,9 @@ function POSPageInner() {
         </div>
 
         {/* Product Grid */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="min-h-0 flex-1 overflow-y-auto">
           {productsLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
               {[...Array(8)].map((_, i) => (
                 <Skeleton key={i} className="h-40 rounded-[var(--radius-lg)]" />
               ))}
@@ -494,16 +494,16 @@ function POSPageInner() {
               }
             />
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
               {products.map(
                 (product: Product & { available_quantity: number }) => (
                   <button
                     key={product.id}
                     onClick={() => handleAddToCart(product)}
-                    className="tt-stat text-left transition-shadow hover:shadow-md hover:border-primary/40"
+                    className="tt-stat min-w-0 p-2.5 text-left transition-shadow hover:shadow-md hover:border-primary/40 sm:p-4"
                   >
                     <div
-                      className="tt-placeholder mb-2.5 flex aspect-square w-full items-center justify-center overflow-hidden rounded-[var(--radius)]"
+                      className="tt-placeholder mb-2 flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-[var(--radius)] sm:mb-2.5 sm:aspect-square"
                       style={{ background: "var(--c-surfaceAlt)" }}
                     >
                       {product.image_url ? (
@@ -533,7 +533,7 @@ function POSPageInner() {
                     >
                       {product.name}
                     </p>
-                    <div className="mt-1.5 flex items-center justify-between">
+                    <div className="mt-1.5 flex min-w-0 flex-col gap-1 min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between">
                       <span className="tt-mono tt-tabular text-[15px] font-bold text-primary">
                         {formatCurrency(product.selling_price)}
                       </span>
@@ -557,8 +557,7 @@ function POSPageInner() {
 
       {/* Right: Cart — sticky, README §9.2 "sticky cart panel" */}
       <div
-        className="tt-stat sticky top-0 flex w-80 shrink-0 flex-col overflow-hidden p-0 xl:w-96"
-        style={{ maxHeight: "calc(100vh - var(--header-h) - 40px)" }}
+        className="tt-stat flex max-h-[min(62dvh,520px)] w-full shrink-0 flex-col overflow-hidden p-0 lg:sticky lg:top-0 lg:max-h-[calc(100dvh-var(--header-h)-40px)] lg:w-80 xl:w-96"
       >
         {/* Cart Header */}
         <div className="flex items-center justify-between border-b border-border p-4">

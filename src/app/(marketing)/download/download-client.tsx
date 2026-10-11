@@ -8,9 +8,10 @@ import {
   Smartphone,
   Monitor,
   Apple,
-  Clock,
   ShieldAlert,
   CheckCircle2,
+  Share,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -49,8 +50,10 @@ function detectOS(): OS {
   const ua = navigator.userAgent;
 
   if (/android/i.test(ua)) return "android";
-  if (/iphone|ipad|ipod/i.test(ua)) return "ios";
-  if (/Mac/i.test(ua) && "ontouchend" in document === false) return "macos";
+  const isIPadOS =
+    navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+  if (/iphone|ipad|ipod/i.test(ua) || isIPadOS) return "ios";
+  if (/Mac/i.test(ua)) return "macos";
   if (/Win/i.test(ua)) return "windows";
   if (/Linux/i.test(ua)) return "linux";
   return "other";
@@ -238,22 +241,41 @@ export function DownloadClient({
           </CardContent>
         </Card>
 
-        {/* iOS / macOS — Coming soon, no misleading links */}
-        <Card className="border-dashed border-2 bg-muted/30">
+        {/* iOS home-screen PWA — iOS does not expose beforeinstallprompt. */}
+        <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Apple className="h-5 w-5 text-muted-foreground" />
-              <CardTitle><TranslatedText text={"iOS & macOS"} /></CardTitle>
-              <Badge variant="outline">
-                <Clock className="h-3 w-3 mr-1" /><TranslatedText text={"Coming Soon"} /></Badge>
-              {(os === "ios" || os === "macos") && (
+              <Apple className="h-5 w-5 text-primary" />
+              <CardTitle><TranslatedText text={"iPhone & iPad"} /></CardTitle>
+              {os === "ios" && (
                 <Badge variant="info"><TranslatedText text={"Detected"} /></Badge>
               )}
             </div>
-            <CardDescription><TranslatedText text={"Native iOS and macOS apps are not available yet."} /></CardDescription>
+            <CardDescription><TranslatedText text={"Use TracKasuwa as an installable web app from Safari. No App Store download is needed."} /></CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground"><TranslatedText text={"We don't have an iOS or macOS build to offer right now — we'd rather say that plainly than give you a link that doesn't work. In the meantime, you can use TracKasuwa directly in Safari at your usual web address."} /></p>
+          <CardContent className="space-y-4">
+            <ol className="space-y-3 text-sm text-muted-foreground">
+              <li className="flex items-start gap-3">
+                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">1</span>
+                <span><TranslatedText text={"Open this site in Safari on your iPhone or iPad, then sign in."} /></span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">2</span>
+                <span className="flex flex-wrap items-center gap-1"><TranslatedText text={"Tap the Share button"} /> <Share className="h-4 w-4 text-primary" aria-label={copy("Share")} /> <TranslatedText text={"in Safari."} /></span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">3</span>
+                <span className="flex flex-wrap items-center gap-1"><TranslatedText text={"Scroll down and tap Add to Home Screen"} /> <Plus className="h-4 w-4 text-primary" aria-label={copy("Add")} /><TranslatedText text={"."} /></span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">4</span>
+                <span><TranslatedText text={"If shown, turn on Open as Web App, tap Add, then launch TracKasuwa from its new Home Screen icon."} /></span>
+              </li>
+            </ol>
+            <p className="rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground"><TranslatedText text={"For the install option to appear, use Safari and make sure your iPhone or iPad is online the first time. The installed PWA opens in its own app window; sign in there to use the POS and inventory features."} /></p>
+            {os === "macos" && (
+              <p className="text-xs text-muted-foreground"><TranslatedText text={"On Mac, continue using the web app in Safari or Chrome. The iPhone/iPad Home Screen install steps do not apply to macOS."} /></p>
+            )}
           </CardContent>
         </Card>
       </div>

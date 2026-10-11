@@ -81,15 +81,16 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon.ico" },
-      { url: "/icons/favicon-48x48.png", sizes: "48x48", type: "image/png" },
-      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/favicon.ico?v=5", sizes: "any" },
+      { url: "/icons/favicon-48x48.png?v=5", sizes: "48x48", type: "image/png" },
+      { url: "/icons/icon-192x192.png?v=5", sizes: "192x192", type: "image/png" },
     ],
-    apple: "/icons/apple-touch-icon.png",
+    apple: "/icons/apple-touch-icon.png?v=5",
   },
 };
 
 export const viewport: Viewport = {
+  viewportFit: "cover",
   // Matches Retail design tokens (README §4.1/4.2): --c-bg light / dark.
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#0858F8" },

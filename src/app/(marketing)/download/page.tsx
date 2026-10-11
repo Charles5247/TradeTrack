@@ -7,7 +7,7 @@ import { Reveal } from "@/components/marketing/reveal";
 export const metadata: Metadata = {
   title: "Download",
   description:
-    "Download TracKasuwa for Windows or Android, or install it as an app directly from your browser. iOS and macOS support is coming soon.",
+    "Download TracKasuwa for Windows or Android, or install the offline-first web app on iPhone and iPad from Safari.",
 };
 
 export const dynamic = "force-dynamic";
@@ -18,11 +18,9 @@ export const dynamic = "force-dynamic";
  * path: Android + desktop Chromium get a `beforeinstallprompt`-driven
  * PWA install button PLUS a direct APK/EXE download link (URLs sourced
  * from env vars — see render.yaml's TracKasuwa_*_DOWNLOAD_URL, never
- * committed binaries to git). iOS and macOS both show an explicit
- * "Coming soon" card — electron-builder only has a `win` target, so
- * there is no real Mac build to link to, and no misleading iOS
- * sideload instructions are given since iOS doesn't support installing
- * unsigned .ipa files without a developer account anyway.
+ * committed binaries to git). iPhone and iPad users get Safari
+ * Add-to-Home-Screen steps because iOS does not fire the install prompt
+ * event used by Chromium browsers.
  */
 async function getVersionInfo() {
   try {
