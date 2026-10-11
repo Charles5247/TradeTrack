@@ -29,7 +29,7 @@ android {
         // so returning users see no extra step.
         // ─────────────────────────────────────────────────────────
         buildConfigField "String", "APP_URL",
-            "\"${project.findProperty('appUrl') ?: 'https://TracKasuwa.ng'}/login\""
+            "\"${project.findProperty('appUrl') ?: 'https://tracKasuwa.vercel.app'}/login\""
     }
 
     buildTypes {
