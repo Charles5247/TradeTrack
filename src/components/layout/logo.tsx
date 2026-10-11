@@ -1,4 +1,5 @@
 import * as React from "react";
+import Image from "next/image";
 
 /**
  * TracKasuwa "Retail" logomark — bold TT monogram with an accent dot.
@@ -17,36 +18,13 @@ export function Logo({
 }) {
   return (
     <div className={`inline-flex items-center gap-2.5 ${className ?? ""}`}>
-      <svg
+      <Image
+        src="/brand/trackasuwa-icon.png"
+        alt=""
         width={size}
         height={size}
-        viewBox="0 0 40 40"
-        aria-hidden="true"
         className="shrink-0"
-      >
-        <rect
-          x="4"
-          y="4"
-          width="32"
-          height="32"
-          rx="9"
-          fill="var(--c-primary)"
-        />
-        <path
-          d="M10 14 H22 M16 14 V28"
-          stroke="var(--c-primaryFg)"
-          strokeWidth="3.2"
-          strokeLinecap="round"
-        />
-        <path
-          d="M22 14 H30 M26 14 V28"
-          stroke="var(--c-primaryFg)"
-          strokeWidth="3.2"
-          strokeLinecap="round"
-          opacity="0.6"
-        />
-        <circle cx="30" cy="10" r="3" fill="var(--c-accent)" />
-      </svg>
+      />
       {showLabel && (
         <span
           className="tt-head shrink-0"

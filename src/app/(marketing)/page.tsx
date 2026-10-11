@@ -7,9 +7,29 @@ import { AccountabilityBand } from "@/components/marketing/accountability-band";
 import { CTABand } from "@/components/marketing/cta-band";
 
 export const metadata: Metadata = {
-  title: "TracKasuwa — POS & Inventory Built for Accountability",
+  title: "Offline POS & Inventory Built for Accountability",
   description:
-    "Offline-first point-of-sale and inventory management for Nigerian market traders. Every sale recorded, every stock movement tracked, even without internet.",
+    "Offline-first POS and inventory management built for Nigerian retailers. Record sales, track stock, and keep your business moving, even without internet.",
+  openGraph: {
+    title: "TracKasuwa | POS & Inventory for Nigerian Retailers",
+    description:
+      "Offline-first POS and inventory management built for Nigerian retailers. Record sales, track stock, and keep your business moving, even without internet.",
+    images: [
+      {
+        url: "/brand/social-preview.png",
+        width: 1200,
+        height: 630,
+        alt: "TracKasuwa — Point of sale and inventory management",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TracKasuwa | POS & Inventory for Nigerian Retailers",
+    description:
+      "Offline-first POS and inventory management built for Nigerian retailers. Record sales, track stock, and keep your business moving, even without internet.",
+    images: ["/brand/social-preview.png"],
+  },
 };
 
 /**

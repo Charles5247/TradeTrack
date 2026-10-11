@@ -13,15 +13,39 @@ import "./fonts.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://trackasuwa.vercel.app"),
   title: {
-    default: "TracKasuwa - POS & Inventory Management",
+    default: "TracKasuwa | POS & Inventory for Nigerian Retailers",
     template: "%s | TracKasuwa",
   },
   description:
-    "Enterprise offline-first POS and inventory management system for Nigerian market traders",
-  keywords: ["POS", "inventory", "Nigeria", "trade", "business", "offline"],
+    "Offline-first POS and inventory management built for Nigerian retailers. Record sales, track stock, and keep your business moving, even without internet.",
+  keywords: [
+    "POS software Nigeria",
+    "inventory management Nigeria",
+    "offline POS",
+    "retail management",
+    "stock tracking",
+    "TracKasuwa",
+  ],
   authors: [{ name: "TracKasuwa" }],
   creator: "CAXiE Technologies Limited",
+  publisher: "CAXiE Technologies Limited",
+  applicationName: "TracKasuwa",
+  alternates: {
+    canonical: "https://trackasuwa.vercel.app/",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -34,14 +58,33 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_NG",
-    url: "https://TracKasuwa.ng",
-    title: "TracKasuwa - POS & Inventory Management",
+    url: "https://trackasuwa.vercel.app/",
+    title: "TracKasuwa | POS & Inventory for Nigerian Retailers",
     description:
-      "Enterprise offline-first POS and inventory management for Nigerian businesses",
+      "Offline-first POS and inventory management built for Nigerian retailers. Record sales, track stock, and keep your business moving, even without internet.",
     siteName: "TracKasuwa",
+    images: [
+      {
+        url: "/brand/social-preview.png",
+        width: 1200,
+        height: 630,
+        alt: "TracKasuwa — Point of sale and inventory management",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TracKasuwa | POS & Inventory for Nigerian Retailers",
+    description:
+      "Offline-first POS and inventory management built for Nigerian retailers. Record sales, track stock, and keep your business moving, even without internet.",
+    images: ["/brand/social-preview.png"],
   },
   icons: {
-    icon: "/icons/icon-192x192.png",
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icons/favicon-48x48.png", sizes: "48x48", type: "image/png" },
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+    ],
     apple: "/icons/apple-touch-icon.png",
   },
 };
@@ -49,8 +92,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   // Matches Retail design tokens (README §4.1/4.2): --c-bg light / dark.
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fafafa" },
-    { media: "(prefers-color-scheme: dark)", color: "#232529" },
+    { media: "(prefers-color-scheme: light)", color: "#0858F8" },
+    { media: "(prefers-color-scheme: dark)", color: "#081868" },
   ],
 };
 

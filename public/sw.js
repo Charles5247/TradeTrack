@@ -25,7 +25,7 @@
  *    has its own online/offline + retry logic.
  */
 
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 const STATIC_CACHE = `TracKasuwa-static-${CACHE_VERSION}`;
 const PAGES_CACHE = `TracKasuwa-pages-${CACHE_VERSION}`;
 const OFFLINE_URL = "/offline.html";
@@ -33,8 +33,13 @@ const OFFLINE_URL = "/offline.html";
 const PRECACHE_URLS = [
   OFFLINE_URL,
   "/manifest.json",
+  "/favicon.ico",
+  "/icons/favicon-48x48.png",
   "/icons/icon-192x192.png",
   "/icons/icon-512x512.png",
+  "/icons/maskable-192.png",
+  "/icons/maskable-512.png",
+  "/icons/apple-touch-icon.png",
 ];
 
 self.addEventListener("install", (event) => {

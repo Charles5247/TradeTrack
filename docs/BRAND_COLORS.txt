@@ -1,0 +1,8 @@
+Trackasuwa brand colours (sampled from your logo)
+Bright blue  #0858F8  (RGB 8, 88, 248)   - main
+Navy         #081868  (RGB 8, 24, 104)   - shadow / text / navy shirts
+Gold         #C99823  (RGB 201, 152, 35) - tagline rules, accents
+
+Re-generate the back print with your REAL QR link:
+  python3 make_tees.py https://your-real-link.com
+(needs: pip install pillow qrcode; expects ../logo folder next to it)
