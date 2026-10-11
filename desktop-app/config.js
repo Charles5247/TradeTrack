@@ -41,7 +41,7 @@ const path = require("path");
 // be overridden without rebuilding via TracKasuwa_APP_URL or
 // TracKasuwa-config.json (see getAppUrl() below).
 // ─────────────────────────────────────────────────────────────────
-const DEFAULT_APP_URL = "https://tracKasuwa.vercel.app";
+const DEFAULT_APP_URL = "https://trackasuwa.vercel.app";
 
 // The path the shell opens on launch. "/" now serves the public
 // marketing site (logged-out); traders should land straight on

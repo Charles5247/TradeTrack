@@ -28,7 +28,7 @@ public class MainActivity extends Activity {
     // android-app/app/build.gradle's defaultConfig.buildConfigField),
     // not a hardcoded literal — this lets the production domain be
     // overridden at build time via `-PappUrl=https://...` without
-    // touching this file. Defaults to https://tracKasuwa.vercel.app/login when
+    // touching this file. Defaults to https://trackasuwa.vercel.app/login when
     // no -PappUrl is supplied. See android-app/README.md → "Rebuilding
     // with a different domain".
     private static final String APP_URL = BuildConfig.APP_URL;
