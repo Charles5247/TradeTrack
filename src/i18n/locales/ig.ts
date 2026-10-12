@@ -128,3 +128,24 @@ export const ig: typeof en = {
     pending_transfers: "Mbughara Nlogba",
   },
 };
+
+export const downloadCopy = {
+  "Download app": "Budata ngwa",
+  "Download for Android": "Budata maka Android",
+  "Download for Windows": "Budata maka Windows",
+  "Download Android APK": "Budata Android APK",
+  "Download Windows EXE": "Budata Windows EXE",
+  "Coming soon": "Ọ na-abịa n’oge adịghị anya",
+  "Version": "Ụdị",
+  "Recommended for your device": "A tụrụ nke a aro maka ngwaọrụ gị",
+  "Web app (install from your browser)": "Ngwa weebụ (wụnye site na nchọgharị gị)",
+  "For iPhone, iPad, Mac and other devices. No app store needed.": "Maka iPhone, iPad, Mac na ngwaọrụ ndị ọzọ. Ọ dịghị mkpa ụlọ ahịa ngwa.",
+  "iPhone or iPad: open this site in Safari and tap Share.": "iPhone ma ọ bụ iPad: mepee saịtị a na Safari ma pịa Share.",
+  "Tap Add to Home Screen, then Add. Open TracKasuwa from its icon.": "Pịa Add to Home Screen, mgbe ahụ Add. Mepee TracKasuwa site na akara ya.",
+  "Mac: in Safari, choose File, then Add to Dock.": "Mac: na Safari, họrọ File, mgbe ahụ Add to Dock.",
+  "Chrome or Edge: choose Install app from the browser menu.": "Chrome ma ọ bụ Edge: họrọ Install app na menu nchọgharị.",
+  "Open the downloaded APK. If asked, tap Settings and allow installs from this source. Return and tap Install.": "Mepee APK ị budatara. Ọ bụrụ na a jụọ, pịa Settings ma kwe ka e si ebe a wụnye ngwa. Laghachi ma pịa Install.",
+  "Play Protect may warn about apps outside the Play Store. For this trusted download, tap More details, then Install anyway if offered.": "Play Protect nwere ike ịdọ aka ná ntị maka ngwa na-abụghị nke Play Store. Maka nbudata a ị tụkwasịrị obi, pịa More details, mgbe ahụ Install anyway ma ọ pụta.",
+  "Open the installer. If SmartScreen says “Windows protected your PC”, tap “More info”, then “Run anyway”.": "Mepee faịlụ nrụnye. Ọ bụrụ na SmartScreen kwuru “Windows protected your PC”, pịa “More info”, mgbe ahụ “Run anyway”.",
+  "Download for Android or Windows, or install the web app.": "Budata maka Android ma ọ bụ Windows, ma ọ bụ wụnye ngwa weebụ."
+};

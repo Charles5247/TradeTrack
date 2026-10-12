@@ -991,3 +991,24 @@ export const yo = {
     scan_another: "Ṣàwárí Mìíràn",
   },
 };
+
+export const downloadCopy = {
+  "Download app": "Ṣe ìgbàsílẹ̀ app",
+  "Download for Android": "Ṣe ìgbàsílẹ̀ fún Android",
+  "Download for Windows": "Ṣe ìgbàsílẹ̀ fún Windows",
+  "Download Android APK": "Ṣe ìgbàsílẹ̀ Android APK",
+  "Download Windows EXE": "Ṣe ìgbàsílẹ̀ Windows EXE",
+  "Coming soon": "Ó ń bọ̀ láìpẹ́",
+  "Version": "Ẹ̀yà",
+  "Recommended for your device": "Èyí dára fún ẹ̀rọ rẹ",
+  "Web app (install from your browser)": "App wẹ́ẹ̀bù (fi sí ẹ̀rọ láti inú aṣàwákiri rẹ)",
+  "For iPhone, iPad, Mac and other devices. No app store needed.": "Fún iPhone, iPad, Mac àti àwọn ẹ̀rọ mìíràn. Kò nílò ilé ìtajà app.",
+  "iPhone or iPad: open this site in Safari and tap Share.": "iPhone tàbí iPad: ṣí ojúlé yìí ní Safari, tẹ Share.",
+  "Tap Add to Home Screen, then Add. Open TracKasuwa from its icon.": "Tẹ Add to Home Screen, lẹ́yìn náà Add. Ṣí TracKasuwa láti àmì rẹ̀.",
+  "Mac: in Safari, choose File, then Add to Dock.": "Mac: nínú Safari, yan File, lẹ́yìn náà Add to Dock.",
+  "Chrome or Edge: choose Install app from the browser menu.": "Chrome tàbí Edge: yan Install app láti àkójọ aṣàwákiri.",
+  "Open the downloaded APK. If asked, tap Settings and allow installs from this source. Return and tap Install.": "Ṣí APK tí o gbà sílẹ̀. Bí a bá béèrè, tẹ Settings kí o gba fífi app sí ẹ̀rọ láti orísun yìí láàyè. Padà, tẹ Install.",
+  "Play Protect may warn about apps outside the Play Store. For this trusted download, tap More details, then Install anyway if offered.": "Play Protect lè kìlọ̀ nípa app láti òde Play Store. Fún ìgbàsílẹ̀ tí o gbẹ́kẹ̀ lé yìí, tẹ More details, lẹ́yìn náà Install anyway bí ó bá hàn.",
+  "Open the installer. If SmartScreen says “Windows protected your PC”, tap “More info”, then “Run anyway”.": "Ṣí fáìlì ìfìsórí ẹrọ. Bí SmartScreen bá sọ “Windows protected your PC”, tẹ “More info”, lẹ́yìn náà “Run anyway”.",
+  "Download for Android or Windows, or install the web app.": "Ṣe ìgbàsílẹ̀ fún Android tàbí Windows, tàbí fi app wẹ́ẹ̀bù sí ẹ̀rọ."
+};

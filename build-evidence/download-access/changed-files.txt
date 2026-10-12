@@ -1,0 +1,15 @@
+.env.example
+README.md
+RELEASING.md
+src/components/marketing/hero.tsx
+src/app/(marketing)/download/page.tsx
+src/app/(marketing)/download/download-client.tsx
+src/app/(marketing)/download/download-client.test.tsx
+src/app/api/version/route.ts
+src/lib/downloads/config.ts
+src/lib/downloads/config.test.ts
+src/i18n/messages.ts
+src/i18n/locales/ha.ts
+src/i18n/locales/yo.ts
+src/i18n/locales/ig.ts
+src/i18n/locales/pcm.ts

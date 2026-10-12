@@ -228,10 +228,10 @@ export function Hero() {
             </Reveal>
 
             <Reveal delay={500}>
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                 <Link
                   href="/pricing"
-                  className="inline-flex items-center gap-2 rounded-lg h-[52px] px-6 text-base font-medium"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg h-[52px] px-6 text-base font-medium"
                   style={{
                     background: "var(--c-primary)",
                     color: "var(--c-primaryFg)",
@@ -241,7 +241,7 @@ export function Hero() {
                 </Link>
                 <Link
                   href="/download"
-                  className="inline-flex items-center gap-2 rounded-lg h-[52px] px-6 text-base font-medium border"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg h-[52px] px-6 text-base font-medium border"
                   style={{
                     borderColor: "var(--c-border)",
                     color: "var(--c-text)",

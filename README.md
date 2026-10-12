@@ -173,3 +173,13 @@ environment variables, and step-by-step Render/Vercel deployment:
 ## 📝 License
 
 MIT © TracKasuwa 2026
+
+## Installer downloads
+
+The header, hero and footer link to /download. Android, Windows and web-app cards always appear in that order. Detection only highlights a recommendation.
+
+Host APK/EXE installers as public GitHub Release assets, never committed source files. Set NEXT_PUBLIC_ANDROID_APK_URL and NEXT_PUBLIC_WINDOWS_EXE_URL in Vercel to their HTTPS asset URLs, then redeploy. Blank or invalid URLs show disabled Coming soon buttons. Never set placeholder links. A private source repository needs a separate public releases repository or public hosting.
+
+Optional metadata: TracKasuwa_ANDROID_LATEST_VERSION, TracKasuwa_WINDOWS_LATEST_VERSION, TracKasuwa_ANDROID_FILE_SIZE and TracKasuwa_WINDOWS_FILE_SIZE. Sizes are display text, e.g. 12 MB. The page and /api/version share configuration. Legacy TracKasuwa_ANDROID_DOWNLOAD_URL and TracKasuwa_WINDOWS_DOWNLOAD_URL remain fallbacks when the new variables are absent; explicitly blank new variables disable downloads.
+
+See [RELEASING.md](RELEASING.md) for signing, publishing and update continuity.

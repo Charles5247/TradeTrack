@@ -1,0 +1,21 @@
+[
+  {
+    "route": "/",
+    "status": 200,
+    "downloadLink": true,
+    "androidFooter": true,
+    "windowsFooter": true
+  },
+  {
+    "route": "/download",
+    "status": 200,
+    "android": true,
+    "windows": true,
+    "web": true,
+    "order": true
+  },
+  {
+    "route": "/api/version",
+    "status": 200
+  }
+]
