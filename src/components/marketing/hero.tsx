@@ -247,7 +247,7 @@ export function Hero() {
                     color: "var(--c-text)",
                   }}
                 >
-                  <Download className="h-4 w-4" strokeWidth={1.75} />{" "}<TranslatedText text={"Install on your phone"} /></Link>
+                  <Download className="h-4 w-4" strokeWidth={1.75} />{" "}<TranslatedText text={"Download app"} /></Link>
               </div>
             </Reveal>
 

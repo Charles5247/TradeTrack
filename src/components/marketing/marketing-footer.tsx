@@ -24,7 +24,8 @@ const FOOTER_COLUMNS: {
       { label: "Features", href: "/features" },
       { label: "Industries", href: "/industries" },
       { label: "Pricing", href: "/pricing" },
-      { label: "Download", href: "/download" },
+      { label: "Download for Android", href: "/download#android" },
+      { label: "Download for Windows", href: "/download#windows" },
     ],
   },
   {

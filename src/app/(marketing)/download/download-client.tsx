@@ -134,7 +134,7 @@ export function DownloadClient({
 
       <div className="grid gap-6 sm:grid-cols-2">
         {/* Windows */}
-        <Card className={`${windowsOrder} ${os === "windows" ? "" : "sm:opacity-90"}`}>
+        <Card id="windows" className={`scroll-mt-24 ${windowsOrder} ${os === "windows" ? "" : "sm:opacity-90"}`}>
           <CardHeader>
             <div className="flex items-center gap-2">
               <Monitor className="h-5 w-5 text-primary" />
@@ -172,7 +172,7 @@ export function DownloadClient({
         </Card>
 
         {/* Android */}
-        <Card className={androidOrder}>
+        <Card id="android" className={`scroll-mt-24 ${androidOrder}`}>
           <CardHeader>
             <div className="flex items-center gap-2">
               <Smartphone className="h-5 w-5 text-primary" />

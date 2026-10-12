@@ -17,7 +17,7 @@ const NAV_ITEMS = [
   { href: "/features", label: "Features" },
   { href: "/industries", label: "Industries" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/download", label: "Download" },
+  { href: "/download", label: "Download app" },
 ];
 
 /**
