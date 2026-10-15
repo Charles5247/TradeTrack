@@ -47,7 +47,7 @@ export function FormTemplate({
 }: FormTemplateProps) {
   return (
     <div className={cn("grid gap-8", sidebar ? "lg:grid-cols-[2fr_1fr]" : "grid-cols-1", className)}>
-      <div className="flex flex-col gap-5">
+      <div className="flex min-w-0 flex-col gap-5">
         {sections.map((sec, i) => (
           <Card key={i} className="p-[var(--card-pad)]">
             <div className="mb-5">
@@ -59,7 +59,7 @@ export function FormTemplate({
             {sec.fields}
           </Card>
         ))}
-        <div className="sticky bottom-0 flex justify-end gap-2.5 border-t border-border bg-background/80 py-4 backdrop-blur-sm">
+        <div className="sticky bottom-0 flex flex-wrap justify-end gap-2.5 border-t border-border bg-background/80 py-3 backdrop-blur-sm [&_button]:max-w-full [&_button]:whitespace-normal [&_button]:h-auto [&_button]:min-h-11 [&_button]:py-2">
           {onCancel && (
             <Button variant="ghost" onClick={onCancel} disabled={isSaving}>
               <TranslatedLabel>{cancelLabel}</TranslatedLabel>

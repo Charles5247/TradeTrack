@@ -477,7 +477,7 @@ function POSPageInner() {
       {/* Left: Products */}
       <div className="flex min-w-0 flex-1 flex-col gap-4">
         {/* Search & Warehouse — big-touch, README §9.2 */}
-        <div className="tt-stat flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="flex min-w-0 flex-col gap-3 rounded-xl border border-border bg-card p-3 sm:flex-row sm:items-center sm:p-4">
           <div className="relative flex-1">
             <Search
               className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 tt-muted"
@@ -540,7 +540,7 @@ function POSPageInner() {
                   <button
                     key={product.id}
                     onClick={() => handleAddToCart(product)}
-                    className="tt-stat min-w-0 p-2.5 text-left transition-shadow hover:shadow-md hover:border-primary/40 sm:p-4"
+                    className="flex min-w-0 flex-col rounded-xl border border-border bg-card p-2.5 text-left transition-shadow hover:shadow-md hover:border-primary/40 sm:p-3"
                   >
                     <div
                       className="tt-placeholder mb-2 flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-[var(--radius)] sm:mb-2.5 sm:aspect-square"
@@ -562,7 +562,7 @@ function POSPageInner() {
                       )}
                     </div>
                     <p
-                      className="text-[13px] font-semibold leading-snug"
+                      className="break-words text-[13px] font-semibold leading-snug"
                       style={{
                         display: "-webkit-box",
                         WebkitLineClamp: 2,
@@ -573,12 +573,12 @@ function POSPageInner() {
                     >
                       {product.name}
                     </p>
-                    <div className="mt-1.5 flex min-w-0 flex-col gap-1 min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between">
-                      <span className="tt-mono tt-tabular text-[15px] font-bold text-primary">
+                    <div className="mt-1.5 flex min-w-0 flex-col items-start gap-1">
+                      <span className="tt-mono tt-tabular max-w-full break-words text-[13px] sm:text-[15px] font-bold text-primary">
                         {formatCurrency(product.selling_price)}
                       </span>
                       {product.available_quantity <= 5 ? (
-                        <Badge variant="warning" className="text-[11px] py-0">
+                        <Badge variant="warning" className="max-w-full whitespace-normal text-[11px] py-0">
                           {product.available_quantity} {t.pos.units_left}
                         </Badge>
                       ) : (
@@ -610,7 +610,7 @@ function POSPageInner() {
         role={mobileCartOpen ? "dialog" : undefined}
         aria-modal={mobileCartOpen ? true : undefined}
         aria-labelledby="pos-cart-heading"
-        className={`tt-stat w-full shrink-0 flex-col p-0 lg:w-80 xl:w-96 ${
+        className={`min-w-0 w-full shrink-0 flex-col rounded-xl border border-border bg-card p-0 lg:w-80 xl:w-96 ${
           mobileCartOpen
             ? "fixed inset-x-0 bottom-0 z-40 flex max-h-[85dvh] overflow-y-auto rounded-t-2xl border-t bg-background pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl lg:static lg:z-auto lg:max-h-[calc(100dvh-var(--header-h)-40px)] lg:rounded-none lg:shadow-none"
             : "hidden lg:sticky lg:top-0 lg:flex lg:max-h-[calc(100dvh-var(--header-h)-40px)] lg:overflow-y-auto"

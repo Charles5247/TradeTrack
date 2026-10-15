@@ -61,7 +61,7 @@ export function StatCard({
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={onClick ? (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onClick(); } } : undefined}
     >
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-2">
         <div className="tt-stat-label"><TranslatedLabel>{label}</TranslatedLabel></div>
         {Icon && (
           <div
@@ -76,7 +76,7 @@ export function StatCard({
         )}
       </div>
       <div className="tt-stat-value tt-tabular">{value}</div>
-      <div className="flex min-h-[20px] items-center gap-2">
+      <div className="flex min-h-[20px] flex-wrap items-center gap-2">
         {delta && (
           <div className="tt-stat-delta" data-dir={deltaDir}>
             {deltaDir === "up" ? (

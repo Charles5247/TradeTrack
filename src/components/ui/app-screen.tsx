@@ -90,7 +90,8 @@ export function AppScreen({ children, pos, dense, noPadding }: AppScreenProps) {
           <Sidebar />
           <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
             <Header />
-            <main className="flex-1 overflow-y-auto tt-fadein">
+            {/* A transform on this scrolling ancestor traps fixed POS controls. */}
+            <main className="min-h-0 min-w-0 flex-1 overflow-y-auto">
               <div className={cn(!noPadding && 'mx-auto w-full max-w-[1440px] p-4 lg:p-6')}>{children}</div>
             </main>
           </div>

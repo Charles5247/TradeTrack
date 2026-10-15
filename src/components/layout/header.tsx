@@ -142,7 +142,7 @@ export function Header() {
       {/* Breadcrumb + title */}
       <div className="flex-1 min-w-0">
         {breadcrumb.length > 0 && (
-          <div className="flex items-center gap-1.5 text-xs tt-muted mb-0.5">
+          <div className="hidden xl:flex items-center gap-1.5 text-xs tt-muted mb-0.5">
             {breadcrumb.map((b, i) => (
               <React.Fragment key={i}>
                 <span><TranslatedLabel>{b}</TranslatedLabel></span>
@@ -153,7 +153,7 @@ export function Header() {
             ))}
           </div>
         )}
-        <div className="tt-head text-[18px] leading-none truncate">
+        <div className="tt-head text-base sm:text-[18px] leading-tight truncate">
           <TranslatedLabel>{title}</TranslatedLabel>
         </div>
       </div>
@@ -162,7 +162,7 @@ export function Header() {
       <button
         type="button"
         onClick={() => setCommandPaletteOpen(true)}
-        className="hidden md:flex items-center gap-2 min-w-[240px] max-w-xs h-9 rounded-lg border border-border bg-card px-3 text-sm text-muted-foreground hover:border-[var(--c-borderStrong)] transition-colors"
+        className="hidden 2xl:flex items-center gap-2 w-60 shrink-0 h-9 rounded-lg border border-border bg-card px-3 text-sm text-muted-foreground hover:border-[var(--c-borderStrong)] transition-colors"
         aria-label={copy("Open search")}
       >
         <Search className="h-4 w-4 shrink-0" strokeWidth={1.75} />
@@ -174,7 +174,7 @@ export function Header() {
       <Button
         variant="ghost"
         size="icon"
-        className="md:hidden"
+        className="h-11 w-11 shrink-0 2xl:hidden"
         onClick={() => setCommandPaletteOpen(true)}
         aria-label={copy("Open search")}
       >
@@ -182,10 +182,10 @@ export function Header() {
       </Button>
 
       <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
-        <LanguageSelect />
+        <div className="hidden xl:block"><LanguageSelect /></div>
         <div
           className={cn(
-            "hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors",
+            "hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors",
           )}
           style={
             isOnline
@@ -257,7 +257,7 @@ export function Header() {
         <Button
           variant="ghost"
           size="icon"
-          className="hidden sm:inline-flex"
+          className="hidden xl:inline-flex"
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           title={t.header.toggle_theme}
         >
@@ -293,7 +293,7 @@ export function Header() {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full">
+            <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0 rounded-full" aria-label={copy("Settings")}>
               <div className="tt-avatar w-7 h-7 text-[11px]" style={{ background: "color-mix(in oklch, var(--c-primary), transparent 88%)", color: "var(--c-primary)", border: "none" }}>
                 {user?.full_name?.charAt(0).toUpperCase() ?? "U"}
               </div>
@@ -315,8 +315,9 @@ export function Header() {
                 )}
               </div>
             </DropdownMenuLabel>
+            <div className="px-2 py-2 xl:hidden"><LanguageSelect /></div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="sm:hidden" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+            <DropdownMenuItem className="xl:hidden" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
               <Sun className="mr-2 h-4 w-4" />{t.header.toggle_theme}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => router.push("/settings")}>

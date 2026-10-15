@@ -328,6 +328,7 @@
   letter-spacing: var(--letter-tight);
   line-height: 1.05;
   color: var(--c-text);
+  overflow-wrap: anywhere;
 }
 .tt-stat-delta {
   font-size: calc(var(--base-font) - 2px);
@@ -393,6 +394,24 @@
   --btn-h: 32px;
   --base-font: 13px;
   --card-pad: 16px;
+}
+
+/* Phone layouts use compact spacing without shrinking touch targets.
+   Keep form text at 16px so Safari does not zoom when a field is focused. */
+@media (max-width: 639px) {
+  :root,
+  [data-density],
+  [data-pos-mode="true"],
+  [data-dense-mode="true"] {
+    --card-pad: 14px;
+    --header-h: 60px;
+    --input-h: 44px;
+    --btn-h: 44px;
+  }
+  .tt-page-title { font-size: 26px; line-height: 1.15; }
+  .tt-section-title { font-size: 20px; line-height: 1.2; }
+  .tt-stat-value { font-size: clamp(20px, 5.5vw, 28px); }
+  input, select, textarea { font-size: 16px; }
 }
 
 /* ============================================================================

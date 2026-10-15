@@ -48,12 +48,12 @@ export function MarketingNav() {
           : "1px solid transparent",
       }}
     >
-      <div className="mx-auto flex h-[72px] max-w-6xl items-center gap-6 px-4 sm:px-6">
-        <Link href="/" aria-label={copy("TracKasuwa home")}>
+      <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-3 sm:px-6 xl:h-[72px] xl:gap-3">
+        <Link className="mr-auto shrink-0 xl:mr-2" href="/" aria-label={copy("TracKasuwa home")}>
           <Logo size={30} />
         </Link>
 
-        <div className="hidden md:flex flex-1 items-center gap-1">
+        <div className="hidden xl:flex flex-1 items-center gap-1">
           {NAV_ITEMS.map((item) => {
             const active = pathname === item.href;
             return (
@@ -71,13 +71,12 @@ export function MarketingNav() {
             );
           })}
         </div>
-        <div className="hidden md:block flex-1" />
-        <LanguageSelect />
+        <div className="hidden xl:block"><LanguageSelect /></div>
 
         <Button
           variant="ghost"
           size="icon"
-          className="hidden sm:inline-flex"
+          className="hidden xl:inline-flex"
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           aria-label={copy("Toggle theme")}
         >
@@ -98,7 +97,7 @@ export function MarketingNav() {
         >
           <Link href="/login"><TranslatedText text={"Sign in"} /></Link>
         </Button>
-        <Button size="sm" asChild>
+        <Button size="sm" className="hidden sm:inline-flex" asChild>
           <Link href="/pricing"><TranslatedText text={"View paid plans"} />{" "}<ArrowRight className="h-3.5 w-3.5" strokeWidth={1.75} />
           </Link>
         </Button>
@@ -106,9 +105,11 @@ export function MarketingNav() {
         <Button
           variant="ghost"
           size="icon"
-          className="md:hidden"
+          className="h-11 w-11 shrink-0 xl:hidden"
           onClick={() => setMobileOpen((v) => !v)}
           aria-label={copy("Toggle menu")}
+          aria-expanded={mobileOpen}
+          aria-controls="marketing-mobile-menu"
         >
           {mobileOpen ? (
             <X className="h-5 w-5" strokeWidth={1.75} />
@@ -119,7 +120,11 @@ export function MarketingNav() {
       </div>
 
       {mobileOpen && (
-        <div className="md:hidden border-t border-border bg-[var(--c-bg)] px-4 sm:px-6 py-3">
+        <div id="marketing-mobile-menu" className="max-h-[calc(100dvh-64px)] overflow-y-auto xl:hidden border-t border-border bg-[var(--c-bg)] px-4 sm:px-6 py-3">
+          <div className="flex items-center justify-between gap-3 border-b border-border pb-3 mb-2">
+            <LanguageSelect />
+            <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0" aria-label={copy("Toggle theme")} onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}><Sun className="h-4 w-4" /></Button>
+          </div>
           <div className="flex flex-col gap-1">
             {NAV_ITEMS.map((item) => (
               <Link

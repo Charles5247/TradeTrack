@@ -51,7 +51,7 @@ export function DetailTemplate({
       <div>
         <div className="mb-3 flex flex-wrap items-start justify-between gap-5">
           <div className="min-w-0 flex-1">
-            <div className="mb-3 flex items-center gap-2.5">
+            <div className="mb-3 flex flex-wrap items-center gap-2.5">
               <h1 className="tt-page-title break-words">
                 {title}
               </h1>
@@ -72,7 +72,7 @@ export function DetailTemplate({
             )}
           </div>
           {(primary || secondary) && (
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex max-w-full flex-wrap items-center gap-2 [&_button]:max-w-full [&_button]:whitespace-normal [&_button]:h-auto [&_button]:min-h-11 [&_button]:py-2">
               {secondary}
               {primary}
             </div>
