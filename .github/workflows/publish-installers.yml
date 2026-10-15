@@ -1,0 +1,42 @@
+name: Publish verified installers
+on:
+  workflow_dispatch:
+    inputs:
+      build_run_id:
+        description: Successful Build installers run on main
+        required: true
+permissions:
+  actions: read
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      BUILD_RUN_ID: ${{ inputs.build_run_id }}
+    steps:
+      - name: Verify build and publish release assets
+        run: |
+          set -euo pipefail
+          [[ "$BUILD_RUN_ID" =~ ^[0-9]+$ ]]
+          gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN_ID" > run.json
+          jq -e '.conclusion == "success" and .head_branch == "main" and .path == ".github/workflows/installers.yml"' run.json
+          commit=$(jq -r .head_sha run.json)
+          gh run download "$BUILD_RUN_ID" --name android-installer --dir assets
+          gh run download "$BUILD_RUN_ID" --name windows-installer --dir assets
+          test -f assets/TracKasuwa-1.0.1.apk
+          test -f assets/TracKasuwa-Setup-1.0.1.exe
+          (cd assets && sha256sum *.apk *.exe > SHA256SUMS.txt)
+          cat > notes.md <<'NOTES'
+          Android APK and Windows x64 installer for TracKasuwa 1.0.1.
+
+          Android uses a new production signing identity. If an older demonstration APK cannot update in place, sync all pending sales before uninstalling it. Uninstalling removes local data.
+
+          The Windows installer is not Authenticode-signed and may show an unknown-publisher warning.
+
+          Both apps open https://trackasuwa.vercel.app/login. An internet connection is required for the first sign-in and to load the app.
+
+          SHA-256 checksums are attached. Never install assets from untrusted sources.
+          NOTES
+          gh release create v1.0.1 --target "$commit" --title 'TracKasuwa 1.0.1' --notes-file notes.md assets/TracKasuwa-1.0.1.apk assets/TracKasuwa-Setup-1.0.1.exe assets/SHA256SUMS.txt
