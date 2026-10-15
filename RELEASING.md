@@ -1,6 +1,26 @@
 # Releasing TracKasuwa installers
 
-## Continuity audit — 12 October 2026
+## Production release — 15 October 2026
+
+- Published release: https://github.com/Charles5247/TradeTrack/releases/tag/v1.0.1
+- Build run: https://github.com/Charles5247/TradeTrack/actions/runs/38693357925 (Android and Windows succeeded).
+- Android: versionCode 2, versionName 1.0.1, applicationId `ng.TracKasuwa.app`. APK signature verified by `apksigner` in CI.
+- Android certificate SHA-256: `E2:25:91:A9:FA:31:C3:27:17:AD:5D:4B:9A:73:FD:BB:9C:02:47:8F:65:03:C8:B7:28:8B:45:D8:6B:BC:87:EB`.
+- A new production PKCS12 signing key was created because the prior demonstration key was unavailable. Local custody is in the Git-ignored `.release-private/` directory. Keep a secure separate backup of the key and password; do not commit or upload them as release assets.
+- The user authorized encrypted GitHub Actions signing secrets: `ANDROID_KEYSTORE_BASE64` and `ANDROID_KEYSTORE_PASSWORD`. Restrict repository write access because trusted workflows can use these secrets.
+- Windows: 1.0.1, x64 NSIS installer, **not Authenticode-signed**. No Windows certificate is configured.
+- Default app origin remains https://trackasuwa.vercel.app. Public APK and EXE asset checks returned HTTP 200, with sizes 41,831 and 81,934,485 bytes.
+- No real-device installation or upgrade test has been performed by this environment.
+
+### Repeatable release workflow
+
+1. Increment Android versionCode/versionName and the desktop package and lockfile versions. Update versioned artifact filenames in both workflows.
+2. Run **Build installers** (`.github/workflows/installers.yml`) on main. It signs Android using the existing encrypted secrets and verifies the signature.
+3. After both jobs succeed, run **Publish verified installers** with that build run ID. It validates the source workflow and branch, publishes the APK/EXE and attaches SHA-256 checksums. Update the release tag for each new release; existing releases are never overwritten.
+4. Update the public release URL and version/size environment values in `vercel.json` and deploy. Only public metadata belongs there; API keys must stay in Vercel Project Settings. The current public URL variables are supplied to both build and runtime. To manage them solely in Vercel Project Settings later, remove the corresponding `env` and `build.env` entries from this file and redeploy.
+5. Check `/api/version` and `/download` on the live site and test installation on Android and Windows.
+
+## Historical continuity audit — 12 October 2026
 
 - Android applicationId: ng.TracKasuwa.app.
 - Current versionCode: 1; versionName: 1.0.0.

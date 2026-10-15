@@ -1,4 +1,18 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "npm ci --include=dev"
+  "installCommand": "npm ci --include=dev",
+  "env": {
+    "NEXT_PUBLIC_ANDROID_APK_URL": "https://github.com/Charles5247/TradeTrack/releases/download/v1.0.1/TracKasuwa-1.0.1.apk",
+    "NEXT_PUBLIC_WINDOWS_EXE_URL": "https://github.com/Charles5247/TradeTrack/releases/download/v1.0.1/TracKasuwa-Setup-1.0.1.exe",
+    "TracKasuwa_ANDROID_LATEST_VERSION": "1.0.1",
+    "TracKasuwa_WINDOWS_LATEST_VERSION": "1.0.1",
+    "TracKasuwa_ANDROID_FILE_SIZE": "41.8 KB",
+    "TracKasuwa_WINDOWS_FILE_SIZE": "81.9 MB"
+  },
+  "build": {
+    "env": {
+      "NEXT_PUBLIC_ANDROID_APK_URL": "https://github.com/Charles5247/TradeTrack/releases/download/v1.0.1/TracKasuwa-1.0.1.apk",
+      "NEXT_PUBLIC_WINDOWS_EXE_URL": "https://github.com/Charles5247/TradeTrack/releases/download/v1.0.1/TracKasuwa-Setup-1.0.1.exe"
+    }
+  }
 }

@@ -183,3 +183,6 @@ Host APK/EXE installers as public GitHub Release assets, never committed source 
 Optional metadata: TracKasuwa_ANDROID_LATEST_VERSION, TracKasuwa_WINDOWS_LATEST_VERSION, TracKasuwa_ANDROID_FILE_SIZE and TracKasuwa_WINDOWS_FILE_SIZE. Sizes are display text, e.g. 12 MB. The page and /api/version share configuration. Legacy TracKasuwa_ANDROID_DOWNLOAD_URL and TracKasuwa_WINDOWS_DOWNLOAD_URL remain fallbacks when the new variables are absent; explicitly blank new variables disable downloads.
 
 See [RELEASING.md](RELEASING.md) for signing, publishing and update continuity.
+# Installer release 1.0.1
+
+Android APK and Windows x64 EXE assets are published at [GitHub Releases](https://github.com/Charles5247/TradeTrack/releases/tag/v1.0.1). The website reads `NEXT_PUBLIC_ANDROID_APK_URL` and `NEXT_PUBLIC_WINDOWS_EXE_URL`; public deployment values are configured in `vercel.json`. No installer binaries or signing keys are committed. See [RELEASING.md](RELEASING.md) for build, signing, key custody and update instructions.
