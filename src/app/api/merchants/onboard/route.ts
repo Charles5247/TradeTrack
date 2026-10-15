@@ -1,3 +1,4 @@
+import { TRIAL_PLAN_ID } from "@/lib/subscriptions/signup-trial";
 /**
  * TracKasuwa — Merchant Onboarding API
  * POST /api/merchants/onboard
@@ -172,8 +173,8 @@ export async function POST(request: NextRequest) {
           email: contact_email,
           phone: contact_phone || null,
           address: address || null,
-          subscription_plan_id: subscription_plan_id || null,
-          subscription_status: "trial",
+          subscription_plan_id: TRIAL_PLAN_ID,
+          subscription_status: "suspended",
         } as any)
         .select("id")
         .single();
@@ -237,7 +238,7 @@ export async function POST(request: NextRequest) {
           state: state || null,
           country: country || "Nigeria",
           notes: notes || null,
-          subscription_plan_id: subscription_plan_id || null,
+          subscription_plan_id: TRIAL_PLAN_ID,
           status: "pending",
           verification_status: "unverified",
           onboarding_completed: false,

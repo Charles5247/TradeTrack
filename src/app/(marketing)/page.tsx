@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Hero } from "@/components/marketing/hero";
+import { AIAssistantBand } from '@/components/marketing/ai-assistant-band';
 import { StatsBand } from "@/components/marketing/stats-band";
 import { FeatureGrid } from "@/components/marketing/feature-grid";
 import { IndustriesBand } from "@/components/marketing/industries-band";
@@ -62,6 +63,7 @@ export default function MarketingHomePage() {
       {showSocialProof ? <SocialProofBand /> : null}
       <StatsBand />
       <FeatureGrid />
+      <AIAssistantBand />
       <IndustriesBand />
       <AccountabilityBand />
       <CTABand />

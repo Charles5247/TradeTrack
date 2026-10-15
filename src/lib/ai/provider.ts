@@ -1,11 +1,12 @@
 import 'server-only';
 import type { AIProvider } from './types';
 import { MockAIProvider } from './mock';
+import { OpenAIProvider } from './openai';
 export function getAIProvider(): AIProvider {
-  const provider=process.env.AI_PROVIDER || 'mock';
+  const provider=process.env.AI_PROVIDER || (process.env.OPENAI_API_KEY ? 'openai' : 'mock');
   if (provider === 'mock') return new MockAIProvider();
-  // AI_API_KEY is reserved for a future server-side adapter. Fail closed
-  // rather than pretending an unimplemented model generated a response.
-  if (!process.env.AI_API_KEY) throw new Error('The configured AI provider needs a server-side API key.');
-  throw new Error('This AI provider is not connected yet. Set AI_PROVIDER=mock.');
+  if (provider !== 'openai') throw new Error('Unsupported AI provider. Choose openai or mock.');
+  const key = process.env.OPENAI_API_KEY || process.env.AI_API_KEY;
+  if (!key) throw new Error('Live AI needs OPENAI_API_KEY in the server environment.');
+  return new OpenAIProvider(key);
 }

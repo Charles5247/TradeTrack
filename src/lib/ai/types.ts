@@ -1,11 +1,13 @@
 import type { ImportRow } from '@/lib/imports/preview';
-export interface BusinessAggregate { productCount: number; unitsOnHand: number; stockCost: number; salesTotal: number; saleCount: number; lowStock: { name: string; quantity: number }[]; }
+export interface BusinessAggregate { productCount: number; unitsOnHand: number; stockCost: number; salesTotal: number; saleCount: number; lowStock: { name: string; quantity: number }[];
+  analysis?: { windowDays: number; observedDays: number; salesTotal: number; saleCount: number; products: { name: string; stock: number; unitsSold: number; dailyUnits: number; estimatedDaysLeft: number | null }[]; staff: { label: string; salesTotal: number; transactions: number; averageSale: number }[]; limitations: string[] };
+}
 export interface Insight { title: string; message: string; source: 'organization-data-only'; }
 export interface AIProvider {
   readonly name: string;
   readonly stub: boolean;
   mapInventory(text: string): Promise<ImportRow[]>;
-  insights(data: BusinessAggregate): Promise<Insight[]>;
+  insights(data: BusinessAggregate, question?: string): Promise<Insight[]>;
 }
 export interface DeliveryAdapter {
   readonly enabled: boolean;

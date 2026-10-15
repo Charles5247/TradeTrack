@@ -15,9 +15,11 @@ vi.mock('@/store', () => ({
 vi.mock('next-themes', () => ({ useTheme: () => ({ theme: 'light', setTheme: mocks.setTheme }) }));
 vi.mock('@/i18n', () => ({ SUPPORTED_LOCALES: [{code:'en',name:'English',native:'English'}], useI18n: () => ({ locale:'en',setLocale:vi.fn(),t: new Proxy({}, {get: () => new Proxy({}, {get: (_t,k) => String(k)})}) }) }));
 vi.mock('@/lib/offline/db', () => ({ cacheUserSession: mocks.cache }));
-vi.mock('@/lib/supabase/client', () => ({ createClient: () => ({ auth: { updateUser: mocks.updatePassword }, from: () => ({
+vi.mock('@/lib/supabase/client', () => ({ createClient: () => ({ auth: { updateUser: mocks.updatePassword }, from: (table: string) => ({
   update: mocks.update,
-  select: () => ({ eq: () => ({single: async () => ({data:{name:'Shop'},error:null})}) }),
+  select: () => table === 'merchants'
+    ? ({ eq: () => ({ order: () => ({ limit: () => ({ maybeSingle: async () => ({ data: null, error: null }) }) }) }) })
+    : ({ eq: () => ({ single: async () => ({ data: { name: 'Shop' }, error: null }) }) }),
 }) }) }));
 vi.mock('@tanstack/react-query', () => ({useQuery: mocks.query}));
 vi.mock('@/hooks/use-realtime-sync', () => ({useRealtimeSync:vi.fn()}));

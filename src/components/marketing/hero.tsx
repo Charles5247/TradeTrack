@@ -230,13 +230,13 @@ export function Hero() {
             <Reveal delay={500}>
               <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                 <Link
-                  href="/pricing"
+                  href="/signup"
                   className="inline-flex items-center justify-center gap-2 rounded-lg h-[52px] px-6 text-base font-medium"
                   style={{
                     background: "var(--c-primary)",
                     color: "var(--c-primaryFg)",
                   }}
-                ><TranslatedText text={"Explore paid plans"} />{" "}
+                ><TranslatedText text={"Start 30-day free trial"} />{" "}
                   <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
                 </Link>
                 <Link

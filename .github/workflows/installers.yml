@@ -1,0 +1,55 @@
+name: Build installers
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+      - name: Build signed Android APK
+        working-directory: android-app
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$ANDROID_KEYSTORE_BASE64"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/trackasuwa.p12"
+          gradle assembleRelease --no-daemon
+          "$ANDROID_HOME/build-tools/34.0.0/zipalign" -p 4 app/build/outputs/apk/release/app-release-unsigned.apk "$RUNNER_TEMP/aligned.apk"
+          "$ANDROID_HOME/build-tools/34.0.0/apksigner" sign --ks "$RUNNER_TEMP/trackasuwa.p12" --ks-type PKCS12 --ks-key-alias trackasuwa --ks-pass env:ANDROID_KEYSTORE_PASSWORD --out TracKasuwa-1.0.1.apk "$RUNNER_TEMP/aligned.apk"
+          "$ANDROID_HOME/build-tools/34.0.0/apksigner" verify --verbose --print-certs TracKasuwa-1.0.1.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-installer
+          path: android-app/TracKasuwa-1.0.1.apk
+          retention-days: 14
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: desktop-app/package-lock.json
+      - run: npm ci
+        working-directory: desktop-app
+      - run: npm run build:win -- --publish never
+        working-directory: desktop-app
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: desktop-app/dist/*.exe
+          retention-days: 14

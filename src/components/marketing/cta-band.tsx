@@ -30,13 +30,13 @@ export function CTABand() {
               style={{ bottom: -80, left: -80, width: 350, height: 350, background: "var(--c-primaryFg)", opacity: 0.05 }}
             />
             <h2 className="tt-head relative" style={{ fontSize: "clamp(32px, 5vw, 56px)", margin: "0 0 16px", lineHeight: 1.05 }}><TranslatedText text={"Start selling smarter today."} /></h2>
-            <p className="relative mx-auto mb-9" style={{ fontSize: 18, opacity: 0.85, maxWidth: 560 }}><TranslatedText text={"Choose a paid monthly plan that fits your shop."} /></p>
+            <p className="relative mx-auto mb-9" style={{ fontSize: 18, opacity: 0.85, maxWidth: 560 }}><TranslatedText text={"Full business access for 30 days. No payment needed to start."} /></p>
             <div className="relative flex flex-wrap items-center justify-center gap-4">
               <Link
-                href="/pricing"
+                href="/signup"
                 className="inline-flex items-center gap-2 rounded-lg h-[52px] px-6 text-base font-medium"
                 style={{ background: "var(--c-primaryFg)", color: "var(--c-primary)" }}
-              ><TranslatedText text={"Explore paid plans"} />{" "}<ArrowRight className="h-4 w-4" strokeWidth={1.75} />
+              ><TranslatedText text={"Start 30-day free trial"} />{" "}<ArrowRight className="h-4 w-4" strokeWidth={1.75} />
               </Link>
               <Link
                 href="/download"

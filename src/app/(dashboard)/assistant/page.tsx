@@ -19,6 +19,7 @@ async function call(body: Record<string, unknown>) {
 }
 export default function AssistantPage() {
   const copy = useCopy();
+  const [question, setQuestion] = useState('');
   const [text, setText] = useState(''); const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<any>(null); const [preferences, setPreferences] = useState({ in_app: false, email: false, sms: false });
   const [proposal, setProposal] = useState<{ job: string; rows: ImportRow[] } | null>(null);
@@ -28,7 +29,7 @@ export default function AssistantPage() {
   const run = async (action: () => Promise<void>) => { setBusy(true); setError(''); setNotice(''); try { await action(); } catch (e) { setError(e instanceof Error ? e.message : 'Assistant unavailable'); } finally { setBusy(false); } };
   return <AccessGuard allow={['business_owner','admin']}><div className="min-w-0 space-y-6 [&_button]:max-w-full [&_button]:whitespace-normal [&_button]:h-auto [&_button]:min-h-11 [&_button]:py-2">
     <h1 className="tt-page-title"><TranslatedText text={"TracKasuwa assistant"} /></h1>
-    <p className="tt-muted text-sm"><TranslatedText text={"Prepare product imports and review insights from your business data."} /></p><p className="rounded-lg border border-border bg-muted p-4 text-sm"><TranslatedText text={"Preview mode: this assistant uses fixed rules, with no live AI model or external market data. Review every proposed change before confirming."} /></p>
+    <p className="tt-muted text-sm"><TranslatedText text={"Prepare product imports and review insights from your business data."} /></p><p className="rounded-lg border border-border bg-muted p-4 text-sm"><TranslatedText text={status && !status.stub ? "Live AI uses your business records. Review every proposed change before confirming." : "Preview mode: this assistant uses fixed rules, with no live AI model or external market data. Review every proposed change before confirming."} /></p>
     <p><Link className="text-sm font-medium text-primary underline underline-offset-4" href="/imports"><TranslatedText text={"Business imports"} /></Link> · <Link className="text-sm font-medium text-primary underline underline-offset-4" href="/notifications"><TranslatedText text={"Notifications"} /></Link></p>
     {busy && <p role="status" className="tt-muted text-sm"><TranslatedText text={"Working on your request?"} /></p>}{!status && !error && <p role="status" className="tt-muted text-sm"><TranslatedText text={"Loading assistant preferences?"} /></p>}{error && <p role="alert" className="text-destructive">{error}</p>}{notice && <p role="status">{notice}</p>}
     <fieldset disabled={busy || !status} className="min-w-0 space-y-4 rounded-[var(--radius-lg)] border border-border bg-card p-4 sm:p-6">
@@ -39,7 +40,8 @@ export default function AssistantPage() {
     </fieldset>
     {proposal && <section className="space-y-3"><h2 className="tt-section-title"><TranslatedText text={"Review inventory proposal"} /></h2><ImportWorkbench key={proposal.job} initialRows={proposal.rows} onApproved={async batch => { await call({ action: 'approve', job: proposal.job, batch, confirm: true }); }} /></section>}
     <fieldset disabled={busy || !status} className="min-w-0 space-y-4 rounded-[var(--radius-lg)] border border-border bg-card p-4 sm:p-6"><legend className="tt-section-title px-2"><TranslatedText text={"Business insights"} /></legend>
-      <Button  onClick={() => void run(async () => setReport(await call({ action: 'insights' })))}><TranslatedText text={"Generate organization-only insights"} /></Button>
+      <Textarea aria-label={copy("Ask about your business")} placeholder={copy("Ask about your sales or stock")} maxLength={2000} value={question} onChange={e => setQuestion(e.target.value)} />
+      <Button onClick={() => void run(async () => setReport(await call({ action: 'insights', question })))}><TranslatedText text={"Generate organization-only insights"} /></Button>
       {report && <div className="space-y-3">{report.insights.map(i => <article key={i.title}><h3 className="font-semibold">{i.title}</h3><p>{i.message}</p></article>)}
         <label className="block min-w-0 space-y-2 text-sm font-medium"><TranslatedText text={"Deliver this preview to your profile"} />{" "}<NativeSelect  value={channel} onChange={e => setChannel(e.target.value)}>{['in_app','email','sms'].map(c => <option key={c} value={c} disabled={!status?.channels[c]}>{c.replace('_',' ')}<TranslatedText text={!status?.channels[c] ? ' (disabled)' : ''} /></option>)}</NativeSelect></label>
         <Button  onClick={() => void run(async () => { await call({ action: 'deliver', job: report.job, channel, confirm: true }); setNotice('Insight delivered.'); })}><TranslatedText text={"Confirm and deliver displayed insights"} /></Button>

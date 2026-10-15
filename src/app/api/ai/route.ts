@@ -2,6 +2,7 @@ import { apiContext } from '@/lib/auth/api-context';
 import { hasAIEntitlement } from '@/lib/ai/entitlement';
 import { getAIProvider } from '@/lib/ai/provider';
 import { deliveryAdapter } from '@/lib/ai/delivery';
+import { recentAnalysis } from '@/lib/ai/analysis';
 
 async function context() {
   const ctx = await apiContext();
@@ -54,6 +55,7 @@ export async function POST(request: Request) {
     }
     if (!['inventory','insights'].includes(body.action)) throw new Error('Unknown assistant action.');
     if (body.action === 'inventory' && (typeof body.text !== 'string' || !body.text.trim() || body.text.length > 200000)) throw new Error('Paste between 1 and 200,000 characters of product data.');
+    if (body.question !== undefined && (typeof body.question !== 'string' || body.question.length > 2000)) throw new Error('Keep your business question under 2,000 characters.');
     const provider = getAIProvider();
     const job = await rpc('reserve_ai_job', { job_kind: body.action });
     try {
@@ -71,11 +73,11 @@ export async function POST(request: Request) {
             rows.push(...data); if (data.length < 1000) return rows;
           }
         };
-        const [products, inventory, sales, reversals] = await Promise.all([read('products','id,name,cost_price'), read('inventory','id,product_id,quantity'), read('sales','id,total'), read('financial_reversals','id,sale_id,kind')]);
+        const [products, inventory, sales, reversals] = await Promise.all([read('products','id,name,cost_price'), read('inventory','id,product_id,quantity'), read('sales','id,total,status,created_at,cashier_id,sale_items(product_id,quantity)'), read('financial_reversals','id,sale_id,kind')]);
         const reversed = new Set(reversals.filter(r => r.kind !== 'vendor_payment_correction').map(r => r.sale_id));
-        const currentSales = sales.filter(s => !reversed.has(s.id));
+        const currentSales = sales.filter(s => s.status === 'completed' && !reversed.has(s.id));
         const stock = products.map(p => ({ name: p.name, quantity: inventory.filter(i => i.product_id === p.id).reduce((n,i) => n + Number(i.quantity), 0), cost: Number(p.cost_price) }));
-        const insights = await provider.insights({ productCount: products.length, unitsOnHand: stock.reduce((n,p) => n+p.quantity,0), stockCost: stock.reduce((n,p) => n+p.quantity*p.cost,0), salesTotal: currentSales.reduce((n,s) => n+Number(s.total),0), saleCount: currentSales.length, lowStock: stock.filter(p => p.quantity <= 5).slice(0,20).map(({name,quantity}) => ({name,quantity})) });
+        const insights = await provider.insights({ analysis: recentAnalysis(products, inventory, currentSales), productCount: products.length, unitsOnHand: stock.reduce((n,p) => n+p.quantity,0), stockCost: stock.reduce((n,p) => n+p.quantity*p.cost,0), salesTotal: currentSales.reduce((n,s) => n+Number(s.total),0), saleCount: currentSales.length, lowStock: stock.filter(p => p.quantity <= 5).slice(0,20).map(({name,quantity}) => ({name,quantity})) }, body.question); 
         output = { insights, summary: insights.map(i => `${i.title}: ${i.message}`).join('\n'), stub: provider.stub };
       }
       await rpc('finish_ai_job', { job, output, failed: false });

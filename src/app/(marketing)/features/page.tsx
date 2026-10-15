@@ -240,13 +240,13 @@ export default function FeaturesPage() {
                 </div>
                 <div className="flex items-center gap-2 mb-1.5">
                   <div className="tt-head text-lg"><TranslatedText text={"AI Assistant"} /></div>
-                  <Badge variant="outline"><TranslatedText text={"Coming Soon"} /></Badge>
+                  <Badge variant="outline"><TranslatedText text={"Owner reviewed"} /></Badge>
                 </div>
                 <div
                   className="text-sm mb-4"
                   style={{ color: "var(--c-textMuted)" }}
-                ><TranslatedText text={"We're exploring an AI assistant to help with things like restock suggestions and sales insights."} /></div>
-                <p className="text-sm" style={{ color: "var(--c-textMuted)" }}><TranslatedText text={"This feature does not exist in the app yet. We'd rather tell you that plainly than promise something that isn't built."} /></p>
+                ><TranslatedText text={"Prepare inventory drafts, ask business questions and review stock insights from your records."} /></div>
+                <p className="text-sm" style={{ color: "var(--c-textMuted)" }}><TranslatedText text={"Live AI needs an internet connection. Forecasts are estimates, and you review changes before saving."} /></p>
               </div>
             </Reveal>
           </div>

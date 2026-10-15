@@ -181,7 +181,7 @@ export function Header() {
         <Search className="h-4 w-4" strokeWidth={1.75} />
       </Button>
 
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
         <LanguageSelect />
         <div
           className={cn(
@@ -257,6 +257,7 @@ export function Header() {
         <Button
           variant="ghost"
           size="icon"
+          className="hidden sm:inline-flex"
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           title={t.header.toggle_theme}
         >
@@ -315,6 +316,9 @@ export function Header() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem className="sm:hidden" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+              <Sun className="mr-2 h-4 w-4" />{t.header.toggle_theme}
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => router.push("/settings")}>
               <User className="mr-2 h-4 w-4" strokeWidth={1.75} />
               {t.header.profile}

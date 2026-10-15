@@ -25,6 +25,11 @@ export function BusinessSettings({ localizationOnly = false }: { localizationOnl
   const [language, setLanguage] = useState(locale);
   const [value, setValue] = useState(initial);
   const [settings, setSettings] = useState<Record<string, unknown>>({});
+  const [merchantVerification, setMerchantVerification] = useState<{
+    id: string;
+    registrationNumber: string;
+    status: string;
+  } | null>(null);
   const [saved, setSaved] = useState(initial);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -38,13 +43,27 @@ export function BusinessSettings({ localizationOnly = false }: { localizationOnl
     void (async () => {
       try {
         if (!user?.organization_id) throw new Error('No business is linked to this account.');
-        const { data, error } = await createClient().from('organizations').select('*').eq('id', user.organization_id).single();
+        const client = createClient();
+        const [{ data, error }, { data: merchant, error: merchantError }] = await Promise.all([
+          client.from('organizations').select('*').eq('id', user.organization_id).single(),
+          client.from('merchants').select('id, registration_number, verification_status').eq('organization_id', user.organization_id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+        ]);
         if (error) throw error;
+        if (merchantError) throw merchantError;
         if (!data) throw new Error('Business profile could not be loaded.');
         const next = Object.fromEntries(Object.entries(initial).map(([key, fallback]) => [key, data[key as keyof typeof data] || fallback])) as typeof initial;
-        next.registration_number = String(data.settings?.registration_number || '');
+        next.registration_number = String(merchant?.registration_number || data.settings?.registration_number || '');
         next.date_format = String(data.settings?.date_format || 'medium');
-        if (!disposed) { setValue(next); setSaved(next); setSettings(data.settings || {}); }
+        if (!disposed) {
+          setValue(next);
+          setSaved(next);
+          setSettings(data.settings || {});
+          setMerchantVerification(merchant ? {
+            id: merchant.id,
+            registrationNumber: String(merchant.registration_number || ''),
+            status: merchant.verification_status,
+          } : null);
+        }
       } catch (e) { if (!disposed) setError((e as Error).message || 'Could not load business settings.'); }
       finally { if (!disposed) setLoading(false); }
     })();
@@ -55,15 +74,48 @@ export function BusinessSettings({ localizationOnly = false }: { localizationOnl
     if (!editable || !user?.organization_id) return;
     if (!value.name.trim()) { setError('Business name is required.'); return; }
     if (value.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.email)) { setError('Enter a valid business email.'); return; }
+    if (value.registration_number.trim() && !merchantVerification) {
+      setError('This business has no merchant verification record. Contact support to request verification.');
+      return;
+    }
     setSaving(true); setError('');
     try {
       const { registration_number, date_format, ...profile } = value;
-      const { data, error } = await createClient().from('organizations').update({ ...profile, settings: { ...settings, registration_number, date_format }, name: value.name.trim(), updated_at: new Date().toISOString() }).eq('id', user.organization_id).select('id').single();
+      const profileSettings: Record<string, unknown> = { ...settings, date_format };
+      delete profileSettings.registration_number;
+      const client = createClient();
+      const { data, error } = await client.from('organizations').update({ ...profile, settings: profileSettings, name: value.name.trim(), updated_at: new Date().toISOString() }).eq('id', user.organization_id).select('id').single();
       if (error) throw error;
       if (!data) throw new Error('Your account cannot update this business.');
+      let verificationRequested = false;
+      if (merchantVerification) {
+        const registrationNumber = registration_number.trim() || null;
+        const normalized = (value: string | null) => value?.replace(/\s+/g, '').toUpperCase() || '';
+        const shouldRequestVerification = Boolean(registrationNumber) && (
+          normalized(registrationNumber) !== normalized(merchantVerification.registrationNumber)
+          || merchantVerification.status !== 'verified'
+        );
+        const { data: merchant, error: merchantError } = await client.from('merchants').update({
+          business_name: value.name.trim(),
+          contact_phone: value.phone.trim() || null,
+          contact_email: value.email.trim() || user.email,
+          registration_number: registrationNumber,
+          ...(shouldRequestVerification ? { verification_status: 'pending' } : {}),
+        }).eq('id', merchantVerification.id).select('id, registration_number, verification_status').single();
+        if (merchantError) throw merchantError;
+        if (!merchant) throw new Error('This business has no merchant verification record. Contact support to request verification.');
+        verificationRequested = shouldRequestVerification;
+        setMerchantVerification({
+          id: merchant.id,
+          registrationNumber: String(merchant.registration_number || ''),
+          status: merchant.verification_status,
+        });
+      }
       org.setOrganizationName(value.name.trim()); org.setOrganizationPhone(value.phone); org.setOrganizationAddress(value.address); org.setCurrency(value.currency);
       setAppCurrency(value.currency); setAppDateFormat(value.date_format); setLocale(language); setSaved(value);
-      toast.success('Business settings saved');
+      toast.success(copy(verificationRequested
+        ? 'Business details submitted. Your trial will begin after platform verification.'
+        : 'Business settings saved'));
     } catch (e) { setError((e as Error).message || 'Could not save business settings.'); }
     finally { setSaving(false); }
   }

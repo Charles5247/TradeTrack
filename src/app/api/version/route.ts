@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   return NextResponse.json({
-    ...getDownloadInfo(),
+    ...await getDownloadInfo(),
     deployment_id: process.env.NEXT_PUBLIC_DEPLOYMENT_ID ?? 'local',
     checked_at: new Date().toISOString(),
   }, { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' } });

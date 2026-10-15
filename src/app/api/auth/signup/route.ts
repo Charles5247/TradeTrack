@@ -1,43 +1,7 @@
-/**
- * TracKasuwa — Public Self-Serve Signup API
- * POST /api/auth/signup
- *
- * This is intentionally a SEPARATE, unauthenticated-callable route from
- * `/api/merchants/onboard` (which requires an authenticated
- * `platform_owner` caller and is used for staff-initiated onboarding).
- * This route exists specifically for the new public marketing site's
- * plan-selection self-serve flow: any anonymous visitor may
- * call it to create their own brand-new organization + business_owner
- * account, with no existing session and no platform staff involved.
- *
- * Mirrors the same "one org per merchant, roll back on any failure"
- * shape as /api/merchants/onboard, but:
- *   - No auth/role check on the CALLER (this route IS the auth boundary
- *     — anyone may sign themselves up).
- *   - The created user does NOT get `must_change_password: true` (the
- *     signer chose their own password already, unlike the temp-password
- *     admin-onboarding flow).
- *   - Accepts an optional `plan_id` (from the marketing Pricing page's
- *     `?plan=` query param) and, if it resolves to a real, active
- *     subscription_plans row, immediately creates a `subscriptions` row
- *     for the new org on that plan (defaulting to the legacy zero-price
- *     otherwise, so every new org always has SOME subscription row from
- *     day one — consistent with how canAddProduct()/resolveSubscriptionPlan()
- *     in src/lib/subscriptions/plan-limits.ts expect to find one).
- *   - Enterprise is a "Talk to Sales" plan with no self-serve checkout;
- *     if `plan_id` resolves to the Enterprise plan, this route falls back
- *     to the legacy zero-price plan rather than silently granting
- *     Enterprise limits without payment.
- *
- * On ANY failure after organization creation, everything created so far
- * is rolled back (org -> auth user -> users row -> merchants row ->
- * subscription), matching /api/merchants/onboard's pattern, so no
- * half-created account is ever left behind.
- */
-
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import crypto from "crypto";
+import { TRIAL_PLAN_ID } from "@/lib/subscriptions/signup-trial";
 import type { Database } from "@/lib/supabase/types";
 
 type PlanRow = Database["public"]["Tables"]["subscription_plans"]["Row"];
@@ -104,32 +68,12 @@ export async function POST(request: NextRequest) {
 
     const serviceSupabase = getServiceClient();
 
-    // ── Resolve the requested plan (legacy zero-price fallback) ───────
-    // Enterprise has no self-serve checkout, so it is never granted here
-    // even if explicitly requested — only an active, non-Enterprise plan
-    // id results in that plan; anything else (missing, inactive, unknown,
-    // or Enterprise) uses the legacy zero-price fallback.
-    let resolvedPlan: PlanRow | null = null;
-    if (plan_id) {
-      const { data: requestedPlan } = await serviceSupabase
-        .from("subscription_plans")
-        .select("*")
-        .eq("id", plan_id)
-        .eq("is_active", true)
-        .maybeSingle();
-      if (requestedPlan && (requestedPlan as PlanRow).name !== "Enterprise") {
-        resolvedPlan = requestedPlan as PlanRow;
-      }
-    }
-    if (!resolvedPlan) {
-      const { data: freePlan } = await serviceSupabase
-        .from("subscription_plans")
-        .select("*")
-        .eq("name", "Free")
-        .eq("is_active", true)
-        .maybeSingle();
-      resolvedPlan = (freePlan as PlanRow) ?? null;
-    }
+    // The Business plan is selected now; trial access starts only after
+    // platform-owner verification of the submitted business registration.
+    const { data: trialPlan, error: planError } = await serviceSupabase
+      .from("subscription_plans").select("*").eq("id", TRIAL_PLAN_ID).single();
+    if (planError || !trialPlan) throw new Error("The trial plan is unavailable. Please contact support.");
+    const resolvedPlan = trialPlan as PlanRow;
 
     // ── Track what we've created so we can roll back on failure ──────
     let createdOrgId: string | null = null;
@@ -146,7 +90,7 @@ export async function POST(request: NextRequest) {
           email,
           phone: phone || null,
           subscription_plan_id: resolvedPlan?.id ?? null,
-          subscription_status: "trial",
+          subscription_status: "suspended",
         } as any)
         .select("id")
         .single();
@@ -219,31 +163,6 @@ export async function POST(request: NextRequest) {
       }
       createdMerchantId = merchant.id;
 
-      // 5. Create the org's initial `subscriptions` row on the resolved
-      //    plan so plan-limits.ts's
-      //    resolveSubscriptionPlan() has something to find immediately.
-      if (resolvedPlan) {
-        const startsAt = new Date();
-        const expiresAt = new Date(startsAt);
-        // The legacy zero-price plan has no real expiry pressure, but
-        // every subscriptions row needs an expiry. Paid plans self-served
-        // with no payment step yet default to a 14-day trial
-        // (see docs/SUBSCRIPTION_SYSTEM.md — full checkout still runs
-        // through the authenticated Subscriptions page/Zainpay).
-        expiresAt.setDate(
-          expiresAt.getDate() + (resolvedPlan.name === "Free" ? 3650 : 14),
-        );
-        await serviceSupabase.from("subscriptions").insert({
-          organization_id: createdOrgId,
-          plan_id: resolvedPlan.id,
-          status: resolvedPlan.name === "Free" ? "active" : "trial",
-          starts_at: startsAt.toISOString(),
-          expires_at: expiresAt.toISOString(),
-          created_by: authData.user.id,
-          billing_cycle: "monthly",
-        } as any);
-      }
-
       // 6. Audit log (best-effort).
       try {
         await serviceSupabase.from("audit_logs").insert({
@@ -265,9 +184,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           organization_id: createdOrgId,
-          plan: resolvedPlan
-            ? { id: resolvedPlan.id, name: resolvedPlan.name }
-            : null,
+          plan: null,
+          trial_status: "pending_verification",
           user: { id: authData.user.id, email },
         },
         { status: 201 },

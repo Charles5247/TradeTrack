@@ -1,7 +1,7 @@
 {
   "name": "TracKasuwa-desktop",
   "productName": "TracKasuwa",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "TracKasuwa POS & Inventory Management — Windows desktop app",
   "main": "main.js",
   "author": "TracKasuwa",

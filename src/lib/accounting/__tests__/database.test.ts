@@ -7,6 +7,7 @@ let db: PGlite;
 const org='10000000-0000-0000-0000-000000000001';
 const owner='20000000-0000-0000-0000-000000000001';
 const cashier='20000000-0000-0000-0000-000000000002';
+const platformOwner='20000000-0000-0000-0000-000000000010';
 const product='30000000-0000-0000-0000-000000000001';
 const warehouse='40000000-0000-0000-0000-000000000001';
 const sale='50000000-0000-0000-0000-000000000001';
@@ -25,7 +26,12 @@ beforeAll(async () => {
    catch(e){throw new Error(`Migration ${f}: ${e instanceof Error?e.message:e}`);}
  }
  await db.exec(`INSERT INTO organizations(id,name,slug) VALUES('${org}','Test','test');
- INSERT INTO users(id,email,full_name,role,organization_id) VALUES('${owner}','owner@test.local','Owner','business_owner','${org}'),('${cashier}','cashier@test.local','Cashier','cashier','${org}');
+ INSERT INTO users(id,email,full_name,role,organization_id) VALUES('${owner}','owner@test.local','Owner','business_owner','${org}'),('${cashier}','cashier@test.local','Cashier','cashier','${org}'),('${platformOwner}','platform@test.local','Platform Owner','platform_owner',NULL);
+ INSERT INTO merchants(organization_id,business_name,registration_number,contact_name,contact_email,business_owner_user_id)
+ VALUES('${org}','Test','RC-BASE-1','Owner','owner@test.local','${owner}');
+ SELECT set_config('test.uid','${platformOwner}',false);
+ UPDATE merchants SET verification_status='verified' WHERE organization_id='${org}';
+ SELECT set_config('test.uid','${owner}',false);
  INSERT INTO products(id,organization_id,name,sku,selling_price,cost_price) VALUES('${product}','${org}','Rice','RICE',100,50);
  INSERT INTO warehouses(id,organization_id,name) VALUES('${warehouse}','${org}','Main');
  INSERT INTO inventory(organization_id,product_id,warehouse_id,quantity) VALUES('${org}','${product}','${warehouse}',10);
@@ -68,16 +74,41 @@ it('rejects cashier reversals and cross-org operations',async()=>{
  await expect(db.query('SELECT reverse_financial_sale($1,$2,$3)',['50000000-0000-0000-0000-000000000099','void','Wrong sale'])).rejects.toThrow('not found');
 });
 it('requires payment and starts trial with database time',async()=>{
+ const unpaid='10000000-0000-0000-0000-000000000096';
+ const unpaidOwner='20000000-0000-0000-0000-000000000096';
+ await db.exec(`INSERT INTO organizations(id,name,slug) VALUES('${unpaid}','Unpaid','unpaid');
+ INSERT INTO users(id,email,full_name,role,organization_id) VALUES('${unpaidOwner}','unpaid@test.local','Unpaid Owner','business_owner','${unpaid}');`);
  await db.exec(`SELECT set_config('test.jwt','{"role":"service_role"}',false)`);
- await expect(db.exec(`INSERT INTO subscriptions(organization_id,plan_id,status,starts_at,expires_at) VALUES('${org}','${plan}','active',now(),now()+interval '1 month')`)).rejects.toThrow('Payment confirmation');
+ await expect(db.exec(`INSERT INTO subscriptions(organization_id,plan_id,status,starts_at,expires_at) VALUES('${unpaid}','${plan}','active',now(),now()+interval '1 month')`)).rejects.toThrow('Payment confirmation');
+ await db.exec(`SELECT set_config('test.jwt','{}',false); SELECT set_config('test.uid','${owner}',false);`);
 });
-it('activates the introductory window once using server time', async()=>{
- await db.exec(`SELECT set_config('test.jwt','{"role":"service_role"}',false);
- INSERT INTO payment_transactions(organization_id,amount,status) VALUES('${org}',15000,'success');
- INSERT INTO subscriptions(organization_id,plan_id,status,starts_at,expires_at) VALUES('${org}','${plan}','active','2000-01-01','2000-02-01');`);
- const {rows}=await db.query<{days:number,start:boolean}>(`SELECT extract(epoch FROM trial_ends_at-trial_started_at)/86400 days, subscription_period_start=trial_ends_at start FROM organizations WHERE id='${org}'`);
- expect(Number(rows[0].days)).toBe(30);expect(rows[0].start).toBe(true);
- const result=await db.query<{v:{active:boolean}}>('SELECT verify_business_subscription() v');expect(result.rows[0].v.active).toBe(true);
+it('starts the 30-day introductory window when a platform owner approves registration', async()=>{
+ const trialOrg='10000000-0000-0000-0000-000000000097';
+ const trialOwner='20000000-0000-0000-0000-000000000097';
+ await db.exec(`INSERT INTO organizations(id,name,slug) VALUES('${trialOrg}','Verified trial','verified-trial');
+ INSERT INTO users(id,email,full_name,role,organization_id) VALUES('${trialOwner}','trial-owner@test.local','Trial Owner','business_owner','${trialOrg}');
+ INSERT INTO merchants(organization_id,business_name,registration_number,contact_name,contact_email,business_owner_user_id)
+ VALUES('${trialOrg}','Verified trial','RC-VERIFY-97','Trial Owner','trial-owner@test.local','${trialOwner}');
+ SELECT set_config('test.uid','${owner}',false);`);
+ await expect(db.exec(`UPDATE merchants SET verification_status='verified' WHERE organization_id='${trialOrg}'`))
+   .rejects.toThrow('Only a platform owner');
+ await db.exec(`SELECT set_config('test.uid','${platformOwner}',false);
+ UPDATE merchants SET verification_status='verified' WHERE organization_id='${trialOrg}';
+ SELECT set_config('test.uid','${trialOwner}',false);`);
+ const trial=await db.query<{plan:string;days:number;pending:boolean}>(`SELECT subscription_plan_id plan,
+   extract(epoch FROM trial_ends_at-trial_started_at)/86400 days,trial_pending_verification pending
+   FROM organizations WHERE id='${trialOrg}'`);
+ expect(Number(trial.rows[0].days)).toBe(30);
+ expect(trial.rows[0]).toMatchObject({plan:'b4000000-0000-0000-0000-000000000004',pending:false});
+ const result=await db.query<{v:{active:boolean;business_verification_status:string}}>('SELECT verify_business_subscription() v');
+ expect(result.rows[0].v).toMatchObject({active:true,business_verification_status:'verified'});
+ const duplicateOrg='10000000-0000-0000-0000-000000000095';
+ const duplicateOwner='20000000-0000-0000-0000-000000000095';
+ await db.exec(`INSERT INTO organizations(id,name,slug) VALUES('${duplicateOrg}','Duplicate','duplicate');
+ INSERT INTO users(id,email,full_name,role,organization_id) VALUES('${duplicateOwner}','duplicate@test.local','Duplicate Owner','business_owner','${duplicateOrg}');`);
+ await expect(db.exec(`INSERT INTO merchants(organization_id,business_name,registration_number,contact_name,contact_email,business_owner_user_id)
+   VALUES('${duplicateOrg}','Duplicate','rc-verify-97','Duplicate Owner','duplicate@test.local','${duplicateOwner}')`))
+   .rejects.toThrow('merchants_registration_number_normalized_uidx');
 });
 it('reverses stock exactly once and records a reason',async()=>{
  await db.exec(`SELECT set_config('test.jwt','{}',false); SELECT set_config('test.uid','${owner}',false);
@@ -155,7 +186,10 @@ it('requires an import batch for AI inventory approval and rejects inactive acce
  await expect(db.query('SELECT approve_ai_job($1)',[job])).rejects.toThrow('preview batch');
  await db.exec(`SELECT set_config('test.jwt','{"role":"service_role"}',false); UPDATE subscriptions SET status='expired' WHERE organization_id='${org}'; UPDATE organizations SET trial_ends_at=now()-interval '1 day' WHERE id='${org}';`);
  await expect(db.exec("SELECT reserve_ai_job('insights')")).rejects.toThrow('AI requires');
- await db.exec(`UPDATE subscriptions SET status='active' WHERE organization_id='${org}'; SELECT set_config('test.jwt','{}',false);`);
+ await db.exec(`INSERT INTO payment_transactions(organization_id,amount,status,reference)
+   VALUES('${org}',15000,'success','test-ai-restored-subscription');
+   UPDATE subscriptions SET status='active',expires_at=now()+interval '1 month' WHERE organization_id='${org}';
+   SELECT set_config('test.jwt','{}',false);`);
 });
 it('enforces the AI request quota in the database',async()=>{
  const before=await db.query<{n:number}>('SELECT count(*)::int n FROM ai_jobs');
@@ -172,15 +206,6 @@ it('isolates AI rows with real authenticated-role RLS and denies direct writes',
   await expect(db.exec(`INSERT INTO ai_jobs(organization_id,user_id,kind) VALUES('${org}','${otherOwner}','inventory')`)).rejects.toThrow();
  } finally {await db.exec(`RESET ROLE; SELECT set_config('test.uid','${owner}',false);`);}
 });
-it('does not count legacy unpaid signup trials as an introduction on new organizations',async()=>{
- const unpaid='10000000-0000-0000-0000-000000000002';const user='20000000-0000-0000-0000-000000000003';
- await db.exec(`SELECT set_config('test.jwt','{"role":"service_role"}',false); INSERT INTO subscriptions(organization_id,plan_id,status,starts_at,expires_at) VALUES('${unpaid}','${plan}','trial',now(),now()+interval '14 days'); SELECT set_config('test.uid','${user}',false); SELECT set_config('test.jwt','{}',false);`);
- try {
-  expect((await db.query<{v:{active:boolean}}>('SELECT verify_business_subscription() v')).rows[0].v.active).toBe(false);
-  await expect(db.exec("SELECT reserve_ai_job('insights')")).rejects.toThrow('AI requires');
- } finally {await db.exec(`SELECT set_config('test.uid','${owner}',false)`);}
-});
-
 it('isolates supplier catalogs and lets only owners assign warehouse staff', async () => {
  const other='10000000-0000-0000-0000-000000000099';
  const supplier='60000000-0000-0000-0000-000000000001';
@@ -199,4 +224,45 @@ it('isolates supplier catalogs and lets only owners assign warehouse staff', asy
   expect((await db.query('DELETE FROM warehouse_staff RETURNING *')).rows).toHaveLength(0);
   await expect(db.exec(`INSERT INTO warehouse_staff(organization_id,warehouse_id,user_id,assignment_role) VALUES('${org}','${warehouse}','${owner}','manager')`)).rejects.toThrow();
  } finally { await db.exec(`RESET ROLE; SELECT set_config('test.uid','${owner}',false);`); }
+});
+
+it('keeps a new business locked until verified, then permits transactions only through its 30-day trial', async () => {
+ const trialOrg='10000000-0000-0000-0000-000000000098';
+ const trialOwner='20000000-0000-0000-0000-000000000098';
+ const trialWarehouse='40000000-0000-0000-0000-000000000098';
+ const firstSale='50000000-0000-0000-0000-000000000098';
+ const secondSale='50000000-0000-0000-0000-000000000099';
+ await db.exec(`INSERT INTO organizations(id,name,slug) VALUES('${trialOrg}','Trial boundary','trial-boundary');
+ INSERT INTO users(id,email,full_name,role,organization_id) VALUES('${trialOwner}','trial-boundary@test.local','Trial Owner','business_owner','${trialOrg}');
+ INSERT INTO merchants(organization_id,business_name,registration_number,contact_name,contact_email,business_owner_user_id)
+ VALUES('${trialOrg}','Trial boundary','RC-BOUNDARY-98','Trial Owner','trial-boundary@test.local','${trialOwner}');
+ INSERT INTO warehouses(id,organization_id,name) VALUES('${trialWarehouse}','${trialOrg}','Trial warehouse');`);
+ const pending=await db.query<{status:string;pending:boolean}>(
+   `SELECT subscription_status status,trial_pending_verification pending FROM organizations WHERE id='${trialOrg}'`);
+ expect(pending.rows[0]).toEqual({status:'suspended',pending:true});
+ const orgDetails=await db.query<{plan:string;days:number;status:string}>(`SELECT subscription_plan_id plan,
+   extract(epoch FROM trial_ends_at-trial_started_at)/86400 days,subscription_status status
+   FROM organizations WHERE id='${trialOrg}'`);
+ const insertSale=(id:string,invoice:string)=>`INSERT INTO sales(id,organization_id,invoice_number,cashier_id,warehouse_id,total,amount_paid,payment_method)
+   VALUES('${id}','${trialOrg}','${invoice}','${trialOwner}','${trialWarehouse}',10,10,'cash')`;
+ await expect(db.exec(insertSale(firstSale,'TRIAL-1'))).rejects.toThrow('verification');
+ await db.exec(`SELECT set_config('test.uid','${platformOwner}',false);
+ UPDATE merchants SET verification_status='verified' WHERE organization_id='${trialOrg}';
+ SELECT set_config('test.uid','${trialOwner}',false);`);
+ expect(orgDetails.rows[0].status).toBe('suspended');
+ const verified=await db.query<{plan:string;days:number;status:string}>(`SELECT subscription_plan_id plan,
+   extract(epoch FROM trial_ends_at-trial_started_at)/86400 days,subscription_status status
+   FROM organizations WHERE id='${trialOrg}'`);
+ expect(verified.rows[0]).toMatchObject({
+   plan:'b4000000-0000-0000-0000-000000000004',
+   status:'trial',
+ });
+ expect(Number(verified.rows[0].days)).toBe(30);
+
+ await db.exec(insertSale(firstSale,'TRIAL-1'));
+ await db.exec(`UPDATE organizations SET trial_ends_at=statement_timestamp()-interval '1 second' WHERE id='${trialOrg}';
+ UPDATE subscriptions SET expires_at=statement_timestamp()-interval '1 second' WHERE organization_id='${trialOrg}' AND status='trial'`);
+ await expect(db.exec(insertSale(secondSale,'TRIAL-2'))).rejects.toThrow('Trial ended');
+ const existingSales=await db.query<{count:number}>(`SELECT count(*)::int count FROM sales WHERE organization_id='${trialOrg}'`);
+ expect(existingSales.rows[0].count).toBe(1);
 });

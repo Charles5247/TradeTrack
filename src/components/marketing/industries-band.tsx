@@ -1,25 +1,15 @@
 
 import { TranslatedLabel, TranslatedText } from '@/i18n/text';
-import { Store, ChefHat, Building2, ShoppingBasket, Croissant, Building } from "lucide-react";
+import { Store, ChefHat, Building2, ShoppingBasket, Croissant, Building, Pill, Warehouse, Factory } from "lucide-react";
 import { Reveal } from "@/components/marketing/reveal";
 import { Badge } from "@/components/ui/badge";
 import { SiteImage } from "@/components/shared/site-image";
 import { siteImages } from "@/content/images";
 
-/**
- * Industries band — ported from the handoff's `IndustriesBand` layout.
- * Content deviation (flagged, not guessed): the handoff shows 6
- * industries with 2 marked `live: true` (Retail, Grocery) and 4 marked
- * "Extension" implying a shipped-but-separate module. In this codebase,
- * the Production & Hospitality Extension (README §5.5 / build-order
- * Step 8) has NOT been built yet — no route group, no schema, no
- * feature gate exists. Representing it as an available "Extension"
- * badge would be a fabricated claim, which conflicts with this app's
- * established honesty standard (see /features' explicit "Coming Soon"
- * treatment for the unbuilt AI Assistant). Retail is marked Available;
- * everything else is explicitly "Coming soon" until Step 8 ships.
- */
 const INDUSTRIES = [
+ { key: "pharmaceuticals", image: { alt: "Pharmaceutical stock and sales" }, label: "Pharmaceuticals", desc: "Track medicine stock and sales. Prescription and expiry management are not included.", Icon: Pill, live: true },
+ { key: "warehousing", image: { alt: "Warehouse inventory" }, label: "Warehousing merchants", desc: "Track stock across warehouses, transfers and sales.", Icon: Warehouse, live: true },
+ { key: "manufacturers", image: { alt: "Finished goods inventory" }, label: "Manufacturers", desc: "Track finished-goods stock and sales. Production planning is not available.", Icon: Factory, live: true },
  { key: "bakery", image: siteImages.industries.bakery, label: "Bakeries", desc: "Recipes, batches and production planning.", Icon: Croissant, live: false },
  { key: "mall", image: siteImages.industries.mall, label: "Shopping malls", desc: "Tenants, leases and shared utilities.", Icon: Building, live: false },
   {
@@ -60,9 +50,9 @@ export function IndustriesBand() {
           <div className="flex flex-wrap justify-between items-end gap-10 mb-12">
             <div>
               <div className="tt-eyebrow mb-3"><TranslatedText text={"Industries · one platform"} /></div>
-              <h2 className="tt-head" style={{ fontSize: "clamp(28px, 4vw, 48px)", margin: 0, maxWidth: 640, lineHeight: 1.05 }}><TranslatedText text={"Retail today. Restaurants & hotels are on the way."} /></h2>
+              <h2 className="tt-head" style={{ fontSize: "clamp(28px, 4vw, 48px)", margin: 0, maxWidth: 640, lineHeight: 1.05 }}><TranslatedText text={"Built for shops, warehouses and finished goods."} /></h2>
             </div>
-            <p style={{ fontSize: 15, color: "var(--c-textMuted)", maxWidth: 380, lineHeight: 1.6 }}><TranslatedText text={"A Production & Hospitality extension is planned on top of the core platform — same login, same audit trail. Not available yet."} /></p>
+            <p style={{ fontSize: 15, color: "var(--c-textMuted)", maxWidth: 380, lineHeight: 1.6 }}><TranslatedText text={"Production planning and hospitality tools are planned; core inventory and sales tracking are available today."} /></p>
           </div>
         </Reveal>
 

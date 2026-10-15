@@ -40,6 +40,7 @@ import { createClient } from "@/lib/supabase/client";
 import { formatCurrency } from "@/lib/utils/format";
 import { useCartStore, useAuthStore, useOrgStore } from "@/store";
 import { useI18n } from "@/i18n";
+import { useCopy } from "@/i18n/text";
 import type { Product, Warehouse, CartItem } from "@/types";
 import Image from "next/image";
 import { usePrinter } from "@/hooks/use-printer";
@@ -226,7 +227,11 @@ function POSPageInner() {
   const { organizationName, organizationAddress, organizationPhone, currency } =
     useOrgStore();
   const { t } = useI18n();
+  const copy = useCopy();
   const cart = useCartStore();
+  const [mobileCartOpen, setMobileCartOpen] = useState(false);
+  const cartRef = useRef<HTMLDivElement>(null);
+  const cartOpenButtonRef = useRef<HTMLButtonElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [amountPaid, setAmountPaid] = useState("");
   const [customerName, setCustomerName] = useState("");
@@ -268,6 +273,40 @@ function POSPageInner() {
     setIsHydrated(true);
   }, []);
 
+  useEffect(() => {
+    if (!mobileCartOpen) return;
+    const dialog = cartRef.current;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMobileCartOpen(false);
+        return;
+      }
+      if (event.key !== "Tab" || !dialog) return;
+      const focusable = dialog.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!first || !last) {
+        event.preventDefault();
+      } else if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    requestAnimationFrame(() => {
+      dialog?.querySelector<HTMLButtonElement>("[data-mobile-cart-close]")?.focus();
+    });
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      cartOpenButtonRef.current?.focus();
+    };
+  }, [mobileCartOpen]);
+
   const saleMutation = useMutation({
     mutationFn: completeSale,
     // completeSale only writes to IndexedDB — it must run immediately even
@@ -278,6 +317,7 @@ function POSPageInner() {
     onSuccess: (sale) => {
       setLastSale(sale);
       setShowReceipt(true);
+      setMobileCartOpen(false);
       cart.clearCart();
       setAmountPaid("");
       setCustomerName("");
@@ -431,11 +471,11 @@ function POSPageInner() {
 
   return (
     <div
-      className="flex min-h-0 flex-col gap-3 p-3 lg:flex-row lg:gap-5 lg:p-5"
+      className="flex min-h-0 flex-col gap-3 p-3 pb-28 lg:flex-row lg:gap-5 lg:p-5"
       style={{ minHeight: "calc(100dvh - var(--header-h))" }}
     >
       {/* Left: Products */}
-      <div className="flex-1 flex flex-col gap-4 min-w-0">
+      <div className="flex min-w-0 flex-1 flex-col gap-4">
         {/* Search & Warehouse — big-touch, README §9.2 */}
         <div className="tt-stat flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="relative flex-1">
@@ -556,14 +596,32 @@ function POSPageInner() {
       </div>
 
       {/* Right: Cart — sticky, README §9.2 "sticky cart panel" */}
+      {mobileCartOpen && (
+        <button
+          type="button"
+          className="fixed inset-0 z-30 bg-black/40 lg:hidden"
+          aria-label={copy("Close cart")}
+          onClick={() => setMobileCartOpen(false)}
+        />
+      )}
       <div
-        className="tt-stat flex max-h-[min(62dvh,520px)] w-full shrink-0 flex-col overflow-hidden p-0 lg:sticky lg:top-0 lg:max-h-[calc(100dvh-var(--header-h)-40px)] lg:w-80 xl:w-96"
+        ref={cartRef}
+        id="pos-cart"
+        role={mobileCartOpen ? "dialog" : undefined}
+        aria-modal={mobileCartOpen ? true : undefined}
+        aria-labelledby="pos-cart-heading"
+        className={`tt-stat w-full shrink-0 flex-col p-0 lg:w-80 xl:w-96 ${
+          mobileCartOpen
+            ? "fixed inset-x-0 bottom-0 z-40 flex max-h-[85dvh] overflow-y-auto rounded-t-2xl border-t bg-background pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl lg:static lg:z-auto lg:max-h-[calc(100dvh-var(--header-h)-40px)] lg:rounded-none lg:shadow-none"
+            : "hidden lg:sticky lg:top-0 lg:flex lg:max-h-[calc(100dvh-var(--header-h)-40px)] lg:overflow-y-auto"
+        }`}
       >
+        <Button data-mobile-cart-close variant="outline" className="m-3 min-h-11 lg:hidden" onClick={() => setMobileCartOpen(false)}><TranslatedText text="Back to products" /></Button>
         {/* Cart Header */}
         <div className="flex items-center justify-between border-b border-border p-4">
           <div className="flex items-center gap-2">
             <ShoppingCart className="h-4 w-4" strokeWidth={1.75} />
-            <span className="tt-section-title text-base">{t.pos.cart}</span>
+            <span id="pos-cart-heading" className="tt-section-title text-base">{t.pos.cart}</span>
             {isHydrated && cart.items.length > 0 && (
               <Badge variant="secondary">{cart.items.length}</Badge>
             )}
@@ -581,7 +639,7 @@ function POSPageInner() {
         </div>
 
         {/* Cart Items */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-2">
+        <div className="shrink-0 p-3 space-y-2 lg:max-h-[40dvh] lg:overflow-y-auto">
           {!isHydrated ? (
             <div className="flex h-32 flex-col items-center justify-center tt-muted">
               <Loader2 className="mb-2 h-8 w-8 animate-spin opacity-30" />
@@ -600,10 +658,10 @@ function POSPageInner() {
             cart.items.map((item: CartItem) => (
               <div
                 key={item.product.id}
-                className="flex items-center gap-2 rounded-[var(--radius)] p-2"
+                className="flex flex-wrap items-center gap-2 rounded-[var(--radius)] p-3"
                 style={{ background: "var(--c-surfaceAlt)" }}
               >
-                <div className="flex-1 min-w-0">
+                <div className="min-w-[120px] flex-1">
                   <p className="text-xs font-medium truncate">
                     {item.product.name}
                   </p>
@@ -814,28 +872,51 @@ function POSPageInner() {
           </div>
 
           {/* Complete Sale Button — README §9.2 big-touch primary CTA */}
-          <Button
-            className="h-[var(--btn-h)] w-full text-base"
-            onClick={handleCheckout}
-            disabled={
-              !isHydrated ||
-              cart.items.length === 0 ||
-              saleMutation.isPending ||
-              isUploadingReceipt
-            }
-          >
-            {saleMutation.isPending ? (
-              <>{t.pos.processing}</>
-            ) : (
-              <>
-                <CreditCard className="h-4 w-4 mr-2" strokeWidth={1.75} />
-                {t.pos.complete_sale}
-              </>
-            )}
-          </Button>
+          <div className="sticky bottom-0 -mx-4 border-t border-border bg-card/95 px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur">
+            <Button
+              className="h-[var(--btn-h)] w-full text-base"
+              onClick={handleCheckout}
+              disabled={
+                !isHydrated ||
+                cart.items.length === 0 ||
+                saleMutation.isPending ||
+                isUploadingReceipt
+              }
+            >
+              {saleMutation.isPending ? (
+                <>{t.pos.processing}</>
+              ) : (
+                <>
+                  <CreditCard className="h-4 w-4 mr-2" strokeWidth={1.75} />
+                  {t.pos.complete_sale}
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
 
+      {!mobileCartOpen && (
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background px-3 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] lg:hidden">
+          <div className="mx-auto flex max-w-2xl items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="truncate text-xs text-muted-foreground">{t.pos.cart} · {cart.items.reduce((n, item) => n + item.quantity, 0)}</p>
+              <p className="tt-mono tt-tabular text-base font-bold">{formatCurrency(total)}</p>
+            </div>
+            <Button
+              ref={cartOpenButtonRef}
+              className="min-h-12 min-w-32"
+              aria-controls="pos-cart"
+              aria-label={copy("View cart and pay")}
+              disabled={cart.items.length === 0}
+              onClick={() => setMobileCartOpen(true)}
+            >
+              <CreditCard className="h-4 w-4" aria-hidden="true" />
+              <TranslatedText text="Pay" />
+            </Button>
+          </div>
+        </div>
+      )}
       {/* Receipt Modal */}
       {showReceipt && lastSale && (
         <div
