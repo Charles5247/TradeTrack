@@ -61,72 +61,78 @@ describe("persistOfflineSale", () => {
    * After the fix (composite `by-queue-key` index), each duplicate check is
    * a single indexed read regardless of backlog size.
    */
-  it("stays fast even with a large pending offline backlog", async () => {
-    const db = await getDB();
-
-    // 30,000 pending rows simulates a till that has been offline for a long
-    // time without syncing. Before the composite-index fix, every
-    // addToSyncQueue call scanned all of these; with a 2-item sale that's
-    // up to 5 calls × 30,000 rows = 150,000 row reads on the critical path.
+  describe("with a large pending offline backlog", () => {
     const SEEDED_PENDING_ROWS = 30000;
-    const oldTimestamp = new Date(
-      Date.now() - 30 * 24 * 60 * 60 * 1000,
-    ).toISOString();
+    // Building the fake IndexedDB fixture is not checkout work. Give only
+    // setup a larger budget; the test and its 300ms checkout limit stay strict.
+    beforeEach(async () => {
+      const db = await getDB();
 
-    const tx = db.transaction("sync_queue", "readwrite");
-    const store = tx.objectStore("sync_queue");
-    const seeds: SyncQueueRecord[] = Array.from(
-      { length: SEEDED_PENDING_ROWS },
-      (_, i) => ({
-        id: generateId(),
-        table_name: "sales",
-        operation: "INSERT",
-        record_id: `pending-sale-${i}`,
-        payload: { id: `pending-sale-${i}` },
-        status: "pending",
-        retry_count: 0,
-        created_at: oldTimestamp,
-      }),
-    );
-    await Promise.all([...seeds.map((seed) => store.add(seed)), tx.done]);
+      // 30,000 pending rows simulates a till that has been offline for a long
+      // time without syncing. Before the composite-index fix, every
+      // addToSyncQueue call scanned all of these; with a 2-item sale that's
+      // up to 5 calls × 30,000 rows = 150,000 row reads on the critical path.
+      const oldTimestamp = new Date(
+        Date.now() - 30 * 24 * 60 * 60 * 1000,
+      ).toISOString();
 
-    const seededCount = await db.count("sync_queue");
-    expect(seededCount).toBe(SEEDED_PENDING_ROWS);
+      const tx = db.transaction("sync_queue", "readwrite");
+      const store = tx.objectStore("sync_queue");
+      const seeds: SyncQueueRecord[] = Array.from(
+        { length: SEEDED_PENDING_ROWS },
+        (_, i) => ({
+          id: generateId(),
+          table_name: "sales",
+          operation: "INSERT",
+          record_id: `pending-sale-${i}`,
+          payload: { id: `pending-sale-${i}` },
+          status: "pending",
+          retry_count: 0,
+          created_at: oldTimestamp,
+        }),
+      );
+      await Promise.all([...seeds.map((seed) => store.add(seed)), tx.done]);
 
-    const start = Date.now();
+      const seededCount = await db.count("sync_queue");
+      expect(seededCount).toBe(SEEDED_PENDING_ROWS);
+    }, 60000);
 
-    await persistOfflineSale({
-      cashier_id: "cashier-1",
-      organization_id: "org-1",
-      warehouse_id: "warehouse-1",
-      invoice_number: "INV-000003",
-      items: [
-        {
-          product_id: "product-1",
-          warehouse_id: "warehouse-1",
-          quantity: 2,
-          unit_price: 50,
-          cost_price: 40,
-          discount: 0,
-          total: 100,
-        },
-        {
-          product_id: "product-2",
-          warehouse_id: "warehouse-1",
-          quantity: 1,
-          unit_price: 200,
-          cost_price: 150,
-          discount: 0,
-          total: 200,
-        },
-      ],
-      subtotal: 300,
-      discount: 0,
-      tax: 0,
-      total: 300,
-      amount_paid: 300,
-      change_amount: 0,
-      payment_method: "cash",
+    it("stays fast even with a large pending offline backlog", async () => {
+      const db = await getDB();
+      const start = Date.now();
+
+      await persistOfflineSale({
+        cashier_id: "cashier-1",
+        organization_id: "org-1",
+        warehouse_id: "warehouse-1",
+        invoice_number: "INV-000003",
+        items: [
+          {
+            product_id: "product-1",
+            warehouse_id: "warehouse-1",
+            quantity: 2,
+            unit_price: 50,
+            cost_price: 40,
+            discount: 0,
+            total: 100,
+          },
+          {
+            product_id: "product-2",
+            warehouse_id: "warehouse-1",
+            quantity: 1,
+            unit_price: 200,
+            cost_price: 150,
+            discount: 0,
+            total: 200,
+          },
+        ],
+        subtotal: 300,
+        discount: 0,
+        tax: 0,
+        total: 300,
+        amount_paid: 300,
+        change_amount: 0,
+        payment_method: "cash",
     });
 
     const elapsedMs = Date.now() - start;
@@ -141,80 +147,85 @@ describe("persistOfflineSale", () => {
 
     const totalAfter = await db.count("sync_queue");
     expect(totalAfter).toBeGreaterThan(SEEDED_PENDING_ROWS);
+    });
   });
 
-  it("stays fast even with a large historical synced sync_queue backlog", async () => {
-    const db = await getDB();
-
-    // 30,000 rows is a realistic "months of daily use, never pruned" queue
-    // size for a busy till. Measured directly against this exact scenario:
-    // the pre-fix `db.getAll('sync_queue')`-per-call implementation took
-    // ~1000ms+ here (and scales linearly with the backlog); the fixed,
-    // index-scoped implementation takes low single-digit milliseconds. The
-    // budget below is set well below the pre-fix timing so this test fails
-    // if the O(queue size) scan regresses, while staying generous enough
-    // to not be flaky on a slower CI machine.
+  describe("with a large historical synced backlog", () => {
     const SEEDED_SYNCED_ROWS = 30000;
-    const oldTimestamp = new Date(
-      Date.now() - 200 * 24 * 60 * 60 * 1000,
-    ).toISOString();
+    beforeEach(async () => {
+      const db = await getDB();
 
-    const tx = db.transaction("sync_queue", "readwrite");
-    const store = tx.objectStore("sync_queue");
-    const seeds: SyncQueueRecord[] = Array.from(
-      { length: SEEDED_SYNCED_ROWS },
-      (_, i) => ({
-        id: generateId(),
-        table_name: "sales",
-        operation: "INSERT",
-        record_id: `historical-sale-${i}`,
-        payload: { id: `historical-sale-${i}` },
-        status: "synced",
-        retry_count: 0,
-        created_at: oldTimestamp,
-        synced_at: oldTimestamp,
-      }),
-    );
-    await Promise.all([...seeds.map((seed) => store.add(seed)), tx.done]);
+      // 30,000 rows is a realistic "months of daily use, never pruned" queue
+      // size for a busy till. Measured directly against this exact scenario:
+      // the pre-fix `db.getAll('sync_queue')`-per-call implementation took
+      // ~1000ms+ here (and scales linearly with the backlog); the fixed,
+      // index-scoped implementation takes low single-digit milliseconds. The
+      // budget below is set well below the pre-fix timing so this test fails
+      // if the O(queue size) scan regresses, while staying generous enough
+      // to not be flaky on a slower CI machine.
+      const oldTimestamp = new Date(
+        Date.now() - 200 * 24 * 60 * 60 * 1000,
+      ).toISOString();
 
-    // Sanity check the seed actually landed.
-    const seededCount = await db.count("sync_queue");
-    expect(seededCount).toBe(SEEDED_SYNCED_ROWS);
+      const tx = db.transaction("sync_queue", "readwrite");
+      const store = tx.objectStore("sync_queue");
+      const seeds: SyncQueueRecord[] = Array.from(
+        { length: SEEDED_SYNCED_ROWS },
+        (_, i) => ({
+          id: generateId(),
+          table_name: "sales",
+          operation: "INSERT",
+          record_id: `historical-sale-${i}`,
+          payload: { id: `historical-sale-${i}` },
+          status: "synced",
+          retry_count: 0,
+          created_at: oldTimestamp,
+          synced_at: oldTimestamp,
+        }),
+      );
+      await Promise.all([...seeds.map((seed) => store.add(seed)), tx.done]);
 
-    const start = Date.now();
+      // Sanity check the seed actually landed.
+      const seededCount = await db.count("sync_queue");
+      expect(seededCount).toBe(SEEDED_SYNCED_ROWS);
+    }, 60000);
 
-    await persistOfflineSale({
-      cashier_id: "cashier-1",
-      organization_id: "org-1",
-      warehouse_id: "warehouse-1",
-      invoice_number: "INV-000002",
-      items: [
-        {
-          product_id: "product-1",
-          warehouse_id: "warehouse-1",
-          quantity: 2,
-          unit_price: 50,
-          cost_price: 40,
-          discount: 0,
-          total: 100,
-        },
-        {
-          product_id: "product-2",
-          warehouse_id: "warehouse-1",
-          quantity: 1,
-          unit_price: 200,
-          cost_price: 150,
-          discount: 0,
-          total: 200,
-        },
-      ],
-      subtotal: 300,
-      discount: 0,
-      tax: 0,
-      total: 300,
-      amount_paid: 300,
-      change_amount: 0,
-      payment_method: "cash",
+    it("stays fast even with a large historical synced sync_queue backlog", async () => {
+      const db = await getDB();
+      const start = Date.now();
+
+      await persistOfflineSale({
+        cashier_id: "cashier-1",
+        organization_id: "org-1",
+        warehouse_id: "warehouse-1",
+        invoice_number: "INV-000002",
+        items: [
+          {
+            product_id: "product-1",
+            warehouse_id: "warehouse-1",
+            quantity: 2,
+            unit_price: 50,
+            cost_price: 40,
+            discount: 0,
+            total: 100,
+          },
+          {
+            product_id: "product-2",
+            warehouse_id: "warehouse-1",
+            quantity: 1,
+            unit_price: 200,
+            cost_price: 150,
+            discount: 0,
+            total: 200,
+          },
+        ],
+        subtotal: 300,
+        discount: 0,
+        tax: 0,
+        total: 300,
+        amount_paid: 300,
+        change_amount: 0,
+        payment_method: "cash",
     });
 
     const elapsedMs = Date.now() - start;
@@ -235,6 +246,7 @@ describe("persistOfflineSale", () => {
     // the untouched historical backlog.
     const totalAfter = await db.count("sync_queue");
     expect(totalAfter).toBeGreaterThan(SEEDED_SYNCED_ROWS);
+    });
   });
 });
 

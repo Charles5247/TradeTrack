@@ -68,7 +68,10 @@ psql "$(supabase status -o env | grep DB_URL | cut -d= -f2)" \
 ### Option B — remote/hosted Supabase project (staging, or a shared dev project)
 
 1. Go to your Supabase project → SQL Editor.
-2. Run every file in `supabase/migrations/` **in numeric order**:
+2. Run the baseline migrations below. For migrations after 012, follow
+   the dependency-aware sequence in [DEPLOYMENT.md](./DEPLOYMENT.md);
+   it is not strictly numeric because migration 018 must precede 014 on
+   some hosted projects.
 
    ```
    001_initial_schema.sql
@@ -85,6 +88,12 @@ psql "$(supabase status -o env | grep DB_URL | cut -d= -f2)" \
    011_purchase_orders.sql
    012_fix_stray_active_legacy_plans.sql
    ```
+
+The later `20261014222356_signup_full_access_trial.sql` migration is for
+isolated non-production testing or preview only. It has not been applied
+to production. Review its registration-data preflight and existing-account
+behavior in [DEPLOYMENT.md](./DEPLOYMENT.md#signup-full-access-trial-migration)
+before applying it.
 
 3. Optionally run `supabase/seed/001_seed_data.sql` for demo data (see
    the caveat above — verify the catalog afterward).
