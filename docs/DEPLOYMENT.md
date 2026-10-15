@@ -70,6 +70,14 @@ The live TracKasuwa project has received migrations 013–019; see [LIVE_MIGRATI
 
 For another populated hosted database, migration **018 must run before 014** when `pgcrypto` is installed in `extensions`; it supplies the owner-only compatibility function used by 014's backfill. The continuation after the original 001–012 baseline is therefore **013 → 018 → 014 → 015 → 016 → 017 → 019**. Migration 019 accounts for Supabase's direct default grants to anonymous/authenticated roles. This project still uses explicitly applied SQL; do not use `db push` until its legacy history has been reconciled.
 
+### Signup full-access trial migration
+
+`20261014222356_signup_full_access_trial.sql` follows migration 019. It has been exercised by the isolated PGlite test suite, but has **not** been applied to the live/production database. Apply it only to a non-production preview or staging database after confirming that database is not production.
+
+Before applying it to a populated non-production database, review the registration data it will reconcile. It copies registration numbers from organization settings into merchant records, and intentionally aborts on conflicting values, organizations with a registration number but no merchant record, or duplicate normalized registration numbers. Resolve those records before retrying.
+
+Existing organizations keep their current subscription/trial fields and transaction data; they do not receive a retroactive trial. Existing paid entitlements continue to be evaluated normally. Accounts without a valid entitlement are blocked from creating new sales, vendor transactions, and purchase orders, while existing records remain readable and exportable. New eligible organizations are suspended pending platform-owner verification of a registration number; approval starts their 30-day Business-plan trial. The application does not verify registrations against an external registry.
+
 ### Configure Storage
 
 1. Storage → Create bucket: `product-images` (public).

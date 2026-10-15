@@ -52,10 +52,9 @@ npm install
 cp .env.example .env.local
 # Edit .env.local with your Supabase + Zainpay credentials
 
-# 3. Run Supabase migrations, in order (see docs/DEPLOYMENT.md §1 for the
-#    full list and Storage/Auth setup steps, or docs/LOCAL_DEV_SETUP.md
-#    for the full local-dev walkthrough incl. `supabase db reset`)
-#    supabase/migrations/001_initial_schema.sql ... 012_fix_stray_active_legacy_plans.sql
+# 3. Run Supabase migrations using the order and environment cautions in
+#    docs/DEPLOYMENT.md (later migrations have ordering constraints).
+#    Do not apply the signup-trial migration to production without approval.
 
 # 4. Create demo Supabase Auth users matching the seed data (required —
 #    the seed SQL only inserts profile rows, it does not create logins)
