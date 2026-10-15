@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react';
 import { syncEngine } from '@/lib/offline/sync-engine';
 import { useSyncStore } from '@/store';
 import type { SyncStatus } from '@/types';
+import { OfflineNavigation } from './offline-navigation';
 import { VerificationBanner } from '@/components/subscriptions/verification-banner';
 
 function mapEngineStatus(status: string): SyncStatus {
@@ -70,5 +71,5 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     };
   }, [setSyncStatus, setLastSync, setPendingCount]);
 
-  return <><VerificationBanner />{storageError && <div role="alert" className="bg-[color-mix(in_oklch,var(--c-warn),transparent_90%)] p-3 text-[var(--c-warn)]">{storageError}</div>}{authError && <div role="alert" className="bg-[color-mix(in_oklch,var(--c-warn),transparent_90%)] p-3 text-[var(--c-warn)]">{authError} <a href="/login" className="underline"><TranslatedText text={"Sign in"} /></a></div>}{children}</>;
+  return <><OfflineNavigation /><VerificationBanner />{storageError && <div role="alert" className="bg-[color-mix(in_oklch,var(--c-warn),transparent_90%)] p-3 text-[var(--c-warn)]">{storageError}</div>}{authError && <div role="alert" className="bg-[color-mix(in_oklch,var(--c-warn),transparent_90%)] p-3 text-[var(--c-warn)]">{authError} <a href="/login" className="underline"><TranslatedText text={"Sign in"} /></a></div>}{children}</>;
 }

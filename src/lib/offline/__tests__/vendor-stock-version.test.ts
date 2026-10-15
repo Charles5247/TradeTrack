@@ -165,3 +165,24 @@ it('holds a legacy pending snapshot for review rather than inventing its origina
   expect(sent).toHaveLength(0);
   expect((await stockQueue())[0]).toMatchObject({ stock_sync: { review_reason: 'legacy_pending_write' } });
 });
+
+it('does not swallow product download errors', async () => {
+  const failure = new Error('Product download failed');
+  const query = { select: () => query, eq: () => query, gte: () => query, order: () => query, range: async () => ({ data: null, error: failure }) };
+  await expect(engine.pullData('org', { from: () => query })).rejects.toThrow('Product download failed');
+});
+
+it('downloads products beyond the first server page', async () => {
+  const ranges: number[] = [];
+  const remote = { from: (table: string) => {
+    const query = { select: () => query, eq: () => query, gte: () => query, like: () => query, is: () => query, order: () => query,
+      range: async (offset: number) => {
+        if (table === 'products') ranges.push(offset);
+        return { data: table === 'products' ? Array.from({ length: offset === 0 ? 500 : 1 }, (_, index) => ({ id: `page-product-${offset + index}`, organization_id: 'org', name: 'Product' })) : [], error: null };
+      } };
+    return query;
+  } };
+  await engine.pullData('org', remote);
+  expect(ranges).toEqual([0, 500]);
+  expect(await (await getDB()).get('products', 'page-product-500')).toBeTruthy();
+});

@@ -168,6 +168,9 @@ export function getOfflineAuthSession(): OfflineAuthSession | null {
 }
 
 export function clearOfflineAuthSession(): void {
+  if (typeof window !== 'undefined' && 'caches' in window) {
+    void caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('TracKasuwa-pages-')).map(key => caches.delete(key)))).catch(() => {});
+  }
   removeStorage(OFFLINE_AUTH_STORAGE_KEY);
   removeStorage(REMEMBERED_LOGIN_STORAGE_KEY);
   clearOfflineSessionCookie();

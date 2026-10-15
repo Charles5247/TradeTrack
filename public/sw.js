@@ -64,7 +64,7 @@ self.addEventListener("activate", (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key !== STATIC_CACHE && key !== PAGES_CACHE)
+            .filter((key) => key.startsWith("TracKasuwa-") && key !== STATIC_CACHE && key !== PAGES_CACHE)
             .map((key) => caches.delete(key)),
         ),
       )
@@ -104,16 +104,16 @@ self.addEventListener("fetch", (event) => {
       caches.match(request).then((cached) => {
         if (cached) return cached;
         return fetch(request)
-          .then((response) => {
+          .then(async (response) => {
             if (response && response.status === 200) {
               const clone = response.clone();
-              caches
+              await caches
                 .open(STATIC_CACHE)
                 .then((cache) => cache.put(request, clone));
             }
             return response;
           })
-          .catch(() => cached);
+          .catch(() => cached || Response.error());
       }),
     );
     return;
@@ -137,7 +137,7 @@ self.addEventListener("fetch", (event) => {
         // a cached copy — this is what keeps the cache fresh. We don't
         // await it before responding.
         const revalidate = fetch(request)
-          .then((response) => {
+          .then(async (response) => {
             // Only cache a genuine, non-redirected 200 for THIS URL. If the
             // browser followed a redirect (e.g. middleware bouncing an
             // unverifiable session to /login), response.redirected is true
@@ -147,7 +147,7 @@ self.addEventListener("fetch", (event) => {
             // when there's no existing cached page to prefer instead.
             if (response && response.status === 200 && !response.redirected) {
               const clone = response.clone();
-              caches
+              await caches
                 .open(PAGES_CACHE)
                 .then((cache) => cache.put(request, clone));
             }

@@ -53,6 +53,10 @@ export function MarketingNav() {
           <Logo size={30} />
         </Link>
 
+        <div className="shrink-0 sm:hidden">
+          <LanguageSelect compact />
+        </div>
+
         <div className="hidden xl:flex flex-1 items-center gap-1">
           {NAV_ITEMS.map((item) => {
             const active = pathname === item.href;
@@ -122,7 +126,7 @@ export function MarketingNav() {
       {mobileOpen && (
         <div id="marketing-mobile-menu" className="max-h-[calc(100dvh-64px)] overflow-y-auto xl:hidden border-t border-border bg-[var(--c-bg)] px-4 sm:px-6 py-3">
           <div className="flex items-center justify-between gap-3 border-b border-border pb-3 mb-2">
-            <LanguageSelect />
+            <div className="hidden sm:block"><LanguageSelect /></div>
             <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0" aria-label={copy("Toggle theme")} onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}><Sun className="h-4 w-4" /></Button>
           </div>
           <div className="flex flex-col gap-1">

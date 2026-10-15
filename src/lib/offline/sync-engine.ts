@@ -52,6 +52,7 @@ interface SyncState {
 type SyncListener = (state: SyncState) => void;
 
 class SyncEngine {
+  private syncedAccount: string | null = null;
   private activeStockWrites = new Set<string>();
   private listeners: SyncListener[] = [];
   private state: SyncState = {
@@ -149,18 +150,24 @@ class SyncEngine {
         return;
       }
 
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("users")
         .select("organization_id")
         .eq("id", user.id)
         .single();
 
+      if (profileError) throw profileError;
       if (!profile?.organization_id) {
         this.setState({ status: "idle" });
         return;
       }
 
       const orgId = profile.organization_id;
+      const account = `${orgId}:${user.id}`;
+      if (this.syncedAccount !== account) {
+        this.syncedAccount = account;
+        this.setState({ lastSync: null });
+      }
 
       // Authenticate before touching queued records; failures preserve all data.
       const refreshed = await withTimeout(supabase.auth.refreshSession(), AUTH_CHECK_TIMEOUT_MS, SYNC_AUTH_TIMEOUT);
@@ -174,6 +181,7 @@ class SyncEngine {
         return;
       }
       await this.pushChanges();
+      const pullStartedAt = new Date();
       await this.pullData(orgId, supabase);
 
       // Housekeeping only — never let a pruning failure mark an otherwise
@@ -192,7 +200,7 @@ class SyncEngine {
       const needsStockCheck = remaining.some((entry) => entry.stock_sync?.review_reason);
       this.setState({
         status: needsStockCheck ? "error" : "idle",
-        lastSync: new Date(),
+        lastSync: pullStartedAt,
         pendingCount: remaining.length,
         error: needsStockCheck ? "This stock update needs a quick check. Open Vendors for details." : null,
       });
@@ -563,25 +571,30 @@ class SyncEngine {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async pullRows(client: any, table: string, orgId: string, since?: string) {
+    const rows = [];
+    for (let offset = 0; ; offset += 500) {
+      let query = client.from(table).select('*').eq('organization_id', orgId);
+      if (since) query = query.gte('updated_at', since);
+      const { data, error } = await query.order('id').range(offset, offset + 499);
+      if (error) throw error;
+      rows.push(...(data ?? []));
+      if (!data || data.length < 500) return rows;
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async pullData(orgId: string, supabase: any) {
     const lastSync = this.state.lastSync;
     const since = lastSync ? lastSync.toISOString() : "1970-01-01T00:00:00Z";
 
-    const { data: products } = await supabase
-      .from("products")
-      .select("*")
-      .eq("organization_id", orgId)
-      .gte("updated_at", since);
+    const products = await this.pullRows(supabase, "products", orgId, since);
 
     if (products?.length) {
       await saveToOfflineDB("products", products);
     }
 
-    const { data: inventory } = await supabase
-      .from("inventory")
-      .select("*")
-      .eq("organization_id", orgId)
-      .gte("updated_at", since);
+    const inventory = await this.pullRows(supabase, "inventory", orgId, since);
 
     if (inventory?.length) {
       const db = await getDB();
@@ -595,20 +608,14 @@ class SyncEngine {
       await tx.done;
     }
 
-    const { data: warehouses } = await supabase
-      .from("warehouses")
-      .select("*")
-      .eq("organization_id", orgId);
+    const warehouses = await this.pullRows(supabase, "warehouses", orgId);
 
     if (warehouses?.length) {
       await clearOfflineStore("warehouses");
       await saveToOfflineDB("warehouses", warehouses);
     }
 
-    const { data: categories } = await supabase
-      .from("categories")
-      .select("*")
-      .eq("organization_id", orgId);
+    const categories = await this.pullRows(supabase, "categories", orgId);
 
     if (categories?.length) {
       await clearOfflineStore("categories");
