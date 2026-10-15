@@ -971,6 +971,21 @@
 
 .tt-app { font-size: var(--base-font); height: 100dvh; }
 
+/* Keep mobile edge gestures from dragging the document beyond its content.
+   Actual page, table and dialog scroll areas remain scrollable. */
+@media screen and (max-width: 1023px) {
+  html, body {
+    max-width: 100%;
+    overflow-x: clip;
+    overscroll-behavior: none;
+  }
+  /* A short drawer must not pass a swipe through to the page behind it. */
+  .tt-app:has(#app-sidebar[data-collapsed="false"]) main,
+  .tt-app main:has(#pos-cart[aria-modal="true"]) {
+    overflow-y: hidden;
+  }
+}
+
 /* Native selects share the same Retail sizing and focus treatment as Input. */
 .tt-input {
   width: 100%;

@@ -88,7 +88,7 @@ export function Sidebar() {
       {/* Mobile overlay */}
       {isMobile && sidebarOpen && (
         <div
-          className="fixed inset-0 bg-[color-mix(in_oklch,var(--c-text),transparent_60%)] backdrop-blur-[2px] z-20 lg:hidden"
+          className="fixed inset-0 touch-none bg-[color-mix(in_oklch,var(--c-text),transparent_60%)] backdrop-blur-[2px] z-20 lg:hidden"
           onClick={closeSidebar}
           aria-hidden="true"
         />
@@ -154,7 +154,7 @@ export function Sidebar() {
         )}
 
         {/* Navigation groups */}
-        <nav className="flex-1 overflow-y-auto px-3 pb-3">
+        <nav className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-none px-3 pb-3">
           {groups.map((group) => (
             <div key={group.title} className="mb-2">
               {sidebarOpen && (

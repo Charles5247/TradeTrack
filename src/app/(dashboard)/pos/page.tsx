@@ -471,8 +471,7 @@ function POSPageInner() {
 
   return (
     <div
-      className="flex min-h-0 flex-col gap-3 p-3 pb-28 lg:flex-row lg:gap-5 lg:p-5"
-      style={{ minHeight: "calc(100dvh - var(--header-h))" }}
+      className="flex min-h-full min-w-0 flex-col gap-3 p-3 pb-28 lg:flex-row lg:gap-5 lg:p-5"
     >
       {/* Left: Products */}
       <div className="flex min-w-0 flex-1 flex-col gap-4">
@@ -512,7 +511,7 @@ function POSPageInner() {
         </div>
 
         {/* Product Grid */}
-        <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="min-h-0 min-w-0 flex-1 lg:overflow-y-auto">
           {productsLoading ? (
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
               {[...Array(8)].map((_, i) => (
@@ -599,7 +598,7 @@ function POSPageInner() {
       {mobileCartOpen && (
         <button
           type="button"
-          className="fixed inset-0 z-30 bg-black/40 lg:hidden"
+          className="fixed inset-0 z-30 touch-none bg-black/40 lg:hidden"
           aria-label={copy("Close cart")}
           onClick={() => setMobileCartOpen(false)}
         />
@@ -610,7 +609,7 @@ function POSPageInner() {
         role={mobileCartOpen ? "dialog" : undefined}
         aria-modal={mobileCartOpen ? true : undefined}
         aria-labelledby="pos-cart-heading"
-        className={`min-w-0 w-full shrink-0 flex-col rounded-xl border border-border bg-card p-0 lg:w-80 xl:w-96 ${
+        className={`min-w-0 w-full shrink-0 flex-col overscroll-none rounded-xl border border-border bg-card p-0 lg:w-80 xl:w-96 ${
           mobileCartOpen
             ? "fixed inset-x-0 bottom-0 z-40 flex max-h-[85dvh] overflow-y-auto rounded-t-2xl border-t bg-background pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl lg:static lg:z-auto lg:max-h-[calc(100dvh-var(--header-h)-40px)] lg:rounded-none lg:shadow-none"
             : "hidden lg:sticky lg:top-0 lg:flex lg:max-h-[calc(100dvh-var(--header-h)-40px)] lg:overflow-y-auto"

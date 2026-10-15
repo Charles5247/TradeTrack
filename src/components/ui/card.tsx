@@ -13,6 +13,7 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
+      'min-w-0',
       flat
         ? 'rounded-lg border border-border bg-muted text-card-foreground'
         : 'rounded-lg border border-border bg-card text-card-foreground shadow-sm',
