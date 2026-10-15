@@ -24,4 +24,4 @@ Commits a26b301 and 7e16a05 contain responsive header, navigation, POS cards/car
 4. Restore internet, allow sync, and check the sale from the owner's other device.
 5. Refresh the platform-owner merchant list to see Uzor Electronics.
 
-Validation: production build passed; 99 offline/storage/sync regression tests and the HTML/script preparation test passed. Worker JavaScript syntax checked. Live-device rehearsal remains required.
+Validation: production build and TypeScript check passed. The full suite passed 348 tests and exposed a UTF-8 BOM in the new SQL migration; the BOM was removed and all 20 database tests passed on rerun (368 tests covered). Worker JavaScript syntax checked. Live-device rehearsal remains required.

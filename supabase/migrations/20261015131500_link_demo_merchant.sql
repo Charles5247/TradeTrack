@@ -1,4 +1,4 @@
-﻿-- Repair the existing seeded demo organization without recreating accounts
+-- Repair the existing seeded demo organization without recreating accounts
 -- or claiming identity verification. Safe to run more than once.
 INSERT INTO public.merchants
   (organization_id, business_name, business_type, status, verification_status,
