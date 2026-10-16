@@ -43,6 +43,7 @@ yarn-error.log*
 # Private env files must stay untracked. Only the placeholder template is public.
 .env*
 !.env.example
+.env.local
 
 # vercel
 .vercel
