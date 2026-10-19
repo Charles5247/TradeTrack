@@ -6,12 +6,11 @@ import React, { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Loader2, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import { AuthShell } from "@/components/layout/auth-shell";
 import { signupSchema, type SignupFormData } from "@/lib/validations";
 import { createClient } from "@/lib/supabase/client";
@@ -22,12 +21,8 @@ import {
 
 /**
  * Public self-serve signup page — reachable logged-out, no existing
- * account required. Accepts an optional `?plan=<subscription_plans.id>`
- * query param (set by the marketing Pricing page's "Get Started"/
- * plan-selection CTAs) and forwards it to POST /api/auth/signup, which
- * creates a brand-new organization + business_owner account on that
- * plan (falling back to Free for missing/invalid/Enterprise plan ids —
- * see that route's own comments).
+ * account required. Every new self-serve account starts with a free
+ * 30-day Business-plan trial; users choose a paid subscription afterward.
  *
  * After a successful signup, this page signs the new user straight in
  * client-side (same pattern as the login page: cache an offline auth
@@ -41,8 +36,6 @@ function SignupForm() {
   const copy = useCopy();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const planId = searchParams.get("plan") ?? undefined;
-
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -52,7 +45,6 @@ function SignupForm() {
     formState: { errors },
   } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
-    defaultValues: { plan_id: planId },
   });
 
   const onSubmit = async (data: SignupFormData) => {
@@ -67,7 +59,7 @@ function SignupForm() {
           email: data.email,
           password: data.password,
           phone: data.phone,
-          plan_id: planId,
+          plan_id: searchParams.get("plan"),
         }),
       });
       const result = await res.json();
@@ -129,9 +121,7 @@ function SignupForm() {
       <div className="tt-eyebrow mb-2"><TranslatedText text={"Create your merchant"} /></div>
       <h1 className="tt-head text-3xl mb-2"><TranslatedText text={"Create your account"} /></h1>
       <p className="tt-muted text-sm mb-8">
-        <TranslatedText text={planId
-          ? "You're one step away from your selected plan."
-          : "Enter your details to create an account."} />
+        <TranslatedText text={"Create your account and start your free 30-day Business trial. No payment is required today."} />
       </p>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -216,19 +206,6 @@ function SignupForm() {
             disabled={isLoading}
           />
         </div>
-
-        {planId && (
-          <Card flat>
-            <CardContent className="p-3 flex items-start gap-2 text-xs tt-muted">
-              <CheckCircle
-                className="h-4 w-4 shrink-0 mt-0.5"
-                style={{ color: "var(--c-success)" }}
-                strokeWidth={1.75}
-              />
-              <span><TranslatedText text={"Your selected plan will be applied to your new account automatically after signup."} /></span>
-            </CardContent>
-          </Card>
-        )}
 
         <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
           {isLoading ? (

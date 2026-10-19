@@ -85,7 +85,7 @@ it('requires payment and starts trial with database time',async()=>{
 it('starts the 30-day introductory window when a platform owner approves registration', async()=>{
  const trialOrg='10000000-0000-0000-0000-000000000097';
  const trialOwner='20000000-0000-0000-0000-000000000097';
- await db.exec(`INSERT INTO organizations(id,name,slug) VALUES('${trialOrg}','Verified trial','verified-trial');
+ await db.exec(`INSERT INTO organizations(id,name,slug,subscription_status) VALUES('${trialOrg}','Verified trial','verified-trial','suspended');
  INSERT INTO users(id,email,full_name,role,organization_id) VALUES('${trialOwner}','trial-owner@test.local','Trial Owner','business_owner','${trialOrg}');
  INSERT INTO merchants(organization_id,business_name,registration_number,contact_name,contact_email,business_owner_user_id)
  VALUES('${trialOrg}','Verified trial','RC-VERIFY-97','Trial Owner','trial-owner@test.local','${trialOwner}');
@@ -226,38 +226,47 @@ it('isolates supplier catalogs and lets only owners assign warehouse staff', asy
  } finally { await db.exec(`RESET ROLE; SELECT set_config('test.uid','${owner}',false);`); }
 });
 
-it('keeps a new business locked until verified, then permits transactions only through its 30-day trial', async () => {
+it('starts the self-serve 30-day trial at signup without verification and blocks transactions after it expires', async () => {
  const trialOrg='10000000-0000-0000-0000-000000000098';
  const trialOwner='20000000-0000-0000-0000-000000000098';
  const trialWarehouse='40000000-0000-0000-0000-000000000098';
  const firstSale='50000000-0000-0000-0000-000000000098';
  const secondSale='50000000-0000-0000-0000-000000000099';
- await db.exec(`INSERT INTO organizations(id,name,slug) VALUES('${trialOrg}','Trial boundary','trial-boundary');
+ await db.exec(`SELECT set_config('test.uid','',false);
+ INSERT INTO organizations(id,name,slug,subscription_status,settings)
+   VALUES('${trialOrg}','Trial boundary','trial-boundary','trial','{"_signup_trial":true}');
  INSERT INTO users(id,email,full_name,role,organization_id) VALUES('${trialOwner}','trial-boundary@test.local','Trial Owner','business_owner','${trialOrg}');
  INSERT INTO merchants(organization_id,business_name,registration_number,contact_name,contact_email,business_owner_user_id)
  VALUES('${trialOrg}','Trial boundary','RC-BOUNDARY-98','Trial Owner','trial-boundary@test.local','${trialOwner}');
- INSERT INTO warehouses(id,organization_id,name) VALUES('${trialWarehouse}','${trialOrg}','Trial warehouse');`);
- const pending=await db.query<{status:string;pending:boolean}>(
-   `SELECT subscription_status status,trial_pending_verification pending FROM organizations WHERE id='${trialOrg}'`);
- expect(pending.rows[0]).toEqual({status:'suspended',pending:true});
- const orgDetails=await db.query<{plan:string;days:number;status:string}>(`SELECT subscription_plan_id plan,
-   extract(epoch FROM trial_ends_at-trial_started_at)/86400 days,subscription_status status
-   FROM organizations WHERE id='${trialOrg}'`);
+ INSERT INTO warehouses(id,organization_id,name) VALUES('${trialWarehouse}','${trialOrg}','Trial warehouse');
+ SELECT set_config('test.uid','${trialOwner}',false);`);
+ const pending=await db.query<{status:string;pending:boolean;days:number}>(
+   `SELECT subscription_status status,trial_pending_verification pending,
+     extract(epoch FROM trial_ends_at-trial_started_at)/86400 days
+     FROM organizations WHERE id='${trialOrg}'`);
+ expect(pending.rows[0]).toMatchObject({status:'trial',pending:false});
+ expect(Number(pending.rows[0].days)).toBe(30);
+ const trialSubscription=await db.query<{status:string;days:number}>(`SELECT status,
+   extract(epoch FROM expires_at-starts_at)/86400 days
+   FROM subscriptions WHERE organization_id='${trialOrg}'`);
+ expect(trialSubscription.rows[0].status).toBe('trial');
+ expect(Number(trialSubscription.rows[0].days)).toBe(30);
+ const verification=await db.query<{v:{active:boolean;business_verification_status:string}}>(
+   'SELECT verify_business_subscription() v');
+ expect(verification.rows[0].v).toMatchObject({
+   active:true,
+   business_verification_status:'unverified',
+ });
  const insertSale=(id:string,invoice:string)=>`INSERT INTO sales(id,organization_id,invoice_number,cashier_id,warehouse_id,total,amount_paid,payment_method)
    VALUES('${id}','${trialOrg}','${invoice}','${trialOwner}','${trialWarehouse}',10,10,'cash')`;
- await expect(db.exec(insertSale(firstSale,'TRIAL-1'))).rejects.toThrow('verification');
- await db.exec(`SELECT set_config('test.uid','${platformOwner}',false);
- UPDATE merchants SET verification_status='verified' WHERE organization_id='${trialOrg}';
- SELECT set_config('test.uid','${trialOwner}',false);`);
- expect(orgDetails.rows[0].status).toBe('suspended');
- const verified=await db.query<{plan:string;days:number;status:string}>(`SELECT subscription_plan_id plan,
+ const trial=await db.query<{plan:string;days:number;status:string}>(`SELECT subscription_plan_id plan,
    extract(epoch FROM trial_ends_at-trial_started_at)/86400 days,subscription_status status
    FROM organizations WHERE id='${trialOrg}'`);
- expect(verified.rows[0]).toMatchObject({
+ expect(trial.rows[0]).toMatchObject({
    plan:'b4000000-0000-0000-0000-000000000004',
    status:'trial',
  });
- expect(Number(verified.rows[0].days)).toBe(30);
+ expect(Number(trial.rows[0].days)).toBe(30);
 
  await db.exec(insertSale(firstSale,'TRIAL-1'));
  await db.exec(`UPDATE organizations SET trial_ends_at=statement_timestamp()-interval '1 second' WHERE id='${trialOrg}';

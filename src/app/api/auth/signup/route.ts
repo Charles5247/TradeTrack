@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import crypto from "crypto";
-import { TRIAL_PLAN_ID } from "@/lib/subscriptions/signup-trial";
+import { TRIAL_PLAN_ID, signupPlanPreference } from "@/lib/subscriptions/signup-trial";
 import type { Database } from "@/lib/supabase/types";
-
-type PlanRow = Database["public"]["Tables"]["subscription_plans"]["Row"];
 
 function getServiceClient() {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -68,13 +66,6 @@ export async function POST(request: NextRequest) {
 
     const serviceSupabase = getServiceClient();
 
-    // The Business plan is selected now; trial access starts only after
-    // platform-owner verification of the submitted business registration.
-    const { data: trialPlan, error: planError } = await serviceSupabase
-      .from("subscription_plans").select("*").eq("id", TRIAL_PLAN_ID).single();
-    if (planError || !trialPlan) throw new Error("The trial plan is unavailable. Please contact support.");
-    const resolvedPlan = trialPlan as PlanRow;
-
     // ── Track what we've created so we can roll back on failure ──────
     let createdOrgId: string | null = null;
     let createdAuthUserId: string | null = null;
@@ -89,8 +80,12 @@ export async function POST(request: NextRequest) {
           slug: slugify(business_name),
           email,
           phone: phone || null,
-          subscription_plan_id: resolvedPlan?.id ?? null,
-          subscription_status: "suspended",
+          subscription_plan_id: TRIAL_PLAN_ID,
+          subscription_status: "trial",
+          settings: {
+            _signup_trial: true,
+            preferred_plan_id: signupPlanPreference(plan_id),
+          },
         } as any)
         .select("id")
         .single();
@@ -145,7 +140,7 @@ export async function POST(request: NextRequest) {
           contact_email: email,
           contact_phone: phone || null,
           country: "Nigeria",
-          subscription_plan_id: resolvedPlan?.id ?? null,
+          subscription_plan_id: TRIAL_PLAN_ID,
           status: "active",
           verification_status: "unverified",
           onboarding_completed: true,
@@ -174,7 +169,7 @@ export async function POST(request: NextRequest) {
           new_values: {
             business_name,
             email,
-            plan: resolvedPlan?.name ?? null,
+            plan: "Business",
           },
         } as any);
       } catch {
@@ -184,8 +179,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           organization_id: createdOrgId,
-          plan: null,
-          trial_status: "pending_verification",
+          plan: { id: TRIAL_PLAN_ID, name: "Business" },
+          trial_status: "active",
           user: { id: authData.user.id, email },
         },
         { status: 201 },

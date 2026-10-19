@@ -78,6 +78,8 @@ Before applying it to a populated non-production database, review the registrati
 
 Existing organizations keep their current subscription/trial fields and transaction data; they do not receive a retroactive trial. Existing paid entitlements continue to be evaluated normally. Accounts without a valid entitlement are blocked from creating new sales, vendor transactions, and purchase orders, while existing records remain readable and exportable. New eligible organizations are suspended pending platform-owner verification of a registration number; approval starts their 30-day Business-plan trial. The application does not verify registrations against an external registry.
 
+Migration `20261019113049_signup_30_day_trial_at_creation.sql` changes only self-serve signup: every new self-serve account starts its 30-day Business-plan trial immediately, with no registration verification or payment required before the trial. Staff-onboarded organizations still use the verification flow above. Apply this migration after `20261014222356_signup_full_access_trial.sql` in the target environment.
+
 ### Configure Storage
 
 1. Storage → Create bucket: `product-images` (public).

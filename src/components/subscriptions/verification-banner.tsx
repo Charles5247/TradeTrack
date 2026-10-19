@@ -3,7 +3,7 @@ import { useCopy } from '@/i18n/text';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store';
-import { introductionDays, evaluateVerification, verifySubscription, type Verification } from '@/lib/subscriptions/verification';
+import { introductionDays, trialReminderDay, evaluateVerification, verifySubscription, type Verification } from '@/lib/subscriptions/verification';
 
 export function VerificationBanner() {
   const copy = useCopy();
@@ -37,13 +37,14 @@ export function VerificationBanner() {
   if (!org) return null;
   const decision = evaluateVerification(state, Date.now());
   const trialDays = introductionDays(state);
+  const reminder = trialReminderDay(state);
   const verificationStatus = state?.businessVerificationStatus ?? 'unverified';
   const verificationRequired = Boolean(
     state && !decision.allowed && !state.trialEndsAt && verificationStatus !== 'verified',
   );
   if (decision.allowed && !decision.warning && !trialDays && !verificationRequired) return null;
   const paymentRequired = Boolean(
-    state && verificationStatus === 'verified' && !state.rollback && !decision.allowed,
+    state && !state.rollback && (state.trialEndsAt || verificationStatus === 'verified'),
   );
   const verificationMessage = verificationStatus === 'pending'
     ? 'Business details submitted. Your trial will begin after platform verification.'
@@ -54,6 +55,7 @@ export function VerificationBanner() {
     <div role="status" className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b bg-[color-mix(in_oklch,var(--c-warn),transparent_90%)] px-4 py-2 text-sm text-[var(--c-warn)]">
       <span>{verificationRequired ? copy(verificationMessage) : verificationError || copy(decision.message)}</span>
       {trialDays > 0 && <span>{copy('Free trial: {days} days remaining.', { days: trialDays })}</span>}
+      {reminder !== null && <span>{copy('Trial reminder: day {day} of 30.', { day: reminder })}</span>}
       {verificationRequired && <Link href="/settings" className="font-semibold underline underline-offset-2">{copy('Submit business details')}</Link>}
       {paymentRequired && <Link href="/subscriptions" className="font-semibold underline underline-offset-2">{copy('Choose a plan to create new transactions.')}</Link>}
     </div>
