@@ -1,5 +1,6 @@
 import { MarketingNav } from "@/components/marketing/marketing-nav";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
+import { WhatsAppLink } from '@/components/marketing/whatsapp-link';
 
 /**
  * Public marketing route group layout — no auth check, no dashboard
@@ -25,6 +26,7 @@ export default function MarketingLayout({
       <MarketingNav />
       <main className="flex-1">{children}</main>
       <MarketingFooter />
+      <WhatsAppLink floating />
     </div>
   );
 }

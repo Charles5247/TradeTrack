@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import './subscription-fixture';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { QueryClient, onlineManager } from '@tanstack/react-query';
 import * as offlineDB from '../db';

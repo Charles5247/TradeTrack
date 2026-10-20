@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { MerchantReviews } from '@/components/marketing/merchant-reviews';
+import { TranslatedText } from '@/i18n/text';
 import { Hero } from "@/components/marketing/hero";
 import { AIAssistantBand } from '@/components/marketing/ai-assistant-band';
 import { StatsBand } from "@/components/marketing/stats-band";
@@ -67,6 +69,7 @@ export default function MarketingHomePage() {
       <IndustriesBand />
       <AccountabilityBand />
       <CTABand />
+      <section className="mx-auto max-w-6xl px-4 py-12"><h2 className="mb-6 text-3xl font-semibold"><TranslatedText text="Merchant reviews" /></h2><MerchantReviews /></section>
     </>
   );
 }

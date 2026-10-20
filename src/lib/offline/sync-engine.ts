@@ -330,13 +330,15 @@ class SyncEngine {
           synced_at: new Date().toISOString(),
         });
       } catch (err) {
-        const errMessage = err instanceof Error ? err.message : "Unknown error";
+        const errMessage = err && typeof err === 'object' && 'message' in err ? String(err.message) : "Unknown error";
+        const subscriptionBlocked = /Trial ended|active subscription|read.only/i.test(errMessage);
         await db.put("sync_queue", {
           ...item,
-          status: item.retry_count >= 3 ? "failed" : "pending",
-          retry_count: item.retry_count + 1,
+          status: subscriptionBlocked ? "pending" : item.retry_count >= 3 ? "failed" : "pending",
+          retry_count: subscriptionBlocked ? item.retry_count : item.retry_count + 1,
           error: errMessage,
         });
+        if (subscriptionBlocked) break;
       }
     }
   }

@@ -131,7 +131,8 @@ export function resolveSubscriptionPlan<T extends PlanLike>(
   allPlans: T[],
 ): T | null {
   if (!subscription) return null;
-  return allPlans.find((p) => p.id === subscription.plan_id) ?? null;
+  const plan = allPlans.find((p) => p.id === subscription.plan_id) ?? null;
+  return plan && subscription.status === 'trial' ? { ...plan, max_products: 700 } : plan;
 }
 
 /** Treats `null`/`undefined`/`-1` all as "no limit". */

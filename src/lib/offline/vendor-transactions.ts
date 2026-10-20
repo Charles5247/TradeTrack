@@ -16,6 +16,7 @@ export interface OfflineVendorTransactionPayload {
 }
 
 export async function persistOfflineVendorTransaction(payload: OfflineVendorTransactionPayload) {
+  await requireTransactionSubscription(payload.organization_id);
   if (!payload.organization_id || !payload.created_by || !payload.vendor_name.trim() || !payload.date_issued) {
     throw new Error('Organization, creator, vendor name and issue date are required');
   }
@@ -135,3 +136,4 @@ export async function getVendorStockChecks(organizationId: string) {
     .map((entry) => ({ id: entry.id, productName: names.get(String(entry.payload.product_id)) ?? 'Item',
       savedQuantity: Number(entry.payload.quantity) }));
 }
+import { requireTransactionSubscription } from '@/lib/subscriptions/verification';

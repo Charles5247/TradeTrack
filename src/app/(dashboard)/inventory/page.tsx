@@ -25,6 +25,7 @@ import { AccessGuard } from '@/components/shared/access-guard';
 import { useI18n } from '@/i18n';
 import { generateId } from '@/lib/utils/id';
 import { saveToOfflineDB, addToSyncQueue, getAllFromOfflineDB } from '@/lib/offline/db';
+import { requireTransactionSubscription } from '@/lib/subscriptions/verification';
 import type { InventoryRecord } from '@/lib/offline/db';
 
 async function fetchInventory(warehouseId: string, filter: string, search: string) {
@@ -96,6 +97,7 @@ async function adjustStock(payload: {
   reason?: string;
 }) {
   const saveOffline = async () => {
+    await requireTransactionSubscription(payload.organization_id);
     const nowIso = new Date().toISOString();
 
     // Look for a locally cached inventory row for this product+warehouse

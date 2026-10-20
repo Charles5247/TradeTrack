@@ -83,6 +83,7 @@ export const NAV_GROUPS_BO: NavGroup[] = [
         roles: ["business_owner", "admin"],
       },
       { navKey: "receipts", label: "Receipts", href: "/receipts", icon: History, roles: ["business_owner", "admin", "cashier"] },
+      { navKey: "reviews", label: "Reviews", href: "/reviews", icon: ClipboardCheck, roles: ["business_owner"] },
       {
         navKey: "receiptLookup",
         href: "/receipts/lookup",
@@ -173,6 +174,8 @@ export const NAV_GROUPS_PO: NavGroup[] = [
   {
     title: "Platform",
     items: [
+      { navKey: "contactMessages", label: "Contact messages", href: "/admin/contact", icon: Bell, roles: ["platform_owner"] },
+      { navKey: "reviews", label: "Reviews", href: "/reviews", icon: ClipboardCheck, roles: ["platform_owner"] },
       {
         navKey: "admin",
         href: "/admin",
