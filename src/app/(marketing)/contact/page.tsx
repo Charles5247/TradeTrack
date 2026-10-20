@@ -25,7 +25,7 @@ export default function ContactPage() {
     <p className="tt-eyebrow">TracKasuwa</p><h1 className="tt-head mt-3 text-4xl sm:text-5xl">{copy('Contact us')}</h1>
     <p className="mt-4 max-w-xl text-lg">{copy('We help you set up and keep your business records in order.')}</p>
     <div className="mt-10 grid gap-10 md:grid-cols-2">
-      <div className="space-y-5 rounded-2xl border border-border p-6">
+      <div className="space-y-5 rounded-2xl border border-border bg-card p-6 shadow-sm">
         <WhatsAppLink /><p><a className="underline" href={`tel:${BUSINESS.phoneInternational}`}>{BUSINESS.phone}</a></p>
         <p><a className="break-all underline" href={`mailto:${BUSINESS.email}`}>{BUSINESS.email}</a></p>
         <p>{copy(BUSINESS.location)}</p><p>{copy(BUSINESS.supportHours)}</p>
@@ -36,7 +36,7 @@ export default function ContactPage() {
           <p className="mt-3"><WhatsAppLink /></p>
         </div>
       </div>
-      <form onSubmit={submit} className="space-y-4">
+      <form onSubmit={submit} className="space-y-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
         {([['name','Your name',150],['business_name','Business name',200],['phone','Phone / WhatsApp',30]] as const).map(([name,label,max]) => <label key={name} className="block text-sm font-medium">{copy(label)}<input required name={name} maxLength={max} minLength={name === 'phone' ? 7 : 2} type={name === 'phone' ? 'tel' : 'text'} className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-3" /></label>)}
         <label className="block text-sm font-medium">{copy('Message')}<textarea required name="message" minLength={5} maxLength={5000} rows={5} className="mt-2 w-full rounded-lg border border-border bg-background p-3" /></label>
         <button disabled={busy} className="rounded-lg bg-primary px-5 py-3 text-primary-foreground disabled:opacity-50">{copy(busy ? 'Sending…' : 'Send message')}</button>
