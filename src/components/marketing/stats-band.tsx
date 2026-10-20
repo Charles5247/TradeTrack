@@ -14,8 +14,8 @@ import { Reveal } from "@/components/marketing/reveal";
  * business metrics.
  */
 const STATS = [
-  { n: "4", l: "Paid plans available" },
-  { n: "4", l: "Roles with dedicated permissions" },
+  { n: "30", l: "Days to try your business tools" },
+  { n: "NGN", l: "Records in naira" },
   { n: "Offline", l: "Sales-ready POS" },
   { n: "Audit", l: "Action history" },
 ];
@@ -24,15 +24,15 @@ export function StatsBand() {
   return (
     <section
       className="border-y border-border"
-      style={{ padding: "80px 0" }}
+      style={{ padding: "36px 0" }}
     >
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
           {STATS.map((s, i) => (
             <Reveal key={s.l} delay={i * 100}>
               <div>
-                <div className="tt-head" style={{ fontSize: 48, color: "var(--c-primary)", lineHeight: 1 }}>
-                  {s.n}
+                <div className="tt-head" style={{ fontSize: 32, color: "var(--c-primary)", lineHeight: 1 }}>
+                  <TranslatedLabel>{s.n}</TranslatedLabel>
                 </div>
                 <div className="tt-muted mt-2 text-sm"><TranslatedLabel>{s.l}</TranslatedLabel></div>
               </div>

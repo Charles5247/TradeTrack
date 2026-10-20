@@ -1,6 +1,16 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Editorial headings stay on public pages; transactional UI keeps its compact type. */
+.tt-marketing .market-display {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 500;
+}
+.tt-marketing :where(a, button, input, textarea):focus-visible {
+  outline: 3px solid var(--c-primary);
+  outline-offset: 4px;
+}
+
 /* ============================================================================
  * TracKasuwa — "Retail" design system (README §4)
  * Bold POS, cashier-friendly, electric-blue primary. Light + dark required.
@@ -51,16 +61,16 @@
 @layer base {
   :root {
     /* ── Retail canonical palette — light mode (README §4.1) ───────── */
-    --c-bg: oklch(0.985 0.003 250);
-    --c-bgAlt: oklch(0.96 0.006 250);
+    --c-bg: #f5f7fa;
+    --c-bgAlt: #eaf0f7;
     --c-surface: oklch(1 0 0);
-    --c-surfaceAlt: oklch(0.97 0.005 250);
-    --c-border: oklch(0.9 0.008 250);
-    --c-borderStrong: oklch(0.8 0.01 250);
+    --c-surfaceAlt: #eef2f6;
+    --c-border: #cbd5e1;
+    --c-borderStrong: #94a3b8;
 
-    --c-text: oklch(0.15 0.02 250);
-    --c-textMuted: oklch(0.48 0.015 250);
-    --c-textFaint: oklch(0.65 0.012 250);
+    --c-text: #142438;
+    --c-textMuted: #4d5e73;
+    --c-textFaint: #596b80;
 
     --c-primary: oklch(0.52 0.22 255);
     --c-primaryFg: oklch(0.99 0.003 250);

@@ -1,292 +1,43 @@
-"use client";
-import { TranslatedText, useCopy } from '@/i18n/text';
-
-
 import Link from "next/link";
-import { ArrowRight, Download, Check, ArrowUp } from "lucide-react";
-import { Reveal } from "@/components/marketing/reveal";
-import { useScrollY } from "@/hooks/use-scroll-y";
-import { SiteImage } from "@/components/shared/site-image";
-import { siteImages } from "@/content/images";
+import { ArrowRight, Check, Package, ReceiptText, WifiOff } from "lucide-react";
+import { TranslatedText as T } from "@/i18n/text";
 
-/**
- * Hero copy — ported from the design handoff's `HERO_COPY` (4 brand-
- * direction variants: ledger/market/operator/retail). TracKasuwa uses
- * the "retail" direction, matching a POS/checkout-first product.
- */
-const HERO_COPY = {
-  eyebrow: "Point of Sale · Nigeria",
-  title: "Sell faster. Restock smarter. Never lose a sale.",
-  sub: "Barcode-scan checkout, split payments, offline-ready — plus a dedicated Naira account for every merchant. TracKasuwa is retail, unlocked.",
-};
-
-function MiniBars() {
-  const values = [12, 20, 15, 28, 32, 24, 38];
-  const max = Math.max(...values);
-  return (
-    <div className="flex items-end gap-[3px] h-10 mt-2">
-      {values.map((v, i) => (
-        <div
-          key={i}
-          className="tt-bar-grow flex-1 rounded-sm"
-          style={{
-            background: `color-mix(in oklch, var(--c-primary), transparent ${75 - v}%)`,
-            height: `${(v / max) * 100}%`,
-            animationDelay: `${i * 60}ms`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-function HeroCompositePhoto() {
-  return (
-    <div className="relative" style={{ aspectRatio: "1 / 1.05" }}>
-      <div
-        className="tt-hero-photo absolute inset-0 rounded-xl overflow-hidden"
-        style={{
-          boxShadow:
-            "0 40px 100px -20px color-mix(in oklch, var(--c-primary), transparent 75%)",
-        }}
-      >
-        <SiteImage image={siteImages.heroMarket} sizes="(min-width: 1024px) 50vw, 100vw" preload />
-      </div>
-
-      {/* Floating dashboard mockup */}
-      <div
-        className="tt-hero-mockup absolute left-[-40px] bottom-[-30px] w-[280px] rounded-xl overflow-hidden"
-        style={{
-          boxShadow:
-            "0 30px 60px -15px color-mix(in oklch, var(--c-primary), transparent 70%)",
-        }}
-      >
-        <div
-          className="flex items-center gap-1.5 px-3 py-2 border-b"
-          style={{
-            background: "var(--c-surfaceAlt)",
-            borderColor: "var(--c-border)",
-          }}
-        >
-          <span
-            className="w-[7px] h-[7px] rounded-full"
-            style={{ background: "#ff5f56" }}
-          />
-          <span
-            className="w-[7px] h-[7px] rounded-full"
-            style={{ background: "#ffbd2e" }}
-          />
-          <span
-            className="w-[7px] h-[7px] rounded-full"
-            style={{ background: "#27c93f" }}
-          />
-          <span
-            className="tt-mono ml-1.5 text-[9px]"
-            style={{ color: "var(--c-textMuted)" }}
-          ><TranslatedText text={"trackasuwa.com"} /></span>
-        </div>
-        <div className="p-3.5" style={{ background: "var(--c-surface)" }}>
-          <div className="text-[10px]" style={{ color: "var(--c-textMuted)" }}><TranslatedText text={"Today · Kano HQ"} /></div>
-          <div className="tt-head text-[26px] mt-0.5 leading-none">
-            ₦482,190
-          </div>
-          <div
-            className="flex items-center gap-1 mt-0.5 text-[10px]"
-            style={{ color: "var(--c-success)" }}
-          >
-            <ArrowUp className="h-2.5 w-2.5" strokeWidth={1.75} />{" "}<TranslatedText text={"+18% vs yesterday"} /></div>
-          <MiniBars />
-        </div>
-      </div>
-
-      {/* Floating live-sale toast */}
-      <div
-        className="tt-hero-toast absolute right-[-20px] top-10 flex items-center gap-2.5 rounded-xl px-3.5 py-2.5"
-        style={{
-          background: "var(--c-surface)",
-          boxShadow: "0 20px 40px -10px rgba(0,0,0,0.15)",
-        }}
-      >
-        <div
-          className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
-          style={{
-            background:
-              "color-mix(in oklch, var(--c-success), transparent 82%)",
-          }}
-        >
-          <Check
-            className="h-4 w-4"
-            style={{ color: "var(--c-success)" }}
-            strokeWidth={1.75}
-          />
-        </div>
-        <div>
-          <div className="text-xs font-semibold"><TranslatedText text={"Sale complete"} /></div>
-          <div
-            className="tt-mono text-[10px]"
-            style={{ color: "var(--c-textMuted)" }}
-          ><TranslatedText text={"₦14,500 · Cash · #A00248"} /></div>
-        </div>
-      </div>
-
-      {/* Floating stat pill */}
-      <div
-        className="tt-hero-pill absolute left-[30px] top-[-20px] flex items-center gap-2 rounded-xl px-3.5 py-2"
-        style={{
-          background: "var(--c-surface)",
-          boxShadow: "0 20px 40px -10px rgba(0,0,0,0.15)",
-        }}
-      >
-        <span
-          className="tt-dot-pulse w-2 h-2 rounded-full"
-          style={{ background: "var(--c-success)" }}
-        />
-        <span className="text-xs font-semibold"><TranslatedText text={"Sales today"} /></span>
-      </div>
-    </div>
-  );
-}
-
+/** Illustrative product preview: never presented as real merchant traction. */
 export function Hero() {
-  const scrollY = useScrollY();
-  const py = Math.min(scrollY * 0.15, 60);
-
   return (
-    <section
-      className="relative overflow-hidden"
-      style={{ paddingTop: 60, paddingBottom: 100 }}
-    >
-      {/* Animated blobs */}
-      <div
-        className="tt-blob-float-1 absolute rounded-full blur-3xl pointer-events-none"
-        style={{
-          top: -100,
-          right: -80,
-          width: 500,
-          height: 500,
-          background: "var(--c-primary)",
-          opacity: 0.12,
-        }}
-      />
-      <div
-        className="tt-blob-float-2 absolute rounded-full blur-3xl pointer-events-none"
-        style={{
-          top: 200,
-          left: -80,
-          width: 400,
-          height: 400,
-          background: "var(--c-accent)",
-          opacity: 0.12,
-        }}
-      />
-
-      <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="grid gap-16 lg:grid-cols-[1.1fr_1fr] items-center">
-          <div>
-            <Reveal delay={100}>
-              <div
-                className="tt-eyebrow inline-flex items-center gap-2 rounded-full px-3 py-1.5 mb-5 border"
-                style={{
-                  background: "var(--c-surfaceAlt)",
-                  borderColor: "var(--c-border)",
-                }}
-              >
-                <span
-                  className="tt-dot-pulse w-1.5 h-1.5 rounded-full"
-                  style={{ background: "var(--c-success)" }}
-                />
-                <TranslatedText text={HERO_COPY.eyebrow} />
-              </div>
-            </Reveal>
-
-            <Reveal delay={200}>
-              <h1
-                className="tt-head"
-                style={{
-                  fontSize: "clamp(40px, 6vw, 68px)",
-                  margin: "0 0 20px",
-                  maxWidth: 640,
-                  lineHeight: 1.02,
-                }}
-              >
-                <TranslatedText text={HERO_COPY.title} />
-              </h1>
-            </Reveal>
-
-            <Reveal delay={350}>
-              <p
-                className="mb-8"
-                style={{
-                  fontSize: 18,
-                  lineHeight: 1.55,
-                  color: "var(--c-textMuted)",
-                  maxWidth: 540,
-                }}
-              >
-                <TranslatedText text={HERO_COPY.sub} />
-              </p>
-            </Reveal>
-
-            <Reveal delay={500}>
-              <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-                <Link
-                  href="/signup"
-                  className="inline-flex items-center justify-center gap-2 rounded-lg h-[52px] px-6 text-base font-medium"
-                  style={{
-                    background: "var(--c-primary)",
-                    color: "var(--c-primaryFg)",
-                  }}
-                ><TranslatedText text={"Start 30-day free trial"} />{" "}
-                  <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
-                </Link>
-                <Link
-                  href="/download"
-                  className="inline-flex items-center justify-center gap-2 rounded-lg h-[52px] px-6 text-base font-medium border"
-                  style={{
-                    borderColor: "var(--c-border)",
-                    color: "var(--c-text)",
-                  }}
-                >
-                  <Download className="h-4 w-4" strokeWidth={1.75} />{" "}<TranslatedText text={"Download app"} /></Link>
-              </div>
-            </Reveal>
-
-            <Reveal delay={650}>
-              <div className="flex flex-wrap items-center gap-6 mt-8">
-                {[
-                  "Paid monthly plans",
-                  "Offline-ready",
-                  "Works on any phone",
-                ].map((c) => (
-                  <div key={c} className="flex items-center gap-1.5">
-                    <Check
-                      className="h-3.5 w-3.5"
-                      style={{ color: "var(--c-success)" }}
-                      strokeWidth={1.75}
-                    />
-                    <span
-                      className="text-[13px]"
-                      style={{ color: "var(--c-textMuted)" }}
-                    >
-                      {c}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </Reveal>
+    <section className="relative overflow-hidden border-b border-border bg-[var(--c-bgAlt)]">
+      <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-12 sm:px-6 sm:py-20 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
+        <div>
+          <p className="tt-eyebrow mb-6 flex items-center gap-2 text-primary"><span className="h-2 w-2 rounded-full bg-primary" /><T text="Built for Nigerian retail" /></p>
+          <h1 className="market-display max-w-2xl text-[clamp(2.75rem,5.5vw,4.75rem)] leading-[1.06] tracking-tight">
+            <T text="Your shop. Your numbers." /><br /><span className="text-primary"><T text="Your next move." /></span>
+          </h1>
+          <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground"><T text="Record every sale, stay on top of stock, and understand your business. Built for the realities of trading in Nigeria — including unreliable internet." /></p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <Link href="/signup" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 font-semibold text-primary-foreground shadow-sm"><T text="Start 30-day free trial" /><ArrowRight className="h-4 w-4" /></Link>
+            <Link href="#how-it-works" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-border bg-card px-5 py-3 font-semibold"><T text="See how it works" /></Link>
           </div>
-
-          <div
-            style={{
-              transform: `translateY(${-py * 0.3}px)`,
-              position: "relative",
-            }}
-          >
-            <HeroCompositePhoto />
+          <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
+            {["No payment needed to start", "Android and Windows"].map(text => <span key={text} className="inline-flex items-center gap-1.5"><Check className="h-4 w-4 shrink-0 text-primary" /><T text={text} /></span>)}
           </div>
+          <p className="mt-7 text-sm text-muted-foreground"><T text="Prefer a guided setup?" />{" "}<Link href="/contact#installation" className="font-semibold text-primary underline underline-offset-4"><T text="Talk to our team" /></Link></p>
+        </div>
+        <div className="min-w-0 rounded-2xl border border-border bg-card p-4 shadow-xl shadow-black/5 sm:p-6">
+          <div className="flex items-center justify-between gap-3 border-b border-border pb-4">
+            <span className="font-semibold">TracKasuwa <span className="text-muted-foreground">/</span> <T text="Overview" /></span>
+            <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium"><T text="Sample data" /></span>
+          </div>
+          <div className="py-5"><p className="text-sm text-muted-foreground"><T text="Today's sales" /></p><p className="mt-2 text-4xl font-semibold tracking-tight tabular-nums">₦148,500<span className="ml-2 text-sm font-normal text-muted-foreground">NGN</span></p><p className="mt-2 text-sm text-muted-foreground"><T text="One clear view of your trading day." /></p></div>
+          <div className="grid grid-cols-2 gap-3">
+            {[{icon: ReceiptText, title:"Sales recorded", value:"24"}, {icon:Package, title:"Items to restock", value:"6"}].map(({icon:Icon,title,value}) => <div key={title} className="rounded-xl border border-border bg-secondary p-4"><Icon className="mb-3 h-5 w-5 text-primary" /><p className="text-2xl font-semibold tabular-nums">{value}</p><p className="mt-1 text-xs text-muted-foreground"><T text={title} /></p></div>)}
+          </div>
+          <div className="mt-5 space-y-3">
+            {[["Cash","₦86,000"],["Transfer","₦62,500"]].map(([label,value]) => <div key={label} className="flex justify-between border-b border-border pb-3 text-sm"><span className="text-muted-foreground"><T text={label} /></span><span className="font-medium tabular-nums">{value}</span></div>)}
+          </div>
+          <div className="mt-5 flex gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4"><WifiOff className="mt-0.5 h-5 w-5 shrink-0 text-primary" /><div><p className="text-sm font-semibold"><T text="Keep selling when the network drops" /></p><p className="mt-1 text-xs leading-relaxed text-muted-foreground"><T text="Set up online first. Record sales offline, then sync when connected." /></p></div></div>
+          <p className="mt-3 text-center text-xs text-muted-foreground"><T text="Illustrative preview, not live business results." /></p>
         </div>
       </div>
-
     </section>
   );
 }
