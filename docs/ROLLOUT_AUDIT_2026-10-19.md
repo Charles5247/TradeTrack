@@ -1,6 +1,10 @@
 # TracKasuwa rollout audit — 19 October 2026
 
-Status: Phase 1A in progress. Nothing from this session has been deployed or merged.
+Update, 20 October 2026: the targeted signup repair and initial Contact/Reviews release are deployed. PR #19 merged at `44972fc`; production deployment succeeded and both public routes passed live HTTP checks. The live signup database flow passed with all test rows rolled back. See `SIGNUP_REPAIR_2026-10-20.md` and `CONTACT_REVIEWS_RELEASE_2026-10-20.md` for current evidence and limitations. Full Phase 1A remains incomplete, including payment compatibility and hosted write-guard verification.
+
+The entries below are the historical 19 October audit and are superseded by those release reports where they describe deployment or production diagnosis.
+
+Historical status: Phase 1A in progress. Nothing from this session had been deployed or merged.
 Delivery order remains 1A → 1B → 4 → 2 → 3. Later phases must wait for 1A release verification.
 
 ## Signup failure: evidence
