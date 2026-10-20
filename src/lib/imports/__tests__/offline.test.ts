@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import '../../offline/__tests__/subscription-fixture';
 import { afterEach, expect, it, vi } from 'vitest';
 import { executeImport } from '../execute';
 import { previewImport } from '../preview';

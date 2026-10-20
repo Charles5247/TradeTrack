@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import './subscription-fixture';
 import { beforeEach, expect, it, vi } from "vitest";
 import { getDB, type SyncQueueRecord } from "../db";
 import { persistOfflineVendorTransaction } from "../vendor-transactions";

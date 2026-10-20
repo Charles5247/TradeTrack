@@ -1,4 +1,5 @@
 import { getDB, addToSyncQueue } from './db';
+import { requireTransactionSubscription } from '@/lib/subscriptions/verification';
 import { generateId } from '@/lib/utils/id';
 
 export interface OfflineSaleItemPayload {
@@ -29,6 +30,7 @@ export interface OfflineSalePayload {
 }
 
 export async function persistOfflineSale(payload: OfflineSalePayload) {
+  await requireTransactionSubscription(payload.organization_id);
   const saleId = generateId();
   const createdAt = new Date().toISOString();
 

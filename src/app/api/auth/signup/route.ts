@@ -37,6 +37,8 @@ function isValidEmail(email: string): boolean {
 }
 
 export async function POST(request: NextRequest) {
+  const reference = crypto.randomUUID();
+  let stage = 'validation';
   try {
     const body = await request.json();
     const { business_name, full_name, email, password, phone, plan_id } =
@@ -73,6 +75,7 @@ export async function POST(request: NextRequest) {
 
     try {
       // 1. Create a brand-new organization for this self-serve signup.
+      stage = 'organization';
       const { data: org, error: orgErr } = await serviceSupabase
         .from("organizations")
         .insert({
@@ -97,6 +100,7 @@ export async function POST(request: NextRequest) {
 
       // 2. Create the Supabase Auth user with the password THEY chose
       //    (no temp password / forced change, unlike admin-onboarding).
+      stage = 'auth';
       const { data: authData, error: authErr } =
         await serviceSupabase.auth.admin.createUser({
           email,
@@ -111,6 +115,7 @@ export async function POST(request: NextRequest) {
       createdAuthUserId = authData.user.id;
 
       // 3. Create the business_owner profile, scoped to the new org.
+      stage = 'profile';
       const { error: profileErr } = await serviceSupabase.from("users").insert({
         id: authData.user.id,
         email,
@@ -131,9 +136,11 @@ export async function POST(request: NextRequest) {
       //    admin-onboarded merchants in the platform_owner's Merchants
       //    list, marked as self-serve (onboarded_by is null — no staff
       //    member onboarded them).
+      stage = 'merchant';
       const { data: merchant, error: merchantErr } = await serviceSupabase
         .from("merchants")
         .insert({
+          id: crypto.randomUUID(),
           organization_id: createdOrgId,
           business_name,
           contact_name: full_name,
@@ -228,7 +235,7 @@ export async function POST(request: NextRequest) {
       throw innerErr;
     }
   } catch (err) {
-    console.error("[POST /api/auth/signup]", err);
+    console.error("[POST /api/auth/signup]", { reference, stage, error: err });
     const message =
       err instanceof Error ? err.message : "Internal server error";
     // A duplicate email is the most likely user-facing error — Supabase
@@ -236,6 +243,11 @@ export async function POST(request: NextRequest) {
     const status = /already registered|already exists|duplicate/i.test(message)
       ? 409
       : 500;
-    return NextResponse.json({ error: message }, { status });
+    return NextResponse.json({
+      error: status === 409
+        ? 'An account or trial already exists for these details. Sign in or contact support to recover your account.'
+        : `We could not create your account. Please contact support with reference ${reference}.`,
+      reference,
+    }, { status });
   }
 }

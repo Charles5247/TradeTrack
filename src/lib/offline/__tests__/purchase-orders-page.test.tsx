@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import './subscription-fixture';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider, onlineManager } from '@tanstack/react-query';

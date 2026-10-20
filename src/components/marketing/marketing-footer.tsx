@@ -33,7 +33,8 @@ const FOOTER_COLUMNS: {
     links: [
       { label: "Sign in", href: "/login" },
       { label: "Sign up", href: "/signup" },
-      { label: "Contact sales" },
+      { label: "Contact us", href: "/contact" },
+      { label: "Reviews", href: "/reviews" },
     ],
   },
   {

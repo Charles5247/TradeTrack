@@ -38,6 +38,30 @@ beforeAll(async () => {
  SELECT set_config('test.uid','${owner}',false);`);
 },120000);
 afterAll(async()=>{await db?.close();});
+it('publishes real author reviews, isolates edits, and supports owner soft-delete and restore', async()=>{
+ await db.exec(`SELECT set_config('test.uid','${owner}',false); SET ROLE authenticated;`);
+ try {
+  await db.exec(`INSERT INTO merchant_reviews(author_id,merchant_name,business_name,location,review,rating) VALUES('${owner}','Test merchant','Test shop','Kano','A genuine test-only review',5)`);
+  await expect(db.exec(`INSERT INTO merchant_reviews(author_id,merchant_name,business_name,location,review) VALUES('${owner}','Test merchant','Test shop','Kano','Duplicate test review')`)).rejects.toThrow('unique');
+  await db.exec(`SELECT set_config('test.uid','${cashier}',false)`);
+  expect((await db.query(`UPDATE merchant_reviews SET review='Not the author' RETURNING id`)).rows).toHaveLength(0);
+  await expect(db.exec(`INSERT INTO merchant_reviews(author_id,merchant_name,business_name,location,review) VALUES('${cashier}','Cashier','Test shop','Kano','Not a merchant owner')`)).rejects.toThrow('row-level security');
+  await db.exec(`SELECT set_config('test.uid','${platformOwner}',false); UPDATE merchant_reviews SET deleted_at=now() WHERE author_id='${owner}'; RESET ROLE; SET ROLE anon;`);
+  expect((await db.query('SELECT id FROM merchant_reviews')).rows).toHaveLength(0);
+  await db.exec(`RESET ROLE; SET ROLE authenticated; UPDATE merchant_reviews SET deleted_at=NULL WHERE author_id='${owner}'; RESET ROLE; SET ROLE anon;`);
+  expect((await db.query('SELECT id FROM merchant_reviews')).rows).toHaveLength(1);
+ } finally {await db.exec(`RESET ROLE; SELECT set_config('test.uid','${owner}',false);`);}
+});
+it('keeps contact submissions private to platform owners',async()=>{
+ await db.exec(`INSERT INTO contact_messages(name,business_name,phone,message) VALUES('Test trader','Test shop','08012345678','Please help me set up'); SET ROLE anon;`);
+ try {
+  await expect(db.query('SELECT * FROM contact_messages')).rejects.toThrow('permission denied');
+  await db.exec(`RESET ROLE; SELECT set_config('test.uid','${owner}',false); SET ROLE authenticated;`);
+  expect((await db.query('SELECT id FROM contact_messages')).rows).toHaveLength(0);
+  await db.exec(`SELECT set_config('test.uid','${platformOwner}',false)`);
+  expect((await db.query('SELECT id FROM contact_messages')).rows).toHaveLength(1);
+ }finally{await db.exec(`RESET ROLE; SELECT set_config('test.uid','${owner}',false);`);}
+});
 it('saves a profile under authenticated RLS without allowing role escalation',async()=>{
  await db.exec(`GRANT USAGE ON SCHEMA auth TO authenticated;
  SELECT set_config('test.uid','${cashier}',false);
@@ -210,7 +234,7 @@ it('isolates supplier catalogs and lets only owners assign warehouse staff', asy
  const other='10000000-0000-0000-0000-000000000099';
  const supplier='60000000-0000-0000-0000-000000000001';
  const foreignProduct='30000000-0000-0000-0000-000000000099';
- await db.exec(`INSERT INTO organizations(id,name,slug) VALUES('${other}','Supplier boundary','supplier-boundary');
+ await db.exec(`SELECT set_config('test.uid','',false); INSERT INTO organizations(id,name,slug) VALUES('${other}','Supplier boundary','supplier-boundary');
  INSERT INTO suppliers(id,organization_id,name) VALUES('${supplier}','${org}','Supplier');
  INSERT INTO products(id,organization_id,name,sku,cost_price,selling_price) VALUES('${foreignProduct}','${other}','Other item','OTHER',1,2);
  SELECT set_config('test.uid','${owner}',false); SET ROLE authenticated;`);
@@ -274,4 +298,18 @@ it('starts the self-serve 30-day trial at signup without verification and blocks
  await expect(db.exec(insertSale(secondSale,'TRIAL-2'))).rejects.toThrow('Trial ended');
  const existingSales=await db.query<{count:number}>(`SELECT count(*)::int count FROM sales WHERE organization_id='${trialOrg}'`);
  expect(existingSales.rows[0].count).toBe(1);
+ await db.exec('SET ROLE authenticated');
+ try {
+   expect((await db.query(`SELECT id FROM sales WHERE organization_id='${trialOrg}'`)).rows).toHaveLength(1);
+   await expect(db.exec(`INSERT INTO categories(organization_id,name) VALUES('${trialOrg}','Blocked category')`)).rejects.toThrow('Trial ended');
+   await expect(db.exec(`UPDATE warehouses SET name='Blocked edit' WHERE id='${trialWarehouse}'`)).rejects.toThrow('Trial ended');
+   await expect(db.exec(`DELETE FROM warehouses WHERE id='${trialWarehouse}'`)).rejects.toThrow('Trial ended');
+ } finally {await db.exec('RESET ROLE');}
+ await db.exec(`SELECT set_config('test.uid','',false); SELECT set_config('test.jwt','{"role":"service_role"}',false);
+   INSERT INTO payment_transactions(organization_id,amount,status,reference) VALUES('${trialOrg}',20000,'success','test-trial-reactivation');
+   UPDATE subscriptions SET status='active',starts_at=now(),expires_at=now()+interval '1 month' WHERE organization_id='${trialOrg}';
+   SELECT set_config('test.uid','${trialOwner}',false); SELECT set_config('test.jwt','{}',false);`);
+ expect((await db.query<{v:{active:boolean}}>('SELECT verify_business_subscription() v')).rows[0].v.active).toBe(true);
+ await db.exec(insertSale(secondSale,'TRIAL-2'));
+ await db.exec(`UPDATE warehouses SET name='Paid access restored' WHERE id='${trialWarehouse}'`);
 });

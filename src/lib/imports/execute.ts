@@ -1,4 +1,5 @@
 import { addToSyncQueue, getDB } from '@/lib/offline/db';
+import { requireTransactionSubscription } from '@/lib/subscriptions/verification';
 import { isOffline } from '@/lib/utils/network';
 import { withTimeout } from '@/lib/utils/timeout';
 import type { DuplicateMode, ImportKind, PreviewRow } from './preview';
@@ -14,6 +15,7 @@ export async function loadImportCatalog(kind: ImportKind, org: string): Promise<
   catch { return cached(); }
 }
 async function queueChunk(options: ImportOptions, rows: PreviewRow[]): Promise<RowResult[]> {
+  await requireTransactionSubscription(options.org);
   if (!['products','suppliers'].includes(options.kind)) throw new Error('This record type requires connectivity.');
   const db = await getDB();
   const tx = db.transaction(['app_meta','products','suppliers','inventory','sync_queue'],'readwrite');
