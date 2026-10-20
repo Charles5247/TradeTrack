@@ -13,13 +13,15 @@
 
 ## Validation
 
-- Production build and TypeScript passed before final inbox/navigation additions; final release build is recorded in the PR checks.
+- Final production build and TypeScript passed, including the inbox and navigation additions.
 - Local HTTP checks: `/contact` and `/reviews` return 200 with headings, navigation and the correct WhatsApp destination.
 - Database tests prove review author isolation, one-per-account uniqueness, owner hide/restore, anonymous public visibility and private contact-message access.
 - Contact API tests cover validation, durable save and storage failure.
 - No browser surface is connected in this environment. Screenshots, iPhone 12/low-end Android visual checks and interactive browser submission have not been performed.
 
 ## Deployment and assumptions
+
+PR #19 was merged at `44972fca0dfdd1596fd5a242127b95aa53876180`. GitHub reports the production Vercel deployment succeeded. Live HTTP checks on 20 October 2026 confirmed that `https://trackasuwa.vercel.app/contact` and `/reviews` return 200 with their headings, navigation links and WhatsApp destination. Earlier preview deployments failed; they do not describe the successful production deployment.
 
 The additive `20261019210808_public_contact_reviews.sql` migration has been applied to the linked production project. No existing customer records were modified. No test reviews or contact messages were added to production.
 
