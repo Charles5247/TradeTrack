@@ -7,9 +7,9 @@ import { SiteImage } from "@/components/shared/site-image";
 import { siteImages } from "@/content/images";
 
 const INDUSTRIES = [
- { key: "pharmaceuticals", image: { alt: "Pharmaceutical stock and sales" }, label: "Pharmaceuticals", desc: "Track medicine stock and sales. Prescription and expiry management are not included.", Icon: Pill, live: true },
- { key: "warehousing", image: { alt: "Warehouse inventory" }, label: "Warehousing merchants", desc: "Track stock across warehouses, transfers and sales.", Icon: Warehouse, live: true },
- { key: "manufacturers", image: { alt: "Finished goods inventory" }, label: "Manufacturers", desc: "Track finished-goods stock and sales. Production planning is not available.", Icon: Factory, live: true },
+ { key: "pharmaceuticals", image: siteImages.industries.pharmaceuticals, label: "Pharmaceuticals", desc: "Track medicine stock and sales. Prescription and expiry management are not included.", Icon: Pill, live: true },
+ { key: "warehousing", image: siteImages.industries.warehousing, label: "Warehousing merchants", desc: "Track stock across warehouses, transfers and sales.", Icon: Warehouse, live: true },
+ { key: "manufacturers", image: siteImages.industries.manufacturers, label: "Manufacturers", desc: "Track finished-goods stock and sales. Production planning is not available.", Icon: Factory, live: true },
  { key: "bakery", image: siteImages.industries.bakery, label: "Bakeries", desc: "Recipes, batches and production planning.", Icon: Croissant, live: false },
  { key: "mall", image: siteImages.industries.mall, label: "Shopping malls", desc: "Tenants, leases and shared utilities.", Icon: Building, live: false },
   {
