@@ -1,13 +1,14 @@
 import type { Locale } from '@/types';
 import catalog from './messages.json';
 import { contactReviewCopy } from './contact-review-copy';
+import { industryCopy } from './industry-copy';
 
 import { downloadCopy as haDownloads, pilotCopy as haPilot } from './locales/ha';
 import { downloadCopy as yoDownloads, pilotCopy as yoPilot } from './locales/yo';
 import { downloadCopy as igDownloads, pilotCopy as igPilot } from './locales/ig';
 import { downloadCopy as pcmDownloads, pilotCopy as pcmPilot } from './locales/pcm';
 
-export const messages: Record<string, Partial<Record<Exclude<Locale, 'en'>, string>>> = { ...catalog, ...contactReviewCopy };
+export const messages: Record<string, Partial<Record<Exclude<Locale, 'en'>, string>>> = { ...catalog, ...contactReviewCopy, ...industryCopy };
 // Machine translated: native-speaker review required before rollout.
 messages['Trial reminder: day {day} of 30.'] = {
   ha: 'Tunatarwar gwaji: rana ta {day} cikin 30.',

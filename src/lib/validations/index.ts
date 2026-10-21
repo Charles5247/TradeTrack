@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { isIndustry } from '@/lib/industries';
+import { isIndustry, STOCK_UNITS } from '@/lib/industries';
 
 // ── Auth ──────────────────────────────────────────────────────
 export const loginSchema = z.object({
@@ -54,6 +54,10 @@ export const updateUserSchema = z.object({
 
 // ── Products ──────────────────────────────────────────────────
 export const productSchema = z.object({
+  stock_unit: z.enum(STOCK_UNITS).default('piece'),
+  variant_size: z.string().max(60).optional(),
+  variant_colour: z.string().max(60).optional(),
+  model: z.string().max(100).optional(),
   name: z.string().min(1, 'Product name is required'),
   make: z.string().optional(),
   description: z.string().optional(),

@@ -38,6 +38,13 @@ beforeAll(async () => {
  SELECT set_config('test.uid','${owner}',false);`);
 },120000);
 afterAll(async()=>{await db?.close();});
+it('preserves legacy piece quantities and prevents unit changes after stock history',async()=>{
+ expect((await db.query<{stock_unit:string}>(`SELECT stock_unit FROM products WHERE id='${product}'`)).rows[0].stock_unit).toBe('piece');
+ await expect(db.exec(`UPDATE products SET stock_unit='pair' WHERE id='${product}'`)).rejects.toThrow('stock history');
+ await db.exec(`INSERT INTO products(id,organization_id,name,sku,selling_price,cost_price,stock_unit,variant_size,variant_colour) VALUES('30000000-0000-0000-0000-000000009955','${org}','Shoes','SHOE-42-BLACK',100,50,'pair','42','Black')`);
+ expect((await db.query<{stock_unit:string}>(`SELECT stock_unit FROM products WHERE sku='SHOE-42-BLACK'`)).rows[0].stock_unit).toBe('pair');
+ await expect(db.exec(`UPDATE products SET stock_unit='invalid' WHERE sku='SHOE-42-BLACK'`)).rejects.toThrow('check constraint');
+});
 it('rejects direct medical RPC calls by ordinary retail businesses',async()=>{
  for(const industry of ['electronics','fashion','retail']) {
   await db.exec(`UPDATE merchants SET business_type='${industry}' WHERE organization_id='${org}'; SET ROLE authenticated;`);

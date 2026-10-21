@@ -21,6 +21,8 @@ import { canAddProduct, productLimitMessage, resolveSubscriptionPlan } from '@/l
 import type { Product } from '@/types';
 import type { z } from 'zod';
 import type { CodeMatch } from '@/lib/products/lookup-code';
+import { useOrganization } from '@/components/shared/organization-provider';
+import { industryProfile, type StockUnit } from '@/lib/industries';
 
 type ProductFormData = z.infer<typeof productSchema>;
 
@@ -33,6 +35,8 @@ interface ProductFormProps {
 
 export function ProductForm({ product: initialProduct, categories, onSuccess, onCancel }: ProductFormProps) {
   const copy = useCopy();
+  const { industry } = useOrganization();
+  const workflow = industryProfile(industry);
   const [scannedProduct, setScannedProduct] = useState<CodeMatch | null>(null);
   const [cachedMatch, setCachedMatch] = useState(false);
   const product = scannedProduct ?? initialProduct;
@@ -50,6 +54,10 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(productSchema) as any,
     defaultValues: {
+      stock_unit: (product?.stock_unit as StockUnit) || 'piece',
+      variant_size: product?.variant_size || '',
+      variant_colour: product?.variant_colour || '',
+      model: product?.model || '',
       name: product?.name || '',
       make: product?.make || '',
       description: product?.description || '',
@@ -127,6 +135,10 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
       }
 
       const payload = {
+        stock_unit: data.stock_unit,
+        variant_size: data.variant_size || null,
+        variant_colour: data.variant_colour || null,
+        model: data.model || null,
         name: data.name,
         make: data.make || null,
         description: data.description || null,
@@ -213,7 +225,7 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
             setScannedProduct(match);
             setCachedMatch(cached);
             setImageUrl(match.image_url ?? null);
-            reset({ name: match.name, make: match.make || '', description: match.description || '', sku: match.sku, barcode: match.barcode || '', selling_price: match.selling_price, cost_price: match.cost_price, category_id: match.category_id || null, status: match.status as ProductFormData['status'] });
+            reset({ stock_unit:(match.stock_unit as StockUnit)||'piece',variant_size:match.variant_size||'',variant_colour:match.variant_colour||'',model:match.model||'',name: match.name, make: match.make || '', description: match.description || '', sku: match.sku, barcode: match.barcode || '', selling_price: match.selling_price, cost_price: match.cost_price, category_id: match.category_id || null, status: match.status as ProductFormData['status'] });
           }}
           onCodeSelected={code => setValue('barcode', code, { shouldDirty: true })}
         />
@@ -222,12 +234,12 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="name"><TranslatedText text={"Product Name *"} /></Label>
+          <Label htmlFor="name">{copy(workflow.productLabel)} *</Label>
           <Input
             id="name"
             {...register('name')}
             error={errors.name?.message}
-            placeholder={copy("e.g., Rice (50kg bag)")}
+            placeholder={copy(workflow.example)}
           />
         </div>
         <div className="space-y-2">
@@ -236,6 +248,19 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
         </div>
       </div>
 
+      <div className="space-y-2">
+        <Label htmlFor="stock_unit">{copy('Selling unit')}</Label>
+        <select id="stock_unit" {...register('stock_unit')} className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2">
+          {Array.from(new Set([...workflow.units,watch('stock_unit')||'piece'])).map(unit=><option key={unit} value={unit}>{copy(unit)}</option>)}
+        </select>
+        <p className="text-xs text-muted-foreground">{copy('Stock quantities and prices use this unit. Use whole units; use g, mL or cm for smaller quantities.')}</p>
+        <p className="text-xs text-muted-foreground">{copy('Create a separate SKU for every size, colour, model or pack size you stock.')}</p>
+      </div>
+      {(workflow.variant || product?.variant_size || product?.variant_colour) && <div className="grid grid-cols-2 gap-4">
+        <div><Label htmlFor="variant_size">{copy('Size')}</Label><Input id="variant_size" {...register('variant_size')} maxLength={60}/></div>
+        <div><Label htmlFor="variant_colour">{copy('Colour')}</Label><Input id="variant_colour" {...register('variant_colour')} maxLength={60}/></div>
+      </div>}
+      {(workflow.model || product?.model) && <div><Label htmlFor="model">{copy('Model / specification')}</Label><Input id="model" {...register('model')} maxLength={100}/></div>}
       <div className="space-y-2">
         <Label htmlFor="description"><TranslatedText text={"Description"} /></Label>
         <Textarea
