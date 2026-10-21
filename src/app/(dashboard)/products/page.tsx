@@ -1,5 +1,6 @@
 'use client';
 import { useCopy } from '@/i18n/text';
+import { productVariantLabel } from '@/lib/industries';
 
 
 import React, { useState } from 'react';
@@ -231,7 +232,8 @@ function ProductsPageInner() {
                     </TableCell>
                     <TableCell>
                       <div>
-                        <p className="font-medium">{product.name}</p>
+                        <p className="font-medium">{productVariantLabel(product)}</p>
+                        <p className="text-xs text-muted-foreground">{copy(product.stock_unit || 'piece')}</p>
                         {product.make && (
                           <p className="text-xs tt-muted">{product.make}</p>
                         )}
@@ -325,7 +327,7 @@ function ProductsPageInner() {
                   )}
                 </div>
                 <div>
-                  <h3 className="tt-section-title text-lg">{viewProduct.name}</h3>
+                  <h3 className="tt-section-title text-lg">{productVariantLabel(viewProduct)}</h3>
                   {viewProduct.make && <p className="text-sm tt-muted">{viewProduct.make}</p>}
                   <div className="mt-1">{getStatusBadge(viewProduct.status)}</div>
                 </div>

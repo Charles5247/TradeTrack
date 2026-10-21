@@ -33,6 +33,8 @@ import { useAuthStore } from "@/store";
 import { useI18n } from "@/i18n";
 import type { Sale } from "@/types";
 import AdminPage from "../admin/page";
+import { IndustryWorkspace } from '@/components/shared/industry-workspace';
+import { PlanRecommendation } from '@/components/subscriptions/plan-recommendation';
 
 type RangeKey = "today" | "week" | "month";
 
@@ -241,6 +243,8 @@ function MerchantDashboard() {
 
   return (
     <div className="space-y-6">
+      <IndustryWorkspace />
+      <PlanRecommendation />
       {/* Page Header */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>

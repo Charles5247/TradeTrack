@@ -1,4 +1,5 @@
 import type { CartItem } from "@/types";
+import { productVariantLabel } from '@/lib/industries';
 
 /**
  * A single plain-object model of "what a receipt says", independent of how
@@ -104,7 +105,7 @@ export function buildReceiptData({
     customerName: sale.customer_name,
     customerPhone: sale.customer_phone,
     items: items.map((item) => ({
-      name: item.product.name,
+      name: productVariantLabel(item.product) + (item.product.stock_unit && item.product.stock_unit !== 'piece' ? ` [${item.product.stock_unit}]` : ''),
       quantity: item.quantity,
       unitPrice: item.unit_price,
       total: item.unit_price * item.quantity * (1 - item.discount / 100),

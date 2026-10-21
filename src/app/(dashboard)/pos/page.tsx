@@ -1,5 +1,6 @@
 "use client";
 import { TranslatedText } from '@/i18n/text';
+import { productVariantLabel } from '@/lib/industries';
 
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
@@ -570,11 +571,11 @@ function POSPageInner() {
                         minHeight: 34,
                       }}
                     >
-                      {product.name}
+                      {productVariantLabel(product)}
                     </p>
                     <div className="mt-1.5 flex min-w-0 flex-col items-start gap-1">
                       <span className="tt-mono tt-tabular max-w-full break-words text-[13px] sm:text-[15px] font-bold text-primary">
-                        {formatCurrency(product.selling_price)}
+                        {formatCurrency(product.selling_price)} / <TranslatedText text={product.stock_unit || 'piece'} />
                       </span>
                       {product.available_quantity <= 5 ? (
                         <Badge variant="warning" className="max-w-full whitespace-normal text-[11px] py-0">
@@ -662,10 +663,10 @@ function POSPageInner() {
               >
                 <div className="min-w-[120px] flex-1">
                   <p className="text-xs font-medium truncate">
-                    {item.product.name}
+                    {productVariantLabel(item.product)}
                   </p>
                   <p className="tt-mono text-xs tt-muted">
-                    {formatCurrency(item.unit_price)}
+                    {formatCurrency(item.unit_price)} / <TranslatedText text={item.product.stock_unit || 'piece'} />
                   </p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">

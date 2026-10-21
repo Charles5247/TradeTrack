@@ -163,7 +163,8 @@ export function hasFeature(
   feature: string,
 ): boolean {
   if (!plan) return false;
-  return plan.features.includes(feature);
+  const aliases: Record<string,string[]> = {pos:['sales'],basic_reports:['reports'],warehouses:['warehouse_transfers'],vendors:['vendor_consignment']};
+  return plan.features.includes(feature) || (aliases[feature]??[]).some(alias=>plan.features.includes(alias));
 }
 
 /** Ordered tier ladder — mirrors `PLAN_TIER_ORDER` in the Plans tab UI. */
