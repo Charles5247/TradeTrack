@@ -4,6 +4,10 @@ export interface SiteImage {
 }
 
 export const siteImages = {
+  offlineFeature: {
+    src: "/images/retail/offline-sales-editorial.webp",
+    alt: "Illustrative scene of a Nigerian shopkeeper recording a sale on a tablet",
+  },
   socialPreview: {
     src: "/brand/social-preview.png",
     alt: "TracKasuwa point of sale and inventory management",
