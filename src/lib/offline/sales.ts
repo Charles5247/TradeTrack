@@ -70,7 +70,14 @@ export async function persistOfflineSale(payload: OfflineSalePayload) {
   }));
 
   const db = await getDB();
-  const transaction = db.transaction(['sales', 'sale_items', 'inventory'], 'readwrite');
+  const transaction = db.transaction(['sales', 'sale_items', 'inventory', 'sync_queue', 'products'], 'readwrite');
+  const done = transaction.done;
+  void done.catch(() => {});
+  try {
+  for (const item of payload.items) {
+    const product = await transaction.objectStore('products').get(item.product_id);
+    if (product?.medical_stock_managed) throw new Error('Use the medical batch workflow for this product');
+  }
   const inventoryUpdates: Record<string, unknown>[] = [];
   await transaction.objectStore('sales').put(saleRecord);
 
@@ -83,6 +90,7 @@ export async function persistOfflineSale(payload: OfflineSalePayload) {
   >[];
   const inventoryByProductWarehouse = new Map<string, Record<string, unknown>>();
   for (const record of inventory) {
+    if (record.organization_id !== payload.organization_id) continue;
     inventoryByProductWarehouse.set(
       `${record.product_id as string}::${record.warehouse_id as string}`,
       record,
@@ -113,20 +121,25 @@ export async function persistOfflineSale(payload: OfflineSalePayload) {
       );
     }
   }
-  await transaction.done;
-
-  // Queue the sale, every sale item, and every inventory update
-  // concurrently rather than serially with `await` in a loop — each
-  // `addToSyncQueue` call is now index-scoped (see db.ts), but there is
-  // still no reason to pay N round-trips back-to-back on the critical path
-  // to rendering the receipt when they don't depend on one another.
+  // Commit the receipt, stock and outbox atomically. A device interruption
+  // or queue write failure cannot leave a sale with no sync record.
   await Promise.all([
-    addToSyncQueue('sales', 'INSERT', saleId, saleRecord),
-    ...saleItems.map((item) => addToSyncQueue('sale_items', 'INSERT', item.id, item)),
-    ...inventoryUpdates.map((inv) =>
-      addToSyncQueue('inventory', 'UPDATE', String(inv.id), inv),
-    ),
+    addToSyncQueue('sales', 'INSERT', saleId, saleRecord, transaction),
+    ...saleItems.map((item) => addToSyncQueue('sale_items', 'INSERT', item.id, item, transaction)),
   ]);
+  // Keep the final snapshot when repeated offline sales touch the same row.
+  // Serialize updates so duplicate cart lines cannot race queue coalescing.
+  for (const inv of inventoryUpdates) {
+    await addToSyncQueue('inventory', 'UPDATE', String(inv.id), inv, transaction, {
+      refreshPendingInventoryUpdate: true,
+    });
+  }
+  await done;
 
   return saleRecord;
+  } catch (error) {
+    try { transaction.abort(); } catch { /* Already aborted or completed. */ }
+    await done.catch(() => {});
+    throw error;
+  }
 }

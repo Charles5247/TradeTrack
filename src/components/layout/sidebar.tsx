@@ -51,7 +51,7 @@ export function Sidebar() {
     setMobileSidebarOpen,
   } = useUIStore();
   const { user } = useAuthStore();
-  const { organization } = useOrganization();
+  const { organization, industry } = useOrganization();
   const { t } = useI18n();
 
   const [isMobile, setIsMobile] = useState(false);
@@ -80,7 +80,7 @@ export function Sidebar() {
     ? "TracKasuwa Platform"
     : organization?.name ?? t.app.name;
 
-  const groups = getNavGroupsForRole(user?.role as UserRole | undefined);
+  const groups = getNavGroupsForRole(user?.role as UserRole | undefined, industry);
   const WorkspaceIcon = user?.role === "platform_owner" ? Shield : Store;
 
   return (

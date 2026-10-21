@@ -22,6 +22,18 @@ beforeEach(() => {
   vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'test-only');
 });
 
+it.each(['pharmacy','medical_wholesale','electronics','fashion'])('saves industry %s without changing the trial', async industry => {
+  const response = await POST(new NextRequest('http://localhost/api/auth/signup', {method:'POST',body:JSON.stringify({business_name:'Test shop',full_name:'Owner',email:'test@example.com',password:'test-password',industry})}));
+  expect(response.status).toBe(201);
+  expect(mock.inserts.find(row=>row.table==='merchants')?.value).toMatchObject({business_type:industry,subscription_plan_id:TRIAL_PLAN_ID});
+});
+
+it('rejects unknown industry before creating any account records', async () => {
+  const response = await POST(new NextRequest('http://localhost/api/auth/signup', {method:'POST',body:JSON.stringify({business_name:'Test shop',full_name:'Owner',email:'test@example.com',password:'test-password',industry:'fake'})}));
+  expect(response.status).toBe(400);
+  expect(mock.inserts).toHaveLength(0);
+});
+
 it.each([undefined, 'b2000000-0000-0000-0000-000000000002', 'invalid'])('starts the same free trial with preference %s', async (plan_id) => {
   const response = await POST(new NextRequest('http://localhost/api/auth/signup', {
     method: 'POST', body: JSON.stringify({ business_name: 'Test shop', full_name: 'Test owner', email: 'test@example.com', password: 'test-password', plan_id }),

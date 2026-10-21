@@ -3,6 +3,7 @@ import { createClient as createServiceClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 import { TRIAL_PLAN_ID, signupPlanPreference } from "@/lib/subscriptions/signup-trial";
 import type { Database } from "@/lib/supabase/types";
+import { isIndustry } from '@/lib/industries';
 
 function getServiceClient() {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -43,6 +44,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { business_name, full_name, email, password, phone, plan_id } =
       body as Record<string, string | null | undefined>;
+    // Older clients omit industry; preserve their normal retail onboarding.
+    const industry = body.industry ?? 'retail';
+    if (!isIndustry(industry)) return NextResponse.json({error:'Choose a valid business industry.'}, {status:400});
 
     if (!business_name || !full_name || !email || !password) {
       return NextResponse.json(
@@ -147,6 +151,7 @@ export async function POST(request: NextRequest) {
           contact_email: email,
           contact_phone: phone || null,
           country: "Nigeria",
+          business_type: industry,
           subscription_plan_id: TRIAL_PLAN_ID,
           status: "active",
           verification_status: "unverified",

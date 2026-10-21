@@ -4,6 +4,10 @@ export interface SiteImage {
 }
 
 export const siteImages = {
+  offlineFeature: {
+    src: "/images/retail/offline-sales-editorial.webp",
+    alt: "Illustrative scene of a Nigerian shopkeeper recording a sale on a tablet",
+  },
   socialPreview: {
     src: "/brand/social-preview.png",
     alt: "TracKasuwa point of sale and inventory management",
@@ -13,6 +17,18 @@ export const siteImages = {
     alt: "Traders at a Nigerian market",
   },
   industries: {
+    pharmaceuticals: {
+      src: "/images/retail/pharmacy-editorial.webp",
+      alt: "Illustrative scene of a Nigerian pharmacist checking medicine stock",
+    },
+    warehousing: {
+      src: "/images/retail/warehouse-editorial.webp",
+      alt: "Illustrative scene of a Nigerian warehouse supervisor scanning cartons",
+    },
+    manufacturers: {
+      src: "/images/retail/manufacturing-editorial.webp",
+      alt: "Illustrative scene of Nigerian staff checking finished goods for dispatch",
+    },
     bakery: {
       src: "/images/retail/photo-bakery.jpg",
       alt: "Bakery production",
@@ -48,10 +64,11 @@ export const siteImages = {
       alt: "Point of sale at a market",
     },
     warehouse: {
-      src: "/images/retail/photo-african-spices-market.jpg",
-      alt: "Products in a market",
+      src: "/images/retail/warehouse-editorial.webp",
+      alt: "Illustrative scene of a Nigerian warehouse supervisor scanning cartons",
     },
     receipt: {
+      src: "/images/retail/receipt-editorial.webp",
       alt: "Receipt illustration",
     },
   },

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isIndustry } from '@/lib/industries';
 
 // ── Auth ──────────────────────────────────────────────────────
 export const loginSchema = z.object({
@@ -21,6 +22,7 @@ export const resetPasswordSchema = z.object({
 
 // ── Signup (public self-serve, /signup) ─────────────────────────
 export const signupSchema = z.object({
+  industry: z.string().refine((value): boolean => isIndustry(value), 'Choose your business industry'),
   business_name: z.string().min(2, 'Business name is required'),
   full_name: z.string().min(2, 'Your name is required'),
   email: z.string().email('Invalid email address'),
