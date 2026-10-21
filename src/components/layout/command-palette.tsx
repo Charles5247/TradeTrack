@@ -20,6 +20,7 @@ import { getNavGroupsForRole } from "@/components/layout/nav-config";
 import { useAuthStore, useUIStore } from "@/store";
 import { useI18n } from "@/i18n";
 import type { UserRole } from "@/types";
+import { useOrganization } from '@/components/shared/organization-provider';
 
 /**
  * ⌘K command palette (README §9.1 / §6.3 Header). Wraps the shadcn-style
@@ -33,6 +34,7 @@ import type { UserRole } from "@/types";
 export function CommandPalette() {
   const router = useRouter();
   const { user } = useAuthStore();
+  const { industry } = useOrganization();
   const { theme, setTheme } = useTheme();
   const { t } = useI18n();
   const open = useUIStore((s) => s.commandPaletteOpen);
@@ -57,7 +59,7 @@ export function CommandPalette() {
     [setOpen],
   );
 
-  const groups = getNavGroupsForRole(user?.role as UserRole | undefined);
+  const groups = getNavGroupsForRole(user?.role as UserRole | undefined, industry);
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>

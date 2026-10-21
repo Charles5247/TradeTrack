@@ -4,6 +4,8 @@ Status: development foundation; **not approved for a full pharmacy launch**. The
 
 Implemented locally:
 
+- Industry selection on self-service and platform onboarding. Medical navigation and server/database operations require a medical business type; technology, fashion and other businesses keep ordinary retail navigation.
+
 - Product enrollment for batch tracking, with base-unit quantities and pack conversion.
 - Batch receipt by storage location; expired receipts are quarantined.
 - Earliest-expiry-first allocation, excluding expired and held stock.

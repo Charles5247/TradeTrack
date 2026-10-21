@@ -30,7 +30,7 @@ beforeAll(async () => {
  INSERT INTO merchants(organization_id,business_name,registration_number,contact_name,contact_email,business_owner_user_id)
  VALUES('${org}','Test','RC-BASE-1','Owner','owner@test.local','${owner}');
  SELECT set_config('test.uid','${platformOwner}',false);
- UPDATE merchants SET verification_status='verified' WHERE organization_id='${org}';
+ UPDATE merchants SET verification_status='verified',business_type='pharmacy' WHERE organization_id='${org}';
  SELECT set_config('test.uid','${owner}',false);
  INSERT INTO products(id,organization_id,name,sku,selling_price,cost_price) VALUES('${product}','${org}','Rice','RICE',100,50);
  INSERT INTO warehouses(id,organization_id,name) VALUES('${warehouse}','${org}','Main');
@@ -38,6 +38,16 @@ beforeAll(async () => {
  SELECT set_config('test.uid','${owner}',false);`);
 },120000);
 afterAll(async()=>{await db?.close();});
+it('rejects direct medical RPC calls by ordinary retail businesses',async()=>{
+ for(const industry of ['electronics','fashion','retail']) {
+  await db.exec(`UPDATE merchants SET business_type='${industry}' WHERE organization_id='${org}'; SET ROLE authenticated;`);
+  try {
+   await expect(db.exec(`SELECT public.register_medical_product('${product}','item',1,'general')`)).rejects.toThrow('medical business industry');
+   await expect(db.exec(`SELECT public.receive_medical_batch('60000000-0000-0000-0000-000000000097','${product}','${warehouse}','TEST','2099-12-31',1,'invoice','reason')`)).rejects.toThrow('medical business industry');
+   await expect(db.exec(`SELECT public.issue_medical_stock('60000000-0000-0000-0000-000000000096','${product}','${warehouse}',1,'sale','customer','reason',100,'cash')`)).rejects.toThrow('medical business industry');
+  } finally {await db.exec(`RESET ROLE; UPDATE merchants SET business_type='pharmacy' WHERE organization_id='${org}';`);}
+ }
+});
 it('isolates medical batch receipts, preserves expiry and makes retries exactly-once',async()=>{
  const med='30000000-0000-0000-0000-000000009901';
  const receipt='60000000-0000-0000-0000-000000000099';

@@ -61,6 +61,9 @@ DECLARE actor public.users;
 BEGIN
  SELECT * INTO actor FROM public.users WHERE id=auth.uid() AND status='active' AND role IN ('business_owner','admin');
  IF actor.id IS NULL OR actor.organization_id IS NULL THEN RAISE EXCEPTION 'Active business owner or admin required'; END IF;
+ IF NOT EXISTS(SELECT 1 FROM public.merchants WHERE organization_id=actor.organization_id AND business_type IN ('pharmacy','medical_store','medical_wholesale','medical_manufacturing','hospital')) THEN
+  RAISE EXCEPTION 'Medical workflow requires a medical business industry';
+ END IF;
  PERFORM track_private.assert_active_transaction_access(actor.organization_id);
  RETURN actor;
 END $$;
@@ -224,6 +227,9 @@ DECLARE actor public.users; profile public.medical_products; product public.prod
 BEGIN
  SELECT * INTO actor FROM public.users WHERE id=auth.uid() AND status='active' AND role IN ('business_owner','admin','cashier');
  IF actor.id IS NULL OR actor.organization_id IS NULL THEN RAISE EXCEPTION 'Active business user required'; END IF;
+ IF NOT EXISTS(SELECT 1 FROM public.merchants WHERE organization_id=actor.organization_id AND business_type IN ('pharmacy','medical_store','medical_wholesale','medical_manufacturing','hospital')) THEN
+  RAISE EXCEPTION 'Medical workflow requires a medical business industry';
+ END IF;
  PERFORM track_private.assert_active_transaction_access(actor.organization_id);
  IF request_id IS NULL OR issued_units IS NULL OR issued_units<=0 OR issue_kind IS NULL OR issue_kind NOT IN ('sale','free_issue')
  OR recipient_reference IS NULL OR length(trim(recipient_reference)) NOT BETWEEN 3 AND 200

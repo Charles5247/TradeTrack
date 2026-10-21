@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
-import { createClient } from '@/lib/supabase/server';
+import { medicalAccess } from '@/lib/medical/access';
 
 const uuid=z.string().uuid();
 const units=z.number().int().min(1).max(2147483647);
@@ -12,16 +12,13 @@ const schema=z.discriminatedUnion('action',[
  z.object({action:z.literal('issue'),request_id:uuid,target_product:uuid,target_warehouse:uuid,issued_units:units,issue_kind:z.enum(['sale','free_issue']),recipient_reference:text,reason:z.string().trim().min(3).max(1000),expected_unit_price:z.number().finite().nonnegative().max(9999999999),payment_method:z.enum(['cash','transfer','pos_terminal'])}).strict(),
 ]);
 async function session() {
- const client=await createClient();
- if(!client)return null;
- const {data:{user},error}=await client.auth.getUser();
- if(error||!user)return null;
+ const {client,status}=await medicalAccess();
  // New tables are not yet in the generated schema; DB RLS remains authoritative.
- return client as SupabaseClient;
+ return {db:client as SupabaseClient|null,status};
 }
 export async function GET() {
- const db=await session();
- if(!db)return NextResponse.json({error:'Sign in to continue.'},{status:401});
+ const {db,status}=await session();
+ if(!db)return NextResponse.json({error:status===401?'Sign in to continue.':'Medical workflow is only available to medical businesses.'},{status});
  if(process.env.MEDICAL_STOCK_PILOT_ENABLED!=='true')return NextResponse.json({error:'Medical stock pilot is not enabled.'},{status:503});
  const results=await Promise.all([
   db.from('products').select('id,name,sku,selling_price,medical_stock_managed').eq('status','active').order('name').limit(1000),
@@ -35,8 +32,8 @@ export async function GET() {
 }
 export async function POST(request:NextRequest) {
  if(request.headers.get('origin')!==request.nextUrl.origin)return NextResponse.json({error:'Invalid request origin.'},{status:403});
- const db=await session();
- if(!db)return NextResponse.json({error:'Sign in to continue.'},{status:401});
+ const {db,status}=await session();
+ if(!db)return NextResponse.json({error:status===401?'Sign in to continue.':'Medical workflow is only available to medical businesses.'},{status});
  if(process.env.MEDICAL_STOCK_PILOT_ENABLED!=='true')return NextResponse.json({error:'Medical stock pilot is not enabled.'},{status:503});
  const parsed=schema.safeParse(await request.json().catch(()=>null));
  if(!parsed.success)return NextResponse.json({error:'Check the required fields and whole-unit quantities.'},{status:400});

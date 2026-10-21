@@ -479,6 +479,10 @@ function CreateMerchantDialog({
                     />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="pharmacy">Pharmacy / medical store</SelectItem>
+                    <SelectItem value="medical_wholesale">Medical wholesaler / dealer</SelectItem>
+                    <SelectItem value="medical_manufacturing">Medical manufacturing / storage</SelectItem>
+                    <SelectItem value="hospital">Hospital / clinic</SelectItem>
                     <SelectItem value="retail">
                       {t.merchants.type_retail}
                     </SelectItem>

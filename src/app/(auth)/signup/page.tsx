@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { AuthShell } from "@/components/layout/auth-shell";
 import { signupSchema, type SignupFormData } from "@/lib/validations";
 import { createClient } from "@/lib/supabase/client";
+import { INDUSTRIES } from '@/lib/industries';
 import {
   saveOfflineAuthSession,
   saveRememberedLogin,
@@ -55,6 +56,7 @@ function SignupForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           business_name: data.business_name,
+          industry: data.industry,
           full_name: data.full_name,
           email: data.email,
           password: data.password,
@@ -125,6 +127,15 @@ function SignupForm() {
       </p>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="industry"><TranslatedText text="Business industry" /></Label>
+          <select id="industry" {...register('industry')} disabled={isLoading} required className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2" aria-describedby="industry-help">
+            <option value="">{copy('Choose your industry')}</option>
+            {INDUSTRIES.map(industry => <option key={industry.value} value={industry.value}>{copy(industry.label)}</option>)}
+          </select>
+          <p id="industry-help" className="text-xs text-muted-foreground">{copy('Your industry determines the tools in your workspace. Medical dispensing is being prepared for pilot use.')}</p>
+          {errors.industry && <p role="alert" className="text-sm text-destructive">{copy(errors.industry.message ?? 'Choose your industry')}</p>}
+        </div>
         <div className="space-y-2">
           <Label htmlFor="business_name"><TranslatedText text={"Business name"} /></Label>
           <Input
