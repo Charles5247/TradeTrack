@@ -2,6 +2,8 @@
 
 Updated 24 October 2026. **The isolated M2 implementation gate passed; production enablement remains blocked.** Branch: `feat/m2-spreadsheet-batches`, dependent on [foundation PR #25](https://github.com/Charles5247/TradeTrack/pull/25). The foundation now includes transfer lock-order fix `da909f2`. M3 has not started. No hosted migration, deployment, flag enablement or hosting spend was performed.
 
+Published as [draft PR #26](https://github.com/Charles5247/TradeTrack/pull/26), based on foundation PR #25. Feature commit: `e7b640d`. Merge the foundation first, then retarget the dependent PR to main.
+
 ## Implementation contract
 
 - Reuse M1's validated receipt command, original approving actor, immutable hashes and receipt-atomic stock changes. Public manual entry retains its 1,000-line limit; trusted batch preparation must support a complete receipt beyond 1,000 rows without treating checkpoints as receipts.

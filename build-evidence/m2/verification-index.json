@@ -53,7 +53,11 @@
       "warnings": 0,
       "report": "lint-result.json"
     },
-    "trackedEnvironmentGuard": "PASS: no private environment files are tracked. Historical exposure/rotation requires separate verification."
+    "trackedEnvironmentGuard": "PASS: no private environment files are tracked. Historical exposure/rotation requires separate verification.",
+    "disabledWorkerEntrypoint": {
+      "command": "STOCK_INTAKE_WORKER_ENABLED=false npm run worker:stock-intake",
+      "result": "exits without reading credentials or processing jobs"
+    }
   },
   "historicalEvidence": {
     "pipeline1200": "pipeline-1200-result.json",
@@ -70,5 +74,7 @@
     "NEXT_PUBLIC_STOCK_INTAKE_BATCHES_ENABLED": "false by default",
     "STOCK_INTAKE_WORKER_ENABLED": "false by default",
     "privateBatchSetting": "false by default; true only in disposable acceptance databases"
-  }
+  },
+  "featureCommit": "e7b640d64cd9b8b343c635aecd0f8c747064f9da",
+  "pullRequest": "https://github.com/Charles5247/TradeTrack/pull/26"
 }
