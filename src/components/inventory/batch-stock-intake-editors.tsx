@@ -13,6 +13,12 @@ import {
 } from "@/lib/stock-intake-batches/contracts";
 import type { SpreadsheetPlan } from "@/lib/stock-intake-batches/spreadsheet";
 import { STOCK_UNITS } from "@/lib/industries";
+import {
+  intakeFieldLabels,
+  reviewIssueLabels,
+  stockAddition,
+  suggestIntakeColumns,
+} from "@/lib/stock-intake-batches/review-display";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -115,8 +121,8 @@ export function SheetDialog({
     }));
   return (
     <Modal
-      title="Select complete worksheets"
-      description="Preview shows the first 20 physical rows only. Every nonblank data row in each selected sheet is prepared. Confirm the header and column mappings."
+      title="Choose sheets and check columns"
+      description="Select the sheets to read. Recognized column names are filled in for you; check them before saving. The preview shows 20 rows, but every data row in each selected sheet will be read."
       close={close}
     >
       <form
@@ -146,7 +152,15 @@ export function SheetDialog({
                     sheets: checked
                       ? [
                           ...current.sheets,
-                          { name: sheet.name, headerRow: 1, columns: {} },
+                          {
+                            name: sheet.name,
+                            headerRow: 1,
+                            columns: suggestIntakeColumns(
+                              sheet.preview
+                                .find((row) => row.row === 1)
+                                ?.cells.map((cell) => cell.formatted) ?? [],
+                            ),
+                          },
                         ]
                       : current.sheets.filter((s) => s.name !== sheet.name),
                   }))
@@ -154,7 +168,7 @@ export function SheetDialog({
               />
               {chosen && (
                 <>
-                  <Field label="Header physical row">
+                  <Field label="Row containing the column names">
                     <Input
                       type="number"
                       min={1}
@@ -163,13 +177,18 @@ export function SheetDialog({
                       onChange={(e) =>
                         update(sheet.name, {
                           headerRow: Number(e.target.value),
+                          columns: suggestIntakeColumns(
+                            sheet.preview
+                              .find((row) => row.row === Number(e.target.value))
+                              ?.cells.map((cell) => cell.formatted) ?? [],
+                          ),
                         })
                       }
                     />
                   </Field>
                   <div className="grid gap-3 sm:grid-cols-3">
                     {INTAKE_FIELDS.map((field) => (
-                      <Field key={field} label={field.replaceAll("_", " ")}>
+                      <Field key={field} label={intakeFieldLabels[field]}>
                         <select
                           className={selectClass}
                           value={chosen.columns[field] ?? ""}
@@ -180,7 +199,9 @@ export function SheetDialog({
                             update(sheet.name, { columns });
                           }}
                         >
-                          <option value="">Not mapped</option>
+                          <option value="">
+                            Choose a column (or leave unused)
+                          </option>
                           {Array.from(
                             {
                               length: Math.max(
@@ -278,7 +299,7 @@ export function RowDialog({
     [draft, setDraft] = useState(row.review.new_product),
     [search, setSearch] = useState(""),
     [catalogPages, setCatalogPages] = useState([0]);
-  const offset=catalogPages[catalogPages.length-1];
+  const offset = catalogPages[catalogPages.length - 1];
   const catalog = useQuery({
     queryKey: ["intake-catalog", account, search, offset],
     queryFn: () =>
@@ -290,18 +311,19 @@ export function RowDialog({
     setLine((current) => ({ ...current, ...patch }));
   return (
     <Modal
-      title={`Inspect row ${row.row_number}`}
-      description={`${row.source_name} / ${row.sheet}. Receipt group ${row.group_id}. ${row.group_status === "posted" ? "Posted evidence is immutable." : "Corrections require fresh preparation."}`}
+      title={`Check ${row.review.product_snapshot?.name || row.review.new_product?.name || row.raw.values.description || "product"}`}
+      description={`${row.source_name} / ${row.sheet}, row ${row.row_number}. ${row.group_status === "posted" ? "This product has already been saved. Its original record cannot be changed here." : "Check the details below, confirm the pack size, then save your check. This does not add stock yet."}`}
       close={close}
     >
       <div className="grid gap-5 md:grid-cols-2">
         <section className="space-y-2">
-          <h3 className="font-semibold">Original extracted evidence</h3>
+          <h3 className="font-semibold">From your file</h3>
           <dl className="space-y-2 text-sm">
             {Object.entries(row.raw.values).map(([key, value]) => (
               <div key={key}>
                 <dt className="text-muted-foreground">
-                  {key.replaceAll("_", " ")}
+                  {intakeFieldLabels[key as keyof typeof intakeFieldLabels] ??
+                    key}
                 </dt>
                 <dd className="break-words">
                   {value === null ? "Unreadable or missing" : String(value)}
@@ -333,81 +355,135 @@ export function RowDialog({
             });
           }}
         >
-          <h3 className="font-semibold">Reviewed values</h3>
-          <Field label="Search catalog">
-            <Input
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setCatalogPages([0]);
-              }}
-            />
-          </Field>
-          <Field label="Matched product">
-            <select
-              className={selectClass}
-              value={line.product_id ?? ""}
-              onChange={(e) =>
-                update({
-                  product_id: e.target.value || null,
-                  conversion_confirmed: false,
-                })
-              }
-            >
-              <option value="">Unresolved / shared new draft</option>
-              {line.product_id &&
-                !catalog.data?.products.some(
-                  (p) => p.id === line.product_id,
-                ) && (
-                  <option value={line.product_id}>
-                    {line.product_snapshot?.name ?? line.product_id}
-                  </option>
-                )}
-              {catalog.data?.products.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name} · {p.sku} · {p.stock_unit ?? "piece"}
-                </option>
-              ))}
-            </select>
-          </Field>
-          {line.product_id && (
-            <p className="break-all text-xs">
-              Catalog product ID: {line.product_id}
+          <h3 className="font-semibold">Product details</h3>
+          {row.issues.length > 0 && (
+            <p className="rounded-md bg-muted p-3 text-sm">
+              Needs checking:{" "}
+              {row.issues
+                .map((issue) => reviewIssueLabels[issue] ?? issue)
+                .join("; ")}
+              .
             </p>
           )}
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={catalogPages.length<=1}
-              onClick={() => setCatalogPages(pages=>pages.slice(0,-1))}
-            >
-              Previous products
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={!catalog.data?.hasMore}
-              onClick={() => setCatalogPages(pages=>[...pages,catalog.data!.nextOffset!])}
-            >
-              More products
-            </Button>
-          </div>
-          {catalog.isError && (
-            <p role="alert">
-              Catalog unavailable.{" "}
-              <button
-                type="button"
-                className="underline"
-                onClick={() => void catalog.refetch()}
-              >
-                Retry
-              </button>
-            </p>
+          {(line.quantity !== row.raw.values.quantity ||
+            line.purchase_unit !== row.raw.values.purchase_unit ||
+            line.conversion !== row.raw.values.conversion) && (
+            <div className="space-y-2 rounded-md border p-3 text-sm">
+              <p>
+                The quantity or pack details differ from your file. Check that
+                this change was intended.
+              </p>
+              {row.group_status !== "posted" && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={busy}
+                  onClick={() =>
+                    update({
+                      quantity:
+                        typeof row.raw.values.quantity === "number"
+                          ? row.raw.values.quantity
+                          : null,
+                      purchase_unit:
+                        typeof row.raw.values.purchase_unit === "string"
+                          ? row.raw.values.purchase_unit
+                          : "",
+                      conversion:
+                        typeof row.raw.values.conversion === "number"
+                          ? row.raw.values.conversion
+                          : null,
+                      conversion_confirmed: false,
+                    })
+                  }
+                >
+                  Use pack details from file
+                </Button>
+              )}
+            </div>
           )}
+          <details open={!line.product_id}>
+            <summary className="cursor-pointer text-sm underline">
+              {line.product_id
+                ? `Matched to ${line.product_snapshot?.name ?? "catalog product"}. Change product`
+                : "Choose a catalog product"}
+            </summary>
+            <div className="mt-3 space-y-3">
+              <Field label="Search catalog">
+                <Input
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setCatalogPages([0]);
+                  }}
+                />
+              </Field>
+              <Field label="Matched product">
+                <select
+                  className={selectClass}
+                  value={line.product_id ?? ""}
+                  onChange={(e) =>
+                    update({
+                      product_id: e.target.value || null,
+                      conversion_confirmed: false,
+                    })
+                  }
+                >
+                  <option value="">Unresolved / shared new draft</option>
+                  {line.product_id &&
+                    !catalog.data?.products.some(
+                      (p) => p.id === line.product_id,
+                    ) && (
+                      <option value={line.product_id}>
+                        {line.product_snapshot?.name ?? line.product_id}
+                      </option>
+                    )}
+                  {catalog.data?.products.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} · {p.sku} · {p.stock_unit ?? "piece"}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={catalogPages.length <= 1}
+                  onClick={() => setCatalogPages((pages) => pages.slice(0, -1))}
+                >
+                  Previous products
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!catalog.data?.hasMore}
+                  onClick={() =>
+                    setCatalogPages((pages) => [
+                      ...pages,
+                      catalog.data!.nextOffset!,
+                    ])
+                  }
+                >
+                  More products
+                </Button>
+              </div>
+              {catalog.isError && (
+                <p role="alert">
+                  Catalog unavailable.{" "}
+                  <button
+                    type="button"
+                    className="underline"
+                    onClick={() => void catalog.refetch()}
+                  >
+                    Retry
+                  </button>
+                </p>
+              )}
+            </div>
+          </details>
           {(["quantity", "conversion", "receipt_unit_cost"] as const).map(
             (field) => (
-              <Field key={field} label={field.replaceAll("_", " ")}>
+              <Field key={field} label={intakeFieldLabels[field]}>
                 <Input
                   type="number"
                   min={field === "receipt_unit_cost" ? 0 : 1}
@@ -426,7 +502,7 @@ export function RowDialog({
               </Field>
             ),
           )}
-          <Field label="Purchase unit">
+          <Field label={intakeFieldLabels.purchase_unit}>
             <Input
               maxLength={40}
               value={line.purchase_unit}
@@ -438,14 +514,24 @@ export function RowDialog({
               }
             />
           </Field>
+          <p
+            className="rounded-md bg-muted p-3 text-sm font-medium"
+            role="status"
+          >
+            {stockAddition(line)}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            The cost is for one received pack, not for each stock unit. Checking
+            this receipt does not change your catalog prices.
+          </p>
           <Check
-            label="I confirmed this product, variant, purchase unit and resulting stock-unit conversion."
+            label="I checked the product and pack size. The stock calculation above is correct."
             checked={line.conversion_confirmed}
             disabled={busy}
             onChange={(value) => update({ conversion_confirmed: value })}
           />
           <Button type="submit" disabled={busy}>
-            Save reviewed row
+            Save product check
           </Button>
         </form>
       </div>
@@ -558,8 +644,8 @@ export function BulkDialog({
     [confirmed, setConfirmed] = useState(false);
   return (
     <Modal
-      title={`Correct ${count} selected rows`}
-      description="Apply one explicit correction to these selected rows. Product or purchase-unit changes clear conversion confirmation."
+      title={`Update ${count} selected products`}
+      description="This updates only the products you selected. Check each product's pack size before confirming them together."
       close={close}
     >
       <form
@@ -610,7 +696,17 @@ export function BulkDialog({
               "excluded",
             ].map((field) => (
               <option key={field} value={field}>
-                {field.replaceAll("_", " ")}
+                {field === "conversion_confirmed"
+                  ? "Confirm checked pack sizes"
+                  : field === "group_id"
+                    ? "Move to another receipt"
+                    : field === "excluded"
+                      ? "Include or exclude products"
+                      : field === "product_id"
+                        ? "Change matched product"
+                        : (intakeFieldLabels[
+                            field as keyof typeof intakeFieldLabels
+                          ] ?? field)}
               </option>
             ))}
           </select>

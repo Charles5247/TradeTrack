@@ -21,6 +21,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  reviewIssueLabels,
+  stockAddition,
+} from "@/lib/stock-intake-batches/review-display";
+import {
   SheetDialog,
   RowDialog,
   BulkDialog,
@@ -173,6 +177,21 @@ function Workspace({ account }: { account: string }) {
     refetchOnReconnect: true,
   });
   const view = current.data;
+  // This server selection covers every receipt, including those beyond the current page.
+  const preparable = useQuery({
+    queryKey: ["stock-batch", account, id, "preparable", view?.batch.revision],
+    queryFn: () =>
+      intakeRequest<{ revision: number; ids: string[] }>(
+        `${endpoint}/${id}?selection=preparable`,
+      ),
+    enabled: Boolean(
+      view && !view.summary.jobs_active && view.batch.status !== "cancelled",
+    ),
+  });
+  const canPrepare = Boolean(
+    preparable.data?.revision === view?.batch.revision &&
+      preparable.data?.ids.length,
+  );
   const locked = Boolean(
     busy ||
       view?.batch.status === "posting" ||
@@ -241,6 +260,32 @@ function Workspace({ account }: { account: string }) {
   const selectionUrl = (kind: string) =>
     `${endpoint}/${id}?${new URLSearchParams({ selection: kind, issues, ...(sourceId ? { source: sourceId } : {}) })}`;
   const ackKey = JSON.stringify([view?.batch.revision, view?.summary, ready]);
+  const goTo = (section: string) => {
+    const heading = document.getElementById(section);
+    heading?.scrollIntoView({ block: "start" });
+    heading?.focus({ preventScroll: true });
+  };
+  const prepareReceipts = () =>
+    run("Checking receipt totals", async () => {
+      const result = await intakeRequest<{ revision: number; ids: string[] }>(
+        `${endpoint}/${id}?selection=preparable`,
+      );
+      if (!result.ids.length) {
+        goTo("intake-review");
+        throw new Error(
+          "Some products still need checking. Open ‘Check product’ beside each item marked for review.",
+        );
+      }
+      await command(
+        { action: "prepare", group_ids: result.ids },
+        result.revision,
+      );
+      setReady([]);
+      setNote(
+        "Checking receipt totals. Stock will change only after you review and approve.",
+      );
+      goTo("intake-summary");
+    });
   async function upload(files: File[], resume?: BatchSource) {
     await run("Uploading originals", async () => {
       let revision = view!.batch.revision;
@@ -307,10 +352,12 @@ function Workspace({ account }: { account: string }) {
           <p className="text-sm text-muted-foreground">
             Inventory / Stock intake
           </p>
-          <h1 className="text-2xl font-semibold">Spreadsheet batches</h1>
+          <h1 className="text-2xl font-semibold">
+            Receive stock from a spreadsheet
+          </h1>
           <p className="max-w-2xl text-sm text-muted-foreground">
-            Upload originals, resolve exceptions, review receipts and approve
-            once. Every prepared row stays available.
+            Upload your file, check the products, then approve the delivery.
+            Stock changes only after your approval.
           </p>
         </div>
         <Link href="/inventory/intake" className="text-sm underline">
@@ -331,114 +378,121 @@ function Workspace({ account }: { account: string }) {
         </p>
       )}
       {busy && <p role="status">{busy}…</p>}
-      <Card>
-        <CardContent className="space-y-4 pt-6">
-          <h2 className="font-semibold">Start a batch</h2>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <Field label="Stock operation">
+      <details open={id ? undefined : true} className="rounded-lg border p-4">
+        <summary className="cursor-pointer font-medium">
+          Start a new delivery or open a saved batch
+        </summary>
+        <Card className="mt-4">
+          <CardContent className="space-y-4 pt-6">
+            <h2 className="font-semibold">Start a batch</h2>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Field label="Stock operation">
+                <select
+                  className={selectClass}
+                  value={mode}
+                  onChange={(e) => setMode(e.target.value as typeof mode)}
+                >
+                  <option value="additional_delivery">
+                    Additional deliveries
+                  </option>
+                  <option value="opening_stock">Opening balances only</option>
+                </select>
+              </Field>
+              <Field label="Default location">
+                <select
+                  className={selectClass}
+                  value={warehouse}
+                  onChange={(e) => setWarehouse(e.target.value)}
+                >
+                  <option value="">Select location</option>
+                  {catalog.data?.warehouses.map((w) => (
+                    <option key={w.id} value={w.id}>
+                      {w.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Button
+                className="self-end"
+                disabled={Boolean(busy) || !warehouse}
+                onClick={() =>
+                  void run("Creating batch", async () => {
+                    const created = await intakeRequest<{ batch: BatchHeader }>(
+                      endpoint,
+                      {
+                        action: "create",
+                        id: crypto.randomUUID(),
+                        mode,
+                        warehouse_id: warehouse,
+                      },
+                    );
+                    open(created.batch.id);
+                  })
+                }
+              >
+                Create batch
+              </Button>
+            </div>
+            {catalog.isError && (
+              <p role="alert">
+                Locations unavailable.{" "}
+                <button
+                  className="underline"
+                  onClick={() => void catalog.refetch()}
+                >
+                  Retry
+                </button>
+              </p>
+            )}
+            <Field label="Saved batches">
               <select
                 className={selectClass}
-                value={mode}
-                onChange={(e) => setMode(e.target.value as typeof mode)}
+                value={history.data?.batches.some((b) => b.id === id) ? id : ""}
+                onChange={(e) => e.target.value && open(e.target.value)}
               >
-                <option value="additional_delivery">
-                  Additional deliveries
-                </option>
-                <option value="opening_stock">Opening balances only</option>
-              </select>
-            </Field>
-            <Field label="Default location">
-              <select
-                className={selectClass}
-                value={warehouse}
-                onChange={(e) => setWarehouse(e.target.value)}
-              >
-                <option value="">Select location</option>
-                {catalog.data?.warehouses.map((w) => (
-                  <option key={w.id} value={w.id}>
-                    {w.name}
+                <option value="">Select saved batch</option>
+                {history.data?.batches.slice(0, 20).map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {new Date(b.created_at).toLocaleString()} · {b.status} ·{" "}
+                    {b.id.slice(0, 8)}
                   </option>
                 ))}
               </select>
             </Field>
-            <Button
-              className="self-end"
-              disabled={Boolean(busy) || !warehouse}
-              onClick={() =>
-                void run("Creating batch", async () => {
-                  const created = await intakeRequest<{ batch: BatchHeader }>(
-                    endpoint,
-                    {
-                      action: "create",
-                      id: crypto.randomUUID(),
-                      mode,
-                      warehouse_id: warehouse,
-                    },
-                  );
-                  open(created.batch.id);
-                })
-              }
-            >
-              Create batch
-            </Button>
-          </div>
-          {catalog.isError && (
-            <p role="alert">
-              Locations unavailable.{" "}
-              <button
-                className="underline"
-                onClick={() => void catalog.refetch()}
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                disabled={!historyOffset || Boolean(busy)}
+                onClick={() =>
+                  setHistoryOffset(Math.max(0, historyOffset - 20))
+                }
               >
-                Retry
-              </button>
-            </p>
-          )}
-          <Field label="Saved batches">
-            <select
-              className={selectClass}
-              value={history.data?.batches.some((b) => b.id === id) ? id : ""}
-              onChange={(e) => e.target.value && open(e.target.value)}
-            >
-              <option value="">Select saved batch</option>
-              {history.data?.batches.slice(0, 20).map((b) => (
-                <option key={b.id} value={b.id}>
-                  {new Date(b.created_at).toLocaleString()} · {b.status} ·{" "}
-                  {b.id.slice(0, 8)}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              disabled={!historyOffset || Boolean(busy)}
-              onClick={() => setHistoryOffset(Math.max(0, historyOffset - 20))}
-            >
-              Previous batches
-            </Button>
-            <Button
-              variant="outline"
-              disabled={
-                (history.data?.batches.length ?? 0) <= 20 || Boolean(busy)
-              }
-              onClick={() => setHistoryOffset(historyOffset + 20)}
-            >
-              Next batches
-            </Button>
-          </div>
-          {history.isError && (
-            <p role="alert">
-              Saved batches unavailable.{" "}
-              <button
-                className="underline"
-                onClick={() => void history.refetch()}
+                Previous batches
+              </Button>
+              <Button
+                variant="outline"
+                disabled={
+                  (history.data?.batches.length ?? 0) <= 20 || Boolean(busy)
+                }
+                onClick={() => setHistoryOffset(historyOffset + 20)}
               >
-                Retry
-              </button>
-            </p>
-          )}
-        </CardContent>
-      </Card>
+                Next batches
+              </Button>
+            </div>
+            {history.isError && (
+              <p role="alert">
+                Saved batches unavailable.{" "}
+                <button
+                  className="underline"
+                  onClick={() => void history.refetch()}
+                >
+                  Retry
+                </button>
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </details>
       {id && current.isPending && <p role="status">Loading saved batch…</p>}
       {current.isError && (
         <p role="alert">
@@ -450,8 +504,146 @@ function Workspace({ account }: { account: string }) {
       )}
       {view && (
         <>
+          <nav
+            aria-label="Receiving steps"
+            className="grid gap-2 text-sm sm:grid-cols-3"
+          >
+            <a
+              className="rounded-lg border p-3 hover:bg-muted"
+              href="#intake-upload"
+            >
+              1. Upload your file
+            </a>
+            <a
+              className="rounded-lg border p-3 hover:bg-muted"
+              href="#intake-review"
+            >
+              2. Check the products
+            </a>
+            <a
+              className="rounded-lg border p-3 hover:bg-muted"
+              href="#intake-summary"
+            >
+              3. Review and save
+            </a>
+          </nav>
+          <Card className="border-primary/40">
+            <CardContent
+              className="space-y-3 pt-6"
+              role="status"
+              aria-live="polite"
+            >
+              <h2 className="font-semibold">What to do next</h2>
+              {view.batch.status === "cancelled" ? (
+                <p>
+                  This batch was cancelled. Saved receipts remain in stock; the
+                  other items have not been added.
+                </p>
+              ) : view.summary.jobs_active > 0 ? (
+                <p>
+                  {view.batch.status === "posting"
+                    ? "Saving your approved receipts"
+                    : "Reading files and checking receipts"}
+                  … You can leave this page and return later.
+                </p>
+              ) : view.batch.status === "completed" ? (
+                <p>
+                  Your delivery is saved. {view.summary.posted} receipts have
+                  been added to stock. You can inspect the products and original
+                  files below.
+                </p>
+              ) : !view.sources.some((s) => !s.excluded) ? (
+                <>
+                  <p>
+                    Choose the CSV or Excel file containing the stock you
+                    received.
+                  </p>
+                  <Button onClick={() => goTo("intake-upload")}>
+                    Upload a file
+                  </Button>
+                </>
+              ) : view.sources.some(
+                  (s) =>
+                    !s.excluded &&
+                    (s.status === "select_sheets" ||
+                      s.status === "uploading" ||
+                      s.status === "failed"),
+                ) ? (
+                <>
+                  <p>
+                    Finish setting up your files below. Choose the sheets and
+                    check which columns contain product names, quantities and
+                    prices.
+                  </p>
+                  <Button onClick={() => goTo("intake-upload")}>
+                    Check uploaded files
+                  </Button>
+                </>
+              ) : view.sources.some(
+                  (s) => s.plan && !s.excluded && s.status !== "prepared",
+                ) ? (
+                <>
+                  <p>
+                    Your file setup is saved. Read the selected sheets to list
+                    the products for checking.
+                  </p>
+                  <Button
+                    disabled={locked}
+                    onClick={() => void save({ action: "process" })}
+                  >
+                    Read selected sheets
+                  </Button>
+                </>
+              ) : view.summary.ready > 0 ? (
+                <>
+                  <p>
+                    {view.summary.ready} receipts are ready. Review their
+                    totals, select the ones to save, then approve once.
+                    {view.summary.needs_review > 0
+                      ? ` Another ${view.summary.needs_review} receipts still need checking.`
+                      : ""}
+                  </p>
+                  <Button onClick={() => goTo("intake-summary")}>
+                    Review and save
+                  </Button>
+                </>
+              ) : canPrepare ? (
+                <>
+                  <p>
+                    Your product checks are complete for{" "}
+                    {preparable.data?.ids.length} receipts. Continue to check
+                    their totals before saving.
+                  </p>
+                  <Button
+                    disabled={locked}
+                    onClick={() => void prepareReceipts()}
+                  >
+                    Continue to receipt totals
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <p>
+                    Check the items marked below. Open “Check product” to
+                    confirm the product, quantity, pack size and cost. Nothing
+                    in these unchecked receipts has been added to stock.
+                  </p>
+                  <Button onClick={() => goTo("intake-review")}>
+                    Check products
+                  </Button>
+                </>
+              )}
+            </CardContent>
+          </Card>
           <Card>
             <CardContent className="space-y-4 pt-6">
+              <h2
+                id="intake-upload"
+                tabIndex={-1}
+                className="scroll-mt-32 text-lg font-semibold"
+              >
+                1. Upload your file
+              </h2>
               <div className="flex flex-wrap justify-between gap-2">
                 <h2 className="font-semibold">
                   Batch {id.slice(0, 8)} ·{" "}
@@ -468,13 +660,9 @@ function Workspace({ account }: { account: string }) {
               <dl className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
                 {[
                   ["Files", view.summary.files],
-                  ["Prepared rows", view.summary.prepared_rows],
+                  ["Products read", view.summary.prepared_rows],
                   ["Ready receipts", view.summary.ready],
                   ["Saved receipts", view.summary.posted],
-                  ["Need review", view.summary.needs_review],
-                  ["Excluded receipts", view.summary.excluded],
-                  ["Failed sources", view.summary.failed_sources],
-                  ["Active jobs", view.summary.jobs_active],
                 ].map(([label, value]) => (
                   <div key={label}>
                     <dt className="text-muted-foreground">{label}</dt>
@@ -488,13 +676,17 @@ function Workspace({ account }: { account: string }) {
                 and posting require connectivity; accepted jobs continue on the
                 server.
               </p>
-              <p className="text-sm">
-                Pilot boundaries: 100 files, 250 MiB per batch, 20 MiB per file,
-                20,000 prepared rows. These are enforced limits; measured
-                production capacity is pending. Spreadsheet preparation uses no
-                AI.
-              </p>
-              <Field label="Add CSV/XLSX originals">
+              <details className="text-sm text-muted-foreground">
+                <summary className="cursor-pointer">
+                  File limits and supported formats
+                </summary>
+                <p>
+                  CSV and XLSX: up to 100 files, 20 MiB each, 250 MiB total and
+                  20,000 product rows. All selected sheets are read. PDF, photos
+                  and voice are not available in this version.
+                </p>
+              </details>
+              <Field label="Add a CSV or Excel file">
                 <Input
                   type="file"
                   accept=".csv,.xlsx"
@@ -517,7 +709,7 @@ function Workspace({ account }: { account: string }) {
                   }
                   onClick={() => void save({ action: "process" })}
                 >
-                  Process configured sources
+                  Read selected sheets
                 </Button>
                 <Button
                   variant="outline"
@@ -636,9 +828,15 @@ function Workspace({ account }: { account: string }) {
           </section>
           <section aria-label="Prepared row review" className="space-y-3">
             <h2 className="text-lg font-semibold">
-              Resolve exceptions · {view.row_count.toLocaleString()} matching
-              rows
+              <span id="intake-review" tabIndex={-1} className="scroll-mt-32">
+                2. Check the products · {view.row_count.toLocaleString()} rows
+              </span>
             </h2>
+            <p className="text-sm text-muted-foreground">
+              Check how each received pack becomes stock. For example, 10
+              cartons with 12 pieces each adds 120 pieces. Use “Check product”
+              to confirm or correct each item.
+            </p>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Source filter">
                 <select
@@ -658,7 +856,7 @@ function Workspace({ account }: { account: string }) {
                   ))}
                 </select>
               </Field>
-              <Field label="Exception queue">
+              <Field label="Show items needing">
                 <select
                   className={selectClass}
                   value={issues}
@@ -676,7 +874,7 @@ function Workspace({ account }: { account: string }) {
                     "conversions",
                   ].map((v) => (
                     <option key={v} value={v}>
-                      {v === "all" ? "All prepared rows" : v}
+                      {v === "all" ? "All products" : reviewIssueLabels[v]}
                     </option>
                   ))}
                 </select>
@@ -701,14 +899,14 @@ function Workspace({ account }: { account: string }) {
                   })
                 }
               >
-                Select all included, unposted matching rows
+                Select all matching products
               </Button>
               <Button
                 variant="outline"
                 disabled={!selected.length || locked}
                 onClick={() => setBulk(true)}
               >
-                Correct {selected.length} selected rows
+                Update {selected.length} selected products
               </Button>
               <Button variant="ghost" onClick={() => setSelected([])}>
                 Clear selection
@@ -727,9 +925,9 @@ function Workspace({ account }: { account: string }) {
                       "Source / row",
                       "Product",
                       "Quantity",
-                      "Stock units",
-                      "Receipt unit cost",
-                      "Exceptions",
+                      "Stock to add",
+                      "Cost per received pack",
+                      "Needs checking",
                       "Review",
                     ].map((label) => (
                       <th key={label} className="p-3">
@@ -784,11 +982,8 @@ function Workspace({ account }: { account: string }) {
                         {row.review.quantity ?? "Unknown"}{" "}
                         {row.review.purchase_unit}
                       </td>
-                      <td className="p-3">
-                        {row.review.quantity !== null &&
-                        row.review.conversion !== null
-                          ? row.review.quantity * row.review.conversion
-                          : "Unknown"}
+                      <td className="min-w-44 p-3">
+                        {stockAddition(row.review)}
                       </td>
                       <td className="p-3">
                         {row.review.receipt_unit_cost === null
@@ -796,7 +991,9 @@ function Workspace({ account }: { account: string }) {
                           : row.review.receipt_unit_cost.toFixed(2)}
                       </td>
                       <td className="p-3">
-                        {row.issues.join(", ") || "Resolved"}
+                        {row.issues
+                          .map((issue) => reviewIssueLabels[issue] ?? issue)
+                          .join("; ") || "Checked"}
                         {row.warnings.length > 0 && (
                           <p>{row.warnings.join("; ")}</p>
                         )}
@@ -809,7 +1006,9 @@ function Workspace({ account }: { account: string }) {
                             setRowEditor(row);
                           }}
                         >
-                          Inspect row
+                          {row.group_status === "posted"
+                            ? "View product"
+                            : "Check product"}
                         </Button>
                       </td>
                     </tr>
@@ -958,32 +1157,44 @@ function Workspace({ account }: { account: string }) {
               label="receipts"
             />
             <Button
-              disabled={locked || view.summary.jobs_active > 0}
-              onClick={() =>
-                void run("Preparing reviewed receipts", async () => {
-                  const result = await intakeRequest<{
-                    revision: number;
-                    ids: string[];
-                  }>(selectionUrl("preparable"));
-                  if (!result.ids.length)
-                    throw new Error(
-                      "Resolve row exceptions before preparing receipts.",
-                    );
-                  await command(
-                    { action: "prepare", group_ids: result.ids },
-                    result.revision,
-                  );
-                  setReady([]);
-                })
-              }
+              disabled={locked || view.summary.jobs_active > 0 || !canPrepare}
+              onClick={() => void prepareReceipts()}
             >
-              Prepare all resolved receipts
+              Continue to receipt totals
             </Button>
+            {preparable.isError && (
+              <p role="alert" className="text-sm">
+                Could not check which receipts can continue. Your product checks
+                are saved.{" "}
+                <button
+                  className="underline"
+                  onClick={() => void preparable.refetch()}
+                >
+                  Try again
+                </button>
+              </p>
+            )}
+            {!canPrepare &&
+              !view.summary.jobs_active &&
+              !view.summary.ready &&
+              view.batch.status !== "completed" && (
+                <p className="text-sm text-muted-foreground">
+                  Confirm the products and pack sizes in step 2 before
+                  continuing to totals. No stock has been saved for unchecked
+                  receipts.
+                </p>
+              )}
           </section>
           <Card>
             <CardContent className="space-y-4 pt-6">
               <h2 className="text-lg font-semibold">
-                Review summary and approve once
+                <span
+                  id="intake-summary"
+                  tabIndex={-1}
+                  className="scroll-mt-32"
+                >
+                  3. Review and save
+                </span>
               </h2>
               <p className="text-sm">
                 {view.summary.files} sources; {view.summary.failed_sources}{" "}
@@ -993,73 +1204,85 @@ function Workspace({ account }: { account: string }) {
                 {view.summary.posted} already saved. Only selected ready
                 receipts post. Failed, excluded and unselected work is retained.
               </p>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="outline"
-                  disabled={locked || !view.summary.ready}
-                  onClick={() =>
-                    void run("Selecting ready receipts", async () => {
-                      const result = await intakeRequest<{
-                        revision: number;
-                        receipts: Ready[];
-                      }>(selectionUrl("ready"));
-                      if (result.revision !== view.batch.revision)
-                        throw new Error(
-                          "Batch changed. Refresh before selecting.",
+              {view.summary.ready > 0 ? (
+                <>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      disabled={locked || !view.summary.ready}
+                      onClick={() =>
+                        void run("Selecting ready receipts", async () => {
+                          const result = await intakeRequest<{
+                            revision: number;
+                            receipts: Ready[];
+                          }>(selectionUrl("ready"));
+                          if (result.revision !== view.batch.revision)
+                            throw new Error(
+                              "Batch changed. Refresh before selecting.",
+                            );
+                          setReady(result.receipts);
+                          setApprovalRevision(result.revision);
+                        })
+                      }
+                    >
+                      Select all ready receipts
+                    </Button>
+                    <Button variant="ghost" onClick={() => setReady([])}>
+                      Clear receipt selection
+                    </Button>
+                  </div>
+                  <p className="font-semibold">
+                    {ready.length} selected receipts ·{" "}
+                    {batchMoney(ready, view.summary.currency)}
+                  </p>
+                  <Check
+                    label="I reviewed the selected receipts and summary, including failed, excluded and unselected work. Approve these reviewed deliveries once."
+                    checked={ack === ackKey}
+                    onChange={(checked) => setAck(checked ? ackKey : "")}
+                    disabled={locked || !ready.length}
+                  />
+                  <Button
+                    disabled={
+                      locked ||
+                      !ready.length ||
+                      ack !== ackKey ||
+                      view.summary.jobs_active > 0 ||
+                      ready.some((r) => r.currency !== view.summary.currency)
+                    }
+                    onClick={() =>
+                      void run("Approving batch", async () => {
+                        await command(
+                          {
+                            action: "approve",
+                            approval_id: crypto.randomUUID(),
+                            receipts: ready.map(({ group_id, hash }) => ({
+                              group_id,
+                              hash,
+                            })),
+                            exclusions_acknowledged: true,
+                          },
+                          approvalRevision,
                         );
-                      setReady(result.receipts);
-                      setApprovalRevision(result.revision);
-                    })
-                  }
-                >
-                  Select all ready receipts
-                </Button>
-                <Button variant="ghost" onClick={() => setReady([])}>
-                  Clear receipt selection
-                </Button>
-              </div>
-              <p className="font-semibold">
-                {ready.length} selected receipts ·{" "}
-                {batchMoney(ready, view.summary.currency)}
-              </p>
-              <Check
-                label="I reviewed the selected receipts and summary, including failed, excluded and unselected work. Approve these reviewed deliveries once."
-                checked={ack === ackKey}
-                onChange={(checked) => setAck(checked ? ackKey : "")}
-                disabled={locked}
-              />
-              <Button
-                disabled={
-                  locked ||
-                  !ready.length ||
-                  ack !== ackKey ||
-                  view.summary.jobs_active > 0 ||
-                  ready.some((r) => r.currency !== view.summary.currency)
-                }
-                onClick={() =>
-                  void run("Approving batch", async () => {
-                    await command(
-                      {
-                        action: "approve",
-                        approval_id: crypto.randomUUID(),
-                        receipts: ready.map(({ group_id, hash }) => ({
-                          group_id,
-                          hash,
-                        })),
-                        exclusions_acknowledged: true,
-                      },
-                      approvalRevision,
-                    );
-                    setReady([]);
-                    setAck("");
-                    setNote(
-                      "Approval recorded. Follow each saved or needs-review receipt outcome here.",
-                    );
-                  })
-                }
-              >
-                Approve {ready.length} selected receipts
-              </Button>
+                        setReady([]);
+                        setAck("");
+                        setNote(
+                          "Approval recorded. Follow each saved or needs-review receipt outcome here.",
+                        );
+                      })
+                    }
+                  >
+                    Approve and add {ready.length} receipts to stock
+                  </Button>
+                </>
+              ) : (
+                <p className="rounded-lg bg-muted p-4 text-sm">
+                  {view.summary.jobs_active > 0
+                    ? "Please wait while the receipts are checked or saved."
+                    : view.batch.status === "completed"
+                      ? "Your saved receipts are listed above. There is nothing more to approve."
+                      : "No receipts are ready to save yet. Complete the product checks in step 2, then continue to receipt totals."}
+                </p>
+              )}
             </CardContent>
           </Card>
         </>
