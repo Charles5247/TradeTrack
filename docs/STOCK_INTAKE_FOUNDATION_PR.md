@@ -6,6 +6,8 @@ M1 adds Inventory → Receive stock behind disabled flags. A manager enters 10 c
 
 This branch integrates main at a1109e0, preserving its subscription checks, medical batch-stock separation and product-unit rules. Unit, size, colour or model changes require renewed receipt review. Ordinary receiving excludes medical batch-managed products.
 
+A subsequent concurrency check found a transfer/checkout deadlock when creating a new destination position. An additive migration now locks existing inventory before destination creation fires audit triggers. A held-lock regression proves the accounting counter stays available while both stock writers wait, then verifies their final quantities and duplicate replay.
+
 ## Validation
 
 - Integrated checkout: 88 tests in 12 files passed, including stock, subscription, medical isolation, API and migration checks. Final TypeScript and Next.js production build passed (57 pages).
@@ -18,7 +20,7 @@ See [M0 evidence](AI_AND_BI_M0_IMPLEMENTATION_CHECKPOINT.md), [M1 evidence](AI_A
 
 ## Release and rollback
 
-Apply the four additive M0/M1 migrations before compatible clients use them. Coordinate old-client stock writes/synchronization and a compatible-client rollout; flags cannot repair old open tabs. Confirm credential rotation/history exposure, hosted schema/grants/authorization and historical tenant-link audits before production release. Existing pending transfers require explicit stock reconciliation.
+Apply the additive M0/M1 migrations and `20261024042324_stock_transfer_lock_order.sql` before compatible clients use them. Coordinate old-client stock writes/synchronization and a compatible-client rollout; flags cannot repair old open tabs. Confirm credential rotation/history exposure, hosted schema/grants/authorization and historical tenant-link audits before production release. Existing pending transfers require explicit stock reconciliation.
 
 Public checkout/intake flags and private database switches default off. Rollback disables features while retaining committed receipts, approvals, evidence and unresolved work. Do not restore unsafe snapshot writers or clear queues. No hosted migration, deployment, credential rotation or business-data repair is included.
 

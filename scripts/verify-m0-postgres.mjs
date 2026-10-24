@@ -207,7 +207,22 @@ try {
     };
     const finish=(id,status='received',actor=owner)=>sql(`SELECT public.complete_warehouse_transfer('${id}','${status}')`,actor);
     const before=await quantity(),id=await create();
-    await Promise.all([finish(id),finish(id),rpc(receipt())]);
+    // Hold the source so both writers pause before inventory. A transfer that
+    // inserts its destination first would hold the audit counter and invert
+    // checkout's inventory -> counter order, producing an intermittent deadlock.
+    const release=await holdInventoryRow();
+    const completion=finish(id),duplicate=finish(id),checkout=rpc(receipt());
+    for(const pending of [completion,duplicate,checkout])void pending.catch(()=>{});
+    let blocked=false;
+    try{
+      for(let attempt=0;attempt<60;attempt++){
+        if(Number(await sql("SELECT count(*) FROM pg_stat_activity WHERE datname=current_database() AND wait_event_type='Lock'"))>=3){blocked=true;break;}
+        await new Promise(resolve=>setTimeout(resolve,100));
+      }
+      assert.equal(blocked,true,'Transfer, duplicate and checkout must wait on held locks');
+      await sql(`BEGIN;SELECT organization_id FROM accounting_counters WHERE organization_id='${org}' FOR UPDATE NOWAIT;ROLLBACK;`);
+    }finally{await release();}
+    await Promise.all([completion,duplicate,checkout]);
     assert.equal(await quantity(),before-3);
     assert.equal(await sql(`SELECT quantity FROM inventory WHERE warehouse_id='${destination}' AND product_id='${product}'`),'2');
     await finish(id);assert.equal(await quantity(),before-3);

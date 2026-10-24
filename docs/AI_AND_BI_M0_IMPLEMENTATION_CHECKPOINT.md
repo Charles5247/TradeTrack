@@ -6,6 +6,8 @@ Updated 24 October 2026. Status: **isolated implementation gate passed; producti
 
 ## Current implementation and evidence
 
+24 October follow-up: M2 regression verification exposed a transfer/checkout deadlock when a transfer created a new destination position before locking existing inventory. `20261024042324_stock_transfer_lock_order.sql` corrects that order. The PostgreSQL verifier holds the source inventory, starts the transfer, duplicate finalization and checkout, proves the accounting counter remains available, then releases the stock lock and checks the final quantities. The 13 M0 groups passed again with this deterministic regression. This fix is included in the foundation PR before M2 is reviewed.
+
 This section supersedes the first-batch notes below. No hosted migration, deployment, credential rotation or business-data repair has been performed. The user authorized committing, pushing and opening a draft PR on 24 October. Local branch: `feat/m0-stock-integrity`. M1 may start only after the isolated M0 gate passes; production release remains a separate, blocked decision.
 
 - Atomic PostgreSQL checkout commits the receipt, every line, stock decrements, authoritative ledger/audit and replay result together. Active actor, tenant, location, entitlement, price/arithmetic and positive integer quantity checks run inside the command. Duplicate requests return the committed result; changed payloads and ambiguous legacy ledger evidence fail closed.
