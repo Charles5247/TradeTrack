@@ -76,5 +76,22 @@
     "privateBatchSetting": "false by default; true only in disposable acceptance databases"
   },
   "featureCommit": "e7b640d64cd9b8b343c635aecd0f8c747064f9da",
-  "pullRequest": "https://github.com/Charles5247/TradeTrack/pull/26"
+  "pullRequest": "https://github.com/Charles5247/TradeTrack/pull/26",
+  "hostedDevelopmentFollowup": {
+    "date": "2026-10-24",
+    "focusedTests": 49,
+    "testFiles": 8,
+    "postgresGroups": 37,
+    "cryptoLayout": "extensions",
+    "realAuthStorageBrowserChecks": 13,
+    "roleStorageReconciliationChecks": 7,
+    "productionChanged": false,
+    "securityAdvisorErrorLevel": "no issues",
+    "reports": [
+      "hosted-browser-result.json",
+      "role-checks-result.json",
+      "hosted-followup-unit-result.json",
+      "crypto-layout-output.txt"
+    ]
+  }
 }

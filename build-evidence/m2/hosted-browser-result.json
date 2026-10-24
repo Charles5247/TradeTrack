@@ -1,0 +1,61 @@
+{
+  "generatedAt": "2026-10-24T15:18:00.189Z",
+  "projectRef": "jtqyxfoyllcvptxgwhmk",
+  "actualSupabaseAuthStorageAndDatabase": true,
+  "batchId": "1631d22e-f07d-4ce1-8d84-655dad62583d",
+  "receiptId": "244f14a8-0fca-4217-9863-d073e338eee6",
+  "checks": [
+    {
+      "name": "real Supabase sign-in and session cookies work",
+      "status": "passed"
+    },
+    {
+      "name": "authenticated manual receiving workspace loads",
+      "status": "passed"
+    },
+    {
+      "name": "real tenant-scoped catalog includes verification product",
+      "status": "passed"
+    },
+    {
+      "name": "real hosted manual stock receipt posts atomically",
+      "status": "passed"
+    },
+    {
+      "name": "manual posting replay returns the same result",
+      "status": "passed"
+    },
+    {
+      "name": "authorized private upload session is issued",
+      "status": "passed"
+    },
+    {
+      "name": "real Storage missing-object response waits for upload",
+      "status": "passed"
+    },
+    {
+      "name": "private Storage accepts the authorized original",
+      "status": "passed"
+    },
+    {
+      "name": "real worker prepares the uploaded CSV with source evidence",
+      "status": "passed"
+    },
+    {
+      "name": "hosted approval hash preparation succeeds with extensions pgcrypto",
+      "status": "passed"
+    },
+    {
+      "name": "one approval through the real UI posts the hosted batch",
+      "status": "passed"
+    },
+    {
+      "name": "batch reports a completed saved receipt",
+      "status": "passed"
+    },
+    {
+      "name": "authorized original download retains the exact bytes",
+      "status": "passed"
+    }
+  ]
+}

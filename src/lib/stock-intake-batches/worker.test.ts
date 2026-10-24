@@ -61,6 +61,11 @@ const bookBytes = () => {
     XLSX.write(book, { type: "buffer", bookType: "xlsx", compression: true }),
   );
 };
+it('waits for a missing signed source when Storage wraps its 404 inside HTTP 400',async()=>{
+  const {job}=fixture(bookBytes());
+  const db={storage:{from:()=>({createSignedUrl:async()=>({data:null,error:{status:400,statusCode:'404',message:'Object not found'}})})}} as unknown as SupabaseClient<Database>;
+  await expect(createSupabaseWorkerDriver(db).download(job.source!,new AbortController().signal)).rejects.toMatchObject({missingUpload:true,permanent:false});
+});
 it("inspects the real private bytes in an isolated child and records the verified hash", async () => {
   const bytes = bookBytes(),
     { job, rpc, driver } = fixture(bytes);

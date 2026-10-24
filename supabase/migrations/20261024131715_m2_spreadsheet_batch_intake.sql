@@ -115,7 +115,7 @@ END $$;
 REVOKE ALL ON FUNCTION track_private.stock_batch_actor(boolean) FROM PUBLIC;
 
 CREATE FUNCTION track_private.stock_batch_key(value text) RETURNS uuid
-LANGUAGE sql IMMUTABLE SET search_path='' AS $$ SELECT substr(encode(public.digest(value,'sha256'),'hex'),1,32)::uuid $$;
+LANGUAGE sql IMMUTABLE SET search_path='' AS $$ SELECT substr(encode(public.digest(convert_to(value,'UTF8'),'sha256'),'hex'),1,32)::uuid $$;
 REVOKE ALL ON FUNCTION track_private.stock_batch_key(text) FROM PUBLIC;
 
 CREATE FUNCTION track_private.stock_batch_issues(line jsonb) RETURNS text[]

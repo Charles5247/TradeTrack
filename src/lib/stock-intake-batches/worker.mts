@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../supabase/types.js";
 import { jobSchema, type IntakeJob } from "./contracts.js";
+import { storageErrorStatus } from './storage-errors.js';
 import type { PreparedSpreadsheetRow } from "./spreadsheet.js";
 
 export const INTAKE_BUCKET = "stock-intake-originals";
@@ -336,7 +337,7 @@ export function createSupabaseWorkerDriver(
         .from(INTAKE_BUCKET)
         .createSignedUrl(source.object_key, 60);
       if (error || !data?.signedUrl) {
-        const status = error ? Number(error.status) : 0;
+        const status = storageErrorStatus(error);
         throw new ProcessingError(
           "Private source is not available" + (status ? ` (${status})` : ""),
           status >= 400 && status < 500 && status !== 404 && status !== 429,
