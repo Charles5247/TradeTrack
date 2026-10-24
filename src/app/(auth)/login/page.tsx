@@ -15,11 +15,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AuthShell } from "@/components/layout/auth-shell";
 import { loginSchema, type LoginFormData } from "@/lib/validations";
 import { createClient } from "@/lib/supabase/client";
+import { isAuthRetryableFetchError } from '@supabase/supabase-js';
 import { useI18n } from "@/i18n";
 import {
   saveOfflineAuthSession,
   saveRememberedLogin,
-  verifyRememberedLogin,
+  restoreRememberedLogin,
+  clearOfflineAuthSession,
 } from "@/lib/offline/auth-cache";
 
 // Supabase's client retries certain failure classes (like a fully
@@ -72,13 +74,12 @@ export default function LoginPage() {
     // Shared fallback: try the cached "remembered" offline credential.
     // Returns true if it succeeded (and has already navigated away).
     const tryOfflineFallback = async (): Promise<boolean> => {
-      const rememberedProfile = await verifyRememberedLogin(
+      const rememberedProfile = await restoreRememberedLogin(
         data.email,
         data.password,
       );
       if (!rememberedProfile) return false;
 
-      saveOfflineAuthSession(data.email, rememberedProfile);
       toast.success(t.auth.sign_in_success);
       router.push("/dashboard");
       router.refresh();
@@ -106,7 +107,7 @@ export default function LoginPage() {
       );
 
       if (error) {
-        if (await tryOfflineFallback()) return;
+        if (isAuthRetryableFetchError(error) && await tryOfflineFallback()) return;
         toast.error(error.message || t.auth.invalid_credentials);
         return;
       }
@@ -117,10 +118,15 @@ export default function LoginPage() {
         .eq("id", authData.user?.id)
         .single();
 
-      const profile = (profileData ?? authData.user) as Record<
+      const profile = profileData as Record<
         string,
         unknown
       > | null;
+      if (!profile || profile.status!=='active') {
+        clearOfflineAuthSession();
+        toast.error('An active account is required. Connect to verify your account.');
+        return;
+      }
       if (profile) {
         saveOfflineAuthSession(data.email, profile);
         if (data.remember) {
@@ -142,10 +148,13 @@ export default function LoginPage() {
         router.push("/dashboard");
       }
       router.refresh();
-    } catch {
+    } catch (failure) {
       // Network fully unreachable, or the sign-in attempt above hit
       // SIGN_IN_TIMEOUT_MS — either way, fall back to the cached login.
-      if (await tryOfflineFallback()) return;
+      const networkFailure=isAuthRetryableFetchError(failure) ||
+        (failure instanceof TypeError && /fetch|network/i.test(failure.message)) ||
+        (failure instanceof Error && failure.message==='Sign-in timed out');
+      if (networkFailure && await tryOfflineFallback()) return;
       toast.error(t.auth.unexpected_error);
     } finally {
       setIsLoading(false);

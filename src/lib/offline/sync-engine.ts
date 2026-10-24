@@ -14,11 +14,16 @@ import { AUTH_CHECK_TIMEOUT_MS, withTimeout } from "@/lib/utils/timeout";
 import {
   getDB,
   getPendingSyncItems,
-  saveToOfflineDB,
-  clearOfflineStore,
   pruneSyncedQueueItems,
   type SyncQueueRecord,
 } from "./db";
+import { getOfflineAccountNamespace } from './auth-cache';
+import { getAccountRevision } from '@/lib/auth/account-state';
+import { postSavedCheckout } from './checkout-command';
+import { postSavedAdjustment } from './inventory-adjustment';
+
+type OfflineDatabase = Awaited<ReturnType<typeof getDB>>;
+interface SyncAccount { namespace: string; organizationId: string; userId: string; revision: number; }
 
 type SyncStatus = "idle" | "syncing" | "error" | "offline";
 const SYNC_AUTH_TIMEOUT = "Sync authentication timed out";
@@ -118,6 +123,8 @@ class SyncEngine {
   }
 
   async sync(force = false) {
+    const namespace = getOfflineAccountNamespace();
+    const revision = getAccountRevision();
     // `navigator.onLine` can change without a new SyncEngine instance
     // (notably while DevTools simulates offline mode). Re-check it before
     // constructing any Supabase request, including auth token refreshes.
@@ -152,7 +159,7 @@ class SyncEngine {
 
       const { data: profile, error: profileError } = await supabase
         .from("users")
-        .select("organization_id")
+        .select("organization_id,status")
         .eq("id", user.id)
         .single();
 
@@ -163,6 +170,10 @@ class SyncEngine {
       }
 
       const orgId = profile.organization_id;
+      if (profile.status !== 'active') {
+        this.setState({ status: 'error', error: 'Your account is not active. Queued work has been preserved.' });
+        return;
+      }
       const account = `${orgId}:${user.id}`;
       if (this.syncedAccount !== account) {
         this.syncedAccount = account;
@@ -180,9 +191,15 @@ class SyncEngine {
         this.setState({ status: "error", error: "Please sign in again to resume sync. Your queued data is safe." });
         return;
       }
-      await this.pushChanges();
+      const context = { namespace, organizationId: orgId, userId: user.id, revision };
+      this.assertAccount(context);
+      const db = await getDB();
+      this.assertAccount(context);
+      await this.pushChanges(db, context);
+      this.assertAccount(context);
       const pullStartedAt = new Date();
-      await this.pullData(orgId, supabase);
+      await this.pullData(orgId, supabase, db);
+      this.assertAccount(context);
 
       // Housekeeping only — never let a pruning failure mark an otherwise
       // successful sync as errored. See db.ts's `pruneSyncedQueueItems` for
@@ -191,18 +208,21 @@ class SyncEngine {
       // rendering a sale's receipt) gets slower as the queue's all-time
       // history grows.
       try {
-        await pruneSyncedQueueItems();
+        await pruneSyncedQueueItems(3, db);
       } catch (pruneErr) {
         console.warn("[sync] Failed to prune synced queue items:", pruneErr);
       }
 
-      const remaining = await getPendingSyncItems();
+      const statusDB = db;
+      const remaining = (await Promise.all(['pending', 'syncing', 'failed'].map(status =>
+        statusDB.getAllFromIndex('sync_queue', 'by-status', status)))).flat() as SyncQueueRecord[];
       const needsStockCheck = remaining.some((entry) => entry.stock_sync?.review_reason);
       this.setState({
-        status: needsStockCheck ? "error" : "idle",
+        status: needsStockCheck || remaining.some(entry => entry.status === 'failed') ? "error" : "idle",
         lastSync: pullStartedAt,
         pendingCount: remaining.length,
-        error: needsStockCheck ? "This stock update needs a quick check. Open Vendors for details." : null,
+        error: needsStockCheck ? "Stock sync needs review. Queued changes are preserved; reconcile stock before retrying."
+          : remaining.some(entry => entry.status === 'failed') ? 'Some queued changes failed. Review them before retrying.' : null,
       });
     } catch (err) {
       // A bare "Failed to fetch" TypeError means the request never even
@@ -234,21 +254,41 @@ class SyncEngine {
     }
   }
 
-  private async pushChanges() {
-    const stockDB = await getDB();
+  private assertAccount(context: SyncAccount) {
+    if (getOfflineAccountNamespace() !== context.namespace || getAccountRevision() !== context.revision) {
+      throw new Error('Account changed during sync. Original queued work is preserved.');
+    }
+  }
+
+  private async pushChanges(database?: OfflineDatabase, context?: SyncAccount) {
+    const stockDB = database ?? await getDB();
     // An interrupted PATCH may have committed remotely. Never blindly resend
     // it on restart: preserve the entry and ask for a stock check instead.
     const recovery = stockDB.transaction("sync_queue", "readwrite");
     const stockEntries = await recovery.store.index("by-table").getAll("inventory") as SyncQueueRecord[];
     for (const entry of stockEntries) {
+      if (entry.operation === 'UPDATE' && !entry.stock_sync && entry.status !== 'synced') {
+        await recovery.store.put({ ...entry, status: 'pending', stock_sync: { review_reason: 'legacy_pending_write' } });
+        continue;
+      }
       if (entry.stock_sync && entry.status === "syncing" && !this.activeStockWrites.has(entry.id)) {
         await recovery.store.put({ ...entry, status: "pending", stock_sync: {
           ...entry.stock_sync, review_reason: "interrupted_write",
         } });
       }
     }
+    // These dispatch paths use stable IDs and ignore-duplicate inserts (or
+    // the idempotent import RPC). A crash after a claim must not strand them.
+    const replayable = new Set(['sales', 'sale_items', 'purchase_orders', 'purchase_order_items',
+      'vendor_transactions', 'vendor_transaction_items', 'import_batches', 'import_commands', 'inventory_adjustment_commands']);
+    const interrupted = await recovery.store.index('by-status').getAll('syncing') as SyncQueueRecord[];
+    for (const entry of interrupted) {
+      if (replayable.has(entry.table_name) && (entry.operation === 'INSERT' || entry.table_name === 'import_commands')) {
+        await recovery.store.put({ ...entry, status: 'pending' });
+      }
+    }
     await recovery.done;
-    const pendingItems = await getPendingSyncItems();
+    const pendingItems = await stockDB.getAllFromIndex('sync_queue', 'by-status', 'pending') as SyncQueueRecord[];
     // IndexedDB returns UUID key order, not insertion/dependency order.
     // Preserve the relative order of existing operations; send PO parents first.
     pendingItems.sort(
@@ -267,15 +307,51 @@ class SyncEngine {
     if (pendingItems.length === 0) return;
 
     const supabase = createClient();
-    const db = await getDB();
+    const db = stockDB;
 
     for (const queuedItem of pendingItems) {
+      const current = await db.get('sync_queue', queuedItem.id) as SyncQueueRecord | undefined;
+      if (!current || current.status !== 'pending') continue;
+      if (context) {
+        this.assertAccount(context);
+        if ((queuedItem.payload.organization_id && queuedItem.payload.organization_id !== context.organizationId) ||
+            (queuedItem.table_name === 'sales' && queuedItem.payload.cashier_id !== context.userId)) {
+          throw new Error('Queued work belongs to another account. Reopen its original account to sync.');
+        }
+      }
+      if (queuedItem.table_name === 'sales' && queuedItem.payload.stock_command_version === 1) {
+        try {
+          await db.put('sync_queue', { ...queuedItem, status: 'syncing' });
+          if (context) this.assertAccount(context);
+          await postSavedCheckout(db, queuedItem.record_id, String(queuedItem.payload.organization_id), supabase,undefined,context?.revision);
+        } catch (error) {
+          const latest=await db.get('sync_queue',queuedItem.id) as SyncQueueRecord | undefined;
+          if(latest?.status!=='synced') await db.put('sync_queue', { ...queuedItem, status: 'failed', error: error instanceof Error ? error.message : 'Checkout requires review' });
+        }
+        continue;
+      }
+      if (queuedItem.table_name === 'inventory_adjustment_commands') {
+        try {
+          if (context) this.assertAccount(context);
+          await db.put('sync_queue',{...queuedItem,status:'syncing'});
+          await postSavedAdjustment(db,queuedItem,supabase,context?.revision);
+        } catch(error) {
+          const latest=await db.get('sync_queue',queuedItem.id) as SyncQueueRecord | undefined;
+          if(latest?.status!=='synced') await db.put('sync_queue',{...queuedItem,status:'failed',error:error instanceof Error ? error.message : 'Adjustment requires review'});
+        }
+        continue;
+      }
+      const parentSaleId = queuedItem.table_name === 'sale_items' ? queuedItem.payload.sale_id : queuedItem.stock_sync?.sale_id;
+      if (typeof parentSaleId === 'string') {
+        const parent = await db.get('sales', parentSaleId);
+        if (parent?.stock_command_version === 1) continue; // Only the atomic command may write these effects.
+      }
       if (queuedItem.table_name === "import_commands") {
         const parents = await db.getAllFromIndex("sync_queue", "by-queue-key", ["import_batches", queuedItem.payload.batch, "INSERT"]) as SyncQueueRecord[];
         if (parents.some(parent => parent.status !== "synced")) continue;
       }
       if (queuedItem.table_name === "inventory" && queuedItem.operation === "UPDATE" && queuedItem.stock_sync) {
-        await this.syncVendorStock(queuedItem.id, supabase);
+        await this.syncStockUpdate(queuedItem.id, supabase, db, context);
         continue;
       }
       let item = queuedItem;
@@ -321,7 +397,8 @@ class SyncEngine {
       try {
         await db.put("sync_queue", { ...item, status: "syncing" });
 
-        const { error } = await this.executeSyncOperation(supabase, item);
+        if (context) this.assertAccount(context);
+        const { error } = await this.executeSyncOperation(supabase, item, db);
         if (error) throw error;
 
         await db.put("sync_queue", {
@@ -341,8 +418,17 @@ class SyncEngine {
     }
   }
 
-  private async syncVendorStock(id: string, supabase: ReturnType<typeof createClient>) {
-    const db = await getDB();
+  private async syncStockUpdate(id: string, supabase: ReturnType<typeof createClient>, db: OfflineDatabase, context?: SyncAccount) {
+    const queued = await db.get('sync_queue', id) as SyncQueueRecord | undefined;
+    if (queued?.stock_sync?.sale_id) {
+      const saleId = queued.stock_sync.sale_id;
+      const lines = await db.getAllFromIndex('sale_items', 'by-sale', saleId) as { id: string }[];
+      const prerequisites = await Promise.all([
+        db.getAllFromIndex('sync_queue', 'by-queue-key', ['sales', saleId, 'INSERT']),
+        ...lines.map(line => db.getAllFromIndex('sync_queue', 'by-queue-key', ['sale_items', line.id, 'INSERT'])),
+      ]);
+      if (!lines.length || prerequisites.flat().some(entry => entry.status !== 'synced')) return;
+    }
     const claim = db.transaction("sync_queue", "readwrite");
     const item = await claim.store.get(id) as SyncQueueRecord | undefined;
     if (!item || item.status !== "pending" || !item.stock_sync || item.stock_sync.review_reason) {
@@ -374,8 +460,11 @@ class SyncEngine {
     try {
       // Exact server string, including Postgres sub-millisecond precision.
       // Only quantity is changed: do not overwrite unrelated inventory fields.
+      if (context) this.assertAccount(context);
       const { data, error } = await supabase.from("inventory")
-        .update({ quantity: Number(item.payload.quantity) })
+        .update({ quantity: Number(item.payload.quantity), ...(metadata.sale_id ? {
+          original_device_timestamp: typeof item.payload.updated_at === 'string' ? item.payload.updated_at : undefined,
+        } : {}) })
         .eq("id", item.record_id)
         .eq("organization_id", String(item.payload.organization_id))
         .eq("updated_at", metadata.expected_version!)
@@ -445,6 +534,7 @@ class SyncEngine {
   private async executeSyncOperation(
     supabase: ReturnType<typeof createClient>,
     item: SyncQueueRecord,
+    database?: OfflineDatabase,
   ) {
     // Use type assertion to allow dynamic table name
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -453,7 +543,7 @@ class SyncEngine {
       const { batch, row_index, row_data, duplicate_mode, warehouse, proposed_id } = item.payload;
       const result = await client.rpc("apply_import_row", { batch, row_index, row_data, duplicate_mode, warehouse, proposed_id });
       if (!result.error) {
-        const db = await getDB();
+        const db = database ?? await getDB();
         const row = result.data;
         const tx = db.transaction(["app_meta", "products", "suppliers", "inventory"], "readwrite");
         await tx.objectStore("app_meta").put({ ...row, id: `import-result:${batch}:${row_index}`, batch_id: batch });
@@ -478,7 +568,9 @@ class SyncEngine {
     }
     // `synced` is a local IndexedDB marker; it is not a column on the
     // Supabase sales table and must never be sent through the Data API.
-    const { synced: _localSynced, ...serverPayload } = item.payload;
+    const serverPayload = { ...item.payload };
+    delete serverPayload.synced;
+    delete serverPayload.stock_command_version;
     if (["sales", "sale_items", "inventory", "inventory_movements", "purchase_orders", "vendor_transactions", "products"].includes(item.table_name)) {
       serverPayload.original_device_timestamp = item.payload.updated_at || item.payload.created_at || item.created_at;
     }
@@ -523,6 +615,9 @@ class SyncEngine {
           .upsert(serverPayload, { onConflict: "id" });
 
       case "UPDATE": {
+        if (item.table_name === 'inventory') {
+          return { error: new Error('Unversioned inventory changes require stock review; no stock was overwritten.') };
+        }
         if (isAppendOnly) {
           // Should not normally happen (sales/sale_items are only ever
           // queued as INSERT — see persistOfflineSale), but guard anyway:
@@ -552,10 +647,6 @@ class SyncEngine {
           return { error: null };
         }
 
-        if (item.table_name === "inventory") {
-          if (!serverRow) return { error: new Error("Inventory missing on server; review stock before syncing") };
-          return client.from(item.table_name).update(serverPayload).eq("id", item.record_id);
-        }
         return client
           .from(item.table_name)
           .upsert(serverPayload, { onConflict: "id" })
@@ -584,25 +675,27 @@ class SyncEngine {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async pullData(orgId: string, supabase: any) {
+  private async pullData(orgId: string, supabase: any, database?: OfflineDatabase) {
+    const db = database ?? await getDB();
     const lastSync = this.state.lastSync;
     const since = lastSync ? lastSync.toISOString() : "1970-01-01T00:00:00Z";
 
     const products = await this.pullRows(supabase, "products", orgId, since);
 
     if (products?.length) {
-      await saveToOfflineDB("products", products);
+      const tx = db.transaction('products', 'readwrite');
+      for (const row of products) await tx.store.put(row);
+      await tx.done;
     }
 
     const inventory = await this.pullRows(supabase, "inventory", orgId, since);
 
     if (inventory?.length) {
-      const db = await getDB();
       const tx = db.transaction(["inventory", "sync_queue"], "readwrite");
       for (const row of inventory) {
         const entries = await tx.objectStore("sync_queue").index("by-queue-key")
           .getAll(["inventory", row.id, "UPDATE"]) as SyncQueueRecord[];
-        if (entries.some((entry) => entry.stock_sync && entry.status !== "synced")) continue;
+        if (entries.some((entry) => entry.status !== "synced")) continue;
         await tx.objectStore("inventory").put(row);
       }
       await tx.done;
@@ -611,25 +704,29 @@ class SyncEngine {
     const warehouses = await this.pullRows(supabase, "warehouses", orgId);
 
     if (warehouses?.length) {
-      await clearOfflineStore("warehouses");
-      await saveToOfflineDB("warehouses", warehouses);
+      const tx = db.transaction('warehouses', 'readwrite');
+      await tx.store.clear();
+      for (const row of warehouses) await tx.store.put(row);
+      await tx.done;
     }
 
     const categories = await this.pullRows(supabase, "categories", orgId);
 
     if (categories?.length) {
-      await clearOfflineStore("categories");
-      await saveToOfflineDB("categories", categories);
+      const tx = db.transaction('categories', 'readwrite');
+      await tx.store.clear();
+      for (const row of categories) await tx.store.put(row);
+      await tx.done;
     }
-    await this.pullPurchaseOrders(orgId, supabase);
-    await this.pullVendorTransactions(orgId, supabase);
+    await this.pullPurchaseOrders(orgId, supabase, db);
+    await this.pullVendorTransactions(orgId, supabase, db);
   }
 
   // Full paginated snapshots: items have no updated_at column. Never replace
   // local drafts whose creation is still pending, syncing, or failed.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async pullPurchaseOrders(orgId: string, supabase: any = createClient()) {
-    const db = await getDB();
+  async pullPurchaseOrders(orgId: string, supabase: any = createClient(), database?: OfflineDatabase) {
+    const db = database ?? await getDB();
     for (const table of [
       "suppliers",
       "purchase_orders",
@@ -673,8 +770,8 @@ class SyncEngine {
 
   // Vendor-only snapshots keep POS sales and PO cache behavior unchanged.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async pullVendorTransactions(orgId: string, supabase: any = createClient()) {
-    const db = await getDB();
+  async pullVendorTransactions(orgId: string, supabase: any = createClient(), database?: OfflineDatabase) {
+    const db = database ?? await getDB();
     for (const table of [
       "vendor_transactions",
       "vendor_transaction_items",

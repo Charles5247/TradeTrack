@@ -1,0 +1,20 @@
+{
+  "generatedAt": "2026-10-24T01:49:45.956Z",
+  "baseline": "c5291a9 plus M0/M1 implementation before origin/main integration",
+  "fullRun": {
+    "executedFiles": 56,
+    "passedTests": 385,
+    "runnerErrors": 10,
+    "report": "full-suite-result.json"
+  },
+  "recoveryRun": {
+    "executedFiles": 10,
+    "passedTests": 41,
+    "runnerErrors": 0,
+    "report": "outstanding-tests-result.json"
+  },
+  "distinctExecutedFiles": 66,
+  "distinctPassedTests": 426,
+  "oneAggregateGreenRun": false,
+  "upstreamIntegrationPending": true
+}

@@ -66,7 +66,10 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   }, [user?.organization_id]);
 
   return (
-    <OrganizationContext.Provider value={{ organization, isLoading }}>
+    <OrganizationContext.Provider value={{
+      organization: organization?.id === user?.organization_id ? organization : null,
+      isLoading,
+    }}>
       {children}
     </OrganizationContext.Provider>
   );

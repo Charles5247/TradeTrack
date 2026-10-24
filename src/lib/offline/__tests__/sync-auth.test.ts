@@ -3,6 +3,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { AuthRetryableFetchError, AuthSessionMissingError } from '@supabase/supabase-js';
 import { AUTH_CHECK_TIMEOUT_MS } from '@/lib/utils/timeout';
 import { getDB } from '../db';
+import { advanceAccountRevision } from '@/lib/auth/account-state';
 
 const { client } = vi.hoisted(() => ({ client: { auth: { getUser: vi.fn(), refreshSession: vi.fn() }, from: vi.fn() } }));
 vi.mock('@/lib/supabase/client', () => ({ createClient: () => client }));
@@ -72,13 +73,42 @@ it('does not request authentication when the browser is offline', async () => {
   expect(syncEngine!.getState().status).toBe('offline');
 });
 
+it('stops after an account transition during authentication even if its namespace is unchanged', async () => {
+  const db = await getDB();
+  const queued = { id: 'switched-write', table_name: 'sales', record_id: 'sale-switched', operation: 'INSERT', status: 'pending', payload: { id: 'sale-switched' }, retry_count: 0 };
+  await db.put('sync_queue', queued);
+  client.auth.getUser.mockResolvedValueOnce({ data: { user: { id: 'user' } }, error: null });
+  client.from.mockReturnValue({ select: () => ({ eq: () => ({ single: async () => ({ data: { organization_id: 'org', status: 'active' } }) }) }) });
+  client.auth.refreshSession.mockImplementationOnce(async () => {
+    advanceAccountRevision();
+    return { data: { session: { user: { id: 'user' } } }, error: null };
+  });
+  await syncEngine!.sync(true);
+  expect(syncEngine!.getState().error).toContain('Account changed');
+  expect(client.from.mock.calls.map(call => call[0])).toEqual(['users']);
+  expect(await db.get('sync_queue', queued.id)).toEqual(queued);
+});
+
+it('rejects a suspended account before refreshing or sending queued writes', async () => {
+  const db = await getDB();
+  const queued = { id: 'suspended-write', table_name: 'sales', record_id: 'sale-suspended', operation: 'INSERT', status: 'pending', payload: { id: 'sale-suspended' }, retry_count: 0 };
+  await db.put('sync_queue', queued);
+  client.auth.getUser.mockResolvedValueOnce({ data: { user: { id: 'user' } }, error: null });
+  client.from.mockReturnValue({ select: () => ({ eq: () => ({ single: async () => ({ data: { organization_id: 'org', status: 'suspended' } }) }) }) });
+  await syncEngine!.sync(true);
+  expect(syncEngine!.getState().status).toBe('error');
+  expect(client.auth.refreshSession).not.toHaveBeenCalled();
+  expect(client.from.mock.calls.map(call => call[0])).toEqual(['users']);
+  expect(await db.get('sync_queue', queued.id)).toEqual(queued);
+});
+
 
 it.each(['network', 'invalid', 'timeout'])('preserves queued records when refresh fails: %s', async (kind) => {
   const db = await getDB();
   const queued = { id: 'refresh-pending', table_name: 'sales', record_id: 'sale-refresh', operation: 'INSERT', status: 'pending', payload: { id: 'sale-refresh' }, retry_count: 0 };
   await db.put('sync_queue', queued);
   client.auth.getUser.mockResolvedValueOnce({ data: { user: { id: 'user' } }, error: null });
-  client.from.mockReturnValue({ select: () => ({ eq: () => ({ single: async () => ({ data: { organization_id: 'org' } }) }) }) });
+  client.from.mockReturnValue({ select: () => ({ eq: () => ({ single: async () => ({ data: { organization_id: 'org', status: 'active' } }) }) }) });
   if (kind === 'network') client.auth.refreshSession.mockRejectedValueOnce(new TypeError('Failed to fetch'));
   if (kind === 'invalid') client.auth.refreshSession.mockResolvedValueOnce({ data: { session: null }, error: new AuthSessionMissingError() });
   if (kind === 'timeout') client.auth.refreshSession.mockReturnValueOnce(new Promise(() => {}));

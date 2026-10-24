@@ -1,0 +1,70 @@
+{
+  "generatedAt": "2026-10-21T10:22:46.443Z",
+  "synthetic": true,
+  "hostedAuthVerified": false,
+  "beforeStock": 284,
+  "afterStock": 282,
+  "worker": "Prepared 20000 rows; UI heartbeat 213; elapsed 3306 ms.",
+  "checks": [
+    {
+      "name": "saved receipts survive page closure/reload",
+      "status": "passed"
+    },
+    {
+      "name": "desktop has no horizontal overflow",
+      "status": "passed"
+    },
+    {
+      "name": "review is keyboard operable",
+      "status": "passed"
+    },
+    {
+      "name": "lost acknowledgment committed only one stock effect",
+      "status": "passed"
+    },
+    {
+      "name": "retry returns committed result without another decrement",
+      "status": "passed"
+    },
+    {
+      "name": "mobile review has no horizontal overflow",
+      "status": "passed"
+    },
+    {
+      "name": "both offline receipts reconcile through real PostgreSQL",
+      "status": "passed"
+    },
+    {
+      "name": "other shop cannot see prior receipts",
+      "status": "passed"
+    },
+    {
+      "name": "original account retains its queued receipts",
+      "status": "passed"
+    },
+    {
+      "name": "saved adjustment posts once after offline capture",
+      "status": "passed"
+    },
+    {
+      "name": "worker prepares the complete 20000-row boundary",
+      "status": "passed"
+    },
+    {
+      "name": "worker parsing leaves a responsive UI heartbeat",
+      "status": "passed"
+    },
+    {
+      "name": "overflow is rejected explicitly without truncation",
+      "status": "passed"
+    },
+    {
+      "name": "compressed XLSX remains supported in the browser worker",
+      "status": "passed"
+    },
+    {
+      "name": "reduced-motion preference remains available",
+      "status": "passed"
+    }
+  ]
+}

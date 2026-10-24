@@ -1,0 +1,59 @@
+{
+  "generatedAt": "2026-10-21T04:54:01.582Z",
+  "version": "PostgreSQL 18.1 on x86_64-windows, compiled by msvc-19.44.35221, 64-bit",
+  "synthetic": true,
+  "results": [
+    {
+      "name": "populated upgrade retains balances and historical violations without rewriting them",
+      "status": "passed"
+    },
+    {
+      "name": "disabled by default and no partial effects",
+      "status": "passed"
+    },
+    {
+      "name": "concurrent cashier checkouts and duplicate replay",
+      "status": "passed"
+    },
+    {
+      "name": "all-line rollback and validation",
+      "status": "passed"
+    },
+    {
+      "name": "suspension, foreign location and anonymous invocation",
+      "status": "passed"
+    },
+    {
+      "name": "legacy missing lines and missing stock effects reconcile once",
+      "status": "passed"
+    },
+    {
+      "name": "legacy committed stock acknowledgment loss is not applied twice",
+      "status": "passed"
+    },
+    {
+      "name": "timestamp collisions and unknown ledger effects fail closed",
+      "status": "passed"
+    },
+    {
+      "name": "legacy recovery cannot post missing effects after a financial reversal",
+      "status": "passed"
+    },
+    {
+      "name": "real multi-connection row locking preserves concurrent delivery increment",
+      "status": "passed"
+    },
+    {
+      "name": "legacy grants, views, audit policies and tenant constraints",
+      "status": "passed"
+    },
+    {
+      "name": "manual stock delta, replay and concurrent checkout share locked inventory",
+      "status": "passed"
+    },
+    {
+      "name": "atomic transfer receipt, duplicate replay, checkout concurrency and cancellation",
+      "status": "passed"
+    }
+  ]
+}

@@ -12,8 +12,8 @@ beforeEach(async () => {
   for (const store of ['vendor_transactions', 'vendor_transaction_items', 'sales', 'sale_items', 'inventory', 'warehouses', 'sync_queue']) await db.clear(store);
   await db.put('warehouses', { id: 'a', organization_id: 'org', name: 'A' });
   await db.put('warehouses', { id: 'b', organization_id: 'org', name: 'B' });
-  await db.put('inventory', { id: 'stock-a', organization_id: 'org', product_id: 'product', warehouse_id: 'a', quantity: 5 });
-  await db.put('inventory', { id: 'stock-b', organization_id: 'org', product_id: 'product', warehouse_id: 'b', quantity: 20 });
+  await db.put('inventory', { id: 'stock-a', organization_id: 'org', product_id: 'product', warehouse_id: 'a', quantity: 5, updated_at:'2026-10-19T10:00:00.123456Z' });
+  await db.put('inventory', { id: 'stock-b', organization_id: 'org', product_id: 'product', warehouse_id: 'b', quantity: 20, updated_at:'2026-10-19T10:00:00.123456Z' });
 });
 afterEach(() => { vi.restoreAllMocks(); onlineManager.setOnline(true); });
 

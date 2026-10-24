@@ -1,6 +1,9 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { User, CartItem, Cart, Warehouse, SyncStatus } from "@/types";
+import { accountIdentity, advanceAccountRevision, readAccountState } from '@/lib/auth/account-state';
+import { setOfflineAccountNamespace } from '@/lib/offline/auth-cache';
+import { roundMoney } from '@/lib/utils/money';
 
 // ── Auth Store ────────────────────────────────────────────────
 interface AuthState {
@@ -10,10 +13,17 @@ interface AuthState {
   setLoading: (loading: boolean) => void;
 }
 
-export const useAuthStore = create<AuthState>()((set) => ({
+export const useAuthStore = create<AuthState>()((set, get) => ({
   user: null,
   isLoading: true,
-  setUser: (user) => set({ user }),
+  setUser: (user) => {
+    const activeUser = user?.status === 'active' ? user : null;
+    if (accountIdentity(get().user) !== accountIdentity(activeUser)) {
+      advanceAccountRevision();
+      switchAccountState(activeUser);
+    }
+    set({ user: activeUser });
+  },
   setLoading: (isLoading) => set({ isLoading }),
 }));
 
@@ -44,7 +54,7 @@ export const useOrgStore = create<OrgState>()(
         set({ organizationAddress }),
       setOrganizationPhone: (organizationPhone) => set({ organizationPhone }),
     }),
-    { name: "TracKasuwa-org" },
+    { name: 'TracKasuwa-org:signed-out', skipHydration: true },
   ),
 );
 
@@ -135,33 +145,34 @@ export const useCartStore = create<CartState>()(
       clearCart: () => set({ ...defaultCart }),
 
       getSubtotal: () => {
-        return get().items.reduce((sum, item) => {
+        return roundMoney(get().items.reduce((sum, item) => {
           const itemTotal = item.unit_price * item.quantity;
           const itemDiscount = (itemTotal * item.discount) / 100;
-          return sum + itemTotal - itemDiscount;
-        }, 0);
+          return sum + roundMoney(itemTotal - itemDiscount);
+        }, 0));
       },
 
       getDiscountAmount: () => {
         const subtotal = get().getSubtotal();
-        return (subtotal * get().discount) / 100;
+        return roundMoney((subtotal * get().discount) / 100);
       },
 
       getTaxAmount: () => {
         const subtotal = get().getSubtotal();
         const discountAmount = get().getDiscountAmount();
-        return ((subtotal - discountAmount) * get().tax_rate) / 100;
+        return roundMoney(((subtotal - discountAmount) * get().tax_rate) / 100);
       },
 
       getTotal: () => {
         const subtotal = get().getSubtotal();
         const discount = get().getDiscountAmount();
         const tax = get().getTaxAmount();
-        return subtotal - discount + tax;
+        return roundMoney(subtotal - discount + tax);
       },
     }),
     {
-      name: "TracKasuwa-cart",
+      name: 'TracKasuwa-cart:signed-out',
+      skipHydration: true,
       partialize: (state) => ({
         items: state.items,
         discount: state.discount,
@@ -280,3 +291,41 @@ export const useNotificationStore = create<NotificationState>()((set, get) => ({
   selectedWarehouse: null,
   setSelectedWarehouse: (selectedWarehouse) => set({ selectedWarehouse }),
 }));
+
+function switchAccountState(user: User | null): void {
+  const accountKey = user ? `${user.organization_id ?? 'platform'}:${user.id}` : 'signed-out';
+  const cartKey = `TracKasuwa-cart:${accountKey}`;
+  const orgKey = `TracKasuwa-org:${accountKey}`;
+  // Read before changing persistence options: resetting the in-memory store
+  // must not overwrite a returning account's saved draft with an empty one.
+  const savedCart = user ? readAccountState(cartKey) : {};
+  const savedOrg = user ? readAccountState(orgKey) : {};
+  const items = Array.isArray(savedCart.items) && savedCart.items.every(item =>
+    item?.product?.organization_id === user?.organization_id && Number.isSafeInteger(item.quantity) && item.quantity > 0)
+    ? savedCart.items as CartItem[] : [];
+  const cart = { ...defaultCart, items };
+  for (const key of ['discount', 'tax_rate'] as const) {
+    if (typeof savedCart[key] === 'number' && Number.isFinite(savedCart[key]) && savedCart[key] >= 0 && savedCart[key] <= 100) {
+      cart[key] = savedCart[key];
+    }
+  }
+  if (typeof savedCart.warehouse_id === 'string') cart.warehouse_id = savedCart.warehouse_id;
+  if (typeof savedCart.notes === 'string') cart.notes = savedCart.notes;
+  if (typeof savedCart.customer_name === 'string') cart.customer_name = savedCart.customer_name;
+  if (typeof savedCart.customer_phone === 'string') cart.customer_phone = savedCart.customer_phone;
+  if (['cash', 'transfer', 'pos_terminal', 'split', 'partial'].includes(String(savedCart.payment_method))) {
+    cart.payment_method = savedCart.payment_method as Cart['payment_method'];
+  }
+  useCartStore.persist.setOptions({ name: cartKey });
+  useCartStore.setState(cart);
+  useOrgStore.persist.setOptions({ name: orgKey });
+  useOrgStore.setState({
+    currency: typeof savedOrg.currency === 'string' ? savedOrg.currency : 'NGN',
+    organizationName: typeof savedOrg.organizationName === 'string' ? savedOrg.organizationName : 'TracKasuwa',
+    organizationAddress: typeof savedOrg.organizationAddress === 'string' ? savedOrg.organizationAddress : '',
+    organizationPhone: typeof savedOrg.organizationPhone === 'string' ? savedOrg.organizationPhone : '',
+  });
+  useNotificationStore.setState({ unreadCount: 0, selectedWarehouse: null });
+  useSyncStore.setState({ syncStatus: 'pending', lastSync: null, pendingCount: 0 });
+  if (user) setOfflineAccountNamespace(user as unknown as Record<string, unknown>);
+}

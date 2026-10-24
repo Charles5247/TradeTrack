@@ -82,13 +82,14 @@ interface SyncQueueRecord {
   error?: string;
   created_at: string;
   synced_at?: string;
-  /** Local-only causal information for opt-in vendor stock writes. Treat
+  /** Local-only causal information for verified stock writes. Treat
    * server timestamps as opaque strings; never round them through Date. */
   stock_sync?: {
     expected_version?: string;
     predecessor_id?: string;
     confirmed_version?: string;
     review_reason?: string;
+    sale_id?: string;
   };
   /**
    * The client's local `updated_at` timestamp for this record AT THE TIME
@@ -425,8 +426,15 @@ export async function addToSyncQueue(
   recordId: string,
   payload: Record<string, unknown>,
   transaction?: OfflineWriteTransaction,
-  options?: { refreshPendingInventoryUpdate?: boolean; vendorStock?: { expectedVersion?: string } },
+  options?: {
+    refreshPendingInventoryUpdate?: boolean;
+    vendorStock?: { expectedVersion?: string };
+    saleStock?: { expectedVersion?: string; saleId: string };
+  },
 ): Promise<void> {
+  if (options?.saleStock && (!transaction || tableName !== 'inventory' || operation !== 'UPDATE' || options.vendorStock || options.refreshPendingInventoryUpdate)) {
+    throw new Error('Sale stock requires its own inventory UPDATE inside the checkout transaction');
+  }
   if (options?.vendorStock && !options.refreshPendingInventoryUpdate) {
     throw new Error("Vendor stock metadata requires the inventory update opt-in");
   }
@@ -458,7 +466,10 @@ export async function addToSyncQueue(
     (record) => record.status === "pending" || record.status === "syncing",
   );
 
-  if (alreadyQueued && !options?.refreshPendingInventoryUpdate) return;
+  // Stock snapshots are evidence of distinct local writes. Never discard an
+  // unversioned successor merely because the same stock position is queued.
+  const isStockUpdate = tableName === 'inventory' && operation === 'UPDATE';
+  if (alreadyQueued && !isStockUpdate && !options?.refreshPendingInventoryUpdate && !options?.saleStock) return;
 
   // Capture the record's own `updated_at` (if present in the payload) as
   // the client-side timestamp used for the sync engine's last-write-wins
@@ -469,7 +480,9 @@ export async function addToSyncQueue(
     new Date().toISOString();
 
   if (options?.refreshPendingInventoryUpdate) {
-    const pending = existing.find((entry) => entry.status === "pending");
+    const pending = existing.find((entry) => entry.status === "pending" && !entry.stock_sync?.sale_id &&
+      (!options.vendorStock || (entry.stock_sync && !entry.stock_sync.review_reason)) &&
+      !existing.some(successor => successor.status !== 'synced' && successor.stock_sync?.predecessor_id === entry.id));
     if (pending) {
       await queueStore!.put({
         ...pending,
@@ -493,15 +506,19 @@ export async function addToSyncQueue(
     created_at: new Date().toISOString(),
     client_updated_at: clientUpdatedAt,
   };
-  if (options?.vendorStock) {
+  if (options?.vendorStock || options?.saleStock) {
     const unresolved = existing.filter((entry) => entry.status !== "synced");
-    const predecessor = unresolved.length === 1 ? unresolved[0] : undefined;
-    record.stock_sync = predecessor?.stock_sync && predecessor.status === "syncing"
+    const referenced = new Set(unresolved.map(entry => entry.stock_sync?.predecessor_id));
+    const tails = unresolved.filter(entry => !referenced.has(entry.id));
+    const predecessor = tails.length === 1 ? tails[0] : undefined;
+    record.stock_sync = predecessor?.stock_sync && !predecessor.stock_sync.review_reason &&
+        (predecessor.status === 'pending' || predecessor.status === 'syncing')
       ? { predecessor_id: predecessor.id }
       : unresolved.length ? { review_reason: "legacy_or_unresolved_write" }
-      : options.vendorStock.expectedVersion
-        ? { expected_version: options.vendorStock.expectedVersion }
+      : (options.saleStock ?? options.vendorStock)?.expectedVersion
+        ? { expected_version: (options.saleStock ?? options.vendorStock)!.expectedVersion }
         : { review_reason: "missing_server_version" };
+    if (options.saleStock) record.stock_sync.sale_id = options.saleStock.saleId;
   }
   if (queueStore) await queueStore.add(record);
   else await db!.add("sync_queue", record);
@@ -524,8 +541,9 @@ export async function getPendingSyncItems(): Promise<SyncQueueRecord[]> {
  */
 export async function pruneSyncedQueueItems(
   olderThanDays = 3,
+  database?: Awaited<ReturnType<typeof getDB>>,
 ): Promise<number> {
-  const db = await getDB();
+  const db = database ?? await getDB();
   const syncedItems = (await db.getAllFromIndex(
     "sync_queue",
     "by-status",

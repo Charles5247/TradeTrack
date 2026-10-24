@@ -1,0 +1,6 @@
+
+C:\TradeTrack\src\lib\offline\sync-engine.ts
+  762:36  warning  '_join' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  809:40  warning  '_join' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+✖ 2 problems (0 errors, 2 warnings)

@@ -11,6 +11,11 @@ describe("persistOfflineSale", () => {
     await db.clear("sales");
     await db.clear("sale_items");
     await db.clear("sync_queue");
+    await db.clear('inventory');
+    for (const productId of ['product-1', 'product-2']) {
+      await db.put('inventory', { id: `stock-${productId}`, organization_id: 'org-1', product_id: productId,
+        warehouse_id: 'warehouse-1', quantity: 100, updated_at: '2026-10-19T10:00:00.123456Z' });
+    }
   });
 
   it("stores a sale locally and queues it for sync", async () => {

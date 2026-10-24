@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Package, AlertTriangle, XCircle, TrendingUp, TrendingDown } from 'lucide-react';
 import { toast } from 'sonner';
@@ -18,14 +19,16 @@ import { LoadingState } from '@/components/ui/loading-state';
 import { StatCard } from '@/components/ui/stat-card';
 import { createClient } from '@/lib/supabase/client';
 import { formatDateTime } from '@/lib/utils/format';
-import { isOffline } from '@/lib/utils/network';
+
 import { useAuthStore } from '@/store';
 import type { Warehouse } from '@/types';
 import { AccessGuard } from '@/components/shared/access-guard';
 import { useI18n } from '@/i18n';
-import { generateId } from '@/lib/utils/id';
-import { saveToOfflineDB, addToSyncQueue, getAllFromOfflineDB } from '@/lib/offline/db';
-import type { InventoryRecord } from '@/lib/offline/db';
+import { recordInventoryAdjustment, type InventoryAdjustmentPayload } from '@/lib/offline/inventory-adjustment';
+
+
+import { CheckoutRecovery } from '@/components/inventory/checkout-recovery';
+import { AdjustmentRecovery } from '@/components/inventory/adjustment-recovery';
 
 async function fetchInventory(warehouseId: string, filter: string, search: string) {
   const supabase = createClient();
@@ -61,164 +64,8 @@ async function fetchInventory(warehouseId: string, filter: string, search: strin
   return items;
 }
 
-/**
- * Adjust stock for a product/warehouse. Offline-aware following the exact
- * local persistence pattern established in
- * `src/lib/offline/sales.ts`'s `persistOfflineSale`: a stale
- * `navigator.onLine` read must never block an admin who is genuinely
- * offline from recording a stock movement. When offline, the quantity
- * change is applied optimistically to the `inventory` IndexedDB store
- * (read-modify-write against whatever local copy is cached, falling back
- * to the value supplied by the caller from its already-loaded query data
- * if nothing is cached yet) and queued via `addToSyncQueue('inventory',
- * 'UPDATE', ...)` so the generic, table-agnostic push handler in
- * `sync-engine.ts` replays it once connectivity returns. The
- * `inventory_movements` audit trail and `audit_logs` row are business
- * records with no offline-read UI depending on them yet, so — while
- * online — they're written the same way as before; while offline, the
- * inventory quantity change (the part that actually blocks the cashier's
- * or admin's next action, e.g. seeing correct stock) is guaranteed to
- * land locally, and the movement/audit intent is queued through the same
- * generic INSERT sync-queue path so it still reaches the server once back
- * online, rather than being silently dropped.
- */
-async function adjustStock(payload: {
-  organization_id: string;
-  user_id: string;
-  product_id: string;
-  warehouse_id: string;
-  inventory_id?: string;
-  current_quantity?: number;
-  min_stock_level?: number;
-  quantity_change: number;
-  movement_type: 'in' | 'out' | 'adjustment';
-  notes?: string;
-  reason?: string;
-}) {
-  const saveOffline = async () => {
-    const nowIso = new Date().toISOString();
-
-    // Look for a locally cached inventory row for this product+warehouse
-    // first; fall back to whatever quantity/id the caller already had
-    // loaded from its React Query cache (populated while last online).
-    const cached = (await getAllFromOfflineDB<InventoryRecord>('inventory')).find(
-      (row) => row.product_id === payload.product_id && row.warehouse_id === payload.warehouse_id,
-    );
-
-    const inventoryId = cached?.id ?? payload.inventory_id ?? generateId();
-    const oldQty = cached?.quantity ?? payload.current_quantity ?? 0;
-    const newQty = Math.max(0, oldQty + payload.quantity_change);
-
-    const updatedRecord: InventoryRecord = {
-      id: inventoryId,
-      product_id: payload.product_id,
-      warehouse_id: payload.warehouse_id,
-      organization_id: payload.organization_id,
-      quantity: newQty,
-      min_stock_level: cached?.min_stock_level ?? payload.min_stock_level ?? 5,
-      updated_at: nowIso,
-    };
-
-    await saveToOfflineDB('inventory', [updatedRecord]);
-
-    const movementId = generateId();
-    const auditId = generateId();
-
-    await Promise.all([
-      addToSyncQueue('inventory', 'UPDATE', inventoryId, updatedRecord as unknown as Record<string, unknown>),
-      addToSyncQueue('inventory_movements', 'INSERT', movementId, {
-        id: movementId,
-        organization_id: payload.organization_id,
-        product_id: payload.product_id,
-        warehouse_id: payload.warehouse_id,
-        movement_type: payload.movement_type,
-        quantity: payload.quantity_change,
-        notes: payload.notes,
-        created_by: payload.user_id,
-        created_at: nowIso,
-      }),
-      addToSyncQueue('audit_logs', 'INSERT', auditId, {
-        id: auditId,
-        organization_id: payload.organization_id,
-        user_id: payload.user_id,
-        action: 'ADJUST_STOCK',
-        resource_type: 'inventory',
-        resource_id: payload.product_id,
-        old_values: { quantity: oldQty },
-        new_values: { quantity: newQty },
-        reason: payload.reason,
-        created_at: nowIso,
-      }),
-    ]);
-
-    return { offline: true, quantity: newQty };
-  };
-
-  if (isOffline()) return saveOffline();
-
-  const supabase = createClient();
-
-  let inv: { id: string; quantity: number } | null;
-  try {
-    const { data, error } = await supabase
-      .from('inventory')
-      .select('id, quantity')
-      .eq('product_id', payload.product_id)
-      .eq('warehouse_id', payload.warehouse_id)
-      .maybeSingle();
-    if (error) throw error;
-    inv = data;
-  } catch {
-    // navigator.onLine can be stale. No remote write has been attempted yet.
-    return saveOffline();
-  }
-
-  const oldQty = inv?.quantity || 0;
-  const newQty = Math.max(0, oldQty + payload.quantity_change);
-
-  if (inv) {
-    const { error } = await supabase
-      .from('inventory')
-      .update({ quantity: newQty })
-      .eq('id', inv.id);
-    if (error) throw error;
-  } else {
-    const { error } = await supabase.from('inventory').insert({
-      organization_id: payload.organization_id,
-      product_id: payload.product_id,
-      warehouse_id: payload.warehouse_id,
-      quantity: Math.max(0, payload.quantity_change),
-      min_stock_level: 5,
-    });
-    if (error) throw error;
-  }
-
-  // Record movement
-  const { error: movementError } = await supabase.from('inventory_movements').insert({
-    organization_id: payload.organization_id,
-    product_id: payload.product_id,
-    warehouse_id: payload.warehouse_id,
-    movement_type: payload.movement_type,
-    quantity: payload.quantity_change,
-    notes: payload.notes,
-    created_by: payload.user_id,
-  });
-  if (movementError) throw movementError;
-
-  // Audit log
-  const { error: auditError } = await supabase.from('audit_logs').insert({
-    organization_id: payload.organization_id,
-    user_id: payload.user_id,
-    action: 'ADJUST_STOCK',
-    resource_type: 'inventory',
-    resource_id: payload.product_id,
-    old_values: { quantity: oldQty },
-    new_values: { quantity: newQty },
-    reason: payload.reason,
-  });
-  if (auditError) throw auditError;
-
-  return { offline: false, quantity: newQty };
+async function adjustStock(payload: InventoryAdjustmentPayload) {
+  return recordInventoryAdjustment(payload);
 }
 
 export default function InventoryPage() {
@@ -320,8 +167,11 @@ function InventoryPageInner() {
           <h1 className="tt-page-title">{t.inventory.title}</h1>
           <p className="tt-muted text-sm mt-1">{t.inventory.subtitle}</p>
         </div>
+        {process.env.NEXT_PUBLIC_STOCK_INTAKE_ENABLED==='true' && <Button asChild><Link href="/inventory/intake">Receive stock</Link></Button>}
       </div>
 
+      <CheckoutRecovery />
+      <AdjustmentRecovery />
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-4">
         <StatCard

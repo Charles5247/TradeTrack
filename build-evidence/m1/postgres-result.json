@@ -1,0 +1,62 @@
+{
+  "generatedAt": "2026-10-21T04:54:01.577Z",
+  "synthetic": true,
+  "results": [
+    {
+      "name": "disabled-by-default intake has no effects",
+      "status": "passed"
+    },
+    {
+      "name": "reviewed carton conversion, cost separation, approval binding and replay",
+      "status": "passed"
+    },
+    {
+      "name": "receipt revision invalidates approval and preserves old evidence",
+      "status": "passed"
+    },
+    {
+      "name": "concurrent delivery, checkout and duplicate submissions preserve increments",
+      "status": "passed"
+    },
+    {
+      "name": "opening stock is serialized and requires no position or movement history",
+      "status": "passed"
+    },
+    {
+      "name": "all-line rollback also removes newly created draft products",
+      "status": "passed"
+    },
+    {
+      "name": "product identity changes require new review, cost-only changes remain separate",
+      "status": "passed"
+    },
+    {
+      "name": "shared explicit product draft creates one catalog product for multiple lines",
+      "status": "passed"
+    },
+    {
+      "name": "duplicate invoice requires explicit reviewed acknowledgment",
+      "status": "passed"
+    },
+    {
+      "name": "concurrent new-product identifier collision returns one receipt to review",
+      "status": "passed"
+    },
+    {
+      "name": "malformed, fractional, missing-cost and unconfirmed rows never post",
+      "status": "passed"
+    },
+    {
+      "name": "fresh actor authorization, tenant isolation, immutable evidence and disabled replay",
+      "status": "passed"
+    },
+    {
+      "name": "cross-tenant receipt commands and a changed approving role are denied",
+      "status": "passed"
+    },
+    {
+      "name": "historical stock-tenant conflicts fail closed instead of reporting a false delivery",
+      "status": "passed"
+    }
+  ]
+}

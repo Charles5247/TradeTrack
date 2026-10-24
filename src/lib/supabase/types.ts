@@ -1,5 +1,6 @@
 // TracKasuwa – Supabase Database Types
 // Generated from migrations/001_initial_schema.sql + 003_payment_and_improvements.sql
+import type { IntakeReceipt } from '@/lib/stock-intake/contracts';
 
 export type PaymentMethod =
   | "cash"
@@ -13,6 +14,13 @@ type NoRel = { Relationships: [] };
 export type Database = {
   public: {
     Tables: {
+      stock_intakes: { Row: {[K in keyof Omit<IntakeReceipt,'current_stock'|'stock_warning'>]:IntakeReceipt[K]}; Insert: Record<string,never>; Update: Record<string,never>; Relationships: [] };
+      import_batches: {
+        Row: {id:string;organization_id:string;kind:string;summary:unknown;created_by:string;created_at:string};
+        Insert: {id:string;organization_id:string;kind:string;summary?:unknown;created_by:string;created_at?:string};
+        Update: Partial<Database['public']['Tables']['import_batches']['Insert']>;
+        Relationships: [];
+      };
       supplier_products: {
         Row: { id: string; organization_id: string; supplier_id: string; product_id: string; created_at: string };
         Insert: { id?: string; organization_id: string; supplier_id: string; product_id: string; created_at?: string };
@@ -215,6 +223,7 @@ export type Database = {
           min_stock_level: number;
           max_stock_level: number | null;
           updated_at: string;
+          original_device_timestamp: string | null;
         };
         Insert: {
           id?: string;
@@ -225,6 +234,7 @@ export type Database = {
           min_stock_level?: number;
           max_stock_level?: number | null;
           updated_at?: string;
+          original_device_timestamp?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["inventory"]["Insert"]>;
         Relationships: [];
@@ -910,7 +920,16 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      save_stock_intake: {Args:{receipt_id:string;expected_revision:number;receipt_document:unknown};Returns:unknown};
+      approve_stock_intake: {Args:{receipt_id:string;expected_revision:number;expected_hash:string};Returns:unknown};
+      post_stock_intake: {Args:{receipt_id:string;approval_id:string};Returns:unknown};
+      complete_warehouse_transfer: { Args: {transfer_id: string; target_status: string}; Returns: unknown };
+      apply_import_chunk: {Args:{batch:string;import_rows:unknown;duplicate_mode:string;warehouse:string|null};Returns:unknown};
+      apply_inventory_adjustment: { Args: {command: unknown}; Returns: unknown };
+      post_pos_checkout: {
+        Args: { command: unknown; reconcile_legacy?: boolean; recovery_reason?: string | null };
+        Returns: unknown;
+      };
     };
     Enums: {
       [_ in never]: never;
