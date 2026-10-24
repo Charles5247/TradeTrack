@@ -57,9 +57,11 @@ it('rejects stock and sale links that cross business boundaries even when indivi
  const otherOrg='10000000-0000-0000-0000-000000000088';
  const otherProduct='30000000-0000-0000-0000-000000000088';
  const otherWarehouse='40000000-0000-0000-0000-000000000088';
- await db.exec(`INSERT INTO public.organizations(id,name,slug) VALUES('${otherOrg}','Other','other-m0');
+ await db.exec(`SELECT set_config('test.uid','${platformOwner}',false);
+ INSERT INTO public.organizations(id,name,slug,subscription_status,settings) VALUES('${otherOrg}','Other','other-m0','trial','{"_signup_trial":true}'::jsonb);
  INSERT INTO public.products(id,organization_id,name,sku,selling_price,cost_price) VALUES('${otherProduct}','${otherOrg}','Other product','OTHER',100,50);
- INSERT INTO public.warehouses(id,organization_id,name) VALUES('${otherWarehouse}','${otherOrg}','Other');`);
+ INSERT INTO public.warehouses(id,organization_id,name) VALUES('${otherWarehouse}','${otherOrg}','Other');
+ SELECT set_config('test.uid','${owner}',false);`);
  await expect(db.query('INSERT INTO public.inventory(organization_id,product_id,warehouse_id,quantity) VALUES($1,$2,$3,1)',[org,otherProduct,warehouse]))
   .rejects.toThrow('inventory_product_tenant_fk');
  await expect(db.query('INSERT INTO public.inventory(organization_id,product_id,warehouse_id,quantity) VALUES($1,$2,$3,1)',[org,product,otherWarehouse]))
@@ -85,6 +87,30 @@ it('accepts consecutive cashier stock effects once, with their own sale timestam
   const movements=await db.query<{quantity:number}>(`SELECT quantity FROM public.inventory_movements WHERE product_id=$1 AND created_by=$2 ORDER BY created_at,id`,[item,cashier]);
   expect(movements.rows).toEqual([{quantity:-1},{quantity:-1}]);
  } finally { await db.exec(`ROLLBACK; SELECT set_config('test.uid','${owner}',false);`); }
+});
+it('publishes real author reviews, isolates edits, and supports owner soft-delete and restore', async()=>{
+ await db.exec(`SELECT set_config('test.uid','${owner}',false); SET ROLE authenticated;`);
+ try {
+  await db.exec(`INSERT INTO merchant_reviews(author_id,merchant_name,business_name,location,review,rating) VALUES('${owner}','Test merchant','Test shop','Kano','A genuine test-only review',5)`);
+  await expect(db.exec(`INSERT INTO merchant_reviews(author_id,merchant_name,business_name,location,review) VALUES('${owner}','Test merchant','Test shop','Kano','Duplicate test review')`)).rejects.toThrow('unique');
+  await db.exec(`SELECT set_config('test.uid','${cashier}',false)`);
+  expect((await db.query(`UPDATE merchant_reviews SET review='Not the author' RETURNING id`)).rows).toHaveLength(0);
+  await expect(db.exec(`INSERT INTO merchant_reviews(author_id,merchant_name,business_name,location,review) VALUES('${cashier}','Cashier','Test shop','Kano','Not a merchant owner')`)).rejects.toThrow('row-level security');
+  await db.exec(`SELECT set_config('test.uid','${platformOwner}',false); UPDATE merchant_reviews SET deleted_at=now() WHERE author_id='${owner}'; RESET ROLE; SET ROLE anon;`);
+  expect((await db.query('SELECT id FROM merchant_reviews')).rows).toHaveLength(0);
+  await db.exec(`RESET ROLE; SET ROLE authenticated; UPDATE merchant_reviews SET deleted_at=NULL WHERE author_id='${owner}'; RESET ROLE; SET ROLE anon;`);
+  expect((await db.query('SELECT id FROM merchant_reviews')).rows).toHaveLength(1);
+ } finally {await db.exec(`RESET ROLE; SELECT set_config('test.uid','${owner}',false);`);}
+});
+it('keeps contact submissions private to platform owners',async()=>{
+ await db.exec(`INSERT INTO contact_messages(name,business_name,phone,message) VALUES('Test trader','Test shop','08012345678','Please help me set up'); SET ROLE anon;`);
+ try {
+  await expect(db.query('SELECT * FROM contact_messages')).rejects.toThrow('permission denied');
+  await db.exec(`RESET ROLE; SELECT set_config('test.uid','${owner}',false); SET ROLE authenticated;`);
+  expect((await db.query('SELECT id FROM contact_messages')).rows).toHaveLength(0);
+  await db.exec(`SELECT set_config('test.uid','${platformOwner}',false)`);
+  expect((await db.query('SELECT id FROM contact_messages')).rows).toHaveLength(1);
+ }finally{await db.exec(`RESET ROLE; SELECT set_config('test.uid','${owner}',false);`);}
 });
 it('saves a profile under authenticated RLS without allowing role escalation',async()=>{
  await db.exec(`GRANT USAGE ON SCHEMA auth TO authenticated;
@@ -133,7 +159,7 @@ it('requires payment and starts trial with database time',async()=>{
 it('starts the 30-day introductory window when a platform owner approves registration', async()=>{
  const trialOrg='10000000-0000-0000-0000-000000000097';
  const trialOwner='20000000-0000-0000-0000-000000000097';
- await db.exec(`INSERT INTO organizations(id,name,slug) VALUES('${trialOrg}','Verified trial','verified-trial');
+ await db.exec(`INSERT INTO organizations(id,name,slug,subscription_status) VALUES('${trialOrg}','Verified trial','verified-trial','suspended');
  INSERT INTO users(id,email,full_name,role,organization_id) VALUES('${trialOwner}','trial-owner@test.local','Trial Owner','business_owner','${trialOrg}');
  INSERT INTO merchants(organization_id,business_name,registration_number,contact_name,contact_email,business_owner_user_id)
  VALUES('${trialOrg}','Verified trial','RC-VERIFY-97','Trial Owner','trial-owner@test.local','${trialOwner}');
@@ -258,7 +284,7 @@ it('isolates supplier catalogs and lets only owners assign warehouse staff', asy
  const other='10000000-0000-0000-0000-000000000099';
  const supplier='60000000-0000-0000-0000-000000000001';
  const foreignProduct='30000000-0000-0000-0000-000000000099';
- await db.exec(`INSERT INTO organizations(id,name,slug) VALUES('${other}','Supplier boundary','supplier-boundary');
+ await db.exec(`SELECT set_config('test.uid','',false); INSERT INTO organizations(id,name,slug) VALUES('${other}','Supplier boundary','supplier-boundary');
  INSERT INTO suppliers(id,organization_id,name) VALUES('${supplier}','${org}','Supplier');
  INSERT INTO products(id,organization_id,name,sku,cost_price,selling_price) VALUES('${foreignProduct}','${other}','Other item','OTHER',1,2);
  SELECT set_config('test.uid','${owner}',false); SET ROLE authenticated;`);
@@ -274,38 +300,47 @@ it('isolates supplier catalogs and lets only owners assign warehouse staff', asy
  } finally { await db.exec(`RESET ROLE; SELECT set_config('test.uid','${owner}',false);`); }
 });
 
-it('keeps a new business locked until verified, then permits transactions only through its 30-day trial', async () => {
+it('starts the self-serve 30-day trial at signup without verification and blocks transactions after it expires', async () => {
  const trialOrg='10000000-0000-0000-0000-000000000098';
  const trialOwner='20000000-0000-0000-0000-000000000098';
  const trialWarehouse='40000000-0000-0000-0000-000000000098';
  const firstSale='50000000-0000-0000-0000-000000000098';
  const secondSale='50000000-0000-0000-0000-000000000099';
- await db.exec(`INSERT INTO organizations(id,name,slug) VALUES('${trialOrg}','Trial boundary','trial-boundary');
+ await db.exec(`SELECT set_config('test.uid','',false);
+ INSERT INTO organizations(id,name,slug,subscription_status,settings)
+   VALUES('${trialOrg}','Trial boundary','trial-boundary','trial','{"_signup_trial":true}');
  INSERT INTO users(id,email,full_name,role,organization_id) VALUES('${trialOwner}','trial-boundary@test.local','Trial Owner','business_owner','${trialOrg}');
  INSERT INTO merchants(organization_id,business_name,registration_number,contact_name,contact_email,business_owner_user_id)
  VALUES('${trialOrg}','Trial boundary','RC-BOUNDARY-98','Trial Owner','trial-boundary@test.local','${trialOwner}');
- INSERT INTO warehouses(id,organization_id,name) VALUES('${trialWarehouse}','${trialOrg}','Trial warehouse');`);
- const pending=await db.query<{status:string;pending:boolean}>(
-   `SELECT subscription_status status,trial_pending_verification pending FROM organizations WHERE id='${trialOrg}'`);
- expect(pending.rows[0]).toEqual({status:'suspended',pending:true});
- const orgDetails=await db.query<{plan:string;days:number;status:string}>(`SELECT subscription_plan_id plan,
-   extract(epoch FROM trial_ends_at-trial_started_at)/86400 days,subscription_status status
-   FROM organizations WHERE id='${trialOrg}'`);
+ INSERT INTO warehouses(id,organization_id,name) VALUES('${trialWarehouse}','${trialOrg}','Trial warehouse');
+ SELECT set_config('test.uid','${trialOwner}',false);`);
+ const pending=await db.query<{status:string;pending:boolean;days:number}>(
+   `SELECT subscription_status status,trial_pending_verification pending,
+     extract(epoch FROM trial_ends_at-trial_started_at)/86400 days
+     FROM organizations WHERE id='${trialOrg}'`);
+ expect(pending.rows[0]).toMatchObject({status:'trial',pending:false});
+ expect(Number(pending.rows[0].days)).toBe(30);
+ const trialSubscription=await db.query<{status:string;days:number}>(`SELECT status,
+   extract(epoch FROM expires_at-starts_at)/86400 days
+   FROM subscriptions WHERE organization_id='${trialOrg}'`);
+ expect(trialSubscription.rows[0].status).toBe('trial');
+ expect(Number(trialSubscription.rows[0].days)).toBe(30);
+ const verification=await db.query<{v:{active:boolean;business_verification_status:string}}>(
+   'SELECT verify_business_subscription() v');
+ expect(verification.rows[0].v).toMatchObject({
+   active:true,
+   business_verification_status:'unverified',
+ });
  const insertSale=(id:string,invoice:string)=>`INSERT INTO sales(id,organization_id,invoice_number,cashier_id,warehouse_id,total,amount_paid,payment_method)
    VALUES('${id}','${trialOrg}','${invoice}','${trialOwner}','${trialWarehouse}',10,10,'cash')`;
- await expect(db.exec(insertSale(firstSale,'TRIAL-1'))).rejects.toThrow('verification');
- await db.exec(`SELECT set_config('test.uid','${platformOwner}',false);
- UPDATE merchants SET verification_status='verified' WHERE organization_id='${trialOrg}';
- SELECT set_config('test.uid','${trialOwner}',false);`);
- expect(orgDetails.rows[0].status).toBe('suspended');
- const verified=await db.query<{plan:string;days:number;status:string}>(`SELECT subscription_plan_id plan,
+ const trial=await db.query<{plan:string;days:number;status:string}>(`SELECT subscription_plan_id plan,
    extract(epoch FROM trial_ends_at-trial_started_at)/86400 days,subscription_status status
    FROM organizations WHERE id='${trialOrg}'`);
- expect(verified.rows[0]).toMatchObject({
+ expect(trial.rows[0]).toMatchObject({
    plan:'b4000000-0000-0000-0000-000000000004',
    status:'trial',
  });
- expect(Number(verified.rows[0].days)).toBe(30);
+ expect(Number(trial.rows[0].days)).toBe(30);
 
  await db.exec(insertSale(firstSale,'TRIAL-1'));
  await db.exec(`UPDATE organizations SET trial_ends_at=statement_timestamp()-interval '1 second' WHERE id='${trialOrg}';
@@ -313,4 +348,18 @@ it('keeps a new business locked until verified, then permits transactions only t
  await expect(db.exec(insertSale(secondSale,'TRIAL-2'))).rejects.toThrow('Trial ended');
  const existingSales=await db.query<{count:number}>(`SELECT count(*)::int count FROM sales WHERE organization_id='${trialOrg}'`);
  expect(existingSales.rows[0].count).toBe(1);
+ await db.exec('SET ROLE authenticated');
+ try {
+   expect((await db.query(`SELECT id FROM sales WHERE organization_id='${trialOrg}'`)).rows).toHaveLength(1);
+   await expect(db.exec(`INSERT INTO categories(organization_id,name) VALUES('${trialOrg}','Blocked category')`)).rejects.toThrow('Trial ended');
+   await expect(db.exec(`UPDATE warehouses SET name='Blocked edit' WHERE id='${trialWarehouse}'`)).rejects.toThrow('Trial ended');
+   await expect(db.exec(`DELETE FROM warehouses WHERE id='${trialWarehouse}'`)).rejects.toThrow('Trial ended');
+ } finally {await db.exec('RESET ROLE');}
+ await db.exec(`SELECT set_config('test.uid','',false); SELECT set_config('test.jwt','{"role":"service_role"}',false);
+   INSERT INTO payment_transactions(organization_id,amount,status,reference) VALUES('${trialOrg}',20000,'success','test-trial-reactivation');
+   UPDATE subscriptions SET status='active',starts_at=now(),expires_at=now()+interval '1 month' WHERE organization_id='${trialOrg}';
+   SELECT set_config('test.uid','${trialOwner}',false); SELECT set_config('test.jwt','{}',false);`);
+ expect((await db.query<{v:{active:boolean}}>('SELECT verify_business_subscription() v')).rows[0].v.active).toBe(true);
+ await db.exec(insertSale(secondSale,'TRIAL-2'));
+ await db.exec(`UPDATE warehouses SET name='Paid access restored' WHERE id='${trialWarehouse}'`);
 });

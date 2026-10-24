@@ -72,25 +72,13 @@ export interface Plan {
 // this is only a client-side fallback for when the DB is unreachable.
 export const FALLBACK_PLANS: Plan[] = [
   {
-    id: "free",
-    name: "Free",
-    price: 0,
-    currency: "NGN",
-    billing_cycle: "monthly",
-    max_cashiers: 1,
-    max_products: 50,
-    max_warehouses: 1,
-    features: ["pos", "inventory", "basic_reports"],
-    is_active: true,
-  },
-  {
     id: "starter",
     name: "Starter",
     price: 5000,
     currency: "NGN",
     billing_cycle: "monthly",
     max_cashiers: 2,
-    max_products: 300,
+    max_products: 500,
     max_warehouses: 1,
     features: [
       "pos",
@@ -102,14 +90,18 @@ export const FALLBACK_PLANS: Plan[] = [
     is_active: true,
   },
   {
+    id: "standard",name:"Standard",price:10000,currency:"NGN",billing_cycle:"monthly",max_cashiers:3,max_products:1500,max_warehouses:5,
+    features:['pos','inventory','basic_reports','receipt_printing','daily_summaries','barcode_scanning'],is_active:true,
+  },
+  {
     id: "growth",
     name: "Growth",
     price: 15000,
     currency: "NGN",
     billing_cycle: "monthly",
     max_cashiers: 5,
-    max_products: 1500,
-    max_warehouses: 3,
+    max_products: 3000,
+    max_warehouses: 6,
     features: [
       "pos",
       "inventory",
@@ -128,12 +120,12 @@ export const FALLBACK_PLANS: Plan[] = [
   {
     id: "business",
     name: "Business",
-    price: 30000,
+    price: 20000,
     currency: "NGN",
     billing_cycle: "monthly",
-    max_cashiers: 12,
+    max_cashiers: 10,
     max_products: 5000,
-    max_warehouses: 8,
+    max_warehouses: -1,
     features: [
       "pos",
       "inventory",

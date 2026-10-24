@@ -151,6 +151,11 @@ export type Database = {
       };
       products: {
         Row: {
+          medical_stock_managed: boolean;
+          stock_unit: string;
+          variant_size: string | null;
+          variant_colour: string | null;
+          model: string | null;
           id: string;
           organization_id: string;
           name: string;
@@ -169,6 +174,11 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          stock_unit?: string;
+          medical_stock_managed?: boolean;
+          variant_size?: string | null;
+          variant_colour?: string | null;
+          model?: string | null;
           id?: string;
           organization_id: string;
           name: string;

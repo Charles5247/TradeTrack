@@ -1,6 +1,6 @@
 # M0 local proof and PR preparation
 
-The branch is `feat/m0-stock-integrity`. Nothing has been committed, pushed, deployed or migrated to a hosted database. Preserve the unrelated `idea-to-build/` and ZIP deletions; do not use `git add -A`.
+The branch is `feat/m0-stock-integrity`. The original implementation is committed locally and integrated with origin/main; the user authorized pushing and opening a draft PR on 24 October. Nothing has been deployed or migrated to a hosted database. Preserve the unrelated `idea-to-build/` and ZIP deletions; do not use `git add -A`.
 
 ## Recorded proof
 
@@ -45,4 +45,4 @@ Stop the fixture with Ctrl+C in its own terminal (or POST its loopback `/shutdow
 
 Do not deploy or enable flags as part of opening the PR. Credential rotation/history decisions remain owner-operated; no production operation is implied by this procedure.
 
-The concrete combined PR body and copyable commit/push/draft-PR commands are in [the PR handoff](STOCK_INTAKE_FOUNDATION_PR.md). Those commands have not been executed.
+The concrete combined PR body and copyable commit/push/draft-PR commands are in [the PR handoff](STOCK_INTAKE_FOUNDATION_PR.md). The user has authorized executing those publication commands; the PR link records the actual publication outcome.

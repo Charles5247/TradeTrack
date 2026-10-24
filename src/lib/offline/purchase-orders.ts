@@ -14,6 +14,7 @@ export interface OfflinePurchaseOrderPayload {
 
 /** Draft creation does not change stock. Stock changes only on receipt. */
 export async function persistOfflinePurchaseOrder(payload: OfflinePurchaseOrderPayload) {
+  await requireTransactionSubscription(payload.organization_id);
   if (!payload.organization_id || !payload.supplier_id || !payload.created_by) {
     throw new Error('Organization, supplier and creator are required');
   }
@@ -96,3 +97,4 @@ export async function requireSyncedPurchaseOrder(id: string, organizationId: str
   const order = (await getOfflinePurchaseOrders(organizationId)).find((row) => row.id === id);
   if (!order?.lifecycleReady) throw new Error('Wait for this order and all its items to sync before continuing.');
 }
+import { requireTransactionSubscription } from '@/lib/subscriptions/verification';

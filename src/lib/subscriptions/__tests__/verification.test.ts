@@ -1,9 +1,18 @@
 // @vitest-environment jsdom
 import { expect, it, vi } from 'vitest';
-import { DAY, introductionDays, evaluateVerification, readVerification, requireTransactionSubscription, verifySubscription } from '../verification';
+import { DAY, introductionDays, trialReminderDay, evaluateVerification, readVerification, requireTransactionSubscription, verifySubscription } from '../verification';
 import { getDB } from '@/lib/offline/db';
 const now = Date.now();
 const active = { id: 'subscription:org', active: true, verifiedAt: now, lastSeen: now };
+it.each([[19, null], [20, 20], [26, 20], [27, 27], [29, 27], [30, 30]])('shows the appropriate trial reminder on day %s', (day, expected) => {
+  const state = { ...active, serverTime: '2026-01-01T00:00:00Z', trialEndsAt: '2026-01-31T00:00:00Z' };
+  expect(trialReminderDay(state, now + day! * DAY)).toBe(expected);
+});
+it('restores access after payment beyond an expired trial and removes trial reminders', () => {
+  const state = { ...active, serverTime: '2026-02-01T00:00:00Z', trialEndsAt: '2026-01-31T00:00:00Z', validUntil: '2026-03-01T00:00:00Z' };
+  expect(evaluateVerification(state, now).allowed).toBe(true);
+  expect(trialReminderDay(state, now)).toBeNull();
+});
 it('uses server time for the introductory countdown', () => {
   expect(introductionDays({ ...active, serverTime: '2026-01-01T00:00:00Z', trialEndsAt: '2026-01-31T00:00:00Z' })).toBe(30);
   const verifiedJan1 = {

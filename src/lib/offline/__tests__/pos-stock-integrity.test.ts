@@ -25,6 +25,7 @@ beforeEach(async () => {
   loseResponse = false; denyItems = false; writes = [];
   const db = await getDB();
   for (const store of ['sales', 'sale_items', 'inventory', 'sync_queue', 'app_meta']) await db.clear(store);
+  await db.put('app_meta',{id:'subscription:org',active:true,verifiedAt:Date.now(),lastSeen:Date.now()});
   await db.put('inventory', { id: 'stock', organization_id: 'org', product_id: 'product', warehouse_id: 'warehouse', quantity: 10, updated_at: initialVersion });
   client.from.mockImplementation((table: string) => {
     if (table !== 'inventory') return { upsert: async () => ({ error: table === 'sale_items' && denyItems ? new Error('Item rejected') : null }) };

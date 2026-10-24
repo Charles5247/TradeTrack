@@ -95,9 +95,9 @@ BEGIN
   IF total>9999999999.99 THEN RAISE EXCEPTION 'Receipt cost exceeds supported precision'; END IF;
   IF NULLIF(line->>'product_id','') IS NOT NULL THEN
    IF jsonb_typeof(line->'new_product')='object' THEN RAISE EXCEPTION 'Select an existing product or one explicit draft'; END IF;
-   SELECT * INTO product FROM public.products WHERE id=(line->>'product_id')::uuid AND organization_id=actor.organization_id AND status='active';
+   SELECT * INTO product FROM public.products WHERE id=(line->>'product_id')::uuid AND organization_id=actor.organization_id AND status='active' AND NOT COALESCE((to_jsonb(products)->>'medical_stock_managed')::boolean,false);
    IF NOT FOUND THEN RAISE EXCEPTION 'Active product in business required'; END IF;
-   line:=line||jsonb_build_object('product_id',product.id,'new_product',NULL,'product_snapshot',jsonb_build_object('name',product.name,'sku',product.sku,'barcode',product.barcode,'make',product.make,'status',product.status));
+   line:=line||jsonb_build_object('product_id',product.id,'new_product',NULL,'product_snapshot',jsonb_build_object('name',product.name,'sku',product.sku,'barcode',product.barcode,'make',product.make,'status',product.status,'stock_unit',to_jsonb(product)->'stock_unit','variant_size',to_jsonb(product)->'variant_size','variant_colour',to_jsonb(product)->'variant_colour','model',to_jsonb(product)->'model'));
   ELSE
    draft:=line->'new_product';
    IF jsonb_typeof(draft) IS DISTINCT FROM 'object' OR (draft->>'draft_id')::uuid IS NULL
@@ -197,7 +197,7 @@ BEGIN
  FOR line IN SELECT value FROM jsonb_array_elements(receipt.document->'lines') ORDER BY COALESCE(value->>'product_id',value->'new_product'->>'draft_id') LOOP
   IF NULLIF(line->>'product_id','') IS NOT NULL THEN
    SELECT * INTO product FROM public.products WHERE id=(line->>'product_id')::uuid AND organization_id=actor.organization_id FOR SHARE;
-   IF NOT FOUND OR jsonb_build_object('name',product.name,'sku',product.sku,'barcode',product.barcode,'make',product.make,'status',product.status) IS DISTINCT FROM line->'product_snapshot'
+   IF NOT FOUND OR jsonb_build_object('name',product.name,'sku',product.sku,'barcode',product.barcode,'make',product.make,'status',product.status,'stock_unit',to_jsonb(product)->'stock_unit','variant_size',to_jsonb(product)->'variant_size','variant_colour',to_jsonb(product)->'variant_colour','model',to_jsonb(product)->'model') IS DISTINCT FROM line->'product_snapshot'
     OR product.status<>'active' THEN RAISE EXCEPTION 'Product identity changed; review receipt again'; END IF;
    resolved:=product.id;
   ELSE

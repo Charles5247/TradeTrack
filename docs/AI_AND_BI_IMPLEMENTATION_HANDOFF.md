@@ -1,10 +1,10 @@
 # Bulk AI stock intake and Retail BI: engineering handoff
 
-**Updated 21 October 2026 · M0 isolated gate passed; M1 implementation in progress. Production release is blocked by credential disposition and hosted verification.**
+**Updated 24 October 2026 · M0 and M1 isolated gates passed after upstream integration. Production release is blocked by credential disposition and hosted verification.**
 
 Read the [specification](STOCK_INTAKE_AND_RETAIL_BI_SPEC.md) for contracts/metrics and the [brief](AI_TEAM_BRIEF_BUILD_FIRST.md) for the merchant experience. Priority: bulk stock intake, then Retail BI. PDF, handwriting, voice and mixed bulk processing are stages within this programme. The confirmed model is exception resolution, summary review and one approval of selected ready receipts; all rows stay inspectable.
 
-The user authorized completing M0 and then implementing M1 on 21 October. Read the [M0 checkpoint](AI_AND_BI_M0_IMPLEMENTATION_CHECKPOINT.md) and current milestone status before continuing. This authorization does not include unrelated production operations, credential rotation, hosting spend or deployment. Do not repeatedly reopen already-specified implementation choices as approval questions.
+The user authorized completing M0 and then implementing M1 on 21 October, and authorized finalizing, committing, pushing a draft PR and moving to M2 on 24 October. Read the [M0 checkpoint](AI_AND_BI_M0_IMPLEMENTATION_CHECKPOINT.md) and current milestone status before continuing. This authorization does not include unrelated production operations, credential rotation, hosting spend or deployment. Do not repeatedly reopen already-specified implementation choices as approval questions.
 
 ## 1. Start in the current checkout
 

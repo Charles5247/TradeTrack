@@ -40,9 +40,10 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# Private env files must stay untracked. Only the placeholder template is public.
 .env*
 !.env.example
+.env.local
 
 # vercel
 .vercel
@@ -59,3 +60,4 @@ core
 /.release-tools/
 /.m0-local/
 /.playwright-cli/
+*.crdownload

@@ -9,6 +9,7 @@ const payload={organization_id:'org',user_id:'user',product_id:'product',warehou
 beforeEach(async()=>{
  vi.clearAllMocks();vi.spyOn(navigator,'onLine','get').mockReturnValue(true);
  const db=await getDB();await db.clear('inventory');await db.clear('sync_queue');
+ await db.put('app_meta',{id:'subscription:org',active:true,verifiedAt:Date.now(),lastSeen:Date.now()});
  await db.put('inventory',{id:'stock',organization_id:'org',product_id:'product',warehouse_id:'warehouse',quantity:20,updated_at:'original'});
  client.rpc.mockResolvedValue({data:{id:'stock',organization_id:'org',product_id:'product',warehouse_id:'warehouse',quantity:17,updated_at:'confirmed'},error:null});
 });

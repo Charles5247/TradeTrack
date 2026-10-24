@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import './subscription-fixture';
 import { beforeEach, describe, expect, it, vi, afterEach } from 'vitest';
 import { onlineManager, QueryClient } from '@tanstack/react-query';
 import { getDB, type SyncQueueRecord } from '../db';

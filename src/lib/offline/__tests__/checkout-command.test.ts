@@ -15,6 +15,7 @@ let committed:Map<string,unknown>;
 beforeEach(async()=>{
  vi.clearAllMocks();vi.stubEnv('NEXT_PUBLIC_ATOMIC_CHECKOUT_ENABLED','true');quantity=10;loseResponse=false;committed=new Map();
  const db=await getDB();for(const store of ['sales','sale_items','inventory','sync_queue','app_meta'])await db.clear(store);
+ await db.put('app_meta',{id:'subscription:org',active:true,verifiedAt:Date.now(),lastSeen:Date.now()});
  await db.put('inventory',{id:'stock',organization_id:'org',product_id:'product',warehouse_id:'warehouse',quantity:10,updated_at:'2026-10-19T10:00:00Z'});
  client.rpc.mockImplementation(async(name:string,args:{command:{sale:{id:string};items:{quantity:number}[]}})=>{
   expect(name).toBe('post_pos_checkout');

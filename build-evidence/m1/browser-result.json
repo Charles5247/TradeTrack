@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-10-21T10:16:25.581Z",
+  "generatedAt": "2026-10-24T02:10:07.732Z",
   "synthetic": true,
   "hostedAuthVerified": false,
   "beforeStock": 164,
   "afterStock": 284,
-  "invoice": "BROWSER-M1-1792577734103",
-  "sku": "M1-UI-1792577769902",
+  "invoice": "BROWSER-M1-1792807781555",
+  "sku": "M1-UI-1792807801755",
   "checks": [
     {
       "name": "catalog pagination exposes variants beyond the first 25 matches",

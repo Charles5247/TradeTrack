@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import { MerchantReviews } from '@/components/marketing/merchant-reviews';
+import { TranslatedText } from '@/i18n/text';
 import { Hero } from "@/components/marketing/hero";
+import { GettingStarted } from "@/components/marketing/getting-started";
 import { AIAssistantBand } from '@/components/marketing/ai-assistant-band';
 import { StatsBand } from "@/components/marketing/stats-band";
 import { FeatureGrid } from "@/components/marketing/feature-grid";
@@ -62,10 +65,12 @@ export default function MarketingHomePage() {
       <Hero />
       {showSocialProof ? <SocialProofBand /> : null}
       <StatsBand />
+      <GettingStarted />
       <FeatureGrid />
       <AIAssistantBand />
       <IndustriesBand />
       <AccountabilityBand />
+      <section className="mx-auto max-w-6xl px-4 py-12"><h2 className="mb-6 text-3xl font-semibold"><TranslatedText text="Merchant reviews" /></h2><MerchantReviews /></section>
       <CTABand />
     </>
   );

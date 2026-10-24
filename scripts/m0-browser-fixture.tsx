@@ -29,6 +29,7 @@ function App(){
  useEffect(()=>{if(initialized.current)return;initialized.current=true;void(async()=>{
   seed=await(await fetch('/seed')).json();useAuthStore.getState().setUser(seed.profile);
   const db=await getDB();for(const row of seed.products)await db.put('products',row);for(const row of seed.inventory)if(!await db.get('inventory',String(row.id)))await db.put('inventory',row);
+  await db.put('app_meta',{id:`subscription:${seed.profile.organization_id}`,active:true,verifiedAt:Date.now(),lastSeen:Date.now()});
   setReady(true);setMessage('Fixture ready. All records are synthetic.');await refresh();
  })().catch(error=>setMessage(String(error)));},[refresh]);
  async function action(task:()=>Promise<void>){try{await task();await refresh();}catch(error){setMessage(error instanceof Error?error.message:String(error));}}

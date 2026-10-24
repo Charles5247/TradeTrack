@@ -41,6 +41,10 @@ export const intakeLineSchema = z
         barcode: z.string().nullable(),
         make: z.string().nullable(),
         status: z.string(),
+        stock_unit: z.string().nullable().optional(),
+        variant_size: z.string().nullable().optional(),
+        variant_colour: z.string().nullable().optional(),
+        model: z.string().nullable().optional(),
       })
       .optional(),
     stock_units: quantity.optional(),
@@ -125,6 +129,7 @@ export interface IntakeProduct {
   status: string;
   cost_price: number;
   selling_price: number;
+  stock_unit?: string;
 }
 export interface IntakeCatalog {
   products: IntakeProduct[];

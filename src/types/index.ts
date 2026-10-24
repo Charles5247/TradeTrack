@@ -56,6 +56,11 @@ export interface Organization {
 export type ProductStatus = "active" | "inactive" | "discontinued";
 
 export interface Product {
+  stock_unit?: string;
+  variant_size?: string | null;
+  variant_colour?: string | null;
+  model?: string | null;
+  medical_stock_managed?: boolean;
   id: string;
   organization_id: string;
   name: string;

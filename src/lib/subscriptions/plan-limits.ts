@@ -131,7 +131,8 @@ export function resolveSubscriptionPlan<T extends PlanLike>(
   allPlans: T[],
 ): T | null {
   if (!subscription) return null;
-  return allPlans.find((p) => p.id === subscription.plan_id) ?? null;
+  const plan = allPlans.find((p) => p.id === subscription.plan_id) ?? null;
+  return plan && subscription.status === 'trial' ? { ...plan, max_products: 1000 } : plan;
 }
 
 /** Treats `null`/`undefined`/`-1` all as "no limit". */
@@ -162,7 +163,8 @@ export function hasFeature(
   feature: string,
 ): boolean {
   if (!plan) return false;
-  return plan.features.includes(feature);
+  const aliases: Record<string,string[]> = {pos:['sales'],basic_reports:['reports'],warehouses:['warehouse_transfers'],vendors:['vendor_consignment']};
+  return plan.features.includes(feature) || (aliases[feature]??[]).some(alias=>plan.features.includes(alias));
 }
 
 /** Ordered tier ladder — mirrors `PLAN_TIER_ORDER` in the Plans tab UI. */

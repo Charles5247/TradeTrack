@@ -1,4 +1,6 @@
 import { getDB, addToSyncQueue, type InventoryRecord } from './db';
+import { requireTransactionSubscription } from '@/lib/subscriptions/verification';
+import { getAccountRevision } from '@/lib/auth/account-state';
 import { generateId } from '@/lib/utils/id';
 import { atomicCheckoutEnabled } from './checkout-command';
 
@@ -32,6 +34,8 @@ export interface OfflineSalePayload {
 }
 
 export async function persistOfflineSale(payload: OfflineSalePayload) {
+  const accountRevision = getAccountRevision();
+  await requireTransactionSubscription(payload.organization_id);
   if (!payload.organization_id || !payload.cashier_id || !payload.warehouse_id || !payload.items.length) {
     throw new Error('Business, cashier, location and sale items are required.');
   }
@@ -43,10 +47,15 @@ export async function persistOfflineSale(payload: OfflineSalePayload) {
   }
 
   const db = await getDB();
-  const transaction = db.transaction(['sales', 'sale_items', 'inventory', 'sync_queue', 'app_meta'], 'readwrite');
+  if (accountRevision !== getAccountRevision()) throw new Error('Account changed. Reopen this sale in its original account.');
+  const transaction = db.transaction(['sales', 'sale_items', 'inventory', 'sync_queue', 'app_meta', 'products'], 'readwrite');
   const done = transaction.done;
   void done.catch(() => {});
   try {
+    for (const item of payload.items) {
+      const product = await transaction.objectStore('products').get(item.product_id);
+      if (product?.medical_stock_managed) throw new Error('Use the medical batch workflow for this product');
+    }
     // The existing server guard identifies a sale's stock effect by timestamp.
     // Allocate a distinct timestamp under the same local transaction, including
     // rapid checkouts from different tabs; never combine different sales' stock.

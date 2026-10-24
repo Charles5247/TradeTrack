@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/client';
 import { generateId } from '@/lib/utils/id';
 import { getAccountRevision } from '@/lib/auth/account-state';
+import { requireTransactionSubscription } from '@/lib/subscriptions/verification';
 import { addToSyncQueue, getDB, type InventoryRecord, type SyncQueueRecord } from './db';
 
 export interface InventoryAdjustmentPayload {
@@ -37,16 +38,21 @@ export async function postSavedAdjustment(db: OfflineDatabase, entry: SyncQueueR
 }
 
 export async function recordInventoryAdjustment(payload: InventoryAdjustmentPayload) {
+  const revision = getAccountRevision();
+  await requireTransactionSubscription(payload.organization_id);
   if(!Number.isSafeInteger(payload.quantity_change) || !payload.quantity_change || Math.abs(payload.quantity_change)>2147483647 ||
     !payload.organization_id || !payload.user_id || !payload.product_id || !payload.warehouse_id || (payload.reason?.trim().length ?? 0)<3) {
     throw new Error('A valid integer stock change and reason are required.');
   }
-  const revision=getAccountRevision(), db=await getDB(), id=generateId(), createdAt=new Date().toISOString();
-  const tx=db.transaction(['inventory','sync_queue'],'readwrite');
+  const db=await getDB(), id=generateId(), createdAt=new Date().toISOString();
+  if(revision!==getAccountRevision()) throw new Error('Account changed. Reopen this adjustment in its original account.');
+  const tx=db.transaction(['inventory','sync_queue','products'],'readwrite');
   void tx.done.catch(()=>{});
   let entry: SyncQueueRecord;
   let quantity: number;
   try {
+    const product=await tx.objectStore('products').get(payload.product_id);
+    if(product?.medical_stock_managed) throw new Error('Use the medical batch workflow for this product');
     const rows=await tx.objectStore('inventory').getAll() as InventoryRecord[];
     const cached=rows.find(row=>row.organization_id===payload.organization_id && row.product_id===payload.product_id && row.warehouse_id===payload.warehouse_id);
     quantity=(cached?.quantity ?? payload.current_quantity ?? 0)+payload.quantity_change;

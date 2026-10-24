@@ -77,6 +77,17 @@ export async function verifyManualIntake({
       "UPDATE track_private.stock_command_settings SET intake_enabled=true",
     );
   });
+  await check("stock unit and variant changes require renewed review before initial stock", async () => {
+    const id=randomUUID();
+    await sql(`INSERT INTO products(id,organization_id,name,sku,selling_price,cost_price) VALUES('${id}','${org}','Unit review','UNIT-${id}',10,1)`);
+    const approved=await ready(document([line(id,1,1)]));
+    await sql(`UPDATE products SET stock_unit='kg',variant_size='Large' WHERE id='${id}'`);
+    await assert.rejects(()=>post(approved),/identity changed/);
+    assert.equal(await sql(`SELECT count(*) FROM inventory WHERE product_id='${id}'`),'0');
+    const revised=await save(approved.document,approved.id,approved.revision);
+    assert.equal(revised.document.lines[0].product_snapshot.stock_unit,'kg');
+    await post(await approve(revised));
+  });
   await check(
     "reviewed carton conversion, cost separation, approval binding and replay",
     async () => {

@@ -7,6 +7,7 @@ import { requireOrganization } from "@/lib/auth/organization";
 import { withTimeout, AUTH_CHECK_TIMEOUT_MS } from "@/lib/utils/timeout";
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { PlanRecommendation } from '@/components/subscriptions/plan-recommendation';
 import {
   CreditCard,
   CheckCircle,
@@ -631,6 +632,7 @@ export default function SubscriptionsPage() {
       </div>
 
       {!isPlatformOwner && <>
+        <PlanRecommendation />
         <div className="grid gap-5 xl:grid-cols-[1.5fr_1fr]">
           <Card className="relative overflow-hidden border-transparent bg-primary p-6 text-primary-foreground sm:p-8">
             <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-[var(--c-accent)] opacity-20 blur-3xl" />

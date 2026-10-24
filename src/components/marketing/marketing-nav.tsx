@@ -17,6 +17,8 @@ const NAV_ITEMS = [
   { href: "/features", label: "Features" },
   { href: "/industries", label: "Industries" },
   { href: "/pricing", label: "Pricing" },
+  { href: "/contact", label: "Contact us" },
+  { href: "/reviews", label: "Reviews" },
   { href: "/download", label: "Download app" },
 ];
 
@@ -41,11 +43,11 @@ export function MarketingNav() {
       style={{
         background: scrolled
           ? "color-mix(in oklch, var(--c-bg), transparent 15%)"
-          : "transparent",
+          : "var(--c-bg)",
         backdropFilter: scrolled ? "blur(20px)" : "none",
         borderBottom: scrolled
           ? "1px solid var(--c-border)"
-          : "1px solid transparent",
+          : "1px solid var(--c-border)",
       }}
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-3 sm:px-6 xl:h-[72px] xl:gap-3">
@@ -102,7 +104,7 @@ export function MarketingNav() {
           <Link href="/login"><TranslatedText text={"Sign in"} /></Link>
         </Button>
         <Button size="sm" className="hidden sm:inline-flex" asChild>
-          <Link href="/pricing"><TranslatedText text={"View paid plans"} />{" "}<ArrowRight className="h-3.5 w-3.5" strokeWidth={1.75} />
+          <Link href="/signup"><TranslatedText text={"Start free"} />{" "}<ArrowRight className="h-3.5 w-3.5" strokeWidth={1.75} />
           </Link>
         </Button>
 
@@ -146,10 +148,10 @@ export function MarketingNav() {
               className="rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--c-textMuted)] hover:text-[var(--c-text)] hover:bg-[var(--c-surfaceAlt)]"
             ><TranslatedText text={"Sign in"} /></Link>
             <Link
-              href="/pricing"
+              href="/signup"
               onClick={() => setMobileOpen(false)}
               className="rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--c-primary)] hover:bg-[var(--c-surfaceAlt)]"
-            ><TranslatedText text={"View paid plans"} />{" "}<ArrowRight className="inline h-3.5 w-3.5" strokeWidth={1.75} /></Link>
+            ><TranslatedText text={"Start free"} />{" "}<ArrowRight className="inline h-3.5 w-3.5" strokeWidth={1.75} /></Link>
           </div>
         </div>
       )}

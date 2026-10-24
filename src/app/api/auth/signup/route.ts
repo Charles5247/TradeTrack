@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import crypto from "crypto";
-import { TRIAL_PLAN_ID } from "@/lib/subscriptions/signup-trial";
+import { TRIAL_PLAN_ID, signupPlanPreference } from "@/lib/subscriptions/signup-trial";
 import type { Database } from "@/lib/supabase/types";
-
-type PlanRow = Database["public"]["Tables"]["subscription_plans"]["Row"];
+import { isIndustry } from '@/lib/industries';
 
 function getServiceClient() {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -39,10 +38,15 @@ function isValidEmail(email: string): boolean {
 }
 
 export async function POST(request: NextRequest) {
+  const reference = crypto.randomUUID();
+  let stage = 'validation';
   try {
     const body = await request.json();
     const { business_name, full_name, email, password, phone, plan_id } =
       body as Record<string, string | null | undefined>;
+    // Older clients omit industry; preserve their normal retail onboarding.
+    const industry = body.industry ?? 'retail';
+    if (!isIndustry(industry)) return NextResponse.json({error:'Choose a valid business industry.'}, {status:400});
 
     if (!business_name || !full_name || !email || !password) {
       return NextResponse.json(
@@ -68,13 +72,6 @@ export async function POST(request: NextRequest) {
 
     const serviceSupabase = getServiceClient();
 
-    // The Business plan is selected now; trial access starts only after
-    // platform-owner verification of the submitted business registration.
-    const { data: trialPlan, error: planError } = await serviceSupabase
-      .from("subscription_plans").select("*").eq("id", TRIAL_PLAN_ID).single();
-    if (planError || !trialPlan) throw new Error("The trial plan is unavailable. Please contact support.");
-    const resolvedPlan = trialPlan as PlanRow;
-
     // ── Track what we've created so we can roll back on failure ──────
     let createdOrgId: string | null = null;
     let createdAuthUserId: string | null = null;
@@ -82,6 +79,7 @@ export async function POST(request: NextRequest) {
 
     try {
       // 1. Create a brand-new organization for this self-serve signup.
+      stage = 'organization';
       const { data: org, error: orgErr } = await serviceSupabase
         .from("organizations")
         .insert({
@@ -89,8 +87,12 @@ export async function POST(request: NextRequest) {
           slug: slugify(business_name),
           email,
           phone: phone || null,
-          subscription_plan_id: resolvedPlan?.id ?? null,
-          subscription_status: "suspended",
+          subscription_plan_id: TRIAL_PLAN_ID,
+          subscription_status: "trial",
+          settings: {
+            _signup_trial: true,
+            preferred_plan_id: signupPlanPreference(plan_id),
+          },
         } as any)
         .select("id")
         .single();
@@ -102,6 +104,7 @@ export async function POST(request: NextRequest) {
 
       // 2. Create the Supabase Auth user with the password THEY chose
       //    (no temp password / forced change, unlike admin-onboarding).
+      stage = 'auth';
       const { data: authData, error: authErr } =
         await serviceSupabase.auth.admin.createUser({
           email,
@@ -116,6 +119,7 @@ export async function POST(request: NextRequest) {
       createdAuthUserId = authData.user.id;
 
       // 3. Create the business_owner profile, scoped to the new org.
+      stage = 'profile';
       const { error: profileErr } = await serviceSupabase.from("users").insert({
         id: authData.user.id,
         email,
@@ -136,16 +140,19 @@ export async function POST(request: NextRequest) {
       //    admin-onboarded merchants in the platform_owner's Merchants
       //    list, marked as self-serve (onboarded_by is null — no staff
       //    member onboarded them).
+      stage = 'merchant';
       const { data: merchant, error: merchantErr } = await serviceSupabase
         .from("merchants")
         .insert({
+          id: crypto.randomUUID(),
           organization_id: createdOrgId,
           business_name,
           contact_name: full_name,
           contact_email: email,
           contact_phone: phone || null,
           country: "Nigeria",
-          subscription_plan_id: resolvedPlan?.id ?? null,
+          business_type: industry,
+          subscription_plan_id: TRIAL_PLAN_ID,
           status: "active",
           verification_status: "unverified",
           onboarding_completed: true,
@@ -174,7 +181,7 @@ export async function POST(request: NextRequest) {
           new_values: {
             business_name,
             email,
-            plan: resolvedPlan?.name ?? null,
+            plan: "Business",
           },
         } as any);
       } catch {
@@ -184,8 +191,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           organization_id: createdOrgId,
-          plan: null,
-          trial_status: "pending_verification",
+          plan: { id: TRIAL_PLAN_ID, name: "Business" },
+          trial_status: "active",
           user: { id: authData.user.id, email },
         },
         { status: 201 },
@@ -233,7 +240,7 @@ export async function POST(request: NextRequest) {
       throw innerErr;
     }
   } catch (err) {
-    console.error("[POST /api/auth/signup]", err);
+    console.error("[POST /api/auth/signup]", { reference, stage, error: err });
     const message =
       err instanceof Error ? err.message : "Internal server error";
     // A duplicate email is the most likely user-facing error — Supabase
@@ -241,6 +248,11 @@ export async function POST(request: NextRequest) {
     const status = /already registered|already exists|duplicate/i.test(message)
       ? 409
       : 500;
-    return NextResponse.json({ error: message }, { status });
+    return NextResponse.json({
+      error: status === 409
+        ? 'An account or trial already exists for these details. Sign in or contact support to recover your account.'
+        : `We could not create your account. Please contact support with reference ${reference}.`,
+      reference,
+    }, { status });
   }
 }

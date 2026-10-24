@@ -1,6 +1,6 @@
 # TradeTrack AI and Retail BI roadmap
 
-**Implementation roadmap · updated 21 October 2026.** Programme scope and batch approval are confirmed. M0's isolated gate passed; M1 is in progress. Production release remains blocked pending credential disposition and hosted verification. Examples are fictional. Milestones describe order, not delivery dates or measured capabilities.
+**Implementation roadmap · updated 24 October 2026.** Programme scope and batch approval are confirmed. M0 and M1 passed their isolated gates after upstream integration; M2 is next. Production release remains blocked pending credential disposition and hosted verification. Examples are fictional. Milestones describe order, not delivery dates or measured capabilities.
 
 ## Current programme
 

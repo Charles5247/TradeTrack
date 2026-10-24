@@ -19,11 +19,12 @@ export async function GET(request: Request) {
       .parse(params.get("offset") ?? 0);
     let products = db
       .from("products")
-      .select("id,name,sku,barcode,make,status,cost_price,selling_price", {
+      .select("id,name,sku,barcode,make,status,cost_price,selling_price,stock_unit,variant_size,variant_colour,model", {
         count: "exact",
       })
       .eq("organization_id", org)
       .eq("status", "active")
+      .eq("medical_stock_managed", false)
       .order("name")
       .order("id")
       .range(offset, offset + 25);

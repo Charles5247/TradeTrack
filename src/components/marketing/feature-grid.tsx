@@ -13,6 +13,8 @@ import {
 import { Reveal } from "@/components/marketing/reveal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { SiteImage } from "@/components/shared/site-image";
+import { siteImages } from "@/content/images";
 
 /**
  * Feature grid — ported from the handoff's `FeatureGrid` layout
@@ -87,6 +89,7 @@ export function FeatureGrid() {
               </div>
             </div>
             <div className="relative min-h-[300px] bg-gradient-to-br from-primary/10 via-[var(--c-surfaceAlt)] to-[var(--c-accent)]/20">
+              <SiteImage image={siteImages.offlineFeature} sizes="(min-width: 768px) 50vw, 100vw" className="object-cover object-left" />
               <div
                 className="absolute right-6 bottom-6 rounded-xl p-4 w-[220px]"
                 style={{ background: "var(--c-surface)", boxShadow: "0 20px 40px rgba(0,0,0,0.2)" }}

@@ -23,6 +23,18 @@ export function introductionDays(state: Verification | undefined, now = Date.now
   return Number.isFinite(remaining) ? Math.max(0, Math.ceil(remaining / DAY)) : 0;
 }
 
+/** Keep each reminder visible until the next milestone, including missed days. */
+export function trialReminderDay(state: Verification | undefined, now = Date.now()): 20 | 27 | 30 | null {
+  if (!state?.trialEndsAt || !state.serverTime || state.rollback) return null;
+  // A confirmed paid period beyond the trial needs no trial renewal prompt.
+  if (state.active && state.validUntil && Date.parse(state.validUntil) > Date.parse(state.trialEndsAt)) return null;
+  const end = Date.parse(state.trialEndsAt);
+  const serverNow = Date.parse(state.serverTime) + Math.max(0, now - state.verifiedAt);
+  if (!Number.isFinite(end) || !Number.isFinite(serverNow)) return null;
+  const elapsedDays = 30 - (end - serverNow) / DAY;
+  return elapsedDays >= 30 ? 30 : elapsedDays >= 27 ? 27 : elapsedDays >= 20 ? 20 : null;
+}
+
 export function evaluateVerification(state: Verification | undefined, now: number) {
   if (!state) return { allowed: false, warning: false, message: 'Connect to the internet to verify your subscription before creating transactions.' };
   if (state.rollback || now < state.lastSeen - 120000) return { allowed: false, warning: false, message: 'Your device clock changed. Connect to verify your subscription again.' };

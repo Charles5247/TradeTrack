@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import './subscription-fixture';
 
 import { beforeEach, describe, expect, it } from "vitest";
 import { persistOfflineSale } from "../sales";

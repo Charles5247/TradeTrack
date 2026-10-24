@@ -1,5 +1,6 @@
 "use client";
 import { TranslatedText, useCopy } from '@/i18n/text';
+import { INDUSTRIES } from '@/lib/industries';
 
 
 import React, { useState } from "react";
@@ -479,24 +480,7 @@ function CreateMerchantDialog({
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="retail">
-                      {t.merchants.type_retail}
-                    </SelectItem>
-                    <SelectItem value="wholesale">
-                      {t.merchants.type_wholesale}
-                    </SelectItem>
-                    <SelectItem value="restaurant">
-                      {t.merchants.type_restaurant}
-                    </SelectItem>
-                    <SelectItem value="services">
-                      {t.merchants.type_services}
-                    </SelectItem>
-                    <SelectItem value="ecommerce">
-                      {t.merchants.type_ecommerce}
-                    </SelectItem>
-                    <SelectItem value="other">
-                      {t.merchants.type_other}
-                    </SelectItem>
+                    {INDUSTRIES.map(industry=><SelectItem key={industry.value} value={industry.value}><TranslatedText text={industry.label}/></SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>

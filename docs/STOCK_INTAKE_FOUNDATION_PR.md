@@ -1,34 +1,25 @@
 # Draft PR: recoverable stock commands and reviewed manual receipts
 
-Suggested title: `fix: preserve stock integrity and add reviewed manual receipts`
+Offline receipts, stock adjustments and warehouse transfers can fail between separate writes or race with another stock change. M0 commits each stock command atomically, retains original receipts for explicit recovery and returns the original result on retry. It isolates account caches/drafts and bounds spreadsheet parsing in a browser worker. Private environment files are removed from tracking and checked by the existing repository-hygiene workflow; this does not revoke historical credentials.
 
-Offline sales and split stock writes could lose or repeat inventory effects after failures or concurrent activity. M0 makes checkout, manual adjustments and warehouse transfers atomic and recoverable, isolates account caches and drafts, holds ambiguous legacy work for reconciliation, and moves spreadsheet parsing into a bounded browser worker. Private environment files are removed from tracking and checked by CI; this does not revoke a credential previously exposed in Git history.
+M1 adds Inventory → Receive stock behind disabled flags. A manager enters 10 cartons × 12 units, reviews +120 and purchase costs, approves once and can recover the saved receipt after a lost response without adding another 120. Opening balances require an initial position. Reviewed new-product drafts can be shared within a receipt. Existing catalog prices remain unchanged. Immutable approvals, receipt revisions, conversions, source text, ledger and outcomes persist together.
 
-M1 adds Inventory → Receive stock behind disabled flags. A manager can enter 10 cartons × 12 units, review +120 units and receipt costs, approve once, and recover the saved result after a lost response without adding another 120. Opening stock is restricted to genuinely initial positions. Reviewed new-product drafts can be shared within a receipt; existing catalog costs and selling prices remain unchanged. Receipt revisions, immutable approvals, original quantities/conversions, source text, ledger and outcomes persist together.
+This branch integrates main at a1109e0, preserving its subscription checks, medical batch-stock separation and product-unit rules. Unit, size, colour or model changes require renewed receipt review. Ordinary receiving excludes medical batch-managed products.
 
 ## Validation
 
-See the current [M0 checkpoint](AI_AND_BI_M0_IMPLEMENTATION_CHECKPOINT.md) and [M1 checkpoint](AI_AND_BI_M1_IMPLEMENTATION_CHECKPOINT.md) for exact commands, reports, final build/test status and limitations. Isolated PostgreSQL exercises actual authenticated database roles and concurrency. Browser fixtures run actual components, HTTP handlers and SQL with synthetic session transport; hosted JWT/session issuance and production schema parity are not established by them.
+- Integrated checkout: 88 tests in 12 files passed, including stock, subscription, medical isolation, API and migration checks. Final TypeScript and Next.js production build passed (57 pages).
+- Real PostgreSQL: 13 M0 and 15 M1 acceptance groups passed, including concurrency, rollback, permissions and replay.
+- Browser: 15 M0 and 19 M1 checks passed through actual components, API handlers and SQL with synthetic session transport. Desktop/mobile screenshots retained. Hosted JWT/session issuance is not verified by these fixtures.
+- Original checkout: the broad run executed 385 passing tests but had ten worker-start errors. All ten missing files subsequently passed (41 tests). The disjoint reports cover 426 tests; this was not one aggregate green run and is not a full run of newer upstream tests.
+- Scoped lint passed with two existing warnings; inherited Inventory/POS lint errors are documented. React act warnings remain in test logs.
 
-## Release requirements and rollback
+See [M0 evidence](AI_AND_BI_M0_IMPLEMENTATION_CHECKPOINT.md), [M1 evidence](AI_AND_BI_M1_IMPLEMENTATION_CHECKPOINT.md) and `build-evidence/m1/verification-index.json`.
 
-This is a reviewable draft, not approval to deploy. Apply the four additive M0/M1 migrations before compatible clients use the commands. Coordinate a pause of old stock writers/synchronization and a compatible-client rollout; a flag cannot repair old open tabs. Resolve credential rotation/history exposure, hosted permissions/schema verification and historical tenant-link audits before production release. Old pending transfers require explicit stock reconciliation.
+## Release and rollback
 
-`NEXT_PUBLIC_ATOMIC_CHECKOUT_ENABLED`, `NEXT_PUBLIC_STOCK_INTAKE_ENABLED` and their private database switches default off. Rollback disables new features while retaining committed receipts, approvals, evidence and unresolved local work. Do not restore unsafe snapshot writers or clear queues. M2 uploads, durable workers, AI processing and BI are not implemented in this PR.
+Apply the four additive M0/M1 migrations before compatible clients use them. Coordinate old-client stock writes/synchronization and a compatible-client rollout; flags cannot repair old open tabs. Confirm credential rotation/history exposure, hosted schema/grants/authorization and historical tenant-link audits before production release. Existing pending transfers require explicit stock reconciliation.
 
-## Git handoff
+Public checkout/intake flags and private database switches default off. Rollback disables features while retaining committed receipts, approvals, evidence and unresolved work. Do not restore unsafe snapshot writers or clear queues. No hosted migration, deployment, credential rotation or business-data repair is included.
 
-Branch: `feat/m0-stock-integrity`. No commit, push, hosted migration or deployment has been performed. Review the explicit file allowlist in [local verification](M0_LOCAL_VERIFICATION.md); exclude unrelated `idea-to-build` deletions and the pre-existing audit document. Never attach a raw environment-file diff.
-
-After reviewing and staging the intended files:
-
-```powershell
-npm run check:tracked-env
-git diff --cached --check
-git diff --cached --name-status
-git commit -m "fix: preserve stock integrity and add reviewed manual receipts"
-git push -u origin feat/m0-stock-integrity
-gh pr create --draft --base main --title "fix: preserve stock integrity and add reviewed manual receipts" --body-file docs/STOCK_INTAKE_FOUNDATION_PR.md
-```
-
-These are handoff commands; none has been executed by the agent. A reviewer may split M0 and M1 into separate commits before pushing. Keep the PR as a draft until release requirements are assigned and verified.
+M2 spreadsheet batches, uploads and workers are the next milestone; AI modalities and BI follow later. They are not implemented in this PR.

@@ -23,6 +23,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import type { UserRole } from "@/types";
+import { isMedicalIndustry } from '@/lib/industries';
 
 /**
  * Grouped sidebar navigation, per README §6.3 / design_files/shell.jsx's
@@ -48,6 +49,7 @@ export interface NavItem {
   icon: ComponentType<LucideProps>;
   /** Roles allowed to see this item. Omit for "every authenticated role". */
   roles?: UserRole[];
+  medicalOnly?: boolean;
 }
 
 export interface NavGroup {
@@ -64,6 +66,7 @@ export const NAV_GROUPS_BO: NavGroup[] = [
   {
     title: "Operate",
     items: [
+      { navKey: 'medicalStock', label: 'Medical stock', href: '/medical-stock', icon: ClipboardCheck, roles: ['business_owner', 'admin', 'cashier'], medicalOnly: true },
       {
         navKey: "dashboard",
         href: "/dashboard",
@@ -83,6 +86,7 @@ export const NAV_GROUPS_BO: NavGroup[] = [
         roles: ["business_owner", "admin"],
       },
       { navKey: "receipts", label: "Receipts", href: "/receipts", icon: History, roles: ["business_owner", "admin", "cashier"] },
+      { navKey: "reviews", label: "Reviews", href: "/reviews", icon: ClipboardCheck, roles: ["business_owner"] },
       {
         navKey: "receiptLookup",
         href: "/receipts/lookup",
@@ -173,6 +177,8 @@ export const NAV_GROUPS_PO: NavGroup[] = [
   {
     title: "Platform",
     items: [
+      { navKey: "contactMessages", label: "Contact messages", href: "/admin/contact", icon: Bell, roles: ["platform_owner"] },
+      { navKey: "reviews", label: "Reviews", href: "/reviews", icon: ClipboardCheck, roles: ["platform_owner"] },
       {
         navKey: "admin",
         href: "/admin",
@@ -204,13 +210,13 @@ export const NAV_GROUPS_PO: NavGroup[] = [
 
 /** Returns the appropriate group set for a role, with items already
  * filtered to what that role may see (and empty groups dropped). */
-export function getNavGroupsForRole(role: UserRole | undefined): NavGroup[] {
+export function getNavGroupsForRole(role: UserRole | undefined, industry?: string | null): NavGroup[] {
   const groups = role === "platform_owner" ? NAV_GROUPS_PO : NAV_GROUPS_BO;
   return groups
     .map((group) => ({
       ...group,
       items: group.items.filter(
-        (item) => !item.roles || (role && item.roles.includes(role)),
+        (item) => (!item.roles || (role && item.roles.includes(role))) && (!item.medicalOnly || isMedicalIndustry(industry)),
       ),
     }))
     .filter((group) => group.items.length > 0);
@@ -219,8 +225,8 @@ export function getNavGroupsForRole(role: UserRole | undefined): NavGroup[] {
 /** Flat list of every nav item across both role's groups — used by the
  * command palette, which shows the current user's own items regardless of
  * grouping. */
-export function getFlatNavItems(role: UserRole | undefined): NavItem[] {
-  return getNavGroupsForRole(role).flatMap((g) => g.items);
+export function getFlatNavItems(role: UserRole | undefined, industry?: string | null): NavItem[] {
+  return getNavGroupsForRole(role, industry).flatMap((g) => g.items);
 }
 
 /**

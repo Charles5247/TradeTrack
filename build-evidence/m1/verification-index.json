@@ -16,5 +16,20 @@
   "distinctExecutedFiles": 66,
   "distinctPassedTests": 426,
   "oneAggregateGreenRun": false,
-  "upstreamIntegrationPending": true
+  "upstreamIntegrationPending": false,
+  "integratedVerification": {
+    "upstream": "a1109e0",
+    "focusedTestFiles": 12,
+    "focusedTests": 88,
+    "postgresM0": 13,
+    "postgresM1": 15,
+    "browserM0": 15,
+    "browserM1": 19,
+    "productionBuild": true,
+    "generatedPages": 57,
+    "typecheck": true,
+    "scopedLintErrors": 0,
+    "scopedLintWarnings": 2,
+    "hostedAuthorizationVerified": false
+  }
 }

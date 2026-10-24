@@ -8,7 +8,11 @@ export async function GET() {
     const { data: { user } } = await withTimeout(db.auth.getUser(), AUTH_CHECK_TIMEOUT_MS);
     if (!user) return Response.json({ error: 'Sign in required' }, { status: 401 });
     // RPC uses database time, authenticated user and organization membership.
-    const { data, error } = await (db as any).rpc('verify_business_subscription');
+    let { data, error } = await (db as any).rpc('business_access_state');
+    // Keep verification available while the additive archive migration rolls out.
+    if (error?.code === 'PGRST202' || error?.code === '42883') {
+      ({ data, error } = await (db as any).rpc('verify_business_subscription'));
+    }
     if (error) return Response.json({ error: 'Verification unavailable' }, { status: 503 });
     if (typeof data.business_verification_status !== 'string') {
       const { data: merchant, error: merchantError } = await db

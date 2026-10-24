@@ -1,9 +1,13 @@
 {
-  "generatedAt": "2026-10-21T04:54:01.577Z",
+  "generatedAt": "2026-10-24T01:56:18.259Z",
   "synthetic": true,
   "results": [
     {
       "name": "disabled-by-default intake has no effects",
+      "status": "passed"
+    },
+    {
+      "name": "stock unit and variant changes require renewed review before initial stock",
       "status": "passed"
     },
     {
