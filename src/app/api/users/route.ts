@@ -44,7 +44,7 @@ async function getAuthenticatedUser(): Promise<UserRow | null> {
     .eq("id", user.id)
     .single();
 
-  return profile;
+  return profile?.status === 'active' ? profile : null;
 }
 
 function getServiceClient() {
@@ -87,9 +87,9 @@ export async function POST(request: NextRequest) {
       if (!isBusinessOwner || currentUser.status !== "active" || body.confirm !== true || !currentUser.organization_id) return NextResponse.json({ error: "Owner confirmation required" }, { status: 403 });
       const requestDb = await createRequestClient();
       if (!requestDb) throw new Error("Service unavailable");
-      const { error: batchError } = await (requestDb as any).from("import_batches").upsert({ id: body.batch_id, organization_id: currentUser.organization_id, kind: "staff_invites", created_by: currentUser.id, summary: body.summary || {} }, { onConflict: "id", ignoreDuplicates: true });
+      const { error: batchError } = await requestDb.from("import_batches").upsert({ id: body.batch_id, organization_id: currentUser.organization_id, kind: "staff_invites", created_by: currentUser.id, summary: body.summary || {} }, { onConflict: "id", ignoreDuplicates: true });
       if (batchError) throw batchError;
-      const { data, error } = await (requestDb as any).rpc("apply_import_chunk", { batch: body.batch_id, import_rows: body.rows, duplicate_mode: body.mode, warehouse: null });
+      const { data, error } = await requestDb.rpc("apply_import_chunk", { batch: body.batch_id, import_rows: body.rows, duplicate_mode: body.mode, warehouse: null });
       if (error) throw error;
       return NextResponse.json(data);
     }

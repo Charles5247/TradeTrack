@@ -54,6 +54,8 @@ import { downloadReceiptPDF } from "@/lib/pdf/receipt-pdf";
 import { Receipt } from "@/components/pos/receipt";
 import { getAllFromOfflineDB } from "@/lib/offline/db";
 import { persistOfflineSale } from "@/lib/offline/sales";
+import { roundMoney } from '@/lib/utils/money';
+import { CheckoutRecovery } from '@/components/inventory/checkout-recovery';
 import { generateId } from "@/lib/utils/id";
 import { requireOnline } from "@/lib/utils/network";
 
@@ -400,13 +402,13 @@ function POSPageInner() {
         unit_price: item.unit_price,
         cost_price: item.product.cost_price,
         discount: item.discount,
-        total: item.unit_price * item.quantity * (1 - item.discount / 100),
+        total: roundMoney(item.unit_price * item.quantity * (1 - item.discount / 100)),
       })),
       subtotal: cart.getSubtotal(),
       discount: cart.getDiscountAmount(),
       tax: cart.getTaxAmount(),
       total,
-      amount_paid: paid || total,
+      amount_paid: paid,
       change_amount: Math.max(0, paid - total),
       payment_method: cart.payment_method,
       notes: notes || undefined,
@@ -476,6 +478,7 @@ function POSPageInner() {
     >
       {/* Left: Products */}
       <div className="flex min-w-0 flex-1 flex-col gap-4">
+        <CheckoutRecovery />
         {/* Search & Warehouse — big-touch, README §9.2 */}
         <div className="flex min-w-0 flex-col gap-3 rounded-xl border border-border bg-card p-3 sm:flex-row sm:items-center sm:p-4">
           <div className="relative flex-1">

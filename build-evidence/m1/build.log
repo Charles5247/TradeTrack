@@ -1,0 +1,89 @@
+
+> webapp@0.1.0 build
+> next build
+
+▲ Next.js 16.2.12 (Turbopack)
+- Environments: .env.local
+- Experiments (use with caution):
+  · optimizePackageImports
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 2.1min
+  Running TypeScript ...
+  Finished TypeScript in 67s ...
+  Collecting page data using 1 worker ...
+  Generating static pages using 1 worker (0/57) ...
+  Generating static pages using 1 worker (14/57)
+  Generating static pages using 1 worker (28/57)
+  Generating static pages using 1 worker (42/57)
+✓ Generating static pages using 1 worker (57/57) in 2.3s
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /accounting
+├ ƒ /admin
+├ ƒ /admin/contact
+├ ƒ /api/accounting
+├ ƒ /api/ai
+├ ƒ /api/audit
+├ ƒ /api/auth/signup
+├ ƒ /api/contact
+├ ƒ /api/health
+├ ƒ /api/imports
+├ ƒ /api/medical-stock
+├ ƒ /api/merchants/onboard
+├ ƒ /api/payments/initialize
+├ ƒ /api/payments/verify
+├ ƒ /api/receipts/lookup
+├ ƒ /api/stock-intakes
+├ ƒ /api/stock-intakes/catalog
+├ ƒ /api/subscriptions/recommendation
+├ ƒ /api/subscriptions/verification
+├ ƒ /api/users
+├ ƒ /api/users/[id]
+├ ƒ /api/version
+├ ƒ /api/webhooks/zainpay
+├ ƒ /assistant
+├ ƒ /audit
+├ ƒ /change-password
+├ ƒ /contact
+├ ƒ /dashboard
+├ ƒ /download
+├ ƒ /features
+├ ƒ /forgot-password
+├ ƒ /imports
+├ ƒ /industries
+├ ƒ /inventory
+├ ƒ /inventory/intake
+├ ƒ /login
+├ ƒ /medical-stock
+├ ƒ /merchants
+├ ƒ /merchants/[id]
+├ ƒ /notifications
+├ ƒ /pos
+├ ƒ /pricing
+├ ƒ /products
+├ ƒ /products/[id]/edit
+├ ƒ /purchase-orders
+├ ƒ /purchase-orders/new
+├ ƒ /receipts
+├ ƒ /receipts/lookup
+├ ƒ /reports
+├ ƒ /reviews
+├ ƒ /sales
+├ ƒ /sales/[id]
+├ ƒ /settings
+├ ƒ /signup
+├ ƒ /subscriptions
+├ ƒ /suppliers
+├ ƒ /transfers
+├ ƒ /users
+├ ƒ /vendors
+└ ƒ /warehouses
+
+
+ƒ Proxy (Middleware)
+
+ƒ  (Dynamic)  server-rendered on demand

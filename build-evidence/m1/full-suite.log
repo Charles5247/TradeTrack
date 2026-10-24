@@ -1,0 +1,260 @@
+
+ RUN  v4.1.10 C:/TradeTrack
+
+ ✓ src/lib/accounting/__tests__/database.test.ts (23 tests) 60504ms
+   ✓ enforces the AI request quota in the database  357ms
+ ✓ src/lib/accounting/__tests__/hosted-migration.test.ts (1 test) 40453ms
+   ✓ supports the hosted extensions schema without exposing the digest wrapper  40444ms
+ ✓ src/components/products/retail-pages.test.tsx (2 tests) 6841ms
+   ✓ renders migrated page shells at 375px without changing receipt lookup/reset behavior  4686ms
+   ✓ renders migrated page shells at 1280px without changing receipt lookup/reset behavior  2145ms
+ ✓ src/components/layout/retail-workflows.test.tsx (3 tests) 6042ms
+   ✓ opens supplier history and links a product without conflating supplier purchases and vendor sales  4370ms
+   ✓ lets an owner assign a cashier to the main shop and hides management for cashiers  701ms
+   ✓ opens a receipt from the library, saves recent lookups and exports its actual items  961ms
+ ✓ src/i18n/i18n.test.tsx (10 tests) 19752ms
+     ✓ ha retains every key and interpolation token  1465ms
+     ✓ yo retains every key and interpolation token  7530ms
+     ✓ ig retains every key and interpolation token  7485ms
+     ✓ pcm retains every key and interpolation token  360ms
+     ✓ provides all four translations for each supplemental source message  948ms
+   ✓ switches the real landing hero, statistic cards and operational labels to Pidgin immediately  1837ms
+ ✓ src/components/layout/platform-overview.test.tsx (4 tests) 9749ms
+   ✓ renders platform management actions, truthful empty metrics, and refresh at 375px  5813ms
+   ✓ renders platform management actions, truthful empty metrics, and refresh at 1280px  1646ms
+   ✓ surfaces failed database reads and renders retry instead of empty metrics  1164ms
+   ✓ requests exact head-only platform counts independently of the bounded directory  1117ms
+ ✓ src/components/layout/platform-plans.test.tsx (1 test) 7087ms
+   ✓ shows platform catalog management without merchant billing or checkout and preserves merchant plan selection  7057ms
+ ✓ src/components/products/product-form.test.tsx (1 test) 18914ms
+   ✓ prefills an existing match and updates its ID rather than inserting a duplicate  18810ms
+ ✓ src/components/imports/import-workbench.test.tsx (2 tests) 2513ms
+   ✓ requires preview and confirmation before importing at 375px  1620ms
+   ✓ requires preview and confirmation before importing at 1280px  885ms
+ ✓ src/lib/imports/__tests__/parse.test.ts (7 tests) 1861ms
+   ✓ reports a worksheet over the row limit rather than silently truncating it  977ms
+   ✓ validates compressed workbook contents and rejects falsified expansion lengths  463ms
+ ✓ src/lib/offline/__tests__/vendor-stock-version.test.ts (13 tests) 4549ms
+   ✓ sends 20 → 17 → 14 using the exact raw server version from its predecessor  959ms
+   ✓ protects unresolved local stock from pulls  1090ms
+   ✓ retains a predecessor with no confirmed version when a successor still depends on it  850ms
+   ✓ downloads products beyond the first server page  552ms
+ ✓ src/components/layout/platform-header.test.tsx (1 test) 3388ms
+   ✓ hides merchant upload actions for platform owners while preserving merchant sync and navigation search  3362ms
+ ✓ src/lib/offline/__tests__/purchase-orders.test.ts (18 tests) 931ms
+     ✓ paginates catalogs beyond the first page  422ms
+ ✓ src/lib/offline/__tests__/vendor-transactions.test.ts (13 tests) 748ms
+stderr | src/lib/offline/__tests__/purchase-orders-page.test.tsx > renders cached orders offline, keeps lifecycle disabled until synced, and survives false-online failures
+An update to PurchaseOrdersPageInner inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ ✓ src/lib/offline/__tests__/purchase-orders-page.test.tsx (1 test) 3129ms
+   ✓ renders cached orders offline, keeps lifecycle disabled until synced, and survives false-online failures  3106ms
+ ✓ src/app/(marketing)/download/download-client.test.tsx (5 tests) 8238ms
+   ✓ keeps all cards in order on Android and highlights only the recommendation  6188ms
+   ✓ keeps all cards in order on Windows NT 10.0 and highlights only the recommendation  542ms
+   ✓ keeps all cards in order on iPhone and highlights only the recommendation  636ms
+   ✓ keeps all cards in order on Macintosh and highlights only the recommendation  326ms
+   ✓ renders real installer URLs and optional metadata  323ms
+ ✓ src/lib/offline/__tests__/pos-stock-integrity.test.ts (12 tests) 628ms
+ ✓ src/components/shared/offline-navigation.test.tsx (1 test) 543ms
+   ✓ caches full HTML and its scripts before reporting offline readiness  532ms
+ ✓ src/lib/offline/__tests__/checkout-command.test.ts (4 tests) 323ms
+ ✓ src/lib/imports/__tests__/offline.test.ts (4 tests) 1034ms
+   ✓ atomically stores products, opening stock and append-only import commands offline  497ms
+   ✓ yields between chunks for more than a thousand rows  431ms
+ ✓ src/lib/offline/__tests__/vendor-sync.test.ts (7 tests) 610ms
+   ✓ applies a successor stock snapshot after an in-flight predecessor commits  307ms
+ ✓ src/lib/stock-intake/intake-api.test.ts (11 tests) 748ms
+ ✓ src/lib/offline/__tests__/inventory-adjust.test.tsx (7 tests) 554ms
+ ✓ src/components/shared/offline-read-recovery.test.tsx (1 test) 416ms
+   ✓ handles background storage failures, keeps the pending count, then clears warnings on recovery  410ms
+ ✓ src/lib/ai/__tests__/openai.test.ts (3 tests) 298ms
+ ✓ src/lib/utils/__tests__/format.test.ts (35 tests) 396ms
+stderr | src/components/auth/auth-provider.test.tsx > clears a suspended profile on token refresh while retaining offline business data
+An update to AuthProvider inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to AuthProvider inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ ✓ src/components/auth/auth-provider.test.tsx (3 tests) 595ms
+ ✓ src/lib/ai/__tests__/route.test.ts (4 tests) 221ms
+ ✓ src/lib/supabase/browser-fetch.test.ts (4 tests) 249ms
+ ✓ src/lib/offline/__tests__/db-lifecycle.test.ts (6 tests) 242ms
+ ✓ src/lib/downloads/config.test.ts (4 tests) 241ms
+ ✓ src/lib/offline/__tests__/sync-auth.test.ts (11 tests) 332ms
+ ✓ src/lib/imports/__tests__/parse-worker.test.ts (2 tests) 234ms
+ ✓ src/app/api/health/route.test.ts (1 test) 376ms
+     ✓ returns a cache-disabled 200 response without dependencies  359ms
+ ✓ src/components/shared/query-provider.test.tsx (1 test) 179ms
+ ✓ src/lib/validations/__tests__/index.test.ts (44 tests) 282ms
+ ✓ src/lib/offline/__tests__/auth-cache.test.ts (5 tests) 149ms
+ ✓ src/lib/accounting/__tests__/reconciliation.test.ts (3 tests) 259ms
+ ✓ src/lib/subscriptions/__tests__/verification.test.ts (13 tests) 274ms
+ ✓ src/app/api/receipts/lookup/route.test.ts (4 tests) 169ms
+ ✓ src/lib/offline/register-sw.test.ts (1 test) 112ms
+ ✓ src/store/account-isolation.test.ts (4 tests) 132ms
+ ✓ src/lib/subscriptions/__tests__/plan-limits.test.ts (28 tests) 71ms
+ ✓ src/lib/utils/__tests__/cn.test.ts (5 tests) 123ms
+ ✓ src/lib/stock-intake/contracts.test.ts (2 tests) 503ms
+     ✓ accepts every two-decimal cent at the numeric upper boundary without floating-point false rejections  375ms
+ ✓ src/lib/subscriptions/__tests__/get-plans.test.ts (6 tests) 624ms
+     ✓ returns EXACTLY 5 active plans with the current 5-tier names/prices, matching migration 010's own verification query  419ms
+ ✓ src/lib/utils/__tests__/timeout.test.ts (4 tests) 21ms
+ ✓ src/lib/imports/__tests__/preview.test.ts (4 tests) 33ms
+ ✓ src/lib/zainpay-config.test.ts (4 tests) 29ms
+ ✓ src/lib/products/detect-code.test.ts (4 tests) 19ms
+ ✓ src/lib/ai/__tests__/assistant.test.ts (8 tests) 18ms
+ ✓ src/lib/supabase/__tests__/middleware.test.ts (4 tests) 58ms
+ ✓ src/lib/auth/__tests__/organization.test.ts (5 tests) 14ms
+ ✓ src/lib/receipt/__tests__/receipt-layout.test.ts (2 tests) 18ms
+ ✓ src/lib/utils/money.test.ts (8 tests) 16ms
+ ✓ src/lib/ai/__tests__/analysis.test.ts (1 test) 10ms
+⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+
+Vitest caught 10 unhandled errors during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Failed to start forks worker for test files C:/TradeTrack/src/lib/offline/__tests__/sales-offline.test.ts.
+ ❯ node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3465:94
+ ❯ Pool.schedule node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3465:5
+
+Caused by: Error: [vitest-pool-runner]: Timeout waiting for worker to respond
+ ❯ Timeout.<anonymous> node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3041:58
+ ❯ listOnTimeout node:internal/timers:635:17
+ ❯ processTimers node:internal/timers:571:7
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Failed to start forks worker for test files C:/TradeTrack/src/lib/offline/__tests__/vendors-page.test.tsx.
+ ❯ node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3465:94
+ ❯ Pool.schedule node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3465:5
+
+Caused by: Error: [vitest-pool-runner]: Timeout waiting for worker to respond
+ ❯ Timeout.<anonymous> node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3041:58
+ ❯ listOnTimeout node:internal/timers:635:17
+ ❯ processTimers node:internal/timers:571:7
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Failed to start forks worker for test files C:/TradeTrack/src/components/layout/platform-settings.test.tsx.
+ ❯ node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3465:94
+ ❯ Pool.schedule node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3465:5
+
+Caused by: Error: [vitest-pool-runner]: Timeout waiting for worker to respond
+ ❯ Timeout.<anonymous> node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3041:58
+ ❯ listOnTimeout node:internal/timers:635:17
+ ❯ processTimers node:internal/timers:571:7
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Failed to start forks worker for test files C:/TradeTrack/src/components/layout/workflow-pages.test.tsx.
+ ❯ node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3465:94
+ ❯ Pool.schedule node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3465:5
+
+Caused by: Error: [vitest-pool-runner]: Timeout waiting for worker to respond
+ ❯ Timeout.<anonymous> node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3041:58
+ ❯ listOnTimeout node:internal/timers:635:17
+ ❯ processTimers node:internal/timers:571:7
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Failed to start forks worker for test files C:/TradeTrack/src/components/products/image-upload.test.tsx.
+ ❯ node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3465:94
+ ❯ Pool.schedule node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3465:5
+
+Caused by: Error: [vitest-pool-runner]: Timeout waiting for worker to respond
+ ❯ Timeout.<anonymous> node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3041:58
+ ❯ listOnTimeout node:internal/timers:635:17
+ ❯ processTimers node:internal/timers:571:7
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Failed to start forks worker for test files C:/TradeTrack/src/components/products/product-code-lookup.test.tsx.
+ ❯ node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3465:94
+ ❯ Pool.schedule node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3465:5
+
+Caused by: Error: [vitest-pool-runner]: Timeout waiting for worker to respond
+ ❯ Timeout.<anonymous> node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3041:58
+ ❯ listOnTimeout node:internal/timers:635:17
+ ❯ processTimers node:internal/timers:571:7
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Failed to start forks worker for test files C:/TradeTrack/src/lib/offline/__tests__/db-v4.test.ts.
+ ❯ node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3465:94
+ ❯ Pool.schedule node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3465:5
+
+Caused by: Error: [vitest-pool-runner]: Timeout waiting for worker to respond
+ ❯ Timeout.<anonymous> node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3041:58
+ ❯ listOnTimeout node:internal/timers:635:17
+ ❯ processTimers node:internal/timers:571:7
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Failed to start forks worker for test files C:/TradeTrack/src/lib/offline/__tests__/db-v5.test.ts.
+ ❯ node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3465:94
+ ❯ Pool.schedule node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3465:5
+
+Caused by: Error: [vitest-pool-runner]: Timeout waiting for worker to respond
+ ❯ Timeout.<anonymous> node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3041:58
+ ❯ listOnTimeout node:internal/timers:635:17
+ ❯ processTimers node:internal/timers:571:7
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Failed to start forks worker for test files C:/TradeTrack/src/lib/products/lookup-code.test.ts.
+ ❯ node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3465:94
+ ❯ Pool.schedule node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3465:5
+
+Caused by: Error: [vitest-pool-runner]: Timeout waiting for worker to respond
+ ❯ Timeout.<anonymous> node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3041:58
+ ❯ listOnTimeout node:internal/timers:635:17
+ ❯ processTimers node:internal/timers:571:7
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Failed to start forks worker for test files C:/TradeTrack/src/lib/offline/__tests__/sync-timestamp.test.ts.
+ ❯ node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3465:94
+ ❯ Pool.schedule node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3465:5
+
+Caused by: Error: [vitest-pool-runner]: Timeout waiting for worker to respond
+ ❯ Timeout.<anonymous> node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3041:58
+ ❯ listOnTimeout node:internal/timers:635:17
+ ❯ processTimers node:internal/timers:571:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+
+ Test Files  56 passed (56)
+      Tests  385 passed (385)
+     Errors  10 errors
+   Start at  11:42:11
+   Duration  4254.02s (transform 44.96s, setup 37.96s, import 368.89s, tests 205.85s, environment 405.30s)
+
+JSON report written to C:/TradeTrack/build-evidence/m1/full-suite-result.json

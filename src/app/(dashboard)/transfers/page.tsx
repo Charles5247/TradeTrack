@@ -73,71 +73,14 @@ async function createTransfer(payload: {
   return data;
 }
 
-async function updateTransferStatus(id: string, status: 'received' | 'cancelled', userId: string) {
+async function updateTransferStatus(id: string, status: 'received' | 'cancelled') {
   const supabase = createClient();
-  const updates: Record<string, unknown> = {
-    status,
-    updated_at: new Date().toISOString(),
-  };
-  if (status === 'received') {
-    updates.received_by = userId;
-    updates.date_received = new Date().toISOString();
-
-    // Move inventory
-    const { data: transfer } = await supabase
-      .from('warehouse_transfers')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (transfer) {
-      // Deduct from source
-      const { data: srcInv } = await supabase
-        .from('inventory')
-        .select('quantity')
-        .eq('product_id', transfer.product_id)
-        .eq('warehouse_id', transfer.from_warehouse_id)
-        .single();
-
-      if (srcInv) {
-        await supabase
-          .from('inventory')
-          .update({ quantity: Math.max(0, srcInv.quantity - transfer.quantity) })
-          .eq('product_id', transfer.product_id)
-          .eq('warehouse_id', transfer.from_warehouse_id);
-      }
-
-      // Add to destination
-      const { data: dstInv } = await supabase
-        .from('inventory')
-        .select('quantity')
-        .eq('product_id', transfer.product_id)
-        .eq('warehouse_id', transfer.to_warehouse_id)
-        .single();
-
-      if (dstInv) {
-        await supabase
-          .from('inventory')
-          .update({ quantity: dstInv.quantity + transfer.quantity })
-          .eq('product_id', transfer.product_id)
-          .eq('warehouse_id', transfer.to_warehouse_id);
-      } else {
-        await supabase.from('inventory').insert({
-          organization_id: transfer.organization_id,
-          product_id: transfer.product_id,
-          warehouse_id: transfer.to_warehouse_id,
-          quantity: transfer.quantity,
-          min_stock_level: 5,
-        });
-      }
-    }
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await supabase.from('warehouse_transfers').update(updates as any).eq('id', id);
+  const { error } = await supabase.rpc('complete_warehouse_transfer', {
+    transfer_id: id,
+    target_status: status,
+  });
   if (error) throw error;
 }
-
 export default function TransfersPage() {
   return (
     <AccessGuard allow={['business_owner', 'admin']}>
@@ -198,12 +141,12 @@ function TransfersPageInner() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: 'received' | 'cancelled' }) =>
-      updateTransferStatus(id, status, user?.id || ''),
+      updateTransferStatus(id, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transfers'] });
       toast.success(t.transfers.updated_success);
     },
-    onError: () => toast.error(t.transfers.update_failed),
+    onError: (error) => toast.error(error instanceof Error ? error.message : t.transfers.update_failed),
   });
 
   const handleCreate = () => {
@@ -216,8 +159,8 @@ function TransfersPageInner() {
       toast.error(t.transfers.different_warehouses);
       return;
     }
-    const qty = parseInt(formData.quantity);
-    if (isNaN(qty) || qty <= 0) {
+    const qty = Number(formData.quantity);
+    if (!Number.isSafeInteger(qty) || qty <= 0 || qty > 2147483647) {
       toast.error(t.transfers.valid_quantity);
       return;
     }

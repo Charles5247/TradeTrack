@@ -5,6 +5,7 @@ import React, { useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore, useOrgStore } from "@/store";
 import type { User } from "@/types";
+import { isAuthRetryableFetchError } from '@supabase/supabase-js';
 import {
   cacheUserSession,
   clearCachedSession,
@@ -13,6 +14,7 @@ import {
 import {
   getOfflineAuthSession,
   clearOfflineAuthSession,
+  isOfflineProfileFresh,
 } from "@/lib/offline/auth-cache";
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { setUser, setLoading } = useAuthStore();
@@ -25,14 +27,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const supabase = createClient();
+    let authRevision = 0;
 
-    const loadCachedUser = async () => {
+    const loadCachedUser = async (revision = authRevision) => {
       const cached = await getAnyCachedSession();
       const offlineSession = getOfflineAuthSession();
-      if (cached) {
-        setUser(cached.profile as unknown as User);
-      } else if (offlineSession) {
+      if (revision !== authRevision) return;
+      if (offlineSession) {
         setUser(offlineSession.profile as unknown as User);
+      } else if (cached && isOfflineProfileFresh(cached.profile,cached.cached_at)) {
+        setUser(cached.profile as unknown as User);
       } else {
         setUser(null);
       }
@@ -60,6 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .eq("id", organizationId)
           .single();
         if (org) {
+          if (useAuthStore.getState().user?.organization_id !== organizationId) return;
           if (org.currency) setCurrency(org.currency);
           if (org.name) setOrganizationName(org.name);
           setOrganizationAddress(org.address || "");
@@ -71,11 +76,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     async function loadUser() {
+      const revision = ++authRevision;
       // Do not call getUser() offline: it can attempt to refresh an expired
       // token and block the browser with repeated failed network requests.
       if (typeof navigator !== "undefined" && !navigator.onLine) {
-        await loadCachedUser();
-        setLoading(false);
+        await loadCachedUser(revision);
+        if (revision === authRevision) setLoading(false);
         return;
       }
 
@@ -86,7 +92,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           error,
         } = await withTimeout(supabase.auth.getUser(), AUTH_CHECK_TIMEOUT_MS);
 
-        if (user && !error) {
+        if (error) throw error;
+        if (user) {
           // Fetch profile from database
           const { data: profile } = await supabase
             .from("users")
@@ -94,28 +101,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .eq("id", user.id)
             .single();
 
-          if (profile) {
+          if (revision !== authRevision) return;
+          if (profile?.status === 'active') {
             setUser(profile as User);
             // Cache session for offline use
             await cacheUserSession(user.id, profile as Record<string, unknown>);
             await loadOrgSettings((profile as User).organization_id);
           } else {
             setUser(null);
+            clearOfflineAuthSession();
+            if (profile) await cacheUserSession(user.id, profile as Record<string, unknown>);
+            else await clearCachedSession(user.id);
           }
         } else {
-          // 2. Fall back to IndexedDB cached session (offline mode)
-          await loadCachedUser();
+          // A confirmed missing online session must not resurrect a cached user.
+          if (revision === authRevision) setUser(null);
         }
-      } catch {
+      } catch (error) {
+        if (revision !== authRevision) return;
+        if (!isAuthRetryableFetchError(error) && !(error instanceof TypeError) &&
+            !(error instanceof Error && error.message === 'Operation timed out')) {
+          clearOfflineAuthSession();
+          setUser(null);
+          return;
+        }
         // Network completely unavailable – try offline cache
         console.warn("[offline] Network unavailable, loading cached session");
         try {
-          await loadCachedUser();
+          await loadCachedUser(revision);
         } catch {
           setUser(null);
         }
       } finally {
-        setLoading(false);
+        if (revision === authRevision) setLoading(false);
       }
     }
 
@@ -127,82 +145,106 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen to auth state changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN" && session?.user) {
-        try {
-          const { data: profile } = await supabase
-            .from("users")
-            .select("*")
-            .eq("id", session.user.id)
-            .single();
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!['SIGNED_IN', 'SIGNED_OUT', 'TOKEN_REFRESHED'].includes(event)) return;
+      const revision = ++authRevision;
+      // Return synchronously so Supabase can release its auth lock before
+      // profile queries acquire the session. Revisions guard late responses.
+      void (async () => {
+        if (event === "SIGNED_IN" && session?.user) {
+          if (useAuthStore.getState().user?.id !== session.user.id) {
+            setUser(null);
+            setLoading(true);
+          }
+          try {
+            const { data: profile } = await supabase
+              .from("users")
+              .select("*")
+              .eq("id", session.user.id)
+              .single();
 
-          if (profile) {
-            setUser(profile as User);
-            await cacheUserSession(
-              session.user.id,
-              profile as Record<string, unknown>,
-            );
-            await loadOrgSettings((profile as User).organization_id);
+            if (revision !== authRevision) return;
+            if (profile?.status === 'active') {
+              setUser(profile as User);
+              await cacheUserSession(
+                session.user.id,
+                profile as Record<string, unknown>,
+              );
+              await loadOrgSettings((profile as User).organization_id);
+            } else {
+              setUser(null);
+              clearOfflineAuthSession();
+              if (profile) await cacheUserSession(session.user.id, profile as Record<string, unknown>);
+              else await clearCachedSession(session.user.id);
+            }
+          } catch {
+            // ignore
+          } finally {
+            if (revision === authRevision) setLoading(false);
           }
-        } catch {
-          // ignore
-        }
-      } else if (event === "SIGNED_OUT") {
-        // supabase-js emits SIGNED_OUT both for an explicit sign-out
-        // AND when its background token-auto-refresh fails outright
-        // (e.g. no network at the moment the access token needed
-        // refreshing). Blindly clearing the session on every SIGNED_OUT
-        // would silently log an offline trader out from under them —
-        // exactly what the rest of this offline design exists to
-        // prevent. If we're offline and still have a cached session to
-        // fall back to, treat this as a failed-refresh false alarm
-        // rather than a real sign-out.
-        if (typeof navigator !== "undefined" && navigator.onLine === false) {
-          const cached = await getAnyCachedSession();
-          const offlineSession = getOfflineAuthSession();
-          if (cached || offlineSession) {
-            console.warn(
-              "[offline] Ignoring SIGNED_OUT while offline — restoring cached session",
-            );
-            setUser(
-              (cached?.profile ?? offlineSession?.profile) as unknown as User,
-            );
-            return;
+        } else if (event === "SIGNED_OUT") {
+          // supabase-js emits SIGNED_OUT both for an explicit sign-out
+          // AND when its background token-auto-refresh fails outright
+          // (e.g. no network at the moment the access token needed
+          // refreshing). Blindly clearing the session on every SIGNED_OUT
+          // would silently log an offline trader out from under them —
+          // exactly what the rest of this offline design exists to
+          // prevent. If we're offline and still have a cached session to
+          // fall back to, treat this as a failed-refresh false alarm
+          // rather than a real sign-out.
+          if (typeof navigator !== "undefined" && navigator.onLine === false) {
+            const cached = await getAnyCachedSession();
+            const offlineSession = getOfflineAuthSession();
+            if (revision !== authRevision) return;
+          const validCached=cached && isOfflineProfileFresh(cached.profile,cached.cached_at) ? cached : null;
+          if (validCached || offlineSession) {
+              console.warn(
+                "[offline] Ignoring SIGNED_OUT while offline — restoring cached session",
+              );
+              setUser(
+              (offlineSession?.profile ?? validCached?.profile) as unknown as User,
+              );
+              return;
+            }
           }
-        }
 
-        // Clear cached session on genuine sign-out
-        const {
-          data: { user: currentUser },
-        } = await supabase.auth
-          .getUser()
-          .catch(() => ({ data: { user: null } }));
-        if (currentUser) {
-          await clearCachedSession(currentUser.id);
-        }
-        clearOfflineAuthSession();
-        setUser(null);
-      } else if (event === "TOKEN_REFRESHED" && session?.user) {
-        // Update cache on token refresh
-        try {
-          const { data: profile } = await supabase
-            .from("users")
-            .select("*")
-            .eq("id", session.user.id)
-            .single();
-          if (profile) {
-            await cacheUserSession(
-              session.user.id,
-              profile as Record<string, unknown>,
-            );
+          // Clear the captured account locally; do not call auth methods from
+          // the auth event callback or clear a new account after an await.
+          const currentUser = useAuthStore.getState().user;
+          clearOfflineAuthSession();
+          setUser(null);
+          setLoading(false);
+          if (currentUser) await clearCachedSession(currentUser.id);
+        } else if (event === "TOKEN_REFRESHED" && session?.user) {
+          // Update cache on token refresh
+          try {
+            const { data: profile } = await supabase
+              .from("users")
+              .select("*")
+              .eq("id", session.user.id)
+              .single();
+            if (revision !== authRevision) return;
+            if (profile?.status === 'active') {
+              setUser(profile as User);
+              await cacheUserSession(
+                session.user.id,
+                profile as Record<string, unknown>,
+              );
+            } else {
+              setUser(null);
+              clearOfflineAuthSession();
+              if (profile) await cacheUserSession(session.user.id, profile as Record<string, unknown>);
+              else await clearCachedSession(session.user.id);
+            }
+          } catch {
+            // ignore
           }
-        } catch {
-          // ignore
         }
-      }
+      })();
     });
 
     return () => {
+      authRevision++;
       window.removeEventListener("online", startOnlineAuth);
       window.removeEventListener("offline", stopOfflineAuth);
       subscription.unsubscribe();

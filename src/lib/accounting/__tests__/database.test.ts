@@ -38,6 +38,56 @@ beforeAll(async () => {
  SELECT set_config('test.uid','${owner}',false);`);
 },120000);
 afterAll(async()=>{await db?.close();});
+it('denies an inactive cashier stock access under authenticated RLS and retains inventory', async () => {
+ await db.exec(`GRANT USAGE ON SCHEMA auth TO authenticated;
+ SELECT set_config('test.uid','${platformOwner}',false);
+ UPDATE public.users SET status='suspended' WHERE id='${cashier}';
+ SELECT set_config('test.uid','${cashier}',false); SET ROLE authenticated;`);
+ try {
+  const helpers=await db.query<{org:string|null;role:string|null}>('SELECT public.get_user_org_id() org,public.get_user_role() role');
+  expect(helpers.rows[0]).toEqual({org:null,role:null});
+  expect((await db.query('SELECT id FROM public.inventory')).rows).toEqual([]);
+  expect((await db.query('UPDATE public.inventory SET quantity=0 RETURNING id')).rows).toEqual([]);
+ } finally {
+  await db.exec(`RESET ROLE; SELECT set_config('test.uid','${platformOwner}',false);
+  UPDATE public.users SET status='active' WHERE id='${cashier}'; SELECT set_config('test.uid','${owner}',false);`);
+ }
+});
+it('rejects stock and sale links that cross business boundaries even when individual IDs exist', async () => {
+ const otherOrg='10000000-0000-0000-0000-000000000088';
+ const otherProduct='30000000-0000-0000-0000-000000000088';
+ const otherWarehouse='40000000-0000-0000-0000-000000000088';
+ await db.exec(`SELECT set_config('test.uid','${platformOwner}',false);
+ INSERT INTO public.organizations(id,name,slug,subscription_status,settings) VALUES('${otherOrg}','Other','other-m0','trial','{"_signup_trial":true}'::jsonb);
+ INSERT INTO public.products(id,organization_id,name,sku,selling_price,cost_price) VALUES('${otherProduct}','${otherOrg}','Other product','OTHER',100,50);
+ INSERT INTO public.warehouses(id,organization_id,name) VALUES('${otherWarehouse}','${otherOrg}','Other');
+ SELECT set_config('test.uid','${owner}',false);`);
+ await expect(db.query('INSERT INTO public.inventory(organization_id,product_id,warehouse_id,quantity) VALUES($1,$2,$3,1)',[org,otherProduct,warehouse]))
+  .rejects.toThrow('inventory_product_tenant_fk');
+ await expect(db.query('INSERT INTO public.inventory(organization_id,product_id,warehouse_id,quantity) VALUES($1,$2,$3,1)',[org,product,otherWarehouse]))
+  .rejects.toThrow('inventory_warehouse_tenant_fk');
+});
+it('accepts consecutive cashier stock effects once, with their own sale timestamps and ledger rows', async () => {
+ const item='30000000-0000-0000-0000-000000000077';
+ await db.exec(`BEGIN; SELECT set_config('test.uid','${owner}',false);
+ INSERT INTO public.products(id,organization_id,name,sku,selling_price,cost_price) VALUES('${item}','${org}','M0 stock','M0-STOCK',100,50);
+ INSERT INTO public.inventory(organization_id,product_id,warehouse_id,quantity) VALUES('${org}','${item}','${warehouse}',10);
+ SELECT set_config('test.uid','${cashier}',false); SET LOCAL ROLE authenticated;`);
+ try {
+  for (let index=1;index<=2;index++) {
+   const id=`50000000-0000-0000-0000-00000000007${index}`;
+   const time=`2026-10-19T12:00:00.00${index}Z`;
+   await db.query(`INSERT INTO public.sales(id,organization_id,invoice_number,cashier_id,warehouse_id,subtotal,total,amount_paid,payment_method,created_at)
+    VALUES($1,$2,$3,$4,$5,100,100,100,'cash',$6)`,[id,org,`M0-${index}`,cashier,warehouse,time]);
+   await db.query(`INSERT INTO public.sale_items(sale_id,product_id,warehouse_id,quantity,unit_price,cost_price,total) VALUES($1,$2,$3,1,100,50,100)`,[id,item,warehouse]);
+   const result=await db.query<{quantity:number}>(`UPDATE public.inventory SET quantity=$1,original_device_timestamp=$2
+    WHERE organization_id=$3 AND product_id=$4 RETURNING quantity`,[10-index,time,org,item]);
+   expect(result.rows).toEqual([{quantity:10-index}]);
+  }
+  const movements=await db.query<{quantity:number}>(`SELECT quantity FROM public.inventory_movements WHERE product_id=$1 AND created_by=$2 ORDER BY created_at,id`,[item,cashier]);
+  expect(movements.rows).toEqual([{quantity:-1},{quantity:-1}]);
+ } finally { await db.exec(`ROLLBACK; SELECT set_config('test.uid','${owner}',false);`); }
+});
 it('publishes real author reviews, isolates edits, and supports owner soft-delete and restore', async()=>{
  await db.exec(`SELECT set_config('test.uid','${owner}',false); SET ROLE authenticated;`);
  try {

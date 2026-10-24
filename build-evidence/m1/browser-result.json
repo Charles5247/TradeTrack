@@ -1,0 +1,87 @@
+{
+  "generatedAt": "2026-10-24T02:10:07.732Z",
+  "synthetic": true,
+  "hostedAuthVerified": false,
+  "beforeStock": 164,
+  "afterStock": 284,
+  "invoice": "BROWSER-M1-1792807781555",
+  "sku": "M1-UI-1792807801755",
+  "checks": [
+    {
+      "name": "catalog pagination exposes variants beyond the first 25 matches",
+      "status": "passed"
+    },
+    {
+      "name": "server review records the full carton conversion",
+      "status": "passed"
+    },
+    {
+      "name": "review shows exact receipt purchase cost",
+      "status": "passed"
+    },
+    {
+      "name": "review current and expected stock reflect the selected location",
+      "status": "passed"
+    },
+    {
+      "name": "desktop review has no horizontal overflow",
+      "status": "passed"
+    },
+    {
+      "name": "account switching hides the original merchant receipt",
+      "status": "passed"
+    },
+    {
+      "name": "prepared receipt remains available after an account switch",
+      "status": "passed"
+    },
+    {
+      "name": "lost response still commits exactly one delivery increment",
+      "status": "passed"
+    },
+    {
+      "name": "retry consumes the original approval without adding stock twice",
+      "status": "passed"
+    },
+    {
+      "name": "reload recovers the authoritative committed receipt",
+      "status": "passed"
+    },
+    {
+      "name": "mobile saved receipt has no horizontal overflow",
+      "status": "passed"
+    },
+    {
+      "name": "every shared-draft line remains inspectable",
+      "status": "passed"
+    },
+    {
+      "name": "receipt cost remains separate from new catalog cost",
+      "status": "passed"
+    },
+    {
+      "name": "shared draft posts both lines atomically to one product",
+      "status": "passed"
+    },
+    {
+      "name": "an omitted purchase cost stays blank",
+      "status": "passed"
+    },
+    {
+      "name": "opening history cannot silently replace an edited draft",
+      "status": "passed"
+    },
+    {
+      "name": "local draft text is isolated from another merchant",
+      "status": "passed"
+    },
+    {
+      "name": "returning to the account restores its unprepared draft",
+      "status": "passed"
+    },
+    {
+      "name": "reduced-motion browser preference is enabled",
+      "status": "passed"
+    }
+  ]
+}

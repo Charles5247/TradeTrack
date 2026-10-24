@@ -3,6 +3,14 @@ const REMEMBERED_LOGIN_STORAGE_KEY = "TracKasuwa-remembered-login";
 const OFFLINE_NAMESPACE_STORAGE_KEY = "TracKasuwa-offline-namespace";
 const OFFLINE_SESSION_COOKIE_NAME = "TracKasuwa-offline-session";
 const REMEMBER_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
+// Preserve the existing remembered-device window, now measured from the last
+// online verification rather than renewed by each offline sign-in.
+export const OFFLINE_ACCESS_MAX_AGE_MS = REMEMBER_DURATION_MS;
+
+export function isOfflineProfileFresh(profile: Record<string, unknown>, verifiedAt: string): boolean {
+  const age=Date.now()-Date.parse(verifiedAt);
+  return !!profile && profile.status==='active' && typeof profile.id==='string' && Number.isFinite(age) && age>=-5*60*1000 && age<=OFFLINE_ACCESS_MAX_AGE_MS;
+}
 
 export interface OfflineAuthSession {
   email: string;
@@ -148,11 +156,12 @@ export function getOfflineAccountNamespace(): string {
 export function saveOfflineAuthSession(
   email: string,
   profile: Record<string, unknown>,
+  verifiedAt = new Date().toISOString(),
 ): void {
   const payload: OfflineAuthSession = {
     email,
     profile,
-    createdAt: new Date().toISOString(),
+    createdAt: verifiedAt,
   };
 
   setOfflineAccountNamespace(profile);
@@ -162,7 +171,7 @@ export function saveOfflineAuthSession(
 
 export function getOfflineAuthSession(): OfflineAuthSession | null {
   const session = readStorage<OfflineAuthSession>(OFFLINE_AUTH_STORAGE_KEY);
-  if (!session) return null;
+  if (!session || !isOfflineProfileFresh(session.profile,session.createdAt)) return null;
 
   return session;
 }
@@ -208,7 +217,7 @@ export async function verifyRememberedLogin(
   if (entry.email !== email) return null;
 
   const age = Date.now() - new Date(entry.createdAt).getTime();
-  if (age > REMEMBER_DURATION_MS) {
+  if (age > REMEMBER_DURATION_MS || !isOfflineProfileFresh(entry.profile,entry.createdAt)) {
     removeStorage(REMEMBERED_LOGIN_STORAGE_KEY);
     return null;
   }
@@ -217,4 +226,13 @@ export async function verifyRememberedLogin(
   if (candidateHash !== entry.passwordHash) return null;
 
   return entry.profile;
+}
+
+/** Offline sign-in must retain the last ONLINE verification time. */
+export async function restoreRememberedLogin(email: string,password: string): Promise<Record<string,unknown>|null> {
+  const profile=await verifyRememberedLogin(email,password);
+  const entry=readStorage<RememberedLoginPayload>(REMEMBERED_LOGIN_STORAGE_KEY);
+  if(!profile || !entry) return null;
+  saveOfflineAuthSession(email,profile,entry.createdAt);
+  return profile;
 }

@@ -1,0 +1,20 @@
+{
+  "generatedAt": "2026-10-21T02:48:53.291Z",
+  "synthetic": true,
+  "results": [
+    {
+      "status": "pending",
+      "seedRows": 30000,
+      "elapsedMs": 56.42900000000009,
+      "limitMs": 300,
+      "result": "passed"
+    },
+    {
+      "status": "synced",
+      "seedRows": 30000,
+      "elapsedMs": 84.60450000000128,
+      "limitMs": 300,
+      "result": "passed"
+    }
+  ]
+}

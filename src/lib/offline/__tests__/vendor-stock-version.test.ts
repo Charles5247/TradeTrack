@@ -3,6 +3,7 @@ import './subscription-fixture';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { getDB, pruneSyncedQueueItems, type SyncQueueRecord } from '../db';
 import { persistOfflineVendorTransaction, getVendorStockChecks } from '../vendor-transactions';
+import { persistOfflineSale } from '../sales';
 const { client } = vi.hoisted(() => ({ client: { from: vi.fn() } }));
 vi.mock('@/lib/supabase/client', () => ({ createClient: () => client }));
 import { syncEngine } from '../sync-engine';
@@ -66,6 +67,22 @@ it('refreshes pending quantity without changing its original expected version', 
   expect((await stockQueue())[0].stock_sync?.expected_version).toBe(initial);
   await engine.pushChanges();
   expect(sent).toEqual([{ quantity: 14, expected: initial }]);
+});
+
+it('does not coalesce a vendor write across a later POS sale', async () => {
+  await persistOfflineVendorTransaction(payload);
+  await persistOfflineSale({ organization_id: 'org', cashier_id: 'user', warehouse_id: 'warehouse', invoice_number: 'LOCAL-MIXED',
+    items: [{ product_id: 'product', warehouse_id: 'warehouse', quantity: 1, unit_price: 10, cost_price: 5, discount: 0, total: 10 }],
+    subtotal: 10, discount: 0, tax: 0, total: 10, amount_paid: 10, change_amount: 0, payment_method: 'cash' });
+  await persistOfflineVendorTransaction(payload);
+  const entries = await stockQueue();
+  expect(entries).toHaveLength(3);
+  const first = entries.find(entry => entry.payload.quantity === 17)!;
+  const middle = entries.find(entry => entry.payload.quantity === 16)!;
+  const last = entries.find(entry => entry.payload.quantity === 13)!;
+  expect(middle.stock_sync?.predecessor_id).toBe(first.id);
+  expect(last.stock_sync?.predecessor_id).toBe(middle.id);
+  expect(first.stock_sync?.expected_version).toBe(initial);
 });
 
 it('does not modify an in-flight entry when adding its successor', async () => {
@@ -164,7 +181,14 @@ it('holds a legacy pending snapshot for review rather than inventing its origina
   await persistOfflineVendorTransaction(payload);
   await engine.pushChanges();
   expect(sent).toHaveLength(0);
-  expect((await stockQueue())[0]).toMatchObject({ stock_sync: { review_reason: 'legacy_pending_write' } });
+  const entries = await stockQueue();
+  expect(entries).toHaveLength(2);
+  expect(entries.find(entry => entry.id === 'legacy')).toMatchObject({
+    payload: { quantity: 20 }, stock_sync: { review_reason: 'legacy_pending_write' },
+  });
+  expect(entries.find(entry => entry.id !== 'legacy')).toMatchObject({
+    payload: { quantity: 17 }, stock_sync: { review_reason: 'legacy_or_unresolved_write' },
+  });
 });
 
 it('does not swallow product download errors', async () => {

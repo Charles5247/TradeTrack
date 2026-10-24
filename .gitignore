@@ -58,4 +58,6 @@ core
 /build-evidence/live-backup/
 /.release-private/
 /.release-tools/
+/.m0-local/
+/.playwright-cli/
 *.crdownload

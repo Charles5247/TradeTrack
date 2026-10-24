@@ -26,7 +26,7 @@ it('repairs the hosted merchant foreign-key failure and creates exactly one 30-d
   const benefits=readFileSync('supabase/migrations/20261021182940_approved_trial_and_business_benefits.sql','utf8');
   await db.exec(benefits); await db.exec(benefits);
   expect((await db.query(`SELECT max_products FROM subscription_plans WHERE id='b4000000-0000-0000-0000-000000000004'`)).rows[0]).toEqual({max_products:1000});
-  const business=(await db.query(`SELECT price,features FROM subscription_plans WHERE id='c3d4e5f6-a7b8-9012-cdef-123456789012'`)).rows[0];
+  const business=(await db.query<{price:string;features:string[]}>(`SELECT price,features FROM subscription_plans WHERE id='c3d4e5f6-a7b8-9012-cdef-123456789012'`)).rows[0];
   expect(Number(business.price)).toBe(20000);
   expect(business.features).toEqual(['low_stock_alerts','purchase_orders','sales']);
   await db.exec(`INSERT INTO products SELECT md5(n::text)::uuid,'11111111-1111-1111-1111-111111111111' FROM generate_series(1,1000) n`);
