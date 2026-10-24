@@ -2,7 +2,7 @@ const MAX_EXPANDED_BYTES = 64 * 1024 * 1024;
 const invalid = () => new Error('Could not read the workbook archive. Export a valid XLSX file and try again.');
 
 /** Validate both declared and actual ZIP expansion before SheetJS allocates cells. */
-export async function validateWorkbookArchive(bytes: Uint8Array): Promise<void> {
+export async function validateWorkbookArchive(bytes: Uint8Array, inflateSize?: (content: Uint8Array, maxBytes: number) => number | Promise<number>): Promise<void> {
   const view = new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);
   let end = -1;
   for(let offset=bytes.length-22;offset>=Math.max(0,bytes.length-65557);offset--) {
@@ -23,7 +23,9 @@ export async function validateWorkbookArchive(bytes: Uint8Array): Promise<void> 
     if(dataStart+compressed>start) throw invalid();
     let actual=0;
     if(method===0) actual=compressed;
-    else {
+    else if(inflateSize) {
+      actual=await inflateSize(bytes.subarray(dataStart,dataStart+compressed),Math.min(declared,MAX_EXPANDED_BYTES-expanded));
+    } else {
       if(typeof DecompressionStream==='undefined') throw new Error('This browser cannot validate compressed workbooks. Use CSV or a current browser.');
       const content = new Uint8Array(compressed);
       content.set(bytes.subarray(dataStart,dataStart+compressed));
@@ -36,7 +38,7 @@ export async function validateWorkbookArchive(bytes: Uint8Array): Promise<void> 
         }
       } finally { await reader.cancel().catch(()=>{}); reader.releaseLock(); }
     }
-    if(actual!==declared) throw invalid();
+    if(actual!==declared || expanded+actual>MAX_EXPANDED_BYTES) throw invalid();
     expanded+=actual;
     cursor+=46+view.getUint16(cursor+28,true)+view.getUint16(cursor+30,true)+view.getUint16(cursor+32,true);
   }

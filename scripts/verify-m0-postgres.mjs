@@ -72,6 +72,9 @@ try {
     ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO anon,authenticated;
     ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon,authenticated;`);
   const migrationFiles=readdirSync('supabase/migrations').filter(file=>file.endsWith('.sql')).sort();
+  if(process.argv.includes('--m2'))await sql(`CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT COALESCE(NULLIF(current_setting('request.jwt.claim.sub',true),''),NULLIF(current_setting('test.uid',true),''))::uuid $$;
+    CREATE SCHEMA storage; CREATE TABLE storage.objects(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),bucket_id text NOT NULL,name text NOT NULL,metadata jsonb,UNIQUE(bucket_id,name));
+    ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;GRANT USAGE ON SCHEMA storage TO authenticated,anon;GRANT INSERT,SELECT ON storage.objects TO authenticated,anon;`);
   for(const file of migrationFiles.filter(file=>file<'20261019123240_m0_stock_access_guards.sql')) {
     await execute(psql,[...base,'-d',database,'-f',join(process.cwd(),'supabase/migrations',file)],{maxBuffer:4*1024*1024});
   }
@@ -240,9 +243,14 @@ try {
     await assert.rejects(()=>finish(legacy),/Legacy transfer requires/);
     assert.equal(await quantity(),before-3);
   });
-  if(process.argv.includes('--m1')) {
+  if(process.argv.includes('--m1')||process.argv.includes('--m2')) {
     const {verifyManualIntake}=await import('./verify-m1-postgres.mjs');
     await verifyManualIntake({sql,rpc,receipt,quantity,org,owner,cashier,platform,product,product2,warehouse});
+  }
+  if(process.argv.includes('--m2')){
+    const {verifySpreadsheetIntake}=await import('./verify-m2-postgres.mjs');
+    const {createLocalIntakeSql}=await import('./local-intake-sql.mjs');
+    await verifySpreadsheetIntake({sql:createLocalIntakeSql({host:'127.0.0.1',user:'m0_test',database,port},psql),org,owner,cashier,platform,product,warehouse});
   }
   mkdirSync('build-evidence/m0',{recursive:true});
   writeFileSync('build-evidence/m0/postgres-result.json',JSON.stringify({generatedAt:new Date().toISOString(),version:await sql('SELECT version()'),synthetic:true,results},null,2)+'\n');

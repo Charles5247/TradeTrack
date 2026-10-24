@@ -26,6 +26,10 @@ The [milestone plan](AI_AND_BI_MILESTONES.md) is the source of truth for M0–M1
 
 Within each milestone, A/B/C can run in separate sessions. Persist the checkpoint and exact next batch. A completed backend or mock is not a completed milestone. Do not hide a failing acceptance condition by starting a later feature. Keep production-release status separate from isolated implementation completion; neither removes the stated acceptance gate.
 
+M2's isolated workflow is implemented and verified in [its checkpoint](AI_AND_BI_M2_IMPLEMENTATION_CHECKPOINT.md). Actual seams are `src/lib/stock-intake-batches/{contracts,spreadsheet,http}.ts`, `src/lib/stock-intake-batches/worker.mts`, `src/app/api/stock-intake-batches`, `src/components/inventory/batch-stock-intake*.tsx`, `scripts/stock-intake-worker.mts` and `20261024131715_m2_spreadsheet_batch_intake.sql`. The worker hosting example is deliberately separate from the active Render blueprint. M3 remains unstarted; reuse these contracts and the shared M1 posting command.
+
+M2 proof: `npm run verify:m2:postgres` creates a disposable loopback database; retain that target with `M0_KEEP_DB=true` before running `npx tsx scripts/verify-m2-pipeline.mts` or the browser fixture `npx tsx scripts/verify-m2-browser.mts`. The latter serves only `127.0.0.1:57140`. Run `scripts/m2-playwright-checks.js` through the Playwright CLI. These fixtures never load hosted credentials. Exact results, commands, limits and hosted-release requirements are recorded in `build-evidence/m2/verification-index.json` and the checkpoint.
+
 ### Reuse baseline and checkout identity
 
 Work in `C:\TradeTrack`. The reference architecture at `C:\TradeTrack-main\TradeTrack-main\docs\ai-ml-integration\BARCODE_AND_INVENTORY_INTEGRATION_SPEC.md` describes a different snapshot and contains proposals, not completion evidence. Do not copy its module/migration names or claim its scanner, UOM, OCR, IMEI and speed examples are implemented.
