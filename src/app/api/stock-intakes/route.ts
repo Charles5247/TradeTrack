@@ -24,6 +24,8 @@ export async function GET(request: Request) {
           );
         throw error;
       }
+      if (data.batch_id)
+        return Response.json({error:"Open this receipt in its batch review workspace.",batch_id:data.batch_id},{status:409});
       if (data.status === "posted")
         return Response.json(data, {
           headers: { "Cache-Control": "private, no-store" },
@@ -75,6 +77,7 @@ export async function GET(request: Request) {
       .from("stock_intakes")
       .select("*")
       .eq("organization_id", org)
+      .is("batch_id", null)
       .order("created_at", { ascending: false })
       .order("id", { ascending: false })
       .range(offset, offset + 20);

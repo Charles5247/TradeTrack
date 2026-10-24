@@ -302,6 +302,7 @@ function IntakeWorkspace({ storageKey }: { storageKey: string }) {
             saving stock require a connection.
           </p>
         </div>
+        {process.env.NEXT_PUBLIC_STOCK_INTAKE_BATCHES_ENABLED === 'true' && <Button asChild variant="outline"><Link href="/inventory/intake/batches">Spreadsheet batches</Link></Button>}
         <Button asChild variant="outline">
           <Link href="/inventory">Back to inventory</Link>
         </Button>

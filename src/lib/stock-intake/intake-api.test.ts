@@ -21,6 +21,43 @@ describe("manual receipt HTTP boundary", () => {
       profile: { id },
     } as unknown as Awaited<ReturnType<typeof apiContext>>);
   });
+  it("keeps large batch receipts in their paginated workspace", async () => {
+    const builder = {
+      select: () => builder,
+      eq: () => builder,
+      single: async () => ({
+        data: { id, batch_id: id, status: "posted" },
+        error: null,
+      }),
+    };
+    vi.mocked(apiContext).mockResolvedValue({
+      db: { from: () => builder },
+      org: id,
+    } as unknown as Awaited<ReturnType<typeof apiContext>>);
+    const response = await GET(
+      new Request(`http://localhost/api/stock-intakes?id=${id}`),
+    );
+    expect(response.status).toBe(409);
+    expect((await response.json()).batch_id).toBe(id);
+  });
+  it("filters batch payloads out of manual receipt history", async () => {
+    const is = vi.fn(() => builder);
+    const builder = {
+      select: () => builder,
+      eq: () => builder,
+      is,
+      order: () => builder,
+      range: async () => ({ data: [], error: null }),
+    };
+    vi.mocked(apiContext).mockResolvedValue({
+      db: { from: () => builder },
+      org: id,
+    } as unknown as Awaited<ReturnType<typeof apiContext>>);
+    expect(
+      (await GET(new Request("http://localhost/api/stock-intakes"))).status,
+    ).toBe(200);
+    expect(is).toHaveBeenCalledWith("batch_id", null);
+  });
   it("rejects foreign origin and non-JSON requests before authorization or commands", async () => {
     expect(
       (await POST(request({}, { origin: "https://foreign.invalid" }))).status,

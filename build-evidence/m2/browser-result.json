@@ -1,0 +1,68 @@
+{
+  "generatedAt": "2026-10-24T13:19:41.371048+00:00",
+  "synthetic": true,
+  "hostedSessionAndStorageVerified": false,
+  "method": "CLI completed the entire script with no Error section. Each listed assertion throws on failure.",
+  "checks": [
+    {
+      "name": "creates a server batch from the real review workspace",
+      "status": "passed"
+    },
+    {
+      "name": "both worksheets have explicit complete-sheet mappings",
+      "status": "passed"
+    },
+    {
+      "name": "server accepts processing before the browser disconnects",
+      "status": "passed"
+    },
+    {
+      "name": "preparation continues after the workspace is closed",
+      "status": "passed"
+    },
+    {
+      "name": "two-sheet rows form one proposed supplier receipt",
+      "status": "passed"
+    },
+    {
+      "name": "reconnection restores authoritative batch progress",
+      "status": "passed"
+    },
+    {
+      "name": "review paginates 100 actual rows",
+      "status": "passed"
+    },
+    {
+      "name": "row inspector shows source and review values side by side",
+      "status": "passed"
+    },
+    {
+      "name": "explicit bulk correction covers selected rows across pages",
+      "status": "passed"
+    },
+    {
+      "name": "approval requires the exclusions-summary acknowledgment",
+      "status": "passed"
+    },
+    {
+      "name": "one batch approval reports the complete saved receipt",
+      "status": "passed"
+    },
+    {
+      "name": "mobile layout contains horizontal tables without page overflow",
+      "status": "passed"
+    },
+    {
+      "name": "account switch removes prior batch rows and file names",
+      "status": "passed"
+    },
+    {
+      "name": "another authorized shop cannot read the batch",
+      "status": "passed"
+    },
+    {
+      "name": "browser completed without uncaught component errors",
+      "status": "passed"
+    }
+  ]
+}

@@ -3,10 +3,11 @@ import { getAccountRevision } from "@/lib/auth/account-state";
 export async function intakeRequest<T>(
   url: string,
   body?: unknown,
+  method: "POST" | "PATCH" = "POST",
 ): Promise<T> {
   const revision = getAccountRevision();
   const response = await fetch(url, {
-    method: body === undefined ? "GET" : "POST",
+    method: body === undefined ? "GET" : method,
     credentials: "same-origin",
     cache: "no-store",
     headers:

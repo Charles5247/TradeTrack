@@ -930,6 +930,9 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      read_stock_intake_batch: { Args: { target_id?: string | null; row_offset?: number; group_offset?: number; target_source?: string | null; review_only?: boolean; issue_filter?: string; selection_kind?: string | null }; Returns: unknown };
+      stock_intake_batch_command: { Args: { command: unknown }; Returns: unknown };
+      stock_intake_job_command: { Args: { command: unknown }; Returns: unknown };
       save_stock_intake: {Args:{receipt_id:string;expected_revision:number;receipt_document:unknown};Returns:unknown};
       approve_stock_intake: {Args:{receipt_id:string;expected_revision:number;expected_hash:string};Returns:unknown};
       post_stock_intake: {Args:{receipt_id:string;approval_id:string};Returns:unknown};

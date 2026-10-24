@@ -78,6 +78,10 @@ export async function createManualFixtureAPI({
             conditions.push(`${identifier(key)}=${quote(value)}`);
             return builder;
           },
+          is(key,value) {
+            if(value!==null)throw new Error('Fixture only supports IS NULL');
+            conditions.push(`${identifier(key)} IS NULL`);return builder;
+          },
           in(key, values) {
             conditions.push(
               `${identifier(key)} IN(${values.map(quote).join(",")})`,

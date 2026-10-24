@@ -1,5 +1,7 @@
 # M1 — Manual stock receipt checkpoint
 
+24 October development follow-up: the user authorized a separate new hosted Supabase test project. Real Auth, private Storage, manual receiving and batch posting were verified there; production was not changed. The owner-only text digest compatibility migration handles pgcrypto in the extensions schema. See the M2 checkpoint for the separate hosted-development evidence.
+
 Updated 24 October 2026. **Isolated implementation gate passed after integrating origin/main a1109e0; production release remains blocked.** M0's isolated gate passed first. M2 has not started. No hosted migration, deployment or credential rotation has been performed.
 
 ## Merchant workflow

@@ -1,0 +1,43 @@
+{
+  "generatedAt": "2026-10-24T15:03:17.199Z",
+  "synthetic": true,
+  "hostedStorageVerified": false,
+  "results": [
+    {
+      "name": "batch feature is disabled by default and rejects unauthorized roles",
+      "status": "passed"
+    },
+    {
+      "name": "authorized upload registration is idempotent and queues work before browser completion",
+      "status": "passed"
+    },
+    {
+      "name": "private object policy permits only the registered own-business source and denies anonymous reads",
+      "status": "passed"
+    },
+    {
+      "name": "complete checkpoints preserve source rows, enforce fencing and create inspectable receipts",
+      "status": "passed"
+    },
+    {
+      "name": "one immutable batch approval posts the complete receipt once and recovers a lost response",
+      "status": "passed"
+    },
+    {
+      "name": "shared reviewed drafts span receipts and partial outcomes require renewed review without replaying saved stock",
+      "status": "passed"
+    },
+    {
+      "name": "bounded retries, tenant concurrency, expired actors and cancellation preserve evidence",
+      "status": "passed"
+    },
+    {
+      "name": "file-count and exact upload-byte boundaries reject overflow without truncation",
+      "status": "passed"
+    },
+    {
+      "name": "global lease limit admits four organizations and refuses the fifth",
+      "status": "passed"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # AI stock intake and Retail BI: implementation milestones
 
-**Updated 24 October 2026. M0 and M1 isolated implementation gates passed, including integration with current origin/main; production release remains blocked. M2 is next.**
+**Updated 24 October 2026. M0, M1 and M2 isolated implementation gates passed; production release remains blocked. M3 is next and has not started.**
 
 Deliver one usable feature end to end before starting the next milestone. The [specification](STOCK_INTAKE_AND_RETAIL_BI_SPEC.md) owns business/API/metric rules; this file owns execution order, milestone status and acceptance gates. The [engineering handoff](AI_AND_BI_IMPLEMENTATION_HANDOFF.md) supplies code locations and verification commands. These milestones replace the previous layer-by-layer engineering stages.
 
@@ -18,7 +18,7 @@ Before starting a batch, verify the preceding batch/milestone evidence and curre
 | --- | --- | --- | --- |
 | M0 | Applicable stock, security, account-isolation and parser gates verified/repaired in the isolated target | Current baseline | Isolated gate passed; credential/hosted release gates remain — [checkpoint](AI_AND_BI_M0_IMPLEMENTATION_CHECKPOINT.md) |
 | M1 | Merchant enters, reviews and saves a manual stock receipt safely | M0 | Isolated gate passed — [implementation and acceptance checkpoint](AI_AND_BI_M1_IMPLEMENTATION_CHECKPOINT.md) |
-| M2 | Merchant uploads complete selected spreadsheet sheets, approves a batch and receives saved/failed outcomes | M1 | Not started |
+| M2 | Merchant uploads complete selected spreadsheet sheets, approves a batch and receives saved/failed outcomes | M1 | Isolated gate passed — [implementation and acceptance checkpoint](AI_AND_BI_M2_IMPLEMENTATION_CHECKPOINT.md); hosted storage/worker and release gates remain |
 | M3 | Merchant pastes a stock list, reviews AI preparation and posts the approved receipts | M2 | Not started |
 | M4 | Merchant processes printed invoice photos and digital/scanned PDFs through posting | M3 | Not started |
 | M5 | Merchant processes readable handwritten notes through posting | M4 | Not started |

@@ -168,6 +168,7 @@ function InventoryPageInner() {
           <p className="tt-muted text-sm mt-1">{t.inventory.subtitle}</p>
         </div>
         {process.env.NEXT_PUBLIC_STOCK_INTAKE_ENABLED==='true' && <Button asChild><Link href="/inventory/intake">Receive stock</Link></Button>}
+        {process.env.NEXT_PUBLIC_STOCK_INTAKE_BATCHES_ENABLED==='true' && <Button asChild variant="outline"><Link href="/inventory/intake/batches">Spreadsheet batch</Link></Button>}
       </div>
 
       <CheckoutRecovery />

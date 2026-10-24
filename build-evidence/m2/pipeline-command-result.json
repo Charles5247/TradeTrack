@@ -1,0 +1,6 @@
+{
+  "command": "tsx scripts/verify-m2-pipeline.mts",
+  "exitCode": 0,
+  "generatedAt": "2026-10-24T14:02:36.2895785Z",
+  "rows": 20000
+}

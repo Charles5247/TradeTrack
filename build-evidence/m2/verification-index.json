@@ -1,0 +1,97 @@
+{
+  "generatedAt": "2026-10-24T14:04:51.695400+00:00",
+  "branch": "feat/m2-spreadsheet-batches",
+  "foundationCommit": "da909f29473277868fe9871985e3798959fca467",
+  "feature": "Complete reviewed CSV/XLSX stock intake batches",
+  "productionEnabled": false,
+  "hostedMigrationOrDeploymentPerformed": false,
+  "checks": {
+    "focusedTests": {
+      "passed": 43,
+      "files": 7,
+      "report": "unit-and-api-result.json",
+      "completeRepositorySuite": false
+    },
+    "postgres": {
+      "M0": 13,
+      "M1": 15,
+      "M2": 9,
+      "freshSchemaCommand": "node scripts/verify-m0-postgres.mjs --m2",
+      "commandReport": "postgres-command-result.json",
+      "report": "postgres-result.json",
+      "legacyBroadStoragePolicyTested": true
+    },
+    "pipeline": {
+      "rows": 20000,
+      "sheets": 2,
+      "files": 1,
+      "sourceBytes": 1473580,
+      "elapsedMs": 463356,
+      "elapsedMinutes": 7.72,
+      "actualParserChildAndWorker": true,
+      "actualPostgreSQL": true,
+      "storageTransport": "synthetic private originals; hosted Storage API not certified",
+      "report": "pipeline-20000-result.json",
+      "commandReport": "pipeline-command-result.json"
+    },
+    "browser": {
+      "assertions": 15,
+      "report": "browser-result.json",
+      "componentsRoutesWorkerAndDatabase": "actual",
+      "sessionAndStorageTransport": "synthetic",
+      "note": "Main journey passed before final storage fences/shared-unit hardening; latest SQL groups verify those regressions. Final application build includes catalog-pagination correction."
+    },
+    "build": {
+      "exitCode": 0,
+      "pages": 59,
+      "report": "build-result.json",
+      "typescriptIncluded": true,
+      "batchFeatureFlag": "false"
+    },
+    "scopedLint": {
+      "exitCode": 0,
+      "warnings": 0,
+      "report": "lint-result.json"
+    },
+    "trackedEnvironmentGuard": "PASS: no private environment files are tracked. Historical exposure/rotation requires separate verification.",
+    "disabledWorkerEntrypoint": {
+      "command": "STOCK_INTAKE_WORKER_ENABLED=false npm run worker:stock-intake",
+      "result": "exits without reading credentials or processing jobs"
+    }
+  },
+  "historicalEvidence": {
+    "pipeline1200": "pipeline-1200-result.json",
+    "spreadsheetOnly": "spreadsheet-result.json",
+    "note": "Overlapping evidence is not additive test coverage. Initial 20k run was approximately 3.6 minutes; the final recorded run is reported above."
+  },
+  "releaseGates": [
+    "Historical credential revocation/rotation remains unconfirmed",
+    "Hosted JWT, grants, Storage policies and 55-second RPC/gateway behavior",
+    "Approved worker hosting/budget, retention and recovery",
+    "Representative hosted capacity/device/accessibility checks and compatible-client stock rollout"
+  ],
+  "flags": {
+    "NEXT_PUBLIC_STOCK_INTAKE_BATCHES_ENABLED": "false by default",
+    "STOCK_INTAKE_WORKER_ENABLED": "false by default",
+    "privateBatchSetting": "false by default; true only in disposable acceptance databases"
+  },
+  "featureCommit": "e7b640d64cd9b8b343c635aecd0f8c747064f9da",
+  "pullRequest": "https://github.com/Charles5247/TradeTrack/pull/26",
+  "hostedDevelopmentFollowup": {
+    "date": "2026-10-24",
+    "focusedTests": 49,
+    "testFiles": 8,
+    "postgresGroups": 37,
+    "cryptoLayout": "extensions",
+    "realAuthStorageBrowserChecks": 13,
+    "roleStorageReconciliationChecks": 7,
+    "productionChanged": false,
+    "securityAdvisorErrorLevel": "no issues",
+    "reports": [
+      "hosted-browser-result.json",
+      "role-checks-result.json",
+      "hosted-followup-unit-result.json",
+      "crypto-layout-output.txt"
+    ]
+  }
+}

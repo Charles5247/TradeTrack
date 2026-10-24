@@ -1,0 +1,34 @@
+{
+  "generatedAt": "2026-10-24T15:23:05.467Z",
+  "projectRef": "jtqyxfoyllcvptxgwhmk",
+  "checks": [
+    {
+      "name": "owner sees only its own demo catalog",
+      "status": "passed"
+    },
+    {
+      "name": "owner cannot read the other business verification batch",
+      "status": "passed"
+    },
+    {
+      "name": "another business cannot sign a private original download",
+      "status": "passed"
+    },
+    {
+      "name": "cashier cannot invoke owner/admin batch creation",
+      "status": "passed"
+    },
+    {
+      "name": "manual replay plus batch posting reconcile to three verification units",
+      "status": "passed"
+    },
+    {
+      "name": "hosted text hashing preserves UTF8 bytes",
+      "status": "passed"
+    },
+    {
+      "name": "intake bucket is private with the 20 MiB ceiling",
+      "status": "passed"
+    }
+  ]
+}
