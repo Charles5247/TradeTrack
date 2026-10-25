@@ -211,7 +211,7 @@ function SalesPageInner() {
                 <SelectItem value="retail">Retail sales</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={creditStatus} onValueChange={setCreditStatus}>
+            <Select value={creditStatus} onValueChange={(value) => setCreditStatus(value as "all" | "paid" | "partial" | "unpaid")}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Credit status" />
               </SelectTrigger>
