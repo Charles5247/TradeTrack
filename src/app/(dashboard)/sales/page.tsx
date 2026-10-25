@@ -200,7 +200,7 @@ function SalesPageInner() {
                 <SelectItem value="refunded">{t.sales.status_refunded}</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={saleType} onValueChange={setSaleType}>
+            <Select value={saleType} onValueChange={(value) => setSaleType(value as "retail" | "b2b" | "b2c" | "all")}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Customer sale type" />
               </SelectTrigger>
