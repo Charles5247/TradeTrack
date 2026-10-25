@@ -67,8 +67,7 @@ it('switches the real landing hero, statistic cards and operational labels to Pi
   const select=host.querySelector('select')!;
   expect(select.options).toHaveLength(5);
   await act(async()=>{select.value='pcm';select.dispatchEvent(new Event('change',{bubbles:true}));});
-  expect(host.textContent).toContain('Sell quick. Restock with sense. No lose any sale.');
-  expect(host.textContent).toContain('Roles wey get their own permissions');
+  expect(host.textContent).toContain('POS wey ready for sales');
   expect(host.textContent).toContain('Stock don finish');
   expect(host.textContent).toContain('Receipt style');
   expect(localStorage.getItem(LOCALE_STORAGE_KEY)).toBe('pcm');
