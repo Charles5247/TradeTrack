@@ -696,50 +696,51 @@ export default function SubscriptionsPage() {
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 mt-8">
               {plans.map((plan) => (
-                <div key={plan.id} className="space-y-2">
-                  <PlanCard
-                    compact
-                    catalogOnly={isPlatformOwner}
-                    plan={plan}
-                    allPlans={plans}
-                    currentPlanId={isPlatformOwner || !subscription || !["active", "trial"].includes(subscription.status) ? undefined : subscription.plan_id}
-                    billingCycle={billingCycle}
-                    onSelect={(planId) =>
-                      upgradeMutation.mutate({ planId, cycle: billingCycle })
-                    }
-                    isLoading={upgradeMutation.isPending}
-                  />
-                  {canManagePlans && (
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => {
-                          setEditingPlan(plan);
-                          setPlanDialogOpen(true);
-                        }}
-                      >
-                        <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                        {t.subscriptions.edit_plan}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 text-destructive hover:text-destructive"
-                        onClick={() => setDeletingPlan(plan)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                        {t.subscriptions.delete_plan}
-                      </Button>
+                <PlanCard
+                  key={plan.id}
+                  compact
+                  catalogOnly={isPlatformOwner}
+                  plan={plan}
+                  allPlans={plans}
+                  currentPlanId={isPlatformOwner || !subscription || !["active", "trial"].includes(subscription.status) ? undefined : subscription.plan_id}
+                  billingCycle={billingCycle}
+                  onSelect={(planId) =>
+                    upgradeMutation.mutate({ planId, cycle: billingCycle })
+                  }
+                  isLoading={upgradeMutation.isPending}
+                  actions={canManagePlans ? (
+                    <div className="mt-1 flex flex-col gap-2">
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => {
+                            setEditingPlan(plan);
+                            setPlanDialogOpen(true);
+                          }}
+                        >
+                          <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                          {t.subscriptions.edit_plan}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 text-destructive hover:text-destructive"
+                          onClick={() => setDeletingPlan(plan)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                          {t.subscriptions.delete_plan}
+                        </Button>
+                      </div>
+                      {!plan.is_active && (
+                        <Badge variant="outline" className="w-full justify-center">
+                          {t.subscriptions.inactive_plan}
+                        </Badge>
+                      )}
                     </div>
-                  )}
-                  {!plan.is_active && (
-                    <Badge variant="outline" className="w-full justify-center">
-                      {t.subscriptions.inactive_plan}
-                    </Badge>
-                  )}
-                </div>
+                  ) : undefined}
+                />
               ))}
             </div>
           )}

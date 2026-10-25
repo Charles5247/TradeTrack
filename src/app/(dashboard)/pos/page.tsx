@@ -766,6 +766,27 @@ function POSPageInner() {
           </div>
 
           {/* Payment Method */}
+          <Select
+            value={cart.payment_method}
+            onValueChange={(v) =>
+              cart.setPaymentMethod(
+                v as import("@/lib/supabase/types").PaymentMethod,
+              )
+            }
+          >
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="cash">{t.pos.cash}</SelectItem>
+              <SelectItem value="transfer">{t.pos.bank_transfer}</SelectItem>
+              <SelectItem value="pos_terminal">{t.pos.pos_terminal}</SelectItem>
+              <SelectItem value="split">{t.pos.split}</SelectItem>
+              <SelectItem value="partial">{t.pos.partial}</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Credit sale fields — only shown after "Partial" payment is selected */}
           {cart.payment_method === 'partial' && (
             <div className="grid gap-2 sm:grid-cols-2">
               <div className="space-y-1">
@@ -791,26 +812,6 @@ function POSPageInner() {
               </div>
             </div>
           )}
-
-          <Select
-            value={cart.payment_method}
-            onValueChange={(v) =>
-              cart.setPaymentMethod(
-                v as import("@/lib/supabase/types").PaymentMethod,
-              )
-            }
-          >
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="cash">{t.pos.cash}</SelectItem>
-              <SelectItem value="transfer">{t.pos.bank_transfer}</SelectItem>
-              <SelectItem value="pos_terminal">{t.pos.pos_terminal}</SelectItem>
-              <SelectItem value="split">{t.pos.split}</SelectItem>
-              <SelectItem value="partial">{t.pos.partial}</SelectItem>
-            </SelectContent>
-          </Select>
 
           {/* Optional payment receipt upload */}
           <div className="space-y-1">
