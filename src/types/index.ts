@@ -241,6 +241,8 @@ export interface Sale {
   warehouse_id: string;
   customer_name?: string;
   customer_phone?: string;
+  sale_type: "retail" | "b2b" | "b2c";
+  credit_authorized_by?: string;
   subtotal: number;
   discount: number;
   tax: number;

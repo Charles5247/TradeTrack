@@ -25,6 +25,8 @@ export interface OfflineSalePayload {
   amount_paid: number;
   change_amount: number;
   payment_method: string;
+  sale_type?: 'retail' | 'b2b' | 'b2c';
+  credit_authorized_by?: string;
   notes?: string;
   receipt_url?: string;
 }
@@ -47,7 +49,13 @@ export async function persistOfflineSale(payload: OfflineSalePayload) {
     amount_paid: payload.amount_paid,
     change_amount: payload.change_amount,
     payment_method: payload.payment_method,
-    payment_status: payload.amount_paid >= payload.total ? 'paid' : 'partial',
+    payment_status: payload.amount_paid >= payload.total
+      ? 'paid'
+      : payload.amount_paid > 0
+        ? 'partial'
+        : 'unpaid',
+    sale_type: payload.sale_type ?? 'retail',
+    credit_authorized_by: payload.credit_authorized_by ?? null,
     status: 'completed',
     notes: payload.notes ?? null,
     receipt_url: payload.receipt_url ?? null,

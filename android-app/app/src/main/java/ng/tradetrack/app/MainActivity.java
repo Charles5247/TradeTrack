@@ -2,13 +2,26 @@ package ng.TracKasuwa.app;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.view.View;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.webkit.CookieManager;
+import android.webkit.ValueCallback;
+import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import androidx.core.content.FileProvider;
+
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
 
 /**
  * TracKasuwa Android shell.
@@ -32,8 +45,11 @@ public class MainActivity extends Activity {
     // no -PappUrl is supplied. See android-app/README.md → "Rebuilding
     // with a different domain".
     private static final String APP_URL = BuildConfig.APP_URL;
+    private static final int FILE_CHOOSER_REQUEST_CODE = 1001;
 
     private WebView webView;
+    private ValueCallback<Uri[]> filePathCallback;
+    private Uri cameraOutputUri;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -56,6 +72,42 @@ public class MainActivity extends Activity {
         CookieManager.getInstance().setAcceptCookie(true);
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
 
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback,
+                                             FileChooserParams params) {
+                if (filePathCallback != null) filePathCallback.onReceiveValue(null);
+                filePathCallback = callback;
+
+                Intent galleryIntent = params.createIntent();
+                galleryIntent.addCategory(Intent.CATEGORY_OPENABLE);
+
+                Intent cameraIntent = null;
+                if (params.isCaptureEnabled()) {
+                    cameraIntent = createCameraIntent();
+                }
+
+                Intent chooserIntent;
+                if (cameraIntent != null) {
+                    chooserIntent = new Intent(Intent.ACTION_CHOOSER);
+                    chooserIntent.putExtra(Intent.EXTRA_INTENT, galleryIntent);
+                    chooserIntent.putExtra(Intent.EXTRA_TITLE, "Choose product file");
+                    chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS,
+                            new Intent[]{cameraIntent});
+                } else {
+                    chooserIntent = galleryIntent;
+                }
+
+                try {
+                    startActivityForResult(chooserIntent, FILE_CHOOSER_REQUEST_CODE);
+                    return true;
+                } catch (ActivityNotFoundException error) {
+                    finishFileChooser(null);
+                    return false;
+                }
+            }
+        });
+
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
@@ -68,6 +120,51 @@ public class MainActivity extends Activity {
         });
 
         webView.loadUrl(APP_URL);
+    }
+
+    private Intent createCameraIntent() {
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (intent.resolveActivity(getPackageManager()) == null) return null;
+
+        File photoFile;
+        try {
+            String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
+                    .format(new Date());
+            File directory = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+            photoFile = File.createTempFile("tradetrack_" + timestamp + "_",
+                    ".jpg", directory);
+        } catch (IOException error) {
+            return null;
+        }
+
+        cameraOutputUri = FileProvider.getUriForFile(this,
+                "ng.TracKasuwa.app.fileprovider", photoFile);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, cameraOutputUri);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
+                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        return intent;
+    }
+
+    private void finishFileChooser(Uri[] results) {
+        if (filePathCallback != null) filePathCallback.onReceiveValue(results);
+        filePathCallback = null;
+        cameraOutputUri = null;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode != FILE_CHOOSER_REQUEST_CODE) return;
+
+        Uri[] results = null;
+        if (resultCode == Activity.RESULT_OK) {
+            if (data != null && data.getData() != null) {
+                results = new Uri[]{data.getData()};
+            } else if (cameraOutputUri != null) {
+                results = new Uri[]{cameraOutputUri};
+            }
+        }
+        finishFileChooser(results);
     }
 
     @Override

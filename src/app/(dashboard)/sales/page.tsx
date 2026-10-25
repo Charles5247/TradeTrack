@@ -28,6 +28,8 @@ async function fetchSales(filters: {
   payment_method: string;
   start_date: string;
   end_date: string;
+  sale_type: 'all' | 'retail' | 'b2b' | 'b2c';
+  credit_status: 'all' | 'paid' | 'partial' | 'unpaid';
 }) {
   const supabase = createClient();
   let query = supabase
@@ -35,6 +37,7 @@ async function fetchSales(filters: {
     .select(`
       *,
       cashier:users(full_name),
+      credit_authorizer:users!sales_credit_authorized_by_fkey(full_name),
       warehouse:warehouses(name),
       items:sale_items(
         id, quantity, unit_price, total,
@@ -51,6 +54,8 @@ async function fetchSales(filters: {
   }
   if (filters.status && filters.status !== 'all') query = query.eq('status', filters.status as 'completed' | 'pending' | 'cancelled' | 'refunded');
   if (filters.payment_method && filters.payment_method !== 'all') query = query.eq('payment_method', filters.payment_method as import('@/lib/supabase/types').PaymentMethod);
+  if (filters.sale_type && filters.sale_type !== 'all') query = query.eq('sale_type', filters.sale_type);
+  if (filters.credit_status && filters.credit_status !== 'all') query = query.eq('payment_status', filters.credit_status);
   if (filters.start_date) query = query.gte('created_at', filters.start_date);
   if (filters.end_date) query = query.lte('created_at', filters.end_date + 'T23:59:59');
 
@@ -118,13 +123,15 @@ function SalesPageInner() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
   const [paymentMethod, setPaymentMethod] = useState('all');
+  const [saleType, setSaleType] = useState('all');
+  const [creditStatus, setCreditStatus] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [viewSale, setViewSale] = useState<Sale | null>(null);
 
   const { data: sales = [], isLoading, error: pageError, refetch: retryPage } = useQuery({
-    queryKey: ['sales', search, status, paymentMethod, startDate, endDate],
-    queryFn: () => fetchSales({ search, status, payment_method: paymentMethod, start_date: startDate, end_date: endDate }),
+    queryKey: ['sales', search, status, paymentMethod, saleType, creditStatus, startDate, endDate],
+    queryFn: () => fetchSales({ search, status, payment_method: paymentMethod, sale_type: saleType, credit_status: creditStatus, start_date: startDate, end_date: endDate }),
   });
 
   const statusBadge = (s: string) => {
@@ -193,6 +200,28 @@ function SalesPageInner() {
                 <SelectItem value="refunded">{t.sales.status_refunded}</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={saleType} onValueChange={setSaleType}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Customer sale type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All customer sales</SelectItem>
+                <SelectItem value="b2b">B2B credit sales</SelectItem>
+                <SelectItem value="b2c">B2C credit sales</SelectItem>
+                <SelectItem value="retail">Retail sales</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={creditStatus} onValueChange={setCreditStatus}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Credit status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All payment states</SelectItem>
+                <SelectItem value="paid">Paid / completed</SelectItem>
+                <SelectItem value="partial">Still paying</SelectItem>
+                <SelectItem value="unpaid">Not paid / 0 paid</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={paymentMethod} onValueChange={setPaymentMethod}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder={t.sales.payment} />
@@ -227,6 +256,8 @@ function SalesPageInner() {
                 <TableHead>{t.sales.items}</TableHead>
                 <TableHead>{t.sales.total}</TableHead>
                 <TableHead>{t.sales.payment}</TableHead>
+                <TableHead>Customer</TableHead>
+                <TableHead>Credit state</TableHead>
                 <TableHead>{t.common.status}</TableHead>
                 <TableHead>{t.sales.date}</TableHead>
                 <TableHead className="text-right">{t.sales.actions}</TableHead>
@@ -236,14 +267,14 @@ function SalesPageInner() {
               {isLoading ? (
                 [...Array(6)].map((_, i) => (
                   <TableRow key={i}>
-                    {[...Array(9)].map((_, j) => (
+                    {[...Array(11)].map((_, j) => (
                       <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
                     ))}
                   </TableRow>
                 ))
               ) : sales.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">
+                  <TableCell colSpan={11} className="h-32 text-center text-muted-foreground">
                     <div className="flex flex-col items-center gap-2">
                       <Receipt className="h-8 w-8 opacity-30" strokeWidth={1.75} />
                       <p>{t.sales.no_sales}</p>
@@ -263,6 +294,8 @@ function SalesPageInner() {
                     <TableCell>{t.sales.items_count.replace('{count}', String((sale.items as SaleItem[] | undefined)?.length || 0))}</TableCell>
                     <TableCell className="font-semibold">{formatCurrency(sale.total)}</TableCell>
                     <TableCell>{paymentBadge(sale.payment_method)}</TableCell>
+                    <TableCell>{sale.sale_type === 'b2b' ? 'B2B' : sale.sale_type === 'b2c' ? 'B2C' : 'Retail'}</TableCell>
+                    <TableCell>{sale.payment_status === 'unpaid' ? '0 paid' : sale.payment_status === 'partial' ? 'Still paying' : 'Paid'}</TableCell>
                     <TableCell>{statusBadge(sale.status)}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {formatDateTime(sale.created_at)}
@@ -293,6 +326,9 @@ function SalesPageInner() {
                 <div><span className="text-muted-foreground">{t.sales.cashier}:</span> <span className="font-medium">{(viewSale.cashier as { full_name?: string } | null)?.full_name}</span></div>
                 <div><span className="text-muted-foreground">{t.sales.customer}:</span> <span className="font-medium">{viewSale.customer_name || t.sales.walk_in}</span></div>
                 <div><span className="text-muted-foreground">{t.sales.phone}:</span> <span className="font-medium">{viewSale.customer_phone || '—'}</span></div>
+                <div><span className="text-muted-foreground">Customer type:</span> <span className="font-medium">{viewSale.sale_type === 'b2b' ? 'B2B' : viewSale.sale_type === 'b2c' ? 'B2C' : 'Retail'}</span></div>
+                <div><span className="text-muted-foreground">Credit state:</span> <span className="font-medium">{viewSale.payment_status === 'unpaid' ? 'Not paid / 0 paid' : viewSale.payment_status === 'partial' ? 'Still paying' : 'Paid / completed'}</span></div>
+                <div><span className="text-muted-foreground">Authorized by:</span> <span className="font-medium">{(viewSale as Sale & { credit_authorizer?: { full_name?: string } }).credit_authorizer?.full_name || '—'}</span></div>
                 <div><span className="text-muted-foreground">{t.sales.payment}:</span> <span className="font-medium capitalize">{viewSale.payment_method.replace('_', ' ')}</span></div>
                 <div><span className="text-muted-foreground">{t.common.status}:</span> {statusBadge(viewSale.status)}</div>
               </div>

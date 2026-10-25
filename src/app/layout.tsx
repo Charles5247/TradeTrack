@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 import { QueryProvider } from "@/components/shared/query-provider";
 import { ServiceWorkerRegister } from "@/components/shared/sw-register";
+import { AppPreloader } from "@/components/shared/app-preloader";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider } from "@/i18n";
@@ -149,6 +150,7 @@ export default async function RootLayout({
             <AuthProvider>
               <I18nProvider defaultLocale={locale}>
                 <TooltipProvider delayDuration={200}>
+                  <AppPreloader />
                   {children}
                   <Toaster
                     position="top-right"

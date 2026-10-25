@@ -170,6 +170,8 @@ async function completeSale(payload: {
   warehouse_id: string;
   customer_name?: string;
   customer_phone?: string;
+  sale_type: 'retail' | 'b2b' | 'b2c';
+  credit_authorized_by?: string;
   items: Array<{
     product_id: string;
     warehouse_id: string;
@@ -209,6 +211,8 @@ async function completeSale(payload: {
     payment_method: saleRecord.payment_method,
     customer_name: payload.customer_name,
     customer_phone: payload.customer_phone,
+    sale_type: payload.sale_type,
+    credit_authorized_by: payload.credit_authorized_by,
     notes: payload.notes,
     receipt_url: payload.receipt_url,
     created_at: saleRecord.created_at,
@@ -237,6 +241,8 @@ function POSPageInner() {
   const [amountPaid, setAmountPaid] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [saleType, setSaleType] = useState<'retail' | 'b2b' | 'b2c'>('retail');
+  const [creditAuthorizedBy, setCreditAuthorizedBy] = useState('');
   const [notes, setNotes] = useState("");
   const [paymentReceiptUrl, setPaymentReceiptUrl] = useState("");
   const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
@@ -253,6 +259,23 @@ function POSPageInner() {
   const { data: warehouses = [] } = useQuery({
     queryKey: ["warehouses-pos"],
     queryFn: fetchWarehouses,
+  });
+
+  const { data: creditApprovers = [] } = useQuery({
+    queryKey: ["credit-approvers-pos", user?.organization_id],
+    queryFn: async () => {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("users")
+        .select("id, full_name, role")
+        .eq("organization_id", user!.organization_id)
+        .in("role", ["business_owner", "admin"])
+        .eq("status", "active")
+        .order("full_name");
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!user?.organization_id,
   });
 
   // Set default warehouse
@@ -323,6 +346,8 @@ function POSPageInner() {
       setAmountPaid("");
       setCustomerName("");
       setCustomerPhone("");
+      setSaleType('retail');
+      setCreditAuthorizedBy('');
       setNotes("");
       setPaymentReceiptUrl("");
       toast.success(
@@ -376,6 +401,16 @@ function POSPageInner() {
       return;
     }
 
+    const isCreditSale = cart.payment_method === 'partial' && paid < total;
+    if (isCreditSale && saleType === 'retail') {
+      toast.error('Select B2B or B2C customer sale for a credit sale');
+      return;
+    }
+    if (isCreditSale && !creditAuthorizedBy) {
+      toast.error('Select the staff member who authorized this credit sale');
+      return;
+    }
+
 
     // Get org_id from user store
     const orgId = (user as unknown as { organization_id: string })
@@ -393,6 +428,8 @@ function POSPageInner() {
       warehouse_id: cart.warehouse_id,
       customer_name: customerName || undefined,
       customer_phone: customerPhone || undefined,
+      sale_type: isCreditSale ? saleType : 'retail',
+      credit_authorized_by: isCreditSale ? creditAuthorizedBy : undefined,
       items: cart.items.map((item: CartItem) => ({
         product_id: item.product.id,
         warehouse_id: item.warehouse_id,
@@ -406,7 +443,7 @@ function POSPageInner() {
       discount: cart.getDiscountAmount(),
       tax: cart.getTaxAmount(),
       total,
-      amount_paid: paid || total,
+      amount_paid: paid,
       change_amount: Math.max(0, paid - total),
       payment_method: cart.payment_method,
       notes: notes || undefined,
@@ -729,6 +766,32 @@ function POSPageInner() {
           </div>
 
           {/* Payment Method */}
+          {cart.payment_method === 'partial' && (
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="space-y-1">
+                <Label className="text-xs">Credit customer type</Label>
+                <Select value={saleType} onValueChange={(value) => setSaleType(value as 'b2b' | 'b2c')}>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select customer type" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="b2b">B2B / Vendor customer</SelectItem>
+                    <SelectItem value="b2c">B2C / Direct customer</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Authorized by</Label>
+                <Select value={creditAuthorizedBy} onValueChange={setCreditAuthorizedBy}>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select approver" /></SelectTrigger>
+                  <SelectContent>
+                    {creditApprovers.map((approver) => (
+                      <SelectItem key={approver.id} value={approver.id}>{approver.full_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
           <Select
             value={cart.payment_method}
             onValueChange={(v) =>

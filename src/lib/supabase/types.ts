@@ -419,6 +419,8 @@ export type Database = {
           customer_id: string | null;
           customer_name: string | null;
           customer_phone: string | null;
+          sale_type: "retail" | "b2b" | "b2c";
+          credit_authorized_by: string | null;
           subtotal: number;
           discount: number;
           tax: number;
@@ -442,6 +444,8 @@ export type Database = {
           customer_id?: string | null;
           customer_name?: string | null;
           customer_phone?: string | null;
+          sale_type?: "retail" | "b2b" | "b2c";
+          credit_authorized_by?: string | null;
           subtotal?: number;
           discount?: number;
           tax?: number;

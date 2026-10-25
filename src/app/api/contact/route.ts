@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { BUSINESS } from '@/lib/business-config';
+import { Resend } from 'resend';
 
 const schema = z.object({
   name: z.string().trim().min(2).max(150),
@@ -25,12 +26,18 @@ export async function POST(request: NextRequest) {
   // Pending rows remain visible to the platform owner for follow-up.
   if (process.env.RESEND_API_KEY && process.env.CONTACT_EMAIL_FROM) {
     try {
-      const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST', signal: AbortSignal.timeout(5000),
-        headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from: process.env.CONTACT_EMAIL_FROM, to: [BUSINESS.email], subject: 'TracKasuwa contact request', text: Object.entries(parsed.data).map(([k,v]) => `${k}: ${v}`).join('\n') }),
-      });
-      if (response.ok) await db.from('contact_messages').update({ email_status: 'sent' }).eq('id', data.id);
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      const result = await resend.emails.send({
+        from: process.env.CONTACT_EMAIL_FROM,
+        to: [process.env.CONTACT_EMAIL_TO || BUSINESS.email],
+        subject: 'TracKasuwa contact request',
+        text: Object.entries(parsed.data).map(([k,v]) => `${k}: ${v}`).join('\n'),
+      }, { idempotencyKey: `contact/${data.id}`, signal: AbortSignal.timeout(5000) });
+      if (result.error) console.error('[contact] email failed', result.error.name);
+      else if (result.data?.id) {
+        console.info('[contact] email accepted', result.data.id);
+        await db.from('contact_messages').update({ email_status: 'sent' }).eq('id', data.id);
+      }
     } catch { /* Keep the durable pending delivery for owner follow-up. */ }
   }
   return NextResponse.json({ saved: true }, { status: 201 });
