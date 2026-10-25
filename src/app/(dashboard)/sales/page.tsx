@@ -123,8 +123,8 @@ function SalesPageInner() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
   const [paymentMethod, setPaymentMethod] = useState('all');
-  const [saleType, setSaleType] = useState('all');
-  const [creditStatus, setCreditStatus] = useState('all');
+  const [saleType, setSaleType] = useState<'all' | 'retail' | 'b2b' | 'b2c'>('all');
+  const [creditStatus, setCreditStatus] = useState<'all' | 'paid' | 'partial' | 'unpaid'>('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [viewSale, setViewSale] = useState<Sale | null>(null);
