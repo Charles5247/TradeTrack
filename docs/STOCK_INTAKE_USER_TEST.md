@@ -1,3 +1,6 @@
+> **Legacy spreadsheet developer test — not the new AI workflow.**
+> Updated 26 October 2026: the agreed AI buttons/multimodal journey are not implemented yet. Use the [accepted synthetic AI walkthrough](AI_STOCK_INTAKE_PLAN.md#accepted-synthetic-walkthrough) for product intent and the [fresh-session handoff](AI_STOCK_INTAKE_NEXT_SESSION.md) for implementation. Instructions below describe the older M2 workspace for diagnosis; they are not merchant acceptance instructions for the AI feature.
+
 # Try receiving stock from a spreadsheet
 
 Receiving stock has three steps: **upload the file → check the products → review and save**. Uploading or checking a product does not change your stock. Only the final approval saves the delivery.

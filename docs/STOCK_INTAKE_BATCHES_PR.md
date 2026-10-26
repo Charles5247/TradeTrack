@@ -1,3 +1,6 @@
+> **Historical foundation evidence — active order superseded 26 October 2026.**
+> Read the [AI stock-intake plan](AI_STOCK_INTAKE_PLAN.md), [AI-1–AI-5 milestones](AI_AND_BI_MILESTONES.md) and [next-session handoff](AI_STOCK_INTAKE_NEXT_SESSION.md). Old M3/M11 directions and limits below are historical context. These checks do not prove the new multimodal AI feature or merchant usability. Preserve the original evidence and limitations.
+
 Managers can upload private CSV/XLSX originals, select complete worksheets, inspect every prepared row and correct products, pack conversions, costs and receipt grouping before approving the selected ready receipts once. Processing runs in a dedicated durable worker; closing the workspace does not stop accepted work. Each receipt posts atomically through the shared M1 stock command, with explicit saved/needs-review outcomes and no repeated stock effects on retries.
 
 This PR depends on foundation PR #25. It adds private upload policies, source hashes and provenance, revision-bound review forms, shared product drafts, immutable approval manifests, leased/fenced jobs, bounded retries/concurrency and the paginated merchant workspace. Existing imports and manual receipts remain available. Feature switches default off. The worker hosting file is a separate example; this PR does not deploy or start paid hosting.

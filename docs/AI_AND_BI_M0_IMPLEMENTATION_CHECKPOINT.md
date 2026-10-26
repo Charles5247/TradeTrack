@@ -1,3 +1,6 @@
+> **Historical foundation evidence — active order superseded 26 October 2026.**
+> Read the [AI stock-intake plan](AI_STOCK_INTAKE_PLAN.md), [AI-1–AI-5 milestones](AI_AND_BI_MILESTONES.md) and [next-session handoff](AI_STOCK_INTAKE_NEXT_SESSION.md). Old M3/M11 directions and limits below are historical context. These checks do not prove the new multimodal AI feature or merchant usability. Preserve the original evidence and limitations.
+
 #24 October development follow-up: the user authorized a separate new hosted Supabase test project. Real Auth, private Storage, manual receiving and batch posting were verified there; production was not changed. The owner-only text digest compatibility migration handles pgcrypto in the extensions schema. See the M2 checkpoint for the separate hosted-development evidence.
 
  M0 implementation checkpoint

@@ -1,278 +1,101 @@
-# Bulk stock intake and Retail BI specification
+# AI-assisted normal and bulk stock intake — specification
 
-**Planning handoff · updated 19 October 2026. This revision updates documents only; new programme milestones remain unimplemented.**
+**26 October 2026 · Active specification · AI-1 through AI-5 not started.**
 
-Priority one is bulk stock intake across photos, PDFs, handwriting, spreadsheets, text and voice; priority two is Retail BI. Confirmed approval: **prepare batch → resolve exceptions → review summary → approve selected ready receipts once**. Every row is inspectable. Limits, thresholds and worker configuration below are proposed pilot defaults, not measured results.
+The filename is retained for link compatibility. Retail BI is outside this programme; its previous definitions/interfaces are preserved in the [deferred reference](reference/RETAIL_BI_DEFERRED_REFERENCE.md). The [agreed plan](AI_STOCK_INTAKE_PLAN.md) governs scope; [milestones](AI_AND_BI_MILESTONES.md) govern delivery; the [handoff](AI_AND_BI_IMPLEMENTATION_HANDOFF.md) governs execution. Earlier M0–M11 ordering is superseded.
 
-This specification supersedes older single-document/deferred-modality planning. See the [team brief](AI_TEAM_BRIEF_BUILD_FIRST.md), [milestones](AI_AND_BI_MILESTONES.md) and [engineering handoff](AI_AND_BI_IMPLEMENTATION_HANDOFF.md). The user's earlier instruction to proceed remains recorded; the present request updates planning and execution order, not application code or production resources.
+## 1. Evidence and baseline
 
-## 1. Current evidence
+- Application baseline at discovery: `6f11e6a`, branch `feat/m2-spreadsheet-batches`. Revalidate Git and draft PR state when starting. No AI milestone is complete.
+- Historical manual branch baseline: `c5291a9`, parent of combined M0/M1 commit `e30380f`. Product creation used the product form; stock entry used Inventory's stock-in dialog. Preserve that experience and legitimate upstream changes. Preserve safe writes rather than reintroducing the historical read-then-overwrite stock writer.
+- Product unit/variant fields also arrived through upstream commit `fb3cb03`; they are not grounds for a broad rollback of the AI work.
+- Existing Assistant: text/spreadsheet-derived text → `/api/ai` → provider `mapInventory(text)` → import workbench → `/api/imports` → import RPCs. It does not pass the merchant catalog to the inventory model request; the output contract caps at 1,000 rows. The ordinary importer reads the first worksheet and cannot receive additional quantities into an existing product.
+- M0 adds stock/access/account-safety foundations. M1 adds reviewed receipt commands. M2 adds private CSV/XLSX originals, complete selected sheets, durable jobs, matching/review/grouping and receipt-level posting. These are reuse candidates, not an implemented multimodal AI feature.
+- Historical artifacts include 54 focused passing tests and a synthetic 20,000-row spreadsheet pipeline. Inspect reports and their environment/limitations; they are not new AI acceptance or measured multimodal capacity.
+- Real merchant examples and an independent reviewer are unavailable. The user accepted the synthetic walkthrough as product intent, not extraction/stock-posting evidence.
 
-The 17 October source review and 19 October barcode/inventory comparison establish the baseline below for `C:\TradeTrack`. Neither verifies deployed schema/grants, device compatibility, hosted permissions or capacity.
+### Missing-product discovery, 26 October
 
-| Existing source / symbol | Evidence and implication |
+Read-only development queries showed the new batch `b6887c38-e287-446b-9f1e-6bce7a4aeb06` has configured worksheets but no parse job and zero prepared rows. The guidance condition catches `select_sheets` even when a plan exists and directs users toward setup again. The source also repeats an earlier original without a duplicate acknowledgement, which would block processing later.
+
+The earlier batch `e0ae26ee-2325-4d15-b9f7-a1b554fcb077` still contains two rows. Its reported disappearance from the screen is not explained conclusively. Logs include failed requests and DNS errors. No app or worker was running at inspection. Fix the confirmed guidance defect; do not label the older symptom resolved without response/render evidence.
+
+## 2. Merchant workflow
+
+- Place **Add with AI** beside normal product entry and **Receive with AI** beside Inventory stock entry, including its dialog. Existing manual actions remain available. Owner/admin boundaries remain; no new cashier or platform-owner permissions are implied.
+- Both entry points open one AI workflow for single-item and mixed-batch intake. Carry available product/location/operation context. Product setup starts with opening-stock intent; receiving defaults to additional delivery. The merchant can review/change the intended operation before preparation.
+- Visible stages: **Provide inputs → Review entries → Review and save**. Use existing design tokens/components. Internal stages are not merchant tasks.
+- Choose a default location; allow explicit receipt-level location changes before approval.
+- Add files, paste text or record/upload dictation, then submit **Prepare entries**. Automatically inspect, parse/transcribe, extract, match and prepare review snapshots. Spreadsheet selection/mapping becomes a question only where interpretation needs review; all chosen sheets are read completely.
+- Show meaningful progress and counts. Distinguish processing, filtered, excluded, blocked, failed and empty states. A configured source must have an actionable next step; never imply completion before entries exist.
+- Show original evidence beside reviewed values, including audio playback and editable transcripts. All rows remain inspectable with bounded pagination/virtualization. Keep current filters obvious and reset stale batch-specific filters when opening another batch.
+- Focus required input on unresolved identity, quantity, conversion, cost, duplicate and new-product questions. Bulk edits apply only to explicitly selected entries. Clear rows do not need individual confirmation checkboxes.
+- Show proposed receipts, location, stock additions, costs, exclusions and failures before one approval of the selected ready receipts. Grouping is inspectable/correctable: one invoice can span sources and one source can contain multiple invoices.
+- Report per-receipt saved/failed/needs-review results. Reconnect retrieves authoritative state, not a new submission. Accepted work continues without the browser. Preserve recoverable drafts and evidence when cancelled or paused.
+
+## 3. Input adapters and completeness
+
+| Kind | Required preparation and provenance |
 | --- | --- |
-| `supabase/migrations/001_initial_schema.sql`, `src/lib/offline/db.ts` | Product barcode field/index and a nonunique local barcode index exist. Exact codes are not guaranteed globally unique and do not prove a conflict-free match. Inventory/sale quantities remain integers. |
-| `src/lib/barcode/render-barcode.ts`, `src/lib/qr/render-qr.ts`, `src/lib/printer/{receipt-to-escpos,transfer-receipt-to-escpos}.ts` | Barcode/QR generation and printer command builders exist; physical compatibility has not been verified by this review. |
-| `src/app/(dashboard)/pos/page.tsx`, `src/app/api/receipts/lookup/route.ts` | Typed product barcode/SKU search and receipt lookup exist; they do not establish global scan interception or automatic stock intake. |
-| `src/lib/products/{detect-code,lookup-code}.ts`, `src/components/products/product-code-lookup.tsx` | Still-photo barcode/QR detection using native `BarcodeDetector`, exact tenant catalog lookup, ambiguity handling and manual fallback exist. This is not continuous camera scanning, invoice OCR or a cloud product directory. |
-| `src/components/products/{image-upload,product-form}.tsx` | Lookup can prefill an existing product or use an unmatched code in the form. Cached matches are previews; saving requires reconnect/relookup. Scanning does not automatically add stock. |
-| `src/components/imports/import-workbench.tsx`, `src/lib/imports/preview.ts` | CSV/XLSX mapping, validation, confirmation, outcomes/history and reversal controls exist. Only the first 200 rows are displayed; the new intake needs complete inspectable rows. |
-| `src/lib/ai/openai.ts::OpenAIProvider.mapInventory`, `generate` | Synchronous text mapping: 60-second timeout, 12,000 output tokens and at most 1,000 rows. Larger input alone cannot provide complete intake. |
-| `src/lib/ai/provider.ts::getAIProvider`, `types.ts::AIProvider` | Reusable provider/mock boundary; current text mapping does not implement photo/PDF/transcription. |
-| `src/lib/imports/parse.ts::parseImportFile` | CSV/XLSX up to 20 MiB, but only `SheetNames[0]` is read. |
-| `src/lib/imports/execute.ts::executeImport` | Chunks of 50 and individual row outcomes, including offline import; no atomic receipt or durable extraction guarantee. |
-| `supabase/migrations/015_business_imports.sql::apply_import_row` | New products may receive opening inventory; product updates do not add delivery stock. Do not reuse unchanged for deliveries. |
-| `src/app/api/ai/route.ts`, `src/lib/ai/entitlement.ts`, `016_ai_assistant_plumbing.sql` | Existing entitlement/job/approval primitives; `reserve_ai_job` request limits are not a leased queue or batch budget. |
-| `src/lib/auth/api-context.ts::apiContext` | Resolves authenticated user, active profile, organization and owner/admin role; reuse server enforcement. |
-| `src/store/index.ts::getSubtotal`, `getDiscountAmount`, `getTotal` | Subtotal already includes line discounts; invoice discount is separate; tax is added afterward. |
-| `src/app/(dashboard)/reports/page.tsx::fetchReport` | Sale items capped at 200, inconsistent header/item filters, tax-inclusive revenue and missing-cost zero fallback. |
-| `src/app/(dashboard)/dashboard/page.tsx::fetchDashboardData`, `src/lib/accounting/reconciliation.ts::dailySales` | Separate existing calculations/date/status policies; reference points rather than the new BI contract. |
-| `src/lib/offline/vendor-transactions.ts::persistOfflineVendorTransaction` | Mirror sale uses `notes = 'Vendor transaction <uuid>'`; mirror warehouse is not dependable vendor location. |
-| `001_initial_schema.sql`, `014_accounting_controls.sql::reverse_financial_sale` | Retail historical line costs exist; inspected vendor item schema lacks historical cost/location and inspected schema lacks operating expenses. Full reversals differ from payment corrections. |
-| `014_accounting_controls.sql::track_private.record_stock_change` | Inventory changes create signed `inventory_ledger` movements; requested movement rows must not be counted again. |
-| `src/lib/offline/sales.ts::persistOfflineSale`, `db.ts::addToSyncQueue`, `sync-engine.ts::{pushChanges,executeSyncOperation,pullData}` | Stock snapshots, queue deduplication and conflict/recovery remain shared-stock release gates. |
-| `src/components/layout/nav-config.ts`, `src/app/globals.css`, `src/components/ui/*`, `src/hooks/use-realtime-sync.ts` | Extend existing role navigation, Retail tokens/components and scoped invalidation. |
-| `render.yaml` | One Node 22 web service; worker hosting is an additional service/cost. |
+| Printed photo | JPEG/PNG/WebP content validation, visual extraction and original image/source reference. Unsupported encodings fail clearly. |
+| Digital/scanned PDF | Validate actual PDF/page count, reject unreadable/encrypted inputs explicitly, extract all included pages in bounded jobs and retain original page identity. Scans require visual interpretation, not text-only extraction. |
+| Handwriting photo | Same private-image path, separate evaluation/issue handling. Unreadable values stay unknown; artificial handwritten-style fixtures do not establish real handwriting accuracy. |
+| CSV/XLSX | Parse complete selected worksheets deterministically; preserve sheet/row/cell evidence and identifiers. AI can interpret headings/messy text. The provider is not the authoritative spreadsheet parser. |
+| Pasted list | Preserve original text, parse/extract editable rows and retain line/source references. |
+| Recorded dictation | English initially; record or upload bounded audio (MP3/M4A/WAV/WebM), transcribe, then extract entries. Preserve recording and transcript revisions. Corrections target explicitly selected entries; do not guess which receipt an ambiguous correction changes. |
+| Mixed batch | Share matching, drafts, grouping, review and approval across all adapters. Identical descriptions alone do not establish duplicates. |
 
-The [audit review](AUDIT_REMEDIATION_REVIEW_2026-10-15.md) records scoped dependencies, especially F01–F03, F13–F17, F22 and F29. These are historical findings pending revalidation, not a declaration of remediation. The older 28 focused tests remain historical baseline evidence. The 19 October comparison additionally passed 24 focused tests across seven existing product-code/product-form/receipt/import suites; a worker-start timeout passed on an isolated single-worker retry. These results do not validate new intake/BI milestones, live extraction, real devices or deployment; they were not rerun for this documentation revision.
+Retain private immutable originals and tenant-scoped hashes. Verify uploaded bytes, not only filename/client MIME. Enumerate every selected page/sheet and emitted row; detect overflow/incomplete/refused outputs and block readiness of affected receipts. Never accept a truncated provider/parser result as complete. Preserve prepared results and report what could not finish.
 
-### Reference architecture reconciliation
+Use bounded PDF page inspection/splitting in a worker child rather than a synchronous web request. Reuse parser expansion/heap/time limits where applicable. Interpret fresh references through original source/page indices even when provider requests contain chunks.
 
-The reviewed file `C:\TradeTrack-main\TradeTrack-main\docs\ai-ml-integration\BARCODE_AND_INVENTORY_INTEGRATION_SPEC.md` belongs to a different checkout. That checkout lacks the current product-photo lookup, import and text-AI modules above. Its architecture/examples are useful input, not an implementation completion report or authority over this specification.
+## 4. Catalog, quantities, prices and duplicates
 
-- Reuse the actual barcode/photo lookup and import/AI foundation instead of rebuilding or describing it as absent. Preserve exact identifier conflicts as exceptions; an exact match is not automatically “100% confidence.”
-- Global HID interception, continuous camera scanning/decoder fallback, rapid scan-to-stock, full fractional UOM, serial/IMEI tracking, supplier-channel ingestion and the legacy migration studio were not found implemented in either inspected checkout. They are separate scope candidates, not hidden prerequisites of the current programme.
-- The reference's 100-row bulk RPC and named UOM/OCR/migration files are proposals, not existing contracts. Current imports use 50-row chunks. Do not copy its example migration filename or assume the RPC exists.
-- Keep this specification's one batch approval and atomic posting per receipt. The reference mixes whole-import rollback and partial row success without a settled boundary; neither replaces this contract.
-- Two-minute/2,000-item, zero-error, universal compatibility and “100% offline” claims have no acceptance evidence from this review. Keep measured limits, explicit online upload/posting and preserved offline drafts. Keep receipt costs separate and reject silent SKU/price inventions or autonomous stock changes.
+- Match only the active merchant catalog. Use exact unambiguous merchant identifiers first, with name/variant/unit validation. Supplier item codes are not automatically merchant SKUs. Conflicting identifiers block automatic matching.
+- For messy descriptions, application code supplies bounded tenant catalog candidates to AI. Accept candidate IDs only from that set; offer existing catalog search or an explicit new draft where unresolved. Do not add a vector database for this prototype.
+- A genuinely new product receives an application-generated internal SKU stable for its shared draft, e.g. `TT-<draft UUID>`. Enforce uniqueness server-side; collisions require review. Preserve supplied manufacturer barcodes; never synthesize them. Repeated appearances can share one reviewed draft only when their identities/units agree.
+- Review new-product identity, unit, cost and selling price before its receipts become ready. Missing prices are not zero. Explicit zero remains distinguishable from missing. Receipt costs are separate from catalog pricing; receiving existing products never changes catalog prices implicitly.
+- Versioned AI quantities/conversion factors are positive decimal strings: at most 18 integer digits and six fractional digits. Use exact decimal/integer-ratio arithmetic and PostgreSQL numeric storage; do not rely on binary floating-point products. Reject unsupported precision explicitly.
+- Final `stock_units = purchase_quantity × units_per_purchase_unit` must be an exact positive integer within the existing stock range, and the resulting balance must fit. Preserve original purchase quantity/unit, confirmed conversion and final units. Support fractional purchase storage with targeted receipt compatibility changes; do not change core inventory/POS quantity storage.
+- Built-in physical conversions are exact (kg/g, L/mL, m/cm). Pack/carton/bag conversions are product-specific and require explicit source/catalog support or merchant clarification. Unit incompatibility blocks readiness; do not silently migrate an existing SKU's unit.
+- Money is exact decimal currency arithmetic. Calculate product-line receipt cost as purchase quantity × cost per purchase unit, round half-up to currency precision per line, then sum. Retain the source amount; arithmetic discrepancies require review. Tax, freight and discounts are not silently allocated into product costs. Conflicting currencies require review; no automatic FX conversion.
+- Additional deliveries add approved quantities to current stock under locks; never replace balances. Opening stock is permitted only with no existing product/location inventory or movement history.
+- Detect repeated originals with tenant-scoped hashes and proposed invoice duplicates with fingerprints. Offer returning to an existing draft or an explicit legitimate-repeat acknowledgement/reason. Keep line-level source evidence; do not deduplicate legitimate items just because descriptions match.
 
-### Delivery rule
+## 5. Versioned API, review and posting
 
-Follow [M0–M11](AI_AND_BI_MILESTONES.md) sequentially. M1–M10 each include the merchant UI, server/command/data work, approval or drill-down, recovery and acceptance proof. Private upload/worker work is completed inside usable spreadsheet intake (M2), not delivered as a stand-alone unfinished feature. AI preparation is connected through reviewed posting in M3–M6; grouping/review must not wait until M7. Each BI calculation ships with its usable view and matching details in M8–M10.
+Reuse `/api/stock-intake-batches` create/read/edit/process/approve/retry/cancel operations and the current batch/job engine. Extend the typed contract with an AI workflow version; preserve existing integer documents and immutable hashes without rewriting historical approvals. Legacy editors must not open AI decimal payloads as if they were integer spreadsheet drafts. Route them to the shared AI view or retain a read-only compatible history.
 
-Within a milestone, A/B/C execution batches provide resumable checkpoints. Do not start the next milestone until the current completion gate passes. Earlier single-modality milestones provide complete workflows; M7 proves mixed sources and programme capacity rather than becoming the first working intake. The full scope below remains required; incremental delivery does not defer requested modalities out of the programme.
-
-## 2. Inputs and merchant workflow
-
-| Input | Processing and review |
+| Contract | Required content |
 | --- | --- |
-| Printed JPG/PNG invoice photos | Extract descriptions, quantities, units and costs; retain originals and field references. |
-| Digital PDFs | Process all selected pages; preserve page/document identity and evidence. Default selection is all pages. |
-| Scanned PDFs | Visual extraction with explicit unreadable/ambiguous fields and page failures. |
-| Handwritten notes/photos | Prepare readable rows; require corrections for uncertain numbers, names and units. Unreadable never means zero. |
-| CSV/XLSX | Discover/select worksheets; parse complete selected sheets deterministically. AI may interpret messy headings/meaning. Preserve sheet/row/cell identity. |
-| Pasted lists | Retain original text and line/span references. |
-| Voice | Record/upload completed dictation or corrections, transcribe, then prepare editable rows linked to recording/transcript/time spans. |
-| Mixed bulk sources | Multiple supported inputs in one tracked batch with per-source progress and outcomes. |
+| Source | Kind (PDF/image/spreadsheet/text/audio), immutable identity/hash, selected coverage and private original reference. |
+| Prepared entry | Nullable source values, decimal purchase/conversion strings, product candidates or shared new draft, issue reasons, warnings, source/page/sheet/row/audio references and corrections. |
+| Review snapshot | Batch/review version, canonical values, selected receipt grouping/location, exact totals, exclusions and immutable payload hashes. |
+| Approval | Active approving actor, expected revision, selected receipt IDs/hashes, recorded consent and acknowledged exclusions. |
+| Outcome | Receipt identity, saved/failed/needs-review result, recoverability and committed stock references. |
 
-Voice means stock intake, not conversational voice POS. English is the initial validation language. Evaluate Pidgin and Hausa independently; enable/advertise each only after accepted results, never solely on provider capability.
+Preview arithmetic and validation must be available before approval without falsely marking each line merchant-confirmed. The final batch approval records conversion/identity consent for the complete reviewed selection. Worker preparation/posting consumes that recorded manifest; it cannot substitute another actor or payload or bypass the existing stock command by forging confirmation flags.
 
-1. Create a batch with mode `opening_stock` or `additional_delivery` and an authorized default location.
-2. Upload sources, select sheets/pages, paste lists or add recordings; show selected/excluded source counts and progress.
-3. AI proposes receipts and rows. One file can contain several invoices; one receipt can span files. Allow split/merge/reassignment before approval, preserving merchant grouping corrections on retries.
-4. Resolve product, quantity, cost, conversion, duplicate and unreadable-input exceptions; explicitly change individual receipt locations where needed.
-5. Review batch totals and receipt counts, including ready, excluded and failed receipts. Group quantities by meaningful unit and costs by currency; disclose incomplete cost totals.
-6. Approve an explicit selection of ready receipts once. Unresolved/excluded receipts remain visibly outside the approval.
-7. Track posting and reconcile saved/failed/needs-review receipt outcomes, committed quantities, evidence and eligible retries. Partial completion must never look wholly saved.
+Editing an approved payload invalidates its affected approval. Recheck actor active status, entitlement, tenant, location and product/unit identity before posting. A quantity-only concurrent sale does not invalidate an additive delivery. Each receipt commits all its products/lines/stock/ledger/evidence together or none. A batch may partially finish. Retrying an already posted receipt returns its original result; retrying or cancelling never undoes committed stock.
 
-### Business rules
+## 6. Runtime, budgets and boundaries
 
-- Opening stock establishes an initial balance only where the product/location has no inventory row or movement history, even a zero balance. Recheck under lock at posting; zero is not proof of initial setup.
-- Additional delivery increments the then-current stock; it never replaces a balance with extracted quantity.
-- Match only within the merchant catalog. Exact conflicting SKU/barcode/identifiers block automatic matching. Ambiguous variants, sizes and units require confirmation.
-- Preserve original quantity, purchase unit, confirmed conversion and resulting stock units. Initial posting accepts positive integer stock units within database range. Fractional stock requires an explicit supporting schema change before posting.
-- New products remain reviewed drafts with required identifiers/prices validated. Repeated references may share a draft; atomically map it to one product. Uniqueness/race conflicts return to review, not silent merging.
-- Keep receipt costs separate from catalog costs and selling prices. Missing costs remain null/unresolved. Retain currency and unit-cost basis; resolve mismatches explicitly without guessed exchange rates.
-- Preserve catalog cost/price unless a separate validated update is approved. Document ordering must not choose which catalog cost wins.
-- Retain original/extracted values, corrections, product identity, conversion and actor/time/source evidence on every posted line.
-- Manual and AI entry use the same deterministic validated receipt command. AI proposes; application/database code owns permissions, arithmetic and mutations.
+Reuse the dedicated Node worker and PostgreSQL durable jobs. Retain leases, heartbeats, fencing, checkpoints, two tenant/four global concurrent-job ceilings, three automatic attempts and bounded backoff. Permanent/unknown/incomplete results remain available for correction. Expired leases recover on restart; unstarted work can be cancelled.
 
-### Exception review
+The current hosting file defines a web service only. Worker provisioning is an explicit deployment dependency, not evidence of an already running hosted worker. Require configured provider budgets and worker setup before enabling live processing. Reserve one merchant-initiated AI usage item per batch; record subjob usage/retries separately. Budget exhaustion pauses further calls without discarding results. Unavailable cost/usage is unknown, not zero. Inspect existing 20-requests/hour semantics when extending reservations so resume/retry cannot double-count the merchant action.
 
-Show batch totals/stages and separate queues for unresolved products, quantities, costs, conversions, duplicates and unreadable inputs. Put source and extraction side by side; provide audio playback and transcript editing. Bulk correction applies only to explicitly selected rows with a visible preview. Provide the complete paginated/virtualized row view, including ready rows.
+Initial AI ceilings: 10 sources (pasted inputs and recordings count), 1,000 prepared rows, 20 MiB/upload, 50 combined PDF/image pages, ten minutes/recording. Retain underlying legacy guards but do not expose their older 100-file/20,000-row ceiling as AI capacity. Validate actual size, pages and duration. Test each boundary and overflow; incomplete sources cannot become approved receipts.
 
-Combine deterministic validation, catalog conflicts, source-quality signals and measured extraction performance. Model self-reported confidence is not proof. Invoice arithmetic can flag discrepancies, but tax, discounts, freight and other charges may explain them. Preserve charges separately; do not force them into product costs.
+Extend the existing provider abstraction. Use configured `OPENAI_MODEL` as the initial text/vision candidate and validate capability/access; never silently fall back to mock. Use `OPENAI_TRANSCRIPTION_MODEL`, initially `gpt-transcribe`, for recorded audio. Current references: [file inputs](https://developers.openai.com/api/docs/guides/file-inputs), [structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs), [file transcription](https://developers.openai.com/api/docs/guides/speech-to-text). Recheck official contracts before coding. No agent framework/realtime voice stack is required.
 
-## 3. Durable processing and capacity
+Enforce disabled-by-default AI flags in client, API and worker, plus current actor/tenant/location entitlements. Originals remain private; signed access is scoped/short-lived. Treat sources as untrusted content, not instructions. Account changes clear visible drafts/queries and fence late responses. Small local references may be account-scoped; large originals and AI processing require connectivity. Feature disablement preserves saved receipts, evidence and recoverable jobs.
 
-**Upload → validate → group sources → parse/transcribe → extract → match → review → approve → post → reconcile outcomes.** Grouping can be refined after parsing; reconcile final source coverage before receipt readiness.
+## 7. Acceptance and limitations
 
-| Proposed pilot limit | Required enforcement |
-| --- | --- |
-| 100 files/batch | Reserve capacity across concurrent uploads; recordings count as files. |
-| 500 PDF/image pages | Count actual PDF pages and individual images before extraction. |
-| 20,000 prepared rows/batch | Count complete rows across receipts. Overflow preserves completed work, flags incomplete coverage and blocks affected receipt approval. |
-| 250 MiB total upload | Server reservations and actual-byte accounting. |
-| 20 MiB/file | Validate content/decoded shape as well as filename and bytes. |
-| Ten minutes/recording | Verify decoded duration in addition to file size. |
+Use the [agreed synthetic walkthrough and answers](AI_STOCK_INTAKE_PLAN.md#accepted-synthetic-walkthrough). Generate source artifacts from fixed reference records; keep answer manifests separate from provider inputs and compare with an independently implemented scorer/database reconciliation.
 
-These targets are unmeasured. Test exact boundaries and boundary-plus-one failures. Never silently truncate. Pasted text and decoded spreadsheet/image/PDF work also need resource bounds; small compressed files can expand greatly. Track selected, parsed, blank/header, failed and prepared segments so omissions are visible. An incomplete provider response is a failed task, not a valid shorter receipt.
+Test per modality and mixed batches: exact numeric fields, correct/missing product matches, omitted/invented rows, unknown values, pack ambiguity, missing prices, repeat originals, multi-page/file invoices, complete worksheets, fractions, source coverage, retries, crashes, lease recovery, partial posting, concurrent stock writes, opening-stock conflicts, changed actors/units, cross-tenant denial and account switching. Include original manual entry, keyboard/mobile behavior, reconnect and explicit progress/empty/error states.
 
-Use a dedicated Node worker with PostgreSQL durable jobs. Web requests authorize/create/resume work and return promptly. Neither the browser nor an unawaited route task owns processing. The web-only `render.yaml` needs a separately approved worker service. Render supports continuously running background workers; PostgreSQL queue semantics remain TradeTrack's design responsibility. [Render background workers](https://render.com/docs/background-workers)
+Record mock versus live-provider results, fixture versions, model/configuration, expected/actual results, latency and measured/unknown costs. Artificial handwriting and synthesized speech test controlled plumbing; they are not evidence of actual merchant handwriting, accents or unassisted usability. Saved foundation tests are historical evidence only.
 
-- Split page/row/audio extraction into bounded tasks with stable source ranges and processing versions; persist checkpoints/results.
-- Atomically lease jobs with heartbeats and lease tokens. Recover expired leases after restart; stale workers cannot overwrite newer results.
-- Start with two concurrent extraction jobs per tenant and four globally, coordinated durably across all worker instances, with fair scheduling.
-- Retry transient failures with backoff up to three total attempts. Preserve permanent failures for correction; explicit subsequent retries remain visible and budgeted.
-- Persist stage, attempt, available time, lease owner/token/expiry, heartbeat, result refs, provider/model/version, coverage and sanitized error/usage.
-- Cancel unstarted work; fence in-flight results against changed revisions/cancellation. Posting/cancellation serialize on the receipt: cancellation wins before commit or the saved receipt remains saved. Cancellation never reverses posted stock.
-- Distinguish budget-paused, needs-review, failed, cancelled, prepared and posted states. Batch rollups derive from actual job/receipt counts.
-
-Reuse the provider boundary with document/image extraction and transcription adapters. Vision-capable PDF processing can use text plus page images. Provider spreadsheet augmentation reads up to the first 1,000 rows per sheet; it cannot be the authoritative bulk parser. Parse complete selected worksheets in application-controlled code. [Official OpenAI file inputs](https://developers.openai.com/api/docs/guides/file-inputs)
-
-Use file transcription for completed recordings, then validate prepared rows. Ordinary dictation needs no realtime voice-agent stack. Select supported formats/models during implementation and evaluate them under the application limits. [Official OpenAI transcription documentation](https://developers.openai.com/api/docs/guides/speech-to-text)
-
-### Private sources and cost controls
-
-Upload directly to private storage through short-lived sessions scoped to authenticated tenant/batch/source. Verify completion, actual bytes/content and server-computed hashes before enqueuing. Prevent arbitrary URL fetches and cross-tenant source attachment. Authorize previews/downloads; never expose public originals or log document bodies, keys or signed URLs. Use RLS, deliberate grants, tenant-consistent relations and restricted worker commands. Supabase Storage uses object policies; server service keys bypass them and stay server-only. [Supabase Storage access control](https://supabase.com/docs/guides/storage/security/access-control)
-
-Show estimated usage and an approved batch spending limit before processing. Extend current entitlement/rate controls with batch reservations; every page must not count as a separate merchant request without an explicit policy. Reserve headroom before dispatch, reconcile actual usage and disclose estimate differences. Record pages, audio duration, model usage, retries and cost; measure cost/page, audio minute and accepted row. Exhaustion pauses new work without discarding prepared results. Raising a limit requires an explicit updated spending approval.
-
-Agree evidence retention/deletion before pilot; do not invent an expiry or purge posted evidence during cancellation/rollback.
-
-## 4. Persistence and approval contracts
-
-All entities below are proposed additive structures, not existing tables.
-
-| Entity | Required persisted information |
-| --- | --- |
-| `stock_intake_batches` | Tenant/creator, mode/default location, revision, stage/outcome counts, capacity/usage reservations, budget, approval references and overall outcome. |
-| `stock_intake_sources` | Tenant/batch, private original/hash/type/size/pages/duration, selected sheets/pages, segments/grouping, upload completion, recording/transcript refs and coverage. |
-| `stock_intakes` | Receipt identity, source segments, supplier/invoice fingerprint, location, revision/readiness, exceptions, approval hash, command key and committed outcome/result. |
-| `stock_intake_lines` and shared product drafts | Original/extracted/corrected fields, product/unit versions, quantities/conversions/stock units, receipt cost/currency, source refs and review/posting lineage. |
-| `stock_intake_jobs` | Stage/range/version, attempt/available time, lease/token/expiry/heartbeat, status, result refs, usage and safe failures. |
-| Immutable approval manifest | Tenant, approving actor/time, batch revision, selected receipt IDs/revisions/canonical hashes, reviewed draft/conversion versions, duplicate acknowledgments, exclusions and command IDs. |
-
-Enforce tenant-consistent foreign keys, unique receipt command/job identities and one stock position per product/location. Preserve versioned evidence and approval/posting history. Reviewed payloads/conversions cannot be overwritten silently.
-
-| Proposed API | Contract |
-| --- | --- |
-| `POST /api/stock-intake-batches` | Create draft and authorized upload sessions; return stable ID/revision/limits. |
-| `GET /api/stock-intake-batches/{id}` | Bounded authoritative progress, exception/outcome counts, usage and approval references. |
-| `PATCH /api/stock-intake-batches/{id}` | Edit unposted grouping/rows/drafts/locations using expected revisions; request additional upload sessions as needed. |
-| `POST …/{id}/process` | Validate completed uploads/coverage, reserve budget and enqueue/resume preparation; return durable tracking and `202`. |
-| `POST …/{id}/approve` | Validate expected revisions/readiness; persist immutable selected manifest and enqueue posting transactionally. Identical retries return the same manifest. |
-| `POST …/{id}/retry` | Retry eligible failed work; never repeat posted effects. Changed payloads require renewed approval. |
-| `POST …/{id}/cancel` | Cancel uncommitted work; return explicit saved/in-flight/cancelled outcomes. |
-
-Add bounded child reads for `/receipts`, `/rows`, `/sources` and `/exceptions`, with stable cursors/filters/revision, and authorized source previews. All merchant writes use idempotency keys; reuse with a different canonical request is a conflict. Actor/tenant come from authenticated server context. Distinguish unauthenticated, denied, not-found, stale-revision, invalid-input, limit and retryable-service errors with stable codes and safe corrective actions. Never leak cross-tenant record existence. Long work returns promptly; pagination exposes revisions so changed grouping can restart inspection.
-
-### Shared receipt command
-
-One batch approval is not one enormous transaction. Each receipt commits all approved lines/product creation/evidence together or none; batches may partially succeed.
-
-1. Lock receipt/command; validate the recorded approval and payload hash. Recheck approving user's active status, tenant, role/permissions and entitlement inside posting. Background execution consumes that approval; it cannot substitute another actor/payload.
-2. Lock affected inventory/product rows in consistent order. Safely create missing delivery positions under the unique product/location constraint. Validate identity/unit versions, conversion, quantities and separately approved catalog updates.
-3. Apply delivery quantities as locked database increments. Quantity changes from concurrent sales/deliveries alone do not invalidate approval. Product identity/unit changes and explicit catalog-cost conflicts require renewed review. Opening stock retains serialized still-initial checks against competing first movements.
-4. Commit stock, reviewed product-draft mapping, evidence, audit attribution and durable result atomically. Reuse the authoritative stock-ledger trigger rather than duplicating movements. It currently uses `auth.uid()`; worker posting must preserve verified approving-actor attribution without enabling client impersonation.
-5. Database uniqueness ensures repeated execution returns the original result. Recover response loss by command ID. Failed transactions leave no partial stock or product creation.
-
-Editing approved unposted receipts invalidates approval; preserve previous manifests as history. Posted receipts are immutable in this workflow. Later approval selects only newly ready/corrected unposted receipts. Reprocessing cannot overwrite human corrections or approved revisions.
-
-Detect duplicates with tenant-scoped source hashes and invoice fingerprints across batches/groupings. Legitimate repeat deliveries require acknowledgment/reason in the manifest. Identical descriptions alone are not duplicate proof. Serialize duplicate checks across concurrent approvals; source duplicate detection and command idempotency are distinct controls.
-
-### Offline behavior
-
-Save small drafts locally with tenant/account isolation. Protect/clear displayed caches on account switch without discarding recoverable unsynced business operations. Upload, AI and final stock posting need connectivity. Server-accepted jobs continue without a browser; reconnect by stable batch ID and retrieve authoritative status instead of resubmitting. Do not promise offline retention of hundreds of megabytes without device-storage measurement. Offline approval clicks are not server-approved or saved stock.
-
-## 5. Retail BI definitions
-
-All cards, charts, drill-downs, reports and AI consumers use one authorized server definition over complete eligible data. Use database numeric/currency-precision arithmetic; do not sum browser subsets or silently cap aggregate inputs. Details paginate independently of totals. Use a common read snapshot/as-of basis so figures can reconcile.
-
-### Eligible records and deduplication
-
-- Include completed retail invoices and issued vendor transactions in `pending`, `partial` or `completed` state; exclude cancelled vendor transactions. Issued credit is revenue before payment. Obtain business sign-off before release.
-- Exclude full `void`, `refund` or `return` reversals from the original period, restating historical comparisons. A full reversal through a linked vendor mirror excludes its canonical vendor transaction. Payment correction does not create revenue or a full reversal.
-- Resolve mirrors using the exact tenant-scoped vendor reference in current code. Count the vendor once, suppress every confirmed linked retail mirror and use canonical vendor amounts/items. Do not fuzzy-match names/totals. Missing/conflicting/malformed references create reconciliation warnings; withhold affected metrics if the eligible population cannot be established reliably.
-- Exclude `historical_sales` aggregate imports from operational totals and disclose the exclusion.
-- Vendor historical costs and dependable location attribution are incomplete. Preserve an unallocated segment; never borrow arbitrary mirror locations. Unfiltered reports include eligible unallocated vendors. Location-filtered reports exclude unattributable vendors and disclose omitted counts/values.
-
-| Metric | Calculation and limitation |
-| --- | --- |
-| Transaction count | Eligible retail invoices plus canonical issued vendor transactions, after mirror deduplication and full reversals. |
-| Revenue | Retail `subtotal - discount`, excluding separately recorded tax; vendor recorded `total_value`. Do not invent vendor tax components. |
-| Recorded paid amount | Retail `amount_paid - change_amount` plus vendor `amount_paid`, once per eligible invoice. Reflect recorded corrections without adding correction rows as payments. This is not dated cash collection. |
-| COGS | Eligible sale-line quantity × historical line cost. Missing lines/costs and unavailable vendor costs mean incomplete coverage. Never substitute current catalog cost or zero. |
-| Gross profit / margin | Revenue minus complete dependable COGS; margin = gross profit / revenue × 100. Return null with reasons for incomplete selected-set costs; margin is null for zero revenue. A separately labeled covered subset is allowed, never an unlabeled whole-set profit. |
-| Net profit / margin | Null/unavailable because inspected schemas lack expense data. Gross profit must not be called net profit. |
-| Sales trends | Eligible revenue/count grouped by business date, with corresponding prior-period buckets and identical filters/reversal policy. Empty known buckets are zero; unavailable data remains null. |
-| Top products | Units and net product revenue; allocate invoice discount once across already line-discounted totals. Canonical vendor item totals appear once. Retain unknown/deleted-product labels. |
-| Inventory valuation | Current quantity × current catalog cost, labeled **current-cost estimate**, with valued/unvalued position/unit coverage. Unknown cost is not zero; verified genuine zero differs from a legacy default. |
-| Stock alerts | Current per-location positions: out of stock at quantity ≤ 0; low stock at positive quantity ≤ configured minimum. Preserve explicit zero thresholds with null-aware fallback. Missing positions/history are not invented as measured zeros. |
-| Stock movements | Authoritative signed `inventory_ledger` movements in selected interval/location; never add requested movements again. |
-| Outstanding payments | Current recorded open invoices, deduplicated and excluding full reversals: retail `max(total - (amount_paid - change_amount), 0)` plus vendor `max(total_value - amount_paid, 0)`. Includes invoice tax where recorded; not a complete customer-credit ledger. Invalid payment data produces warnings. |
-| Recent activity | Authorized, paginated canonical transactions with status, amounts, source type and underlying record links. Label reversals/payment events separately from sale revenue. |
-
-Cost coverage detects invoices with no lines, missing historical costs and ambiguous legacy defaults, not just non-null fields. Return eligible/covered invoice and line counts plus missing/excluded/unallocated reasons. Inventory coverage is separate from historical COGS. UI formatting must preserve null/unavailable values.
-
-If `L_i` is an already-discounted line total and `D` the invoice discount, allocate `D × L_i / sum(L)` once. Reconcile minor-unit rounding deterministically, with stable line-ID tie breaking. Allocated product totals must equal invoice net revenue. Missing lines or zero denominators yield incomplete allocation coverage, not guessed values.
-
-### Worked example — fictional
-
-Two retail lines have already-discounted totals of ₦900 and ₦1,000. Subtotal is ₦1,900, invoice discount ₦190 and tax ₦128.25. Revenue is **₦1,710**; product revenue is **₦810 + ₦900**, without subtracting line discounts again. With ₦2,000 paid and ₦161.75 change, recorded paid is **₦1,838.25**, including tax; it differs from revenue.
-
-An issued vendor invoice for ₦5,000 with ₦1,000 paid contributes one transaction, ₦5,000 revenue and ₦4,000 open balance. Its mirror adds nothing. Without dependable vendor costs, whole-set gross profit is unavailable. A later full reversal removes the original invoice from original-period operating totals; payment correction alone does not.
-
-### Dates, filters and comparisons
-
-Use organization timezone/currency from `organizations`, default missing timezone to **Africa/Lagos**. Validate settings and return effective values; do not hardcode naira formatting for every business. Default to **seven business-calendar days including today**. Resolve local boundaries to UTC and query half-open `[start, end)` intervals. Retail recognition uses `created_at`; vendors use `date_issued`. Invalid/missing dates create coverage warnings, not guessed dates.
-
-For the live default range, end at captured current time and compare the preceding seven-calendar-day block through corresponding elapsed local time. Example: at 15:00 on 17 October in Lagos, compare 11 October 00:00–17 October 15:00 with 4 October 00:00–10 October 15:00. Resolve calendar boundaries in the organization's timezone, including DST where applicable, rather than fixed 86,400-second days. Closed custom ranges compare complete equally sized calendar ranges. Return current/previous boundaries, aligned buckets and as-of time. A zero previous baseline produces null percentage change with a reason; valid absolute change may still be shown.
-
-Inventory, alerts and open balances are **current snapshots**, independent of the sales date filter. Label their snapshot time separately. Movement/transaction periods and omitted location coverage remain explicit. Drill-downs share summary eligibility/comparison definitions.
-
-## 6. BI API and interface
-
-Proposed authenticated endpoints under `/api/retail-bi`:
-
-| Endpoint | Response |
-| --- | --- |
-| `GET /summary` | Metric values/availability, trend/comparison, coverage and snapshot cards. |
-| `GET /transactions` | Cursor-paginated canonical activity/invoices with record links. |
-| `GET /products` | Ranked units/net product revenue and allocation/line coverage; optional product detail filter. |
-| `GET /inventory` | Current valuation/alerts by product/location. |
-| `GET /movements` | Signed authoritative ledger detail in selected period. |
-| `GET /balances` | Current recorded open retail/vendor invoices with canonical links. |
-
-Return `effective_filters` (timezone, currency, locations, UTC intervals and prior intervals), `generated_at`, `snapshot_at`, reporting-definition version, coverage warnings and availability. Each metric contains `value` (decimal string or null), `availability` (`available`, `partial`, `unavailable`), `reasons` and coverage. Counts may be integers; currency serialization must preserve precision. Details return stable next cursors and the same definition/as-of metadata. If intervening changes make an as-of detail irreproducible, require refresh rather than claiming equality.
-
-Validate server filters and cap detail pages. Resolve active tenant/role server-side; owner/admin access, existing location permissions and separate platform-owner routing apply. Never authorize from user-editable metadata or a client organization ID. Keep responses private and outside shared public caches. Client query keys include account, tenant, filters and definition version; clear displayed results on account switch.
-
-Extend owner/admin `/dashboard`; `/reports` and drill-downs consume the same definitions. Preserve the cashier experience and `/admin` platform overview. Use existing Retail tokens, typography, density, components and charts.
-
-- Header: period/location filters, timezone, last successful refresh, stale/partial status and intake action.
-- Clear revenue, transaction, recorded-payment and gross-profit/margin cards with reasons for unavailable figures, including net profit.
-- Revenue/comparison chart and ranked product bars with accessible data-table equivalents.
-- Current valuation/coverage, per-location alerts, signed movements, open balances and recent activity with consistent drill-down links.
-- Responsive layout, keyboard access, focus handling, screen-reader status, contrast, reduced motion and usable mobile tables.
-- Distinct loading, empty, partial, unavailable, error and stale states. Failed refresh retains the last successful result/timestamp with a visible error, never a new success timestamp.
-
-Invalidate affected queries after committed intake, sales, payments, reversals, product-cost and inventory changes. Extend tenant-scoped realtime invalidation and invalidate directly after successful commands; debounce event bursts. Poll every **60 seconds while visible and online**, refresh on reconnect/return to visibility and retain manual refresh. Polling is the fallback when events/publication are unavailable. Explain that unsynchronized offline activity cannot appear in server totals.
-
-## 7. Acceptance evidence
-
-Use human-checked development and held-out inputs from different merchants/suppliers. Keep datasets separate; report denominators, supported conditions and unresolved cases. No target here has been measured by this documentation delivery.
-
-| Area | Required proof |
-| --- | --- |
-| Modalities | Separate printed-photo, digital-PDF, scanned-PDF, handwriting, spreadsheet and voice results; English/Pidgin/Hausa evaluated independently. |
-| Completeness/scale | Long PDFs, complete selected worksheets, repeated headers, overlapping pages, multi-file invoices/multi-invoice files, mixed batches, >1,000 rows, exact 20,000-row boundary and explicit overflow. All file/page/byte/duration boundaries tested; no silent truncation. |
-| Matching/review | Pack conversions, ambiguous variants, conflicting identifiers, missing costs, unreadable fields, shared product drafts and inspection of every prepared row. |
-| Durability | Duplicate uploads/approvals, transient/permanent failures, three-attempt policy, worker crashes, stale/expired leases, timeout/response loss, cancellation, budget pause/resume and partial recovery. Repeated jobs never duplicate stock. |
-| Stock integrity | Concurrent sales/deliveries, repeated product/location lines, shared drafts, unit/catalog conflicts, opening-stock races and receipt rollback. Existing scoped offline write paths must also preserve stock. |
-| Security/recovery | Cross-tenant IDs/private sources, suspension/permission/entitlement changes after approval, account switching, browser closure/reconnect, upload expiry and authoritative status retrieval. |
-| BI reconciliation | Independent SQL with >200 sale items, tax, line/invoice discounts, partial/credit payments, multiple vendor mirrors, full reversals, payment corrections, missing costs/lines and imported history. Exact supported currency precision. |
-| BI experience | Date boundaries, end-exclusive ranges, equal elapsed comparisons, zero baselines, unallocated locations, snapshot labels, empty/unavailable/stale/error states, responsive browser and accessibility checks. |
-
-Proposed targets: **≥99% exact numeric extraction** for supported printed inputs; no automatic matching on conflicting identifiers; no silent resolution of known ambiguous conversions; **≥50% reduction in median preparation/review time** against manual entry. Report handwriting/voice separately and agree release thresholds from representative pilot data before enablement. Benchmark **100 single-page documents / approximately 1,000 rows within 30 minutes** under the stated worker configuration. BI summary **p95 ≤ two seconds** on an agreed staging dataset. Define sample sizes, scoring and load before claiming success.
-
-Replace the older single-document cost target with modality-specific cost/page, audio minute and accepted row, plus visible batch spending limits. Advertise capacity only after measuring it. Use additive changes and disabled-by-default flags for intake processing/posting, modalities and BI, enforced server-side/worker-side as well as in UI. Rollback disables new work, safely pauses/drains accepted jobs and preserves committed receipts, approvals and evidence.
-
-## 8. Specified choices and external release requirements
-
-Already specified: one approval per ready selection; complete inspectable rows/grouping; receipt-atomic additive posting; shared manual/AI command; dedicated Node worker/PostgreSQL jobs; complete application spreadsheet parsing; integer-unit boundary; modality delivery stages; shared authorized BI definitions and snapshot labels. Do not repeatedly reopen these as missing preferences.
-
-External requirements: representative documents/recordings and merchant sessions; agreed handwriting and language-specific voice thresholds; approved pilot budget/worker hosting; deployed permission/shared-stock-integrity verification; business sign-off on credit recognition, original-period reversals and cost definitions; measured capacity; and evidence-retention policy. These remain separate from completed implementation work.
-
-Forecasting, supplier messaging, shelf counting, autonomous price changes, conversational voice POS and general accounting remain outside this programme. Global hardware/live-camera scanning expansions, full fractional UOM, serial/IMEI tracking, supplier-channel integrations and additional legacy-migration formats also require separate scope; existing photo-code lookup is reused. Reviewed pack conversions producing integer stock units remain included. PDF, handwriting, voice and bulk processing remain inside the sequential milestones.
+The user has no real examples or independent reviewer currently. Production remains blocked until those exist, quality thresholds are agreed from representative evidence, a merchant completes the journey without coaching, budgets/worker hosting are provisioned, credential disposition is resolved, and deployed permissions plus all relevant stock writers are verified. Development implementation proceeds milestone by milestone without pretending these external release requirements are met.

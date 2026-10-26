@@ -1,3 +1,6 @@
+> **Historical foundation evidence — active order superseded 26 October 2026.**
+> Read the [AI stock-intake plan](AI_STOCK_INTAKE_PLAN.md), [AI-1–AI-5 milestones](AI_AND_BI_MILESTONES.md) and [next-session handoff](AI_STOCK_INTAKE_NEXT_SESSION.md). Old M3/M11 directions and limits below are historical context. These checks do not prove the new multimodal AI feature or merchant usability. Preserve the original evidence and limitations.
+
 # M2 — Complete spreadsheet batches
 
 Updated 24 October 2026. **The isolated M2 implementation gate passed; production enablement remains blocked.** Branch: `feat/m2-spreadsheet-batches`, dependent on [foundation PR #25](https://github.com/Charles5247/TradeTrack/pull/25). The foundation includes transfer lock-order fix `da909f2` and text-hash compatibility fix `763691e`. M3 has not started. Production migration, enablement and hosting spend remain outside this delivery. The user subsequently authorized a separate new hosted development project, described below.

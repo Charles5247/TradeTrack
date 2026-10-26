@@ -1,3 +1,6 @@
+> **Historical foundation evidence — active order superseded 26 October 2026.**
+> Read the [AI stock-intake plan](AI_STOCK_INTAKE_PLAN.md), [AI-1–AI-5 milestones](AI_AND_BI_MILESTONES.md) and [next-session handoff](AI_STOCK_INTAKE_NEXT_SESSION.md). Old M3/M11 directions and limits below are historical context. These checks do not prove the new multimodal AI feature or merchant usability. Preserve the original evidence and limitations.
+
 # Draft PR: recoverable stock commands and reviewed manual receipts
 
 Offline receipts, stock adjustments and warehouse transfers can fail between separate writes or race with another stock change. M0 commits each stock command atomically, retains original receipts for explicit recovery and returns the original result on retry. It isolates account caches/drafts and bounds spreadsheet parsing in a browser worker. Private environment files are removed from tracking and checked by the existing repository-hygiene workflow; this does not revoke historical credentials.
