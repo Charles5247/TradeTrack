@@ -1,4 +1,9 @@
-# M0 implementation checkpoint
+> **Historical foundation evidence — active order superseded 26 October 2026.**
+> Read the [AI stock-intake plan](AI_STOCK_INTAKE_PLAN.md), [AI-1–AI-5 milestones](AI_AND_BI_MILESTONES.md) and [next-session handoff](AI_STOCK_INTAKE_NEXT_SESSION.md). Old M3/M11 directions and limits below are historical context. These checks do not prove the new multimodal AI feature or merchant usability. Preserve the original evidence and limitations.
+
+#24 October development follow-up: the user authorized a separate new hosted Supabase test project. Real Auth, private Storage, manual receiving and batch posting were verified there; production was not changed. The owner-only text digest compatibility migration handles pgcrypto in the extensions schema. See the M2 checkpoint for the separate hosted-development evidence.
+
+ M0 implementation checkpoint
 
 Updated 24 October 2026. Status: **isolated implementation gate passed; production release blocked.**
 
@@ -8,7 +13,7 @@ Updated 24 October 2026. Status: **isolated implementation gate passed; producti
 
 24 October follow-up: M2 regression verification exposed a transfer/checkout deadlock when a transfer created a new destination position before locking existing inventory. `20261024042324_stock_transfer_lock_order.sql` corrects that order. The PostgreSQL verifier holds the source inventory, starts the transfer, duplicate finalization and checkout, proves the accounting counter remains available, then releases the stock lock and checks the final quantities. The 13 M0 groups passed again with this deterministic regression. This fix is included in the foundation PR before M2 is reviewed.
 
-This section supersedes the first-batch notes below. No hosted migration, deployment, credential rotation or business-data repair has been performed. The user authorized committing, pushing and opening a draft PR on 24 October. Local branch: `feat/m0-stock-integrity`. M1 may start only after the isolated M0 gate passes; production release remains a separate, blocked decision.
+This section supersedes the first-batch notes below. No production migration, deployment, credential rotation or production business-data repair has been performed. The user authorized committing, pushing and opening a draft PR on 24 October. Local branch: `feat/m0-stock-integrity`. M1 may start only after the isolated M0 gate passes; production release remains a separate, blocked decision.
 
 - Atomic PostgreSQL checkout commits the receipt, every line, stock decrements, authoritative ledger/audit and replay result together. Active actor, tenant, location, entitlement, price/arithmetic and positive integer quantity checks run inside the command. Duplicate requests return the committed result; changed payloads and ambiguous legacy ledger evidence fail closed.
 - POS and inventory pages provide account-isolated saved-receipt recovery with original lines and an explicit reconciliation reason. Legacy partially uploaded receipts reconcile once where stock evidence is dependable. Reversed or ambiguous receipts are held without guessing. New command records never fall back to the legacy split-write transport.

@@ -1,0 +1,31 @@
+{
+  "generatedAt": "2026-10-24T04:01:23.493Z",
+  "synthetic": true,
+  "hostedStorageVerified": false,
+  "rowCount": 1200,
+  "files": 1,
+  "sheets": 2,
+  "sourceBytes": 93828,
+  "results": [
+    {
+      "name": "real private bytes inspected without an upload-completion callback",
+      "status": "passed",
+      "elapsedMs": 3905
+    },
+    {
+      "name": "all selected worksheets prepare beyond 1000 through durable checkpoints",
+      "status": "passed",
+      "elapsedMs": 15663
+    },
+    {
+      "name": "worker restart fences old lease and retains prepared checkpoints",
+      "status": "passed",
+      "elapsedMs": 7517
+    },
+    {
+      "name": "one approval posts the complete large receipt once across acknowledgment loss",
+      "status": "passed",
+      "elapsedMs": 3816
+    }
+  ]
+}

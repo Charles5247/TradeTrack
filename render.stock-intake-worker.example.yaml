@@ -1,0 +1,19 @@
+# Reviewed configuration example only. This is not included by render.yaml.
+# Copy into the deployment blueprint only after hosting/budget approval.
+services:
+  - type: worker
+    name: TradeTrack-stock-intake
+    runtime: node
+    plan: starter
+    autoDeploy: false
+    buildCommand: npm ci --include=dev
+    startCommand: npm run worker:stock-intake
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: STOCK_INTAKE_WORKER_ENABLED
+        value: "false"
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false

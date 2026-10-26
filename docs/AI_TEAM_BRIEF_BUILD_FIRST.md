@@ -1,59 +1,33 @@
-# Build first: bulk stock intake, then Retail BI
+# Build first: AI-assisted normal and bulk stock intake
 
-**Planning handoff · updated 19 October 2026.** Scope and batch approval are confirmed. This revision updates the plan only; new programme capabilities are not verified in production. The earlier instruction to proceed remains recorded.
+**26 October 2026 · Agreed direction · Implementation starts in a fresh session.**
 
-## 1. Prepare a whole delivery batch with less typing
+A merchant can combine printed invoice photos, digital/scanned PDFs, photographed handwriting, complete CSV/XLSX worksheets, pasted lists and recorded stock dictation in one batch. AI prepares entries using that business's catalog. One item or document uses the same flow.
 
-A merchant can combine printed invoice photos, digital or scanned PDFs, photographed handwritten notes, CSV/XLSX worksheets, pasted lists and stock dictation in one batch. AI prepares entries using that business's catalog. Manual entry stays available.
+**AI belongs beside familiar entry.** Add **Add with AI** beside normal product entry and **Receive with AI** beside normal Inventory stock entry and inside the stock-in dialog. Carry the available product, location and operation. Keep the original manual product form and stock-in dialog available; the added M1 manual receipt screen is not their replacement.
 
-We already have barcode/QR generation, typed lookup, still-photo code scanning/product prefilling, basic CSV/XLSX imports and text AI drafts. Reuse them. Photo barcode lookup is not invoice reading or automatic stock receiving. Current imports read one worksheet and display 200 rows; the new workflow must process selected sheets completely and let merchants inspect every row.
+## Merchant journey
 
-**The merchant resolves exceptions, reviews the summary and approves selected ready receipts once. Every prepared row remains available for inspection.**
+1. Provide inputs and choose operation/location.
+2. AI prepares entries and receipts; meaningful progress continues after browser closure once accepted by the server.
+3. Resolve unclear products, quantities, packs, costs, new-product details and duplicates. Clear entries need no individual checkbox. Every entry/source stays inspectable.
+4. Review totals, grouping, locations and failed/excluded work; approve selected ready receipts once.
+5. See saved, failed or needs-review outcomes. Retry only unposted work without duplicate stock effects.
 
-1. Choose **Opening stock** or **Additional deliveries**, and a default location. Explicitly change individual receipt locations when needed.
-2. Add sources, select spreadsheet sheets and see upload/processing progress. Server-accepted processing continues if the browser closes.
-3. Check proposed receipts: one file may contain several invoices, and one invoice may span files. Correct grouping before approval.
-4. Resolve unclear products, quantities, costs, carton sizes, new-product drafts and duplicates. Inspect sources beside extracted values; play recordings and edit transcripts.
-5. Review totals and excluded/failed receipts, approve the ready selection once, then see each receipt's saved, failed or needs-review result.
+New-product starting stock and additional deliveries are included. Opening stock cannot overwrite inventory/history. Receipt costs are separate from existing catalog costs and selling prices.
 
-Each receipt saves all its lines together or none. A batch can partially succeed; retrying failed receipts never repeats saved stock effects.
+Fractional purchases are included: half a carton can become six pieces; 2.5 L can become 2,500 mL where the catalog uses mL. Preserve the original quantity/unit and exact conversion. Final inventory remains whole catalog units. Incompatible units require review, not silent rounding or product-unit changes.
 
-### Example — fictional
+Application code generates stable internal SKUs for new products that lack them. AI never invents manufacturer barcodes or missing prices. New-product identity, unit and required catalog prices need explicit review. Dictation starts with English; other languages require their own scope and evaluation.
 
-A shop uploads two supplier PDFs, three handwritten delivery photos and a workbook with two selected sheets. AI groups receipts and flags an unreadable quantity and an uncertain carton size. The merchant corrects these exceptions, inspects any other rows and approves the batch once.
+## Evidence and delivery
 
-For **10 cartons of Peak Milk 170g**, a confirmed **12 units per carton** means **120 stock units**. With 30 units on hand, the preview shows 150. If another sale changes the balance before posting, the delivery still adds 120 to the then-current balance. The saved receipt shows the committed result.
+Real merchant examples and an independent reviewer are **not currently available**. Begin with labelled synthetic sources and fixed expected answers. A controlled prototype does not establish real-world accuracy or merchant usability. The [accepted eight-source walkthrough](AI_STOCK_INTAKE_PLAN.md#accepted-synthetic-walkthrough) expects +40 rice pieces, +15 beans pieces, +2,500 mL oil and NGN 57,000 after explicit simulated corrections.
 
-Opening stock establishes a balance only where the product/location has no inventory or movement history. It cannot overwrite stock. Unreadable values stay unresolved; missing costs never become zero. Receipt costs are separate; catalog costs and selling prices change only through a separately approved, validated update.
+Initial development ceilings: 10 sources, 1,000 prepared rows, 20 MiB/file, 50 combined PDF/image pages and ten minutes/recording. Enforce/test these without silent truncation. They are not measured throughput. Require a configured processing budget before live calls.
 
-### Voice and scale
+Deliver **AI-1 printed photos/PDFs → AI-2 spreadsheets/pasted lists → AI-3 handwriting → AI-4 English dictation → AI-5 mixed-batch completion**. Each includes review, authorized saving, recovery and evidence. Finish one feature before the next. All modalities remain programme requirements.
 
-Voice covers recorded stock dictation and corrections. English is the initial validation language. Evaluate Pidgin and Hausa separately and enable each only after accepted results. Conversational voice POS is outside this programme.
+Reuse verified M0/M1/M2 commands, uploads and worker foundations. Their checks do not prove the AI feature. Preserve draft branches and evidence; avoid broad reverts and unrelated redesign.
 
-Proposed pilot limits: **100 files, 500 PDF/image pages, 20,000 prepared rows and 250 MiB per batch**; **20 MiB per file** and **ten minutes per recording**. These are unmeasured targets. Enforce and test limits visibly; never silently omit pages, worksheets or rows. Show estimated processing usage and a batch spending limit before starting; pause when the approved budget is exhausted.
-
-## 2. Show dependable Retail BI
-
-Next, extend the owner/admin dashboard with revenue, transaction count, recorded payments, trends, top products, current inventory value, stock alerts, movements, outstanding balances and recent activity. Figures open authorized supporting records.
-
-Example: the owner selects seven business-calendar days and sees revenue excluding separately recorded tax. An issued credit sale contributes revenue even if unpaid; its balance appears under outstanding payments. A linked vendor mirror counts once. Gross profit appears only with dependable historical costs; net profit is unavailable because expense data is absent from the inspected schema.
-
-Use business timezone/currency, explain incomplete data, show the last successful refresh and label current snapshots separately from period sales. Unsynchronized offline activity cannot appear in server totals. Preserve the cashier workflow and separate platform-owner dashboard.
-
-## Delivery and exclusions
-
-Backend/database owns authorized stock commands, durable jobs, approvals and reporting arithmetic. AI owns extraction, transcription, matching and evaluation. Frontend owns upload, review, outcomes and accessible BI. Infrastructure owns private storage and the additional worker service. Extend the existing application and design system.
-
-PDF, handwriting, voice and mixed bulk processing are stages **inside this programme**. Forecasting, supplier messaging, shelf counting, autonomous price changes and general accounting remain outside it.
-
-Production gates include shared stock-sync integrity, authorization/account isolation, a safe spreadsheet parser, modality tests, business approval of metric definitions and a funded pilot. Earlier focused tests do not prove these capabilities.
-
-## Build one complete feature at a time
-
-Follow the [milestone plan](AI_AND_BI_MILESTONES.md): readiness → manual receipt → spreadsheet batches → AI pasted lists → printed photos/PDFs → handwriting → recorded voice → mixed bulk intake → sales/payment BI → product/profit BI → stock/operations BI → pilot.
-
-Each milestone has three execution batches and an end-to-end completion gate. Finish the usable feature, including saving or drill-downs, failures/recovery and tests, before starting the next milestone. Upload/worker infrastructure ships with spreadsheet intake; review and posting ship with every input type, rather than waiting for final integration.
-
-Hardware-scanner interception, continuous camera scanning, fractional UOM and IMEI tracking from the reference architecture are separate candidates, not completed work or additions to this scope. Integer pack conversions stay included.
-
-Read the [specification](STOCK_INTAKE_AND_RETAIL_BI_SPEC.md), [engineering handoff](AI_AND_BI_IMPLEMENTATION_HANDOFF.md) and [roadmap](AI_FEATURE_ROADMAP.md). Only planning documents change in this revision; production operations, hosting spend and rollout still require their applicable release requirements.
+Retail BI, business insights, forecasting, supplier messaging, shelf counting, autonomous pricing and general accounting are separate future work. Read the [plan](AI_STOCK_INTAKE_PLAN.md), [specification](STOCK_INTAKE_AND_RETAIL_BI_SPEC.md), [milestones](AI_AND_BI_MILESTONES.md), [handoff](AI_AND_BI_IMPLEMENTATION_HANDOFF.md) and [next-session instructions](AI_STOCK_INTAKE_NEXT_SESSION.md).

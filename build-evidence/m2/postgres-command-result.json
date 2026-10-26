@@ -1,0 +1,5 @@
+{
+  "exitCode": 0,
+  "command": "node scripts/verify-m0-postgres.mjs --m2",
+  "generatedAt": "2026-10-24T13:53:03.3177521Z"
+}

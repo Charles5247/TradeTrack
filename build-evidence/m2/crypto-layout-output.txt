@@ -1,0 +1,38 @@
+PASS Supabase extensions-schema text hashing parity
+PASS populated upgrade retains balances and historical violations without rewriting them
+PASS disabled by default and no partial effects
+PASS concurrent cashier checkouts and duplicate replay
+PASS all-line rollback and validation
+PASS suspension, foreign location and anonymous invocation
+PASS legacy missing lines and missing stock effects reconcile once
+PASS legacy committed stock acknowledgment loss is not applied twice
+PASS timestamp collisions and unknown ledger effects fail closed
+PASS legacy recovery cannot post missing effects after a financial reversal
+PASS real multi-connection row locking preserves concurrent delivery increment
+PASS legacy grants, views, audit policies and tenant constraints
+PASS manual stock delta, replay and concurrent checkout share locked inventory
+PASS atomic transfer receipt, duplicate replay, checkout concurrency and cancellation
+PASS M1 disabled-by-default intake has no effects
+PASS M1 stock unit and variant changes require renewed review before initial stock
+PASS M1 reviewed carton conversion, cost separation, approval binding and replay
+PASS M1 receipt revision invalidates approval and preserves old evidence
+PASS M1 concurrent delivery, checkout and duplicate submissions preserve increments
+PASS M1 opening stock is serialized and requires no position or movement history
+PASS M1 all-line rollback also removes newly created draft products
+PASS M1 product identity changes require new review, cost-only changes remain separate
+PASS M1 shared explicit product draft creates one catalog product for multiple lines
+PASS M1 duplicate invoice requires explicit reviewed acknowledgment
+PASS M1 concurrent new-product identifier collision returns one receipt to review
+PASS M1 malformed, fractional, missing-cost and unconfirmed rows never post
+PASS M1 fresh actor authorization, tenant isolation, immutable evidence and disabled replay
+PASS M1 cross-tenant receipt commands and a changed approving role are denied
+PASS M1 historical stock-tenant conflicts fail closed instead of reporting a false delivery
+PASS M2 batch feature is disabled by default and rejects unauthorized roles
+PASS M2 authorized upload registration is idempotent and queues work before browser completion
+PASS M2 private object policy permits only the registered own-business source and denies anonymous reads
+PASS M2 complete checkpoints preserve source rows, enforce fencing and create inspectable receipts
+PASS M2 one immutable batch approval posts the complete receipt once and recovers a lost response
+PASS M2 shared reviewed drafts span receipts and partial outcomes require renewed review without replaying saved stock
+PASS M2 bounded retries, tenant concurrency, expired actors and cancellation preserve evidence
+PASS M2 file-count and exact upload-byte boundaries reject overflow without truncation
+PASS M2 global lease limit admits four organizations and refuses the fifth

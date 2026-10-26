@@ -105,6 +105,7 @@ export interface IntakeResult {
   lines: { line_id: string; product_id: string; stock_units: number }[];
 }
 export interface IntakeReceipt {
+  batch_id?: string | null;
   id: string;
   organization_id: string;
   created_by: string;

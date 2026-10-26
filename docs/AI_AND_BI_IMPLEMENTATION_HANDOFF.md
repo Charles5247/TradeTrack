@@ -1,124 +1,72 @@
-# Bulk AI stock intake and Retail BI: engineering handoff
+# AI stock intake — engineering handoff
 
-**Updated 24 October 2026 · M0 and M1 isolated gates passed after upstream integration. Production release is blocked by credential disposition and hosted verification.**
+**26 October 2026 · Active implementation order: AI-1 → AI-5. Next: AI-1/A in a fresh session.**
 
-Read the [specification](STOCK_INTAKE_AND_RETAIL_BI_SPEC.md) for contracts/metrics and the [brief](AI_TEAM_BRIEF_BUILD_FIRST.md) for the merchant experience. Priority: bulk stock intake, then Retail BI. PDF, handwriting, voice and mixed bulk processing are stages within this programme. The confirmed model is exception resolution, summary review and one approval of selected ready receipts; all rows stay inspectable.
+Read the [agreed plan](AI_STOCK_INTAKE_PLAN.md), [specification](STOCK_INTAKE_AND_RETAIL_BI_SPEC.md), [milestones](AI_AND_BI_MILESTONES.md) and [fresh-session handoff](AI_STOCK_INTAKE_NEXT_SESSION.md). These supersede M0–M11 ordering. This documentation revision implements no application feature or hosted change. The user requested that implementation start in a new session.
 
-The user authorized completing M0 and then implementing M1 on 21 October, and authorized finalizing, committing, pushing a draft PR and moving to M2 on 24 October. Read the [M0 checkpoint](AI_AND_BI_M0_IMPLEMENTATION_CHECKPOINT.md) and current milestone status before continuing. This authorization does not include unrelated production operations, credential rotation, hosting spend or deployment. Do not repeatedly reopen already-specified implementation choices as approval questions.
+## 1. Intent and authority
 
-## 1. Start in the current checkout
+- AI is optional beside existing product/stock entry, including the stock-in dialog. Preserve familiar manual entry and legitimate upstream changes.
+- One shared AI journey handles one item or mixed sources, both new-product starting stock and additional deliveries. All listed modalities remain required. Resolve exceptions, inspect any row, review and approve selected ready receipts once.
+- Preserve fractional purchases exactly; convert only to whole catalog stock units. Generate stable internal SKUs in application code for new drafts. English dictation first. Do not invent manufacturer barcodes, prices or unreadable values.
+- No real examples or independent reviewer are available currently. Use labelled synthetic fixtures; real-world quality/merchant acceptance remain unverified.
+- Reuse foundations; avoid broad reverts or an inventory redesign. BI/business insights are separate future work. The older barcode architecture document is historical reference, not instructions to implement every proposed capability.
 
-1. Re-read `AGENTS.md`, current files and `git -c safe.directory=C:/TradeTrack status --short`. Preserve unrelated work, including existing untracked planning/audit documents and the unrelated `idea-to-build` deletions observed during this delivery. Recheck state rather than assuming that snapshot remains current.
-2. Before application code, read relevant installed guides under `node_modules/next/dist/docs/`. The installed Route Handlers guide was read during planning; it defines App Router `route.ts` handlers and request-time behavior. Re-read at implementation time, particularly route parameters/caching/auth APIs; this Next.js version has changed conventions.
-3. Inspect provider/import contracts, server auth, inventory triggers, offline sync, dashboard role routing and design tokens using the existing-file map below. Neither generated documents nor source existence prove deployed behavior.
-4. Record existing implementation authorization, isolated test target and milestone/release-gate owners. Work additively behind disabled-by-default flags. Document a baseline before touching shared stock paths.
+## 2. Start-of-session checks
 
-Useful installed guides:
+1. Inspect `AGENTS.md`, Git branch/status/log and active documents. Application baseline at documentation discovery was `6f11e6a` on `feat/m2-spreadsheet-batches`; documentation commits may follow it. Recheck current state rather than resetting to that hash.
+2. Preserve unrelated tracked `idea-to-build/` and `idea-to-build.zip` deletions and the untracked audit review. Never stage all changes blindly. Use checkout-specific `git -c safe.directory=C:/TradeTrack ...` if required.
+3. Read relevant installed Next.js guides under `node_modules/next/dist/docs/` before application code. Follow repository conventions/skills; dependencies/models/API contracts require current official verification.
+4. Verify the manual branch baseline `c5291a9` versus combined M0/M1 commit `e30380f`, preserving legitimate upstream unit/variant changes from `fb3cb03`. The desired UI is the product form plus Inventory stock-in, not the added manual receipt workspace. Do not restore old absolute stock writes.
+5. Inspect flags, current schema/grants and the target without printing credentials. Known separate hosted development ref: `jtqyxfoyllcvptxgwhmk`. Never substitute the older production ref `ajrflgewbsosthsjtvuj`. Revalidate actual env/CLI targets before any data/schema operation. Isolated local PostgreSQL tests are preferred for migration/concurrency work.
+6. App and worker were not running at the 26 October discovery. Do not assume they are running now or launch duplicates. Private `.m0-local/dev-backend/` material includes development logins, fixtures and previous reports; never print or commit keys/passwords or reset existing test batches.
 
-- `node_modules/next/dist/docs/01-app/01-getting-started/15-route-handlers.md`
-- `node_modules/next/dist/docs/01-app/01-getting-started/05-server-and-client-components.md`
-- `node_modules/next/dist/docs/01-app/01-getting-started/06-fetching-data.md`
-- `node_modules/next/dist/docs/01-app/01-getting-started/08-caching.md`
+## 3. Source map and required seams
 
-## 2. Sequential feature milestones
-
-The [milestone plan](AI_AND_BI_MILESTONES.md) is the source of truth for M0–M11, A/B/C execution batches, status, demonstrations and completion gates. It replaces the old Stage 0–9 sequence. Do not run infrastructure, all extraction adapters and all UI as separate feature deliveries. Each feature includes its complete merchant path and acceptance; start the next milestone only after the current gate passes.
-
-Within each milestone, A/B/C can run in separate sessions. Persist the checkpoint and exact next batch. A completed backend or mock is not a completed milestone. Do not hide a failing acceptance condition by starting a later feature. Keep production-release status separate from isolated implementation completion; neither removes the stated acceptance gate.
-
-### Reuse baseline and checkout identity
-
-Work in `C:\TradeTrack`. The reference architecture at `C:\TradeTrack-main\TradeTrack-main\docs\ai-ml-integration\BARCODE_AND_INVENTORY_INTEGRATION_SPEC.md` describes a different snapshot and contains proposals, not completion evidence. Do not copy its module/migration names or claim its scanner, UOM, OCR, IMEI and speed examples are implemented.
-
-Reuse `src/lib/products/{detect-code,lookup-code}.ts`, `src/components/products/{product-code-lookup,image-upload,product-form}.tsx`, barcode/QR renderers and receipt lookup. The current product feature decodes a still photo, resolves an exact tenant catalog match and prefills an explicitly confirmed form; cached matches cannot save until rechecked online. It does not add stock automatically. Global HID interception, live-camera/fallback and full fractional UOM/serial tracking remain separate candidates.
-
-Reuse structured import mapping/validation/history/results, but replace the intake limitations deliberately: `parseImportFile` reads only the first worksheet; `import-workbench.tsx` displays the first 200 rows; `executeImport` uses 50-row chunks; `apply_import_row` does not add deliveries to existing products. Reuse text AI/provider/entitlement boundaries, but the existing synchronous 1,000-row mapper is not the bulk pipeline.
-
-### Files, owners and acceptance evidence by milestone
-
-Existing paths are reuse/inspection targets. `src/lib/stock-intake/`, its jobs, `src/app/api/stock-intake-batches/`, `scripts/stock-intake-worker.ts`, `src/lib/retail-bi/` and `src/app/api/retail-bi/` are proposed locations, not modules delivered by this revision. Create migrations through the verified repository workflow; do not copy the reference's example `013_units_of_measure.sql`.
-
-| Milestone / lead | Responsible files and symbols | Required completion evidence |
+| Responsibility | Current paths / contracts | Required change or proof |
 | --- | --- | --- |
-| M0 · backend/offline/security | `src/lib/auth/api-context.ts::apiContext`; `src/store/index.ts`; auth/header/query caches; `src/lib/offline/sales.ts::persistOfflineSale`, `db.ts::addToSyncQueue`, `sync-engine.ts::{pushChanges,executeSyncOperation,pullData}`; parser/package/lockfile and grants/policies | Scoped stock/access/parser gates, recovery and account-switch demonstrations in the isolated target; production dispositions separately recorded. |
-| M1 · backend/database/frontend | Proposed receipt command/persistence under `src/lib/stock-intake/`; manual intake UI in dashboard group; inspect `001_initial_schema.sql`, `014_accounting_controls.sql`, `015_business_imports.sql::apply_import_row`; reuse product lookup | Manual receipt UI → approved command → locked stock/ledger/evidence/result, with atomic rollback, replay, opening races and concurrency proof. |
-| M2 · import/backend/frontend/infrastructure | `src/lib/imports/{parse,preview,execute}.ts`; `src/components/imports/import-workbench.tsx`; proposed batch routes, source storage, durable jobs and worker; `render.yaml` | Complete selected-sheet intake with all-row review, one batch approval, durable posting/outcomes and close/reopen/retry; no silent truncation or duplicate effects. |
-| M3 · AI/backend/frontend | `src/lib/ai/{types,provider,openai,mock,entitlement}.ts`; `src/app/api/ai/route.ts`; `016_ai_assistant_plumbing.sql::reserve_ai_job`; proposed bounded text jobs | Live configured text preparation, usage reservation/budget, correction and approved receipt posting; mocks are not extraction acceptance. |
-| M4 · AI/document/frontend | Proposed document/image adapters, source/page references and previews using M2/M3 jobs/budget/review | Printed-photo, digital-PDF and scanned-PDF workflows independently evaluated through actual saving. |
-| M5 · AI/frontend/QA | Handwriting adapter/evaluation and source/correction views using existing review/posting | Readable/unreadable handwritten inputs corrected or explicitly excluded; agreed handwriting acceptance through stock posting. |
-| M6 · AI/backend/frontend/QA | Recording/transcription adapter, private audio, transcript/time-span refs and playback/correction UI | English dictation/corrections end to end; separate Pidgin/Hausa evidence/flags; recording failures preserve reviewed work. |
-| M7 · full feature team | Shared grouping/deduplication/draft logic, batch worker/workspace and receipt command | Cross-format grouping, approved mixed batch, partial recovery, multi-tenant load and full proposed limit/benchmark evidence. |
-| M8 · reporting/backend/frontend | Proposed shared BI modules/routes; `src/app/(dashboard)/dashboard/page.tsx`, `reports/page.tsx`; `src/lib/accounting/reconciliation.ts`; `src/lib/offline/vendor-transactions.ts`; `src/hooks/use-realtime-sync.ts` | Sales/payment cards, trends, canonical transactions and drill-downs reconcile to independent SQL, including refresh/accessibility/role routing. |
-| M9 · reporting/backend/frontend | Shared BI product/COGS/allocation functions and product/profit cards/detail; inspect `src/store/index.ts::{getSubtotal,getDiscountAmount}` | Exact supported-currency product/profit reconciliation, historical-cost coverage and honest unavailable values; usable views and details ship together. |
-| M10 · reporting/backend/frontend | Shared BI inventory/movement/balance functions and views; `014_accounting_controls.sql::{record_stock_change,reverse_financial_sale}` | Current-cost/threshold/ledger/open-balance reconciliation with snapshot labels, complete drill-downs and committed-change refresh. |
-| M11 · QA/product/infrastructure | Acceptance matrix, recorded evaluation datasets/results, pilot flags/operations and rollback | Merchant evaluation, funded/deployed pilot prerequisites, measured cost/accuracy/time/capacity and accepted rollout evidence. |
+| Product entry | `src/app/(dashboard)/products/page.tsx`, `src/components/products/product-form.tsx` | Optional Add with AI adjacent to normal creation. Preserve manual behavior, unit/variant fields and existing role boundaries. |
+| Stock entry | `src/app/(dashboard)/inventory/page.tsx`, `src/lib/offline/inventory-adjustment.ts` | Optional Receive with AI beside entry and in its dialog; carry location/product. Retain atomic adjustment/legacy recovery safeguards. |
+| Existing AI | `src/app/api/ai/route.ts`, `src/lib/ai/{types,provider,openai}.ts` | Existing mapper receives text without tenant catalog candidates. Extend provider interfaces for structured document extraction/transcription/matching; no mock-as-live fallback or general agent framework. |
+| Ordinary imports | `src/components/imports/import-workbench.tsx`, `src/lib/imports/{parse,parse-core,execute,preview}.ts`, `src/app/api/imports/route.ts`, `015_business_imports.sql` | First-sheet product imports are not delivery receiving. Preserve existing imports; use complete selected-sheet processing and decimal-safe AI contracts for the new flow. |
+| Batch UI/API | `src/components/inventory/batch-stock-intake*.tsx`, `src/app/api/stock-intake-batches/`, `src/lib/stock-intake-batches/{contracts,http,spreadsheet}.ts` | Reuse domain engine/private inputs but provide a shared AI journey. Version the AI DTO; prevent legacy integer editors from misreading decimal AI rows. Preparation is automatic after source submission. |
+| Durable processing | `src/lib/stock-intake-batches/{worker,parser-child}.mts`, `scripts/stock-intake-worker.mts` | Reuse leases/checkpoints/fencing/retries. Add bounded modality adapters, complete source coverage and batch-aware budget reservations. |
+| Receipt commands | `src/lib/stock-intake/{contracts,http,client}.ts`, M1/M2 migrations | Targeted fractional purchase storage/validation and final approval consent. Do not forge per-row confirmation or bypass actor/hash/unit checks. |
+| Database history | `20261021024854_m1_manual_stock_receipts.sql`, `20261024131715_m2_spreadsheet_batch_intake.sql`, crypto compatibility migrations | Add migrations rather than rewriting applied ones. Preserve immutable historical documents/approvals and existing integer callers. Final inventory remains integer stock units. |
+| Existing integration proof | `scripts/verify-m0-postgres.mjs`, `scripts/local-intake-sql.mjs`, `build-evidence/m2/` | Reuse isolated multi-connection tests, expand meaningful cases and distinguish historical/synthetic/live/hosted results. |
 
-Preserve `src/app/(dashboard)/admin/page.tsx`, cashier dashboard behavior and `src/components/layout/nav-config.ts` role boundaries throughout BI. Reuse `src/app/globals.css` Retail tokens and existing components; consult relevant installed frontend skills/guides when implementing UI. Stock writing must preserve verified approving-actor attribution despite worker execution and the ledger's current `auth.uid()` behavior.
+`render.yaml` defines only the web service; a hosted worker is not already provisioned by that file. Source originals stay private and tenant-scoped. Provider output cannot authorize mutations or choose another tenant's catalog. Stock math and cost arithmetic are exact and independently reconciled.
 
-### Scoped readiness and release dependencies
+## 4. First work: AI-1/A
 
-Use the [audit review](AUDIT_REMEDIATION_REVIEW_2026-10-15.md) as historical evidence to revalidate, not a claim that repairs are already done:
+Implement a small usable printed-invoice slice, not a new standalone infrastructure milestone: familiar AI entry action → private PDF source → bounded provider extraction → tenant catalog match → source-linked review snapshot → final approval → shared atomic stock posting → saved outcome.
 
-| Gate | Owner and disposition needed |
-| --- | --- |
-| F01 credential disposition | Security/infrastructure owner; no secrets in output, no unapproved rotation/history rewrite/hosted changes. |
-| F13/F14 authorization | Backend/database; active actor, tenant/location relations, grants/RLS and target-specific parity. |
-| F17 account isolation | Frontend/offline; account-scoped caches with recoverable unsynced operations preserved. |
-| F16 parser | Import/backend; maintained safe parser/advisory disposition and malformed/oversized tests; observed `xlsx` 0.18.5 is not assumed safe. |
-| F02/F03 stock and outbox | Offline/backend; consecutive/concurrent sales, lost response/restarts and stale/conflicting writes cannot lose stock effects. |
-| F22/F29 ledger/approval | Backend/database; authoritative movements once, immutable actor/payload approvals and evidence. |
+Prepare fixed synthetic source records and a separate expected-answer manifest before provider execution. Add versioned fractional purchase/consent contracts and targeted persistence compatibility so half-carton and base-unit cases can work without fractional inventory balances. Preserve legacy callers, source evidence and approval hashes. One completed slice is a checkpoint; AI-1 remains incomplete until its B/C photo/scanned-PDF/new-product/recovery gates pass.
 
-Do not assign every audit finding to the AI engineer. M0 closes/verifies applicable isolated-workflow gates; target-specific production evidence is required before releasing the corresponding feature. M1–M7 cannot claim reliable stock while another relevant writer silently overwrites it. Full fractional UOM, global/live scanner expansion, serial/IMEI, supplier-channel integration and broader migration studio are outside these milestones unless separately scoped.
+Fix the confirmed next-step bug for configured sources. Investigate older disappearing rows through API/render traces before marking that report resolved. An empty display is not proof that persisted rows were lost. The source/hash duplicate rule must offer a clear recovery path rather than silently blocking entry.
 
-## 3. Verification commands and evidence records
+Use a disabled-by-default `NEXT_PUBLIC_AI_STOCK_INTAKE_ENABLED` client flag and server `AI_STOCK_INTAKE_ENABLED` gate, plus the existing worker switch. Gate routes and worker too. Underlying receipt commands must still enforce their settings/permissions. Do not turn the new M1 manual screen into the default experience to expose the AI feature.
 
-Run from `C:\TradeTrack`. These are engineering verification commands, not checks claimed to have passed in this document delivery. Read test configuration first; use isolated fixtures, and do not run hosted migration/data tests against production without appropriate authorization.
+## 5. Verification
 
-Existing focused baselines. The 19 October review passed 24 tests across seven product-code/product-form/receipt/import suites, with a worker-start timeout resolved by an isolated single-worker retry. This is historical evidence for the unchanged foundation, not new milestone acceptance; it was not rerun for this documentation revision.
-
-To reproduce that focused foundation check (single-worker execution is an available recovery option):
+These are starting commands to adapt to the actual changed scope, not claims of new passing checks. Run heavy checks sequentially on this low-memory machine. Inspect existing test configuration and paths before execution.
 
 ```powershell
-npm test -- src/lib/products/detect-code.test.ts src/lib/products/lookup-code.test.ts src/components/products/product-code-lookup.test.tsx src/components/products/product-form.test.tsx src/app/api/receipts/lookup/route.test.ts src/lib/imports/__tests__/parse.test.ts src/lib/imports/__tests__/preview.test.ts --maxWorkers=1
-```
-
-Additional relevant existing suites, selected according to the active milestone:
-
-```powershell
-npm test -- src/lib/imports/__tests__/parse.test.ts src/lib/imports/__tests__/preview.test.ts src/lib/imports/__tests__/offline.test.ts
-npm test -- src/lib/ai/__tests__/openai.test.ts src/lib/ai/__tests__/route.test.ts
-npm test -- src/lib/accounting/__tests__/reconciliation.test.ts src/lib/accounting/__tests__/database.test.ts
-npm test -- src/lib/offline/__tests__/sales-offline.test.ts src/lib/offline/__tests__/vendor-sync.test.ts src/lib/offline/__tests__/vendor-stock-version.test.ts
-npm test -- src/components/imports/import-workbench.test.tsx src/components/layout/retail-workflows.test.tsx
-```
-
-After implementing the proposed modules, create and run meaningful receipt, worker, API authorization and BI fixtures under the matching directories (these suites do not exist yet):
-
-```powershell
-npm test -- src/lib/stock-intake/__tests__ src/app/api/stock-intake-batches
-npm test -- src/lib/retail-bi/__tests__ src/app/api/retail-bi
+node node_modules/vitest/vitest.mjs run src/lib/stock-intake-batches src/lib/stock-intake src/lib/imports/__tests__/parse.test.ts src/lib/imports/__tests__/parse-worker.test.ts --pool=threads --maxWorkers=1 --testTimeout=60000
+node scripts/verify-m0-postgres.mjs --m2 --supabase-crypto
 npm run typecheck
-npm run lint
-npm run build
 ```
 
-Run `npm test` as the final application regression gate in the configured isolated environment. Add a separately documented real-PostgreSQL multi-connection integration harness for lock/concurrency/lease proof; a mocked or single-connection database test cannot establish those guarantees. Record the exact harness command/environment when implemented. Likewise record browser/accessibility commands once a supported runner is selected; do not claim an uninstalled runner exists.
+The PostgreSQL harness needs its configured isolated target; read the script first. Its historical local cluster is loopback 55439, not the user's system PostgreSQL on 5432. Do not reset either to satisfy tests. Scope ESLint to changed application files, then run appropriate integration/browser/manual-regression checks and a build at the milestone gate. Broaden tests when affected behavior or failures justify it; record remaining full-suite gaps honestly.
 
-Each evidence record includes commit/diff identity, command, environment/dataset, expected invariant, actual result, unresolved failures and owner. Benchmarks additionally record configuration, sample count, latency distribution and measured cost. Distinguish source-reviewed, unit-tested, database-integrated, browser-tested and deployed/pilot evidence.
+Use the installed Playwright CLI for actual browser journeys; verify runner availability rather than assuming `@playwright/test`. API tests, a single-connection database mock and a build cannot establish concurrent/idempotent stock or merchant usability.
 
-For documentation changes, check Markdown links, scope consistency, source paths/symbols and Git status/whitespace. For the active implementation batch, use the checkpoint's actual verification results and open gates; application suites do not validate future features that remain planned.
+For live provider tests, first verify configured budget, account/model capabilities and private inputs; a missing requirement blocks the live proof, not unrelated local implementation. Never silently substitute mock output. Record model, fixture version, source coverage, correctness, latency, retries and measured/unknown cost. Do not expose original sources or credentials in reports. Artificial handwriting/synthesized audio are not real merchant quality evidence.
 
-## 4. External requirements and rollback
+At each batch checkpoint record actual changed files, commands/results, target, feature flags, demonstrated behavior, limitations and next batch. Keep AI-1 through AI-5 status accurate; do not count old M0/M1/M2 checks as new feature completion.
 
-| External requirement | Needed from / evidence |
-| --- | --- |
-| Representative inputs and review sessions | Product/merchants: human-checked development/held-out documents, recordings and timed review sessions across suppliers/businesses. |
-| Handwriting and voice thresholds | Product/QA/AI: agreed thresholds and separate English/Pidgin/Hausa results before each enablement. |
-| Budget and worker hosting | Business/infrastructure: approved spending policy, batch limit and worker provisioning. |
-| Deployed permissions/shared stock integrity | Security/backend/offline: grants/RLS/active-user checks and all relevant stock writers verified. |
-| BI accounting policies | Business/reporting: credit recognition, original-period reversal restatement and dependable cost definitions signed off. |
-| Capacity and retention | QA/infrastructure/product: measured limits/performance and agreed source-evidence retention. |
+## 6. Rollout and external gates
 
-Implementation choices already specified in the plan—batch approval, receipt atomicity, worker architecture, integer stock boundary and metric contracts—are not additional preference questions. External evidence/approvals above remain open.
+Development proceeds in isolated targets. Production requires representative merchant data, independent reference/quality review, observed merchant completion, agreed modality thresholds, configured provider budget and worker hosting, credential disposition, deployed access boundaries and safe coordination of existing POS/offline/manual stock writers. Do not claim new additive intake fixes an old writer that can overwrite stock.
 
-Use additive schema changes and disabled-by-default flags for intake processing, posting, modalities and BI, enforced in routes and worker. Rollback disables new work, safely pauses/drains accepted jobs, restores existing dashboard routing and preserves committed receipts/stock/evidence. A flag rollback is not a stock reversal or database down-migration. Verify that disabling a feature cannot orphan invisible jobs or remove committed audit records.
+Rollback disables new AI work while preserving originals, approvals, posted receipts and recoverable drafts/jobs. Do not down-migrate committed receipt evidence or clear unsynced outboxes. Keep existing draft PRs as reviewable history; do not merge/deploy merely because a controlled prototype passes.
