@@ -73,6 +73,16 @@ it('blocks malformed numbers and impossible calendar dates',()=>{
  expect(parseMoney('1-2')).toBeNull();expect(parseMoney('12,34')).toBeNull();
  expect(parseDate('31/02/2026','dmy')).toBeNull();expect(parseDate('28/02/2026 12:75','dmy')).toBeNull();
 });
+it('requires a decision instead of silently rounding source money', () => {
+ const product = cleanProducts([{name:'Cable',price:'1.005'}], {name:'name',selling_price:'price'})[0];
+ expect(product.blocked.join()).toContain('two decimal places');
+ const source = {id:'1',date:'2026-01-01',total:'1.005',payment:'Cash: 1.005'};
+ const sale = cleanSales([source], {invoice_number:'id',sold_at:'date',total:'total',payment_method:'payment'})[0];
+ expect(sale.blocked.join()).toContain('total: more than two');
+ expect(sale.blocked.join()).toContain('amount_paid: more than two');
+ expect(sale.original).toEqual({lines:[source]});
+ expect(parseMoney(Number.MAX_VALUE)).toBeNull();
+});
 it('does not produce duplicate SKU suffixes',()=>{
  const rows=cleanProducts([{name:'A',sku:'A',price:1},{name:'B',sku:'A-2',price:1},{name:'C',sku:'A',price:1}],{name:'name',sku:'sku',selling_price:'price'});
  expect(rows.map(r=>r.data.sku)).toEqual(['A','A-2','A-3']);

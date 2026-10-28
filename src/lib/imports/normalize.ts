@@ -38,7 +38,7 @@ export function autoMapLegacy(headers: string[], kind: ImportKind): Record<strin
 
 // ---- value parsers ----------------------------------------------------------
 export function parseMoney(v: unknown): number | null {
-  if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+  if (typeof v === 'number') return Number.isFinite(v) && Number.isSafeInteger(Math.round(v * 100)) ? v : null;
   let t = s(v); if (!t) return null;
   t = t.replace(/^(?:NGN|naira|N|\u20a6|#)\s*/i, '').trim();
   const neg = /^\(.*\)$/.test(t);
@@ -106,6 +106,7 @@ export function cleanProducts(rows: Record<string, unknown>[], mapping: Record<s
       const n = parseMoney(v);
       if (n === null) { blocked.push(`${f}: cannot read "${s(v)}" as a number`); return s(v); }
       if (n < 0) { blocked.push(`${f}: negative price ${n}`); return String(n); }
+      if (Math.abs(n * 100 - Math.round(n * 100)) > 0.000001) blocked.push(`${f}: more than two decimal places; choose the intended price before import`);
       if (typeof v === 'string' && String(n) !== s(v)) fix(f, v, n, 'Currency symbol/commas removed.');
       return String(n);
     };
@@ -148,6 +149,9 @@ export function cleanSales(rows: Record<string, unknown>[], mapping: Record<stri
     if (opt.saleTotalKey && saleTotal === null) blocked.push('total: unreadable sale total');
     const lineSum = lines.reduce((a, l) => a + (parseMoney(l[opt.lineTotalKey || mapping.total]) ?? 0), 0);
     const total = saleTotal ?? Math.round(lineSum*100)/100;
+    const sourceAmounts = lines.map(l => parseMoney(l[opt.lineTotalKey || mapping.total]));
+    if (saleTotal !== null) sourceAmounts.push(saleTotal);
+    if (sourceAmounts.some(amount => amount !== null && Math.abs(amount * 100 - Math.round(amount * 100)) > 0.000001)) blocked.push('total: more than two decimal places; choose the intended amount before import');
     if (saleTotal !== null && Math.abs(saleTotal - lineSum) > 0.01) fix('total', lineSum, saleTotal, 'Item lines do not add up to the sale total; the sale total was used.', 'review');
     const sold_at = parseDate(head[dateKey], order, opt.utcOffset);
     if (!sold_at) blocked.push(order === 'unknown' ? 'sold_at: day/month order is ambiguous in this file; choose it once for the whole file' : `sold_at: cannot read "${s(head[dateKey])}"`);
@@ -163,6 +167,7 @@ export function cleanSales(rows: Record<string, unknown>[], mapping: Record<stri
     }
     for (const p of parts) { const m = mapPaymentLabel(p.label, opt.paymentMap); if (m) kinds.add(m); else blocked.push(`payment_method: unrecognised "${p.label}" - map it once for the whole file`); }
     const paid = Math.round(parts.reduce((a, p) => a + p.amount, 0)*100)/100;
+    if (parts.some(p => Math.abs(p.amount * 100 - Math.round(p.amount * 100)) > 0.000001)) blocked.push('amount_paid: more than two decimal places; choose the intended amount before import');
     if(parts.some(p=>!Number.isFinite(p.amount))) blocked.push('amount_paid: unreadable payment amount');
     if (parts.some(p => p.amount < 0)) fix('amount_paid', head[payKey], paid, 'Negative payment line (change given) netted into one amount paid.');
     const payment_method = kinds.size > 1 ? 'split' : [...kinds][0] || '';
