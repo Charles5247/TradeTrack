@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/supabase/types';
 import crypto from 'crypto';
 import { getZainpayConfig } from '@/lib/zainpay-config';
+import { verifyCheckout } from '@/lib/subscriptions/zainpay-checkout';
 
 // ─── Supabase admin client ────────────────────────────────────────────────────
 const supabaseAdmin = createClient<Database>(
@@ -127,7 +128,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const txnRef    = payload.txnRef ?? payload.reference ?? `WH-${Date.now()}`;
+  const nested = payload.data && typeof payload.data === 'object' ? payload.data as Record<string, unknown> : {};
+  const txnRef = payload.txnRef ?? payload.reference ?? (typeof nested.txnRef === 'string' ? nested.txnRef : `WH-${Date.now()}`);
+  if (/^TT-[0-9a-f-]{36}$/i.test(txnRef)) {
+    try {
+      const result = await verifyCheckout(txnRef);
+      return NextResponse.json({ received: true, ...result }, { status: result.verified ? 200 : 503 });
+    } catch {
+      return NextResponse.json({ error: 'Checkout verification pending; retry delivery' }, { status: 503 });
+    }
+  }
   const eventType = payload.event ?? payload.eventType ?? 'deposit.notification';
   const code      = payload.code;
 

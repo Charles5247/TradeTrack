@@ -1,1 +1,80 @@
-{}
+{
+  "Every 3 months": {
+    "ha": "Kowane wata 3",
+    "yo": "N? gbogbo o?? 3",
+    "ig": "Kwa ?nwa 3",
+    "pcm": "Every 3 months"
+  },
+  "Every 6 months": {
+    "ha": "Kowane wata 6",
+    "yo": "N? gbogbo o?? 6",
+    "ig": "Kwa ?nwa 6",
+    "pcm": "Every 6 months"
+  },
+  "Renew plan": {
+    "ha": "Sabunta shiri",
+    "yo": "T?n ?t? ?e",
+    "ig": "Meghar?a at?mat?",
+    "pcm": "Renew plan"
+  },
+  "Checking your payment. Do not pay again.": {
+    "ha": "Ana duba biyan ku?inka. Kada ka sake biya.",
+    "yo": "A ? ??y??w? ow? r?. M? ?e san ?n l????kan s? i.",
+    "ig": "A na-enyocha ?kw? ?gw? g?. Akw?la ?z?.",
+    "pcm": "We dey check your payment. No pay again."
+  },
+  "Payment confirmed. Your subscription is active.": {
+    "ha": "An tabbatar da biyan ku?i. Shirin ka yana aiki.",
+    "yo": "A ti j??r?? ow? r?. ?t? r? ti ? ?i???.",
+    "ig": "A kwadoro ?kw? ?gw?. Ndebanye aha g? na-ar? ?r?.",
+    "pcm": "Payment don confirm. Your subscription don active."
+  },
+  "Sandbox payment verified. Paid access was not activated.": {
+    "ha": "An tabbatar da biyan gwaji. Ba a kunna shirin ku?i ba.",
+    "yo": "A ti j??r?? ?sanw? ?d?nw?. A k? tan ?t? t? a sanw? f?n.",
+    "ig": "A kwadoro ?kw? ?gw? nnwale. Emeghegh? ohere akw? ?gw?.",
+    "pcm": "Test payment don verify. Paid access never activate."
+  },
+  "Payment is still being checked. Retry verification before making another payment.": {
+    "ha": "Har yanzu ana duba ku?in. Sake dubawa kafin ka sake biya.",
+    "yo": "A ?? ? ??y??w? ow? n??. T?n ??y??w? k? o t? san ow? m??r?n.",
+    "ig": "A ka na-enyocha ?kw? ?gw?. Lelee ?z? tupu ?kw? ?gw? ?z?.",
+    "pcm": "We still dey check payment. Check again before you pay another money."
+  },
+  "Refresh subscription": {
+    "ha": "Sabunta bayanin shiri",
+    "yo": "T?n ?l?y? ?t? ?e",
+    "ig": "Megharia ndebanye aha",
+    "pcm": "Refresh subscription"
+  },
+  "Check payment again": {
+    "ha": "Sake duba biyan ku?i",
+    "yo": "??y??w? ow? l????kan s? i",
+    "ig": "Lelee ?kw? ?gw? ?z?",
+    "pcm": "Check payment again"
+  },
+  "Renewing the same plan keeps your remaining paid time. A different plan replaces your current plan immediately after payment.": {
+    "ha": "Sabunta shiri ?aya yana adana sauran lokacin da ka biya. Wani shiri zai maye gurbin na yanzu nan da nan bayan biya.",
+    "yo": "T?t?n ?t? kan n?? ?e y?? pa ?k?k? t? k? m??. ?t? m??r?n y?? r??p? ?t? r? l??s??k?s?? l??y?n ?sanw?.",
+    "ig": "Imeghar? otu at?mat? na-edebe oge akw?goro f?d?r?. At?mat? ?z? na-an?chi nke ugbu a ozugbo ?kw? ?gw? gas?r?.",
+    "pcm": "If you renew same plan, your remaining paid time go remain. Different plan go replace your current plan as payment confirm."
+  },
+  "Who supplies your products, what you ordered, and what arrived.": {
+    "ha": "Masu kawo kayanka, abin da ka yi oda, da abin da ya iso.",
+    "yo": "?w?n t? ? p?s? ?j? r?, ohun t? o p???, ?ti ohun t? ? d?.",
+    "ig": "Nd? na-eweta ngwaah?a g?, ihe ? t?r?, na ihe b?ara.",
+    "pcm": "Who dey supply your goods, wetin you order, and wetin arrive."
+  },
+  "Sales-ready POS": {
+    "ha": "POS mai shirye don ciniki",
+    "yo": "POS t? ?et?n f?n t?t?",
+    "ig": "POS d? njikere maka ire ah?a",
+    "pcm": "POS wey ready for sales"
+  },
+  "Receipt template": {
+    "ha": "Tsarin rasit",
+    "yo": "?p??r? r?s??t?",
+    "ig": "?kp?r? risit",
+    "pcm": "Receipt style"
+  }
+}

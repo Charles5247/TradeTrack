@@ -1,225 +1,52 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/lib/supabase/types";
-import { getZainpayConfig } from "@/lib/zainpay-config";
+﻿import { NextRequest, NextResponse } from 'next/server';
+import { randomUUID } from 'node:crypto';
+import { getZainpayConfig } from '@/lib/zainpay-config';
+import { BILLING_MONTHS, billingPrice, type BillingCycle } from '@/lib/subscriptions/billing-cycle';
+import { paymentAdmin, checkoutUrl } from '@/lib/subscriptions/zainpay-checkout';
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3008";
-
-// ─── Supabase service-role client ────────────────────────────────────────────
-const supabaseAdmin = createClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { autoRefreshToken: false, persistSession: false } },
-);
-
-// ─── Types ───────────────────────────────────────────────────────────────────
-interface InitializePaymentBody {
-  /** Amount in kobo (NGN × 100). e.g. 5000 = ₦50 */
-  amount: number;
-  /** Subscription plan id being purchased */
-  planId: string;
-  /** Customer's full name */
-  name: string;
-  /** Customer's email */
-  email: string;
-  /** Customer's mobile (optional) */
-  mobile?: string;
-  /** Zainbox code assigned to this merchant */
-  zainboxCode?: string;
-  /** Client-generated transaction reference */
-  txnRef?: string;
-}
-
-interface ZainpayInitResponse {
-  code: string;
-  description: string;
-  data?: {
-    authorizationUrl?: string;
-    paymentUrl?: string;
-    reference?: string;
-    txnRef?: string;
-    [key: string]: unknown;
-  };
-}
-
-// ─── POST /api/payments/initialize ───────────────────────────────────────────
-export async function POST(request: NextRequest): Promise<NextResponse> {
+export async function POST(request: NextRequest) {
   try {
-    const zainpayConfig = getZainpayConfig();
-
-    // ── 1. Auth check ──────────────────────────────────────────────────────
-    const authHeader = request.headers.get("authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    const token = authHeader.slice(7);
-    const {
-      data: { user },
-      error: authError,
-    } = await supabaseAdmin.auth.getUser(token);
-    if (authError || !user) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
-    }
-
-    // ── 2. Validate environment ────────────────────────────────────────────
-    if (!zainpayConfig.publicKey) {
-      console.error(`[Zainpay] No ${zainpayConfig.mode} public key is configured`);
-      return NextResponse.json(
-        { error: "Payment gateway not configured" },
-        { status: 503 },
-      );
-    }
-
-    // ── 3. Parse & validate body ───────────────────────────────────────────
-    let body: InitializePaymentBody;
-    try {
-      body = (await request.json()) as InitializePaymentBody;
-    } catch {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-
-    const {
-      amount,
-      planId,
-      name,
-      email,
-      mobile,
-      zainboxCode,
-      txnRef: clientTxnRef,
-    } = body;
-
-    if (!amount || amount <= 0) {
-      return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
-    }
-    if (!planId) {
-      return NextResponse.json(
-        { error: "planId is required" },
-        { status: 400 },
-      );
-    }
-    if (!email) {
-      return NextResponse.json({ error: "email is required" }, { status: 400 });
-    }
-
-    // ── 4. Get user profile & organization ────────────────────────────────
-    const { data: profile } = await supabaseAdmin
-      .from("users")
-      .select("id, organization_id, email, full_name")
-      .eq("id", user.id)
-      .single();
-
-    if (!profile) {
-      return NextResponse.json(
-        { error: "User profile not found" },
-        { status: 404 },
-      );
-    }
-
-    // ── 5. Build Zainpay transaction reference ─────────────────────────────
-    const txnRef =
-      clientTxnRef ??
-      `TT-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
-    const callbackUrl = `${APP_URL}/api/payments/verify?txnRef=${txnRef}&planId=${planId}&userId=${user.id}`;
-
-    // ── 6. Build Zainpay payload ───────────────────────────────────────────
-    // CRITICAL: amount MUST be String(amount) per Zainpay spec
-    const zainpayPayload = {
-      amount: String(amount), // ← required as string
-      txnRef,
-      mobileNumber: mobile ?? "",
-      zainboxCode: zainboxCode ?? zainpayConfig.defaultZainbox,
-      emailAddress: email,
-      callbackUrl,
-      name: name || profile.full_name || email,
-    };
-
-    // ── 7. Call Zainpay initialization endpoint ────────────────────────────
-    const zainpayRes = await fetch(
-      `${zainpayConfig.baseUrl}/zainbox/card/initialize/payment`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${zainpayConfig.publicKey}`,
-        },
-        body: JSON.stringify(zainpayPayload),
-      },
-    );
-
-    if (!zainpayRes.ok) {
-      const errText = await zainpayRes.text();
-      console.error("[Zainpay] Init failed:", zainpayRes.status, errText);
-      return NextResponse.json(
-        { error: "Payment gateway error", details: errText },
-        { status: 502 },
-      );
-    }
-
-    const zainpayData = (await zainpayRes.json()) as ZainpayInitResponse;
-    console.log("[Zainpay] Init response:", JSON.stringify(zainpayData));
-
-    // ── 8. Check Zainpay response code ─────────────────────────────────────
-    if (zainpayData.code !== "00") {
-      return NextResponse.json(
-        { error: zainpayData.description ?? "Payment initialization failed" },
-        { status: 400 },
-      );
-    }
-
-    // ── 9. Record pending payment_transaction in DB ────────────────────────
-    // Use provider_reference for txnRef; provider_response for metadata
-    if (profile.organization_id) {
-      await supabaseAdmin.from("payment_transactions").insert({
-        organization_id: profile.organization_id,
-        plan_id: planId,
-        amount: amount / 100, // store in NGN
-        currency: "NGN",
-        payment_method: "transfer",
-        status: "pending",
-        provider: "zainpay",
-        provider_reference: txnRef,
-        initiated_by: user.id,
-      } as any);
-    }
-
-    // ── 10. Audit log ──────────────────────────────────────────────────────
-    await supabaseAdmin.from("audit_logs").insert({
-      user_id: user.id,
-      action: "payment.initialize",
-      resource_type: "payment_transaction",
-      resource_id: txnRef,
-      metadata: { planId, amount, email },
-    } as any);
-
-    // ── 11. Return payment URL ─────────────────────────────────────────────
-    const paymentUrl =
-      zainpayData.data?.authorizationUrl ??
-      zainpayData.data?.paymentUrl ??
-      null;
-
-    return NextResponse.json({
-      success: true,
-      txnRef,
-      paymentUrl,
-      reference: zainpayData.data?.reference ?? txnRef,
-      data: zainpayData.data,
+    const token = request.headers.get('authorization')?.match(/^Bearer (.+)$/)?.[1];
+    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const admin = paymentAdmin();
+    const { data: { user }, error: authError } = await admin.auth.getUser(token);
+    if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { data: profile, error: profileError } = await admin.from('users').select('organization_id,role').eq('id', user.id).single();
+    if (profileError || !profile?.organization_id || profile.role !== 'business_owner') return NextResponse.json({ error: 'Only the business owner can purchase a subscription' }, { status: 403 });
+    let body: { planId?: string; billingCycle?: string; mobile?: string };
+    try { body = await request.json(); } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }); }
+    if (!body || typeof body.planId !== 'string' || !Object.hasOwn(BILLING_MONTHS, body.billingCycle || '')) return NextResponse.json({ error: 'Choose a plan and billing period' }, { status: 400 });
+    const { data: plan, error: planError } = await admin.from('subscription_plans').select('id,name,price,currency,billing_cycle,is_active').eq('id', body.planId).single();
+    if (planError || !plan?.is_active || plan.billing_cycle !== 'monthly' || plan.currency !== 'NGN' || Number(plan.price) <= 0 || /trial|enterprise|free/i.test(plan.name)) return NextResponse.json({ error: 'This plan is not available for checkout' }, { status: 400 });
+    const config = getZainpayConfig();
+    const zainbox = config.defaultZainbox || config.zainboxCode;
+    if (!config.publicKey || !zainbox || !process.env.NEXT_PUBLIC_APP_URL) return NextResponse.json({ error: 'Payment gateway is not configured' }, { status: 503 });
+    if (process.env.VERCEL_ENV === 'production' && config.mode !== 'live') return NextResponse.json({ error: 'Live subscription payments are not enabled yet' }, { status: 503 });
+    const amount = Math.round(billingPrice(Number(plan.price), body.billingCycle as BillingCycle) * 100);
+    if (!Number.isSafeInteger(amount) || amount <= 0 || !user.email) return NextResponse.json({ error: 'Invalid checkout details' }, { status: 400 });
+    const reference = `TT-${randomUUID()}`;
+    const { error: saveError } = await admin.from('subscription_checkouts').insert({
+      reference, organization_id: profile.organization_id, user_id: user.id, plan_id: plan.id,
+      plan_name: plan.name, billing_cycle: body.billingCycle, amount_kobo: amount, mode: config.mode, zainbox_code: zainbox,
     });
-  } catch (error) {
-    console.error("[payments/initialize] Unexpected error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    if (saveError) return NextResponse.json({ error: 'Unable to save checkout; no payment was started' }, { status: 503 });
+    const callback = new URL('/api/payments/verify', process.env.NEXT_PUBLIC_APP_URL);
+    callback.searchParams.set('txnRef', reference);
+    callback.searchParams.set('redirect', '1');
+    const response = await fetch(`${config.baseUrl}/zainbox/card/initialize/payment`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.publicKey}` },
+      body: JSON.stringify({ amount: String(amount), txnRef: reference, emailAddress: user.email,
+        mobileNumber: typeof body.mobile === 'string' ? body.mobile : '', zainboxCode: zainbox, callBackUrl: callback.href }),
+      signal: AbortSignal.timeout(20000),
+    });
+    const url = response.ok ? checkoutUrl(await response.json()) : null;
+    if (!url) return NextResponse.json({ error: 'Payment gateway could not start checkout. Please retry.' }, { status: 502 });
+    return NextResponse.json({ success: true, txnRef: reference, paymentUrl: url, amount: amount / 100, currency: 'NGN' });
+  } catch {
+    return NextResponse.json({ error: 'Unable to start payment. Please retry.' }, { status: 503 });
   }
 }
-
-// ─── GET — health probe ───────────────────────────────────────────────────────
-export async function GET(): Promise<NextResponse> {
-  const zainpayConfig = getZainpayConfig();
-  return NextResponse.json({
-    endpoint: "POST /api/payments/initialize",
-    gateway: "Zainpay",
-    environment: zainpayConfig.mode,
-    configured: Boolean(zainpayConfig.publicKey),
-  });
+export async function GET() {
+  const config = getZainpayConfig();
+  return NextResponse.json({ gateway: 'Zainpay', environment: config.mode, configured: Boolean(config.publicKey && (config.defaultZainbox || config.zainboxCode)) });
 }

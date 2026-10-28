@@ -5,9 +5,11 @@ import { TranslatedText, useCopy } from '@/i18n/text';
 import { BankAccountPanel, UsagePanel } from "@/components/subscriptions/account-panels";
 import { requireOrganization } from "@/lib/auth/organization";
 import { withTimeout, AUTH_CHECK_TIMEOUT_MS } from "@/lib/utils/timeout";
+import { billingPrice, type BillingCycle } from "@/lib/subscriptions/billing-cycle";
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PlanRecommendation } from '@/components/subscriptions/plan-recommendation';
+import { PaymentReturn } from '@/components/subscriptions/payment-return';
 import {
   CreditCard,
   CheckCircle,
@@ -458,7 +460,7 @@ export default function SubscriptionsPage() {
   const [planDialogOpen, setPlanDialogOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
   const [deletingPlan, setDeletingPlan] = useState<Plan | null>(null);
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">(
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>(
     "monthly",
   );
 
@@ -501,80 +503,19 @@ export default function SubscriptionsPage() {
   });
 
   const upgradeMutation = useMutation({
-    mutationFn: async ({
-      planId,
-      cycle,
-    }: {
-      planId: string;
-      cycle: "monthly" | "yearly";
-    }) => {
-      if (typeof navigator !== "undefined" && !navigator.onLine) {
-        throw new Error(
-          "Subscription payment is unavailable while offline. Please reconnect to the internet and try again.",
-        );
-      }
-
-      const supabase = createClient();
-      // In production this would integrate with Zainpay.
-      // Self-service plan selection for the caller's own org (business_owner);
-      // platform_owner catalog management is a separate, gated code path above.
-      const {
-        data: { user: authUser },
-      } = await withTimeout(supabase.auth.getUser(), AUTH_CHECK_TIMEOUT_MS);
-      if (!authUser) throw new Error("Not authenticated");
-
-      const { data: profile } = await supabase
-        .from("users")
-        .select("organization_id")
-        .eq("id", authUser.id)
-        .single();
-
-      const organizationId = requireOrganization(profile);
-
-      const expiresAt = new Date();
-      if (cycle === "yearly") {
-        expiresAt.setFullYear(expiresAt.getFullYear() + 1);
-      } else {
-        expiresAt.setMonth(expiresAt.getMonth() + 1);
-      }
-
-      // Upsert subscription
-      const { error } = await supabase.from("subscriptions").upsert({
-        organization_id: organizationId,
-        plan_id: planId,
-        status: "active",
-        starts_at: new Date().toISOString(),
-        expires_at: expiresAt.toISOString(),
-        created_by: authUser.id,
-        billing_cycle: cycle,
-      } as never);
-      if (error) throw error;
-
-      // Audit log
-      await supabase
-        .from("audit_logs")
-        .insert({
-          organization_id: organizationId,
-          user_id: authUser.id,
-          action: "SUBSCRIPTION_CHANGE",
-          resource_type: "subscription",
-          resource_id: planId,
-          new_values: {
-            plan_id: planId,
-            status: "active",
-            billing_cycle: cycle,
-          },
-        })
-        .then(() => {}); // Non-blocking, ignore RLS errors
+    mutationFn: async ({ planId, cycle }: { planId: string; cycle: BillingCycle }) => {
+      if (!navigator.onLine) throw new Error('Reconnect to the internet to pay for a subscription.');
+      const { data: { session } } = await createClient().auth.getSession();
+      if (!session) throw new Error('Sign in again to continue.');
+      const response = await fetch('/api/payments/initialize', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+        body: JSON.stringify({ planId, billingCycle: cycle }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.paymentUrl) throw new Error(result.error || 'Unable to start payment');
+      window.location.assign(result.paymentUrl);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
-      toast.success(t.subscriptions.updated_success);
-    },
-    onError: (e) =>
-      toast.error(
-        e instanceof Error ? e.message : t.subscriptions.update_failed,
-      ),
+    onError: (error) => toast.error(error.message),
   });
 
   // platform_owner (TracKasuwa) manages the global plan catalog (add/edit
@@ -610,6 +551,7 @@ export default function SubscriptionsPage() {
 
   return (
     <div className="space-y-6">
+      <PaymentReturn />
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -638,7 +580,7 @@ export default function SubscriptionsPage() {
             <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-[var(--c-accent)] opacity-20 blur-3xl" />
             {isLoading ? <Skeleton className="h-64" /> : <div className="relative space-y-6">
               <div><span className="rounded-full bg-primary-foreground/10 px-3 py-1 text-xs"><TranslatedText text={"Current plan"} /></span><h2 className="mt-4 font-[family-name:var(--font-head)] text-4xl font-bold tracking-tight sm:text-5xl">{subscription?.plan?.name || 'Choose your plan'}</h2><p className="mt-2 text-sm opacity-80">{subscription ? 'Status: ' + subscription.status : 'Find the right fit for your business.'}</p></div>
-              <dl className="flex flex-wrap items-end gap-x-8 gap-y-4"><div><dt className="sr-only"><TranslatedText text={"Plan price"} /></dt><dd className="text-3xl font-bold">{formatCurrency(subscription?.status === 'trial' ? 0 : subscription?.plan?.price || 0, 'NGN')}</dd><p className="text-xs opacity-75"><TranslatedText text={"per"} />{" "}<TranslatedText text={subscription?.plan?.billing_cycle === 'yearly' ? 'year' : 'month'} /></p></div><div><dt className="text-xs opacity-75"><TranslatedText text={"Valid until"} /></dt><dd className="mt-1 font-semibold">{subscription?.expires_at ? formatDate(subscription.expires_at) : 'No active period'}</dd></div><div><dt className="text-xs opacity-75"><TranslatedText text={"Renewal"} /></dt><dd className="mt-1 font-semibold"><TranslatedText text={"Manual payment"} /></dd></div></dl>
+              <dl className="flex flex-wrap items-end gap-x-8 gap-y-4"><div><dt className="sr-only"><TranslatedText text={"Plan price"} /></dt><dd className="text-3xl font-bold">{formatCurrency(subscription?.status === 'trial' ? 0 : billingPrice(subscription?.plan?.price || 0, (['monthly','quarterly','biannual','yearly'].includes(subscription?.billing_cycle || '') ? subscription?.billing_cycle : 'monthly') as BillingCycle), 'NGN')}</dd><p className="text-xs opacity-75"><TranslatedText text={"per"} />{" "}<TranslatedText text={subscription?.billing_cycle === 'yearly' ? 'year' : subscription?.billing_cycle === 'quarterly' ? '3 months' : subscription?.billing_cycle === 'biannual' ? '6 months' : 'month'} /></p></div><div><dt className="text-xs opacity-75"><TranslatedText text={"Valid until"} /></dt><dd className="mt-1 font-semibold">{subscription?.expires_at ? formatDate(subscription.expires_at) : 'No active period'}</dd></div><div><dt className="text-xs opacity-75"><TranslatedText text={"Renewal"} /></dt><dd className="mt-1 font-semibold"><TranslatedText text={"Manual payment"} /></dd></div></dl>
               <div className="flex flex-wrap gap-3"><Button className="bg-primary-foreground text-primary hover:bg-primary-foreground/90" onClick={() => { setActiveTab('plans'); }}><TranslatedText text={"Change plan"} /></Button>{subscription && ['active','trial'].includes(subscription.status) && <Button variant="outline" className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10" onClick={() => setCancelOpen(true)}><TranslatedText text={"Cancel subscription"} /></Button>}</div>
             </div>}
           </Card>
@@ -667,10 +609,13 @@ export default function SubscriptionsPage() {
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <Segmented
+                className="flex-wrap"
                 value={billingCycle}
                 onChange={setBillingCycle}
                 options={[
                   { value: "monthly", label: t.subscriptions.monthly },
+                  { value: "quarterly", label: copy("Every 3 months") },
+                  { value: "biannual", label: copy("Every 6 months") },
                   { value: "yearly", label: t.subscriptions.yearly },
                 ]}
               />
@@ -687,6 +632,7 @@ export default function SubscriptionsPage() {
               )}
             </div>
           </div>
+          {!isPlatformOwner && <p className="text-sm text-muted-foreground">{copy('Renewing the same plan keeps your remaining paid time. A different plan replaces your current plan immediately after payment.')}</p>}
           {isLoading ? (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
               {[1, 2, 3, 4, 5].map((i) => (

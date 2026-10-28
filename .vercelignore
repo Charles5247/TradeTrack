@@ -64,3 +64,14 @@ core
 .agents/
 .codex/
 .aws/
+
+# Local reference files, native packages and release evidence are not web assets.
+/android-app/
+/desktop-app/
+/idea-to-build/
+/idea-to-build.zip
+/Invoice.jpg
+/image.png
+/preloader.mp4
+/main
+/build-evidence/

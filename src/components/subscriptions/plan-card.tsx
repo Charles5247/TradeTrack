@@ -19,6 +19,7 @@ import { TranslatedText, useCopy } from '@/i18n/text';
  */
 
 import React from "react";
+import { billingPrice, type BillingCycle } from "@/lib/subscriptions/billing-cycle";
 import {
   CheckCircle,
   Clock,
@@ -298,7 +299,7 @@ export function PlanCard({
   plan: Plan;
   allPlans: Plan[];
   currentPlanId?: string;
-  billingCycle: "monthly" | "yearly";
+  billingCycle: BillingCycle;
   /** Called when the CTA button is clicked (authenticated "Plans" tab
    *  usage — upgrades in place). Mutually exclusive with `selectHref`. */
   onSelect?: (planId: string) => void;
@@ -328,14 +329,14 @@ export function PlanCard({
   const { yearlyPrice, yearlySavings } = computeYearlyPricing(plan.price);
   const showAsYearly =
     billingCycle === "yearly" && plan.price > 0 && !isEnterprise;
-  const displayedPrice = showAsYearly ? yearlyPrice : plan.price;
-  const priceSuffix = showAsYearly ? "/yr" : "/mo";
+  const displayedPrice = billingPrice(plan.price, billingCycle);
+  const priceSuffix = billingCycle === "quarterly" ? "/3 mo" : billingCycle === "biannual" ? "/6 mo" : showAsYearly ? "/yr" : "/mo";
 
   if (compact) return <Card className={`relative flex h-full flex-col gap-4 p-5 ${isCurrent ? 'border-2 border-primary' : ''}`}>
     {isCurrent && <Badge className="absolute -top-2.5 right-4" variant="outline"><TranslatedText text={"Current"} /></Badge>}
     <div><h3 className="tt-head">{plan.name}</h3><p className="mt-2 text-2xl font-bold tracking-tight">{isEnterprise ? copy('Custom') : plan.price === 0 ? copy('Free') : formatCurrency(displayedPrice,'NGN')}{!isEnterprise && plan.price > 0 && <span className="text-xs font-normal text-muted-foreground">{priceSuffix}</span>}</p></div>
     <ul className="space-y-2 text-xs"><li className="flex gap-2"><CheckCircle className="h-3.5 w-3.5 shrink-0" />{plan.max_warehouses == null || plan.max_warehouses < 0 ? copy('Unlimited locations') : copy('{count} locations', {count: plan.max_warehouses})}</li><li className="flex gap-2"><CheckCircle className="h-3.5 w-3.5 shrink-0" />{plan.max_products == null || plan.max_products < 0 ? copy('Unlimited products') : copy('{count} products', {count: plan.max_products.toLocaleString('en-NG')})}</li><li className="flex gap-2"><CheckCircle className="h-3.5 w-3.5 shrink-0" />{plan.max_cashiers < 0 ? copy('Unlimited cashiers') : copy('{count} cashiers', {count: plan.max_cashiers})}</li>{filterDisplayFeatures(plan.features || []).slice(0,4).map(f => <li key={f} className="flex gap-2"><CheckCircle className="h-3.5 w-3.5 shrink-0" />{copy(FEATURE_LABELS[f] || f)}<TranslatedText text={isPendingFeature(f) ? ' (coming soon)' : ''} /></li>)}</ul>
-    {!catalogOnly && (isEnterprise ? <Button asChild className="mt-auto w-full"><a href={`mailto:${SALES_CONTACT_EMAIL}`}><TranslatedText text={"Talk to sales"} /></a></Button> : <Button className="mt-auto w-full" variant={isCurrent ? 'outline' : 'default'} disabled={isCurrent || isLoading} onClick={() => onSelect?.(plan.id)}>{isCurrent ? 'Current plan' : t.subscriptions.select_plan}</Button>)}
+    {!catalogOnly && (isEnterprise ? <Button asChild className="mt-auto w-full"><a href={`mailto:${SALES_CONTACT_EMAIL}`}><TranslatedText text={"Talk to sales"} /></a></Button> : <Button className="mt-auto w-full" variant={isCurrent ? 'outline' : 'default'} disabled={isLoading} onClick={() => onSelect?.(plan.id)}>{isCurrent ? copy('Renew plan') : t.subscriptions.select_plan}</Button>)}
     {actions}
   </Card>;
 
@@ -496,11 +497,11 @@ export function PlanCard({
             variant={
               isCurrent ? "outline" : plan.is_popular ? "default" : "outline"
             }
-            disabled={isCurrent || isLoading}
+            disabled={isLoading}
             onClick={() => onSelect?.(plan.id)}
           >
             {isCurrent
-              ? t.subscriptions.current_plan_badge
+              ? copy("Renew plan")
               : (selectLabel ?? t.subscriptions.select_plan)}
           </Button>
         )}

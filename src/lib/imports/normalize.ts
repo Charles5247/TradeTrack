@@ -74,7 +74,7 @@ export function parseDate(v: unknown, order: DateOrder, offset = '+01:00'): stri
 }
 export interface PayPart { label: string; amount: number }
 export function parsePayments(text: unknown): PayPart[] {
-  return [...s(text).matchAll(/([A-Za-z][A-Za-z .&-]*?):\s*(-?[\d,]*\.?\d+)/g)].map(m => ({ label: m[1].trim(), amount: Number(m[2].replace(/,/g, '')) }));
+  return [...s(text).matchAll(/([A-Za-z][A-Za-z .&-]*?):\s*(-?[\d,]*\.?\d+)/g)].map(m => ({ label: m[1].trim(), amount: parseMoney(m[2]) ?? Number.NaN }));
 }
 /** Source wording -> TracKasuwa method. Unknown labels return null (user maps them once). Note: source apps may have mangled letters, so match loosely. */
 export function mapPaymentLabel(label: string, custom: Record<string, string> = {}): string | null {
