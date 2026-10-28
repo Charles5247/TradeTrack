@@ -76,5 +76,17 @@
     "yo": "?p??r? r?s??t?",
     "ig": "?kp?r? risit",
     "pcm": "Receipt style"
+  },
+  "Confirm subscription payment": {
+    "ha": "Tabbatar da biyan ku?in shiri",
+    "yo": "J??r?? ?sanw? ?t?",
+    "ig": "Kwenye ?kw? ?gw? ndebanye aha",
+    "pcm": "Confirm subscription payment"
+  },
+  "Continue to secure payment": {
+    "ha": "Ci gaba zuwa biyan ku?i mai tsaro",
+    "yo": "T??s?w?j? s? ?sanw? t? n? ??b?",
+    "ig": "Gaa n?ihu na ?kw? ?gw? echekwara",
+    "pcm": "Continue to secure payment"
   }
 }

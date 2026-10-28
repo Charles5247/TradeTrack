@@ -460,6 +460,8 @@ export default function SubscriptionsPage() {
   const [planDialogOpen, setPlanDialogOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
   const [deletingPlan, setDeletingPlan] = useState<Plan | null>(null);
+  const [checkoutPlan, setCheckoutPlan] = useState<Plan | null>(null);
+  const [checkoutPhone, setCheckoutPhone] = useState('');
   const [billingCycle, setBillingCycle] = useState<BillingCycle>(
     "monthly",
   );
@@ -509,7 +511,7 @@ export default function SubscriptionsPage() {
       if (!session) throw new Error('Sign in again to continue.');
       const response = await fetch('/api/payments/initialize', {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
-        body: JSON.stringify({ planId, billingCycle: cycle }),
+        body: JSON.stringify({ planId, billingCycle: cycle, mobile: checkoutPhone }),
       });
       const result = await response.json();
       if (!response.ok || !result.paymentUrl) throw new Error(result.error || 'Unable to start payment');
@@ -552,6 +554,18 @@ export default function SubscriptionsPage() {
   return (
     <div className="space-y-6">
       <PaymentReturn />
+      <Dialog open={Boolean(checkoutPlan)} onOpenChange={(open) => { if (!open && !upgradeMutation.isPending) setCheckoutPlan(null); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{copy('Confirm subscription payment')}</DialogTitle>
+            <DialogDescription>{checkoutPlan?.name} · {billingCycle} · {formatCurrency(billingPrice(checkoutPlan?.price || 0, billingCycle), 'NGN')}</DialogDescription>
+          </DialogHeader>
+          <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); if (checkoutPlan) upgradeMutation.mutate({planId: checkoutPlan.id, cycle: billingCycle}); }}>
+            <p className="text-sm text-muted-foreground">{copy('Renewing the same plan keeps your remaining paid time. A different plan replaces your current plan immediately after payment.')}</p>
+            <div className="space-y-2"><Label htmlFor="checkout-phone">{copy('Phone number')}</Label><Input id="checkout-phone" type="tel" autoComplete="tel" required pattern="[+0-9 ()-]{10,20}" value={checkoutPhone} onChange={event => setCheckoutPhone(event.target.value)} /></div>
+            <Button className="w-full" type="submit" disabled={upgradeMutation.isPending}>{copy('Continue to secure payment')}</Button>
+          </form>
+        </DialogContent>
+      </Dialog>
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -650,9 +664,7 @@ export default function SubscriptionsPage() {
                   allPlans={plans}
                   currentPlanId={isPlatformOwner || !subscription || !["active", "trial"].includes(subscription.status) ? undefined : subscription.plan_id}
                   billingCycle={billingCycle}
-                  onSelect={(planId) =>
-                    upgradeMutation.mutate({ planId, cycle: billingCycle })
-                  }
+                  onSelect={() => { setCheckoutPlan(plan); setCheckoutPhone(user?.phone || ''); }}
                   isLoading={upgradeMutation.isPending}
                   actions={canManagePlans ? (
                     <div className="mt-1 flex flex-col gap-2">

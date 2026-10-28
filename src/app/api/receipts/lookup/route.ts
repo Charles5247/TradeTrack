@@ -76,7 +76,7 @@ async function lookupSale(
     .select(
       `
       *,
-      cashier:users(full_name),
+      cashier:users!sales_cashier_id_fkey(full_name),
       items:sale_items(
         id, quantity, unit_price, discount, total,
         product:products(name, sku)

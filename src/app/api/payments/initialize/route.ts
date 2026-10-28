@@ -11,11 +11,13 @@ export async function POST(request: NextRequest) {
     const admin = paymentAdmin();
     const { data: { user }, error: authError } = await admin.auth.getUser(token);
     if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const { data: profile, error: profileError } = await admin.from('users').select('organization_id,role').eq('id', user.id).single();
+    const { data: profile, error: profileError } = await admin.from('users').select('organization_id,role,phone').eq('id', user.id).single();
     if (profileError || !profile?.organization_id || profile.role !== 'business_owner') return NextResponse.json({ error: 'Only the business owner can purchase a subscription' }, { status: 403 });
     let body: { planId?: string; billingCycle?: string; mobile?: string };
     try { body = await request.json(); } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }); }
     if (!body || typeof body.planId !== 'string' || !Object.hasOwn(BILLING_MONTHS, body.billingCycle || '')) return NextResponse.json({ error: 'Choose a plan and billing period' }, { status: 400 });
+    const mobile = (typeof body.mobile === 'string' ? body.mobile : profile.phone || '').replace(/[\s()-]/g, '');
+    if (!/^\+?\d{10,15}$/.test(mobile)) return NextResponse.json({ error: 'Enter a valid phone number for payment' }, { status: 400 });
     const { data: plan, error: planError } = await admin.from('subscription_plans').select('id,name,price,currency,billing_cycle,is_active').eq('id', body.planId).single();
     if (planError || !plan?.is_active || plan.billing_cycle !== 'monthly' || plan.currency !== 'NGN' || Number(plan.price) <= 0 || /trial|enterprise|free/i.test(plan.name)) return NextResponse.json({ error: 'This plan is not available for checkout' }, { status: 400 });
     const config = getZainpayConfig();
@@ -36,7 +38,7 @@ export async function POST(request: NextRequest) {
     const response = await fetch(`${config.baseUrl}/zainbox/card/initialize/payment`, {
       method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.publicKey}` },
       body: JSON.stringify({ amount: String(amount), txnRef: reference, emailAddress: user.email,
-        mobileNumber: typeof body.mobile === 'string' ? body.mobile : '', zainboxCode: zainbox, callBackUrl: callback.href }),
+        mobileNumber: mobile, zainboxCode: zainbox, callBackUrl: callback.href }),
       signal: AbortSignal.timeout(20000),
     });
     const url = response.ok ? checkoutUrl(await response.json()) : null;

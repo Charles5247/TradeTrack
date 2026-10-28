@@ -36,7 +36,7 @@ async function fetchSales(filters: {
     .from('sales')
     .select(`
       *,
-      cashier:users(full_name),
+      cashier:users!sales_cashier_id_fkey(full_name),
       credit_authorizer:users!sales_credit_authorized_by_fkey(full_name),
       warehouse:warehouses(name),
       items:sale_items(

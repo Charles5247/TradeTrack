@@ -30,7 +30,7 @@ function SaleRecord({ id }: { id: string }) {
     enabled: Boolean(user?.organization_id),
     queryFn: async () => {
       const { data, error } = await createClient().from('sales')
-        .select('*, cashier:users(full_name), warehouse:warehouses(name), items:sale_items(id, quantity, unit_price, total, product:products(name, sku))')
+        .select('*, cashier:users!sales_cashier_id_fkey(full_name), warehouse:warehouses(name), items:sale_items(id, quantity, unit_price, total, product:products(name, sku))')
         .eq('organization_id', user!.organization_id!).eq('id', id).single();
       if (error) throw error;
       return data as unknown as SaleRecordData;

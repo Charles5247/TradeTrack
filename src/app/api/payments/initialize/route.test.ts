@@ -14,7 +14,7 @@ beforeEach(()=>{
  mocks.insert.mockImplementation(async()=>({error:mocks.saveError}));
  mocks.from.mockImplementation(table=>({
   insert:mocks.insert,
-  select:()=>({eq:()=>({single:async()=>({error:null,data:table==='users'?{organization_id:'org-from-auth',role:mocks.role}:{id:'plan-from-db',name:'Business',price:20000,currency:'NGN',billing_cycle:'monthly',is_active:true}})})}),
+  select:()=>({eq:()=>({single:async()=>({error:null,data:table==='users'?{organization_id:'org-from-auth',role:mocks.role,phone:'08012345678'}:{id:'plan-from-db',name:'Business',price:20000,currency:'NGN',billing_cycle:'monthly',is_active:true}})})}),
  }));
  mocks.fetch.mockResolvedValue(new Response(JSON.stringify({code:'00',data:'https://pay.zainpay.ng/checkout'})));
  vi.stubGlobal('fetch',mocks.fetch);
@@ -44,3 +44,5 @@ it.each(['quarter','constructor','__proto__',''])('rejects invalid billing cycle
  expect((await POST(request({planId:'p',billingCycle:cycle}))).status).toBe(400);
  expect(mocks.fetch).not.toHaveBeenCalled();
 });
+
+it('requires a payment phone number before contacting the provider',async()=>{expect((await POST(request({planId:'p',billingCycle:'monthly',mobile:'bad'}))).status).toBe(400);expect(mocks.fetch).not.toHaveBeenCalled();});
