@@ -29,10 +29,10 @@ export async function POST(request: Request) {
     const kind = body.kind as ImportKind;
     if (!(kind in fields) || kind === 'staff_invites') throw new Error('Use the owner-only users API for staff invitations');
     if (!Array.isArray(body.rows) || body.rows.length > 100) throw new Error('Send at most 100 rows');
-    for (const row of body.rows) { const errors=validateRow(row.data,kind); if (errors.length) throw new Error(`Row ${row.index}: ${errors.join('; ')}`); }
+    for (const row of body.rows) { if (row.blocked?.length || (row.fixes?.some((f: {severity:string})=>f.severity==='review') && !row.reviewAccepted)) throw new Error('Resolve import decisions first'); const errors=validateRow(row.data,kind); if (errors.length) throw new Error(`Row ${row.index}: ${errors.join('; ')}`); }
     const { error: batchError } = await (db as any).from('import_batches').upsert({ id: body.batch_id, organization_id: org, kind, created_by: profile.id, summary: body.summary || {} }, { onConflict: 'id', ignoreDuplicates: true });
     if (batchError) throw batchError;
-    const { data, error } = await (db as any).rpc('apply_import_chunk', { batch: body.batch_id, import_rows: body.rows, duplicate_mode: body.mode, warehouse: body.warehouse_id || null });
+    const { data, error } = await (db as any).rpc('apply_import_chunk', { batch: body.batch_id, import_rows: body.rows.map((row: any)=>({...row,data:{...row.data,_import_source:row.original,_import_fixes:row.fixes,_import_review_accepted:row.reviewAccepted}})), duplicate_mode: body.mode, warehouse: body.warehouse_id || null });
     if (error) throw error;
     return Response.json(data);
   } catch (e) { return Response.json({ error: e instanceof Error ? e.message : 'Import failed' }, { status: 400 }); }

@@ -18,6 +18,7 @@ import {
   WifiOff,
   Upload,
   ChevronRight,
+  Sparkles,
 } from "lucide-react";
 import { syncEngine } from "@/lib/offline/sync-engine";
 import { useTheme } from "next-themes";
@@ -182,6 +183,16 @@ export function Header() {
       </Button>
 
       <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
+        {(user?.role === 'business_owner' || user?.role === 'admin') && <Button
+          variant="outline"
+          className="h-11 min-w-11 shrink-0 gap-2 border-primary/40 text-primary"
+          onClick={() => router.push('/assistant')}
+          aria-label={copy('Assistant')}
+          title={copy('Assistant')}
+        >
+          <Sparkles className="h-5 w-5" aria-hidden="true" />
+          <span className="hidden sm:inline">{copy('Assistant')}</span>
+        </Button>}
         <div className="hidden xl:block"><LanguageSelect /></div>
         <div
           className={cn(

@@ -36,7 +36,7 @@ async function queueChunk(options: ImportOptions, rows: PreviewRow[]): Promise<R
           await tx.objectStore('inventory').put({ id: row.data.inventory_id, organization_id: options.org, product_id: row.id, warehouse_id: options.warehouseId, quantity: Number(row.data.opening_stock), min_stock_level: 0, updated_at: now, import_batch_id: batch.id });
         }
       }
-      const command = { batch: options.batchId, row_index: row.index, row_data: row.data, duplicate_mode: options.mode, warehouse: options.warehouseId || null, proposed_id: row.id, organization_id: options.org, local_before: row.existing || null };
+      const command = { batch: options.batchId, row_index: row.index, row_data: { ...row.data, _import_source: row.original, _import_fixes: row.fixes, _import_review_accepted: row.reviewAccepted }, duplicate_mode: options.mode, warehouse: options.warehouseId || null, proposed_id: row.id, organization_id: options.org, local_before: row.existing || null };
       await addToSyncQueue('import_commands','INSERT',`${options.batchId}:${row.index}`,command,tx);
       await tx.objectStore('app_meta').put({ id: `import-result:${options.batchId}:${row.index}`, batch_id: options.batchId, row_number: row.index, outcome: 'queued', entity_id: row.id });
     }
@@ -46,7 +46,7 @@ async function queueChunk(options: ImportOptions, rows: PreviewRow[]): Promise<R
 export async function executeImport(options: ImportOptions, progress: (done: number) => void): Promise<RowResult[]> {
   if (!['business_owner','admin'].includes(options.role) || (options.kind === 'staff_invites' && options.role !== 'business_owner')) throw new Error('You do not have permission to import these records.');
   if (!options.org || !options.userId) throw new Error('Business membership required.');
-  if (options.rows.some(r => r.errors.length)) throw new Error('Fix row errors before confirming.');
+  if (options.rows.some(r => r.errors.length || r.blocked?.length || (r.fixes?.some(f=>f.severity==='review') && !r.reviewAccepted))) throw new Error('Fix row errors before confirming.');
   const results: RowResult[] = [];
   for (let start = 0; start < options.rows.length; start += 50) {
     const rows = options.rows.slice(start,start+50).map(r => ({ ...r, data: { ...r.data, inventory_id: r.data.inventory_id || crypto.randomUUID() } }));

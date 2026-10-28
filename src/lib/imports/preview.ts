@@ -1,3 +1,4 @@
+import type { Fix } from './normalize';
 export type ImportKind = 'products' | 'suppliers' | 'customers' | 'historical_sales' | 'staff_invites';
 export type DuplicateMode = 'skip' | 'update' | 'create';
 export type ImportRow = Record<string, string | number>;
@@ -27,7 +28,7 @@ export function validateRow(row: ImportRow, kind: ImportKind): string[] {
   if (kind === 'historical_sales' && (!Number.isFinite(Date.parse(String(row.sold_at))) || !['cash','transfer','pos_terminal','split','partial'].includes(String(row.payment_method)))) errors.push('Valid date and payment method required');
   return errors;
 }
-export interface PreviewRow { index: number; id: string; data: ImportRow; outcome: 'create' | 'update' | 'skip' | 'error'; errors: string[]; existing?: Record<string, any>; }
+export interface PreviewRow { original?: Record<string, unknown>; fixes?: Fix[]; blocked?: string[]; reviewAccepted?: boolean; index: number; id: string; data: ImportRow; outcome: 'create' | 'update' | 'skip' | 'error'; errors: string[]; existing?: Record<string, any>; }
 export function previewImport(rows: ImportRow[], kind: ImportKind, mode: DuplicateMode, existing: Record<string, any>[]): PreviewRow[] {
   const keys = kind === 'products' ? ['sku','barcode'] : kind === 'historical_sales' ? ['invoice_number'] : ['email','phone'];
   const normalize = (v: unknown) => String(v ?? '').trim().toLowerCase();
