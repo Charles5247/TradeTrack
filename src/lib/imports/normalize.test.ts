@@ -68,3 +68,17 @@ describe('sales: item lines -> one sale, totals reconcile', () => {
     expect(cleanSales([{ 'Sale Id': '1', Date: '01/02/2025', Total: 5, 'Payment Type': 'Cash: 5' }], sm, { dateOrder: 'dmy' })[0].data.sold_at).toBe('2025-02-01T00:00:00+01:00');
   });
 });
+
+it('blocks malformed numbers and impossible calendar dates',()=>{
+ expect(parseMoney('1-2')).toBeNull();expect(parseMoney('12,34')).toBeNull();
+ expect(parseDate('31/02/2026','dmy')).toBeNull();expect(parseDate('28/02/2026 12:75','dmy')).toBeNull();
+});
+it('does not produce duplicate SKU suffixes',()=>{
+ const rows=cleanProducts([{name:'A',sku:'A',price:1},{name:'B',sku:'A-2',price:1},{name:'C',sku:'A',price:1}],{name:'name',sku:'sku',selling_price:'price'});
+ expect(rows.map(r=>r.data.sku)).toEqual(['A','A-2','A-3']);
+});
+it('preserves generic payment amounts and distinct invoice references',()=>{
+ const mapping={invoice_number:'id',sold_at:'date',total:'total',amount_paid:'paid',payment_method:'method'};
+ const rows=cleanSales([{id:'12-A',date:'2026-01-01',total:10,paid:7,method:'cash'},{id:'12-B',date:'2026-01-01',total:'bad',paid:10,method:'cash'}],mapping);
+ expect(rows).toHaveLength(2);expect(rows[0].data.amount_paid).toBe('7');expect(rows[1].blocked.join()).toContain('unreadable');
+});

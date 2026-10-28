@@ -40,10 +40,12 @@ export function autoMapLegacy(headers: string[], kind: ImportKind): Record<strin
 export function parseMoney(v: unknown): number | null {
   if (typeof v === 'number') return Number.isFinite(v) ? v : null;
   let t = s(v); if (!t) return null;
-  const neg = /^\(.*\)$/.test(t) || /^-/.test(t.replace(/^[^\d(-]*/, ''));
-  t = t.replace(/(ngn|naira|[₦#])/gi, '').replace(/\bN(?=\d)/g, '').replace(/[,\s()\-]/g, '');
-  if (!/^\d+(\.\d+)?$/.test(t)) return null;
-  const n = Number(t); return neg ? -n : n;
+  t = t.replace(/^(?:NGN|naira|N|\u20a6|#)\s*/i, '').trim();
+  const neg = /^\(.*\)$/.test(t);
+  if (neg) t=t.slice(1,-1);
+  if (!/^-?(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?$/.test(t)) return null;
+  const n=Number(t.replaceAll(',',''))*(neg?-1:1);
+  return Number.isFinite(n) && Number.isSafeInteger(Math.round(n*100)) ? n : null;
 }
 export type DateOrder = 'mdy' | 'dmy' | 'unknown';
 const DATE_RE = /^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})(?:[\sT-]+(\d{1,2}):(\d{2})(?::\d{2})?\s*([ap]m)?)?$/i;
@@ -54,15 +56,21 @@ export function detectDateOrder(values: unknown[]): DateOrder {
   return first && !second ? 'dmy' : second && !first ? 'mdy' : 'unknown';
 }
 export function parseDate(v: unknown, order: DateOrder, offset = '+01:00'): string | null {
-  const t = s(v); if (!t) return null;
-  if (/^\d{4}-\d{2}-\d{2}/.test(t)) return Number.isFinite(Date.parse(t)) ? t : null;
-  const m = DATE_RE.exec(t); if (!m || order === 'unknown') return null;
-  const [d, mo] = order === 'dmy' ? [+m[1], +m[2]] : [+m[2], +m[1]];
-  let h = m[4] ? +m[4] : 0; const ap = m[6]?.toLowerCase();
-  if (ap === 'pm' && h < 12) h += 12; if (ap === 'am' && h === 12) h = 0;
-  if (mo < 1 || mo > 12 || d < 1 || d > 31 || h > 23) return null;
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${m[3]}-${p(mo)}-${p(d)}T${p(h)}:${m[5] || '00'}:00${offset}`;
+  const t=s(v); if(!t || !/^[+-](?:0\d|1[0-4]):[0-5]\d$/.test(offset)) return null;
+  const iso=/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(\.\d{1,3})?)?(Z|[+-]\d{2}:\d{2})?)?$/.exec(t);
+  const m=iso ? null : /^(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{4})(?:[\sT-]+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([ap]m)?)?$/i.exec(t);
+  if(!iso && (!m || order==='unknown')) return null;
+  const year=+(iso?.[1] || m![3]);
+  const month=iso?+iso[2]:+(order==='dmy'?m![2]:m![1]);
+  const day=iso?+iso[3]:+(order==='dmy'?m![1]:m![2]);
+  let hour=+(iso?.[4] || m?.[4] || 0);
+  const minute=+(iso?.[5] || m?.[5] || 0),second=+(iso?.[6] || m?.[6] || 0),ap=m?.[7]?.toLowerCase();
+  if(ap && (hour<1 || hour>12))return null;
+  if(ap==='pm' && hour<12)hour+=12;if(ap==='am' && hour===12)hour=0;
+  if(year<1000 || month<1 || month>12 || day<1 || day>new Date(Date.UTC(year,month,0)).getUTCDate() || hour>23 || minute>59 || second>59)return null;
+  const pad=(n:number)=>String(n).padStart(2,'0');
+  const result=year+'-'+pad(month)+'-'+pad(day)+'T'+pad(hour)+':'+pad(minute)+':'+pad(second)+(iso?.[7]||'')+(iso?.[8]||offset);
+  return Number.isFinite(Date.parse(result))?result:null;
 }
 export interface PayPart { label: string; amount: number }
 export function parsePayments(text: unknown): PayPart[] {
@@ -89,8 +97,10 @@ export function cleanProducts(rows: Record<string, unknown>[], mapping: Record<s
     if (!name) { name = `UNNAMED ITEM (${legacy ? 'legacy id ' + legacy : 'row ' + (i + 1)})`; fix('name', '', name, 'Name is required; placeholder keeps the record. Rename after import.', 'review'); }
     let sku = s(pick('sku'));
     if (!sku) { sku = legacy ? `ITM-${legacy}` : `ITM-ROW-${i + 1}`; fix('sku', '', sku, 'No SKU in source; generated from the old system id so it stays traceable.'); }
-    const lk = sku.toLowerCase(), seen = used.get(lk) || 0; used.set(lk, seen + 1);
-    if (seen) { const n = `${sku}-${seen + 1}`; fix('sku', sku, n, 'SKU already used by an earlier row in this file; suffix added so both records are kept.', 'review'); sku = n; }
+    const base=sku; let suffix=2;
+    while(used.has(sku.toLowerCase())) sku=base+'-'+suffix++;
+    used.set(sku.toLowerCase(),1);
+    if(sku!==base) fix('sku',base,sku,'SKU already used by an earlier row in this file; suffix added so both records are kept.','review');
     const money = (f: string): string => {
       const v = pick(f); if (!s(v)) { fix(f, '', 0, 'Blank price set to 0; set the real price after import.', f === 'selling_price' ? 'review' : 'auto'); return '0'; }
       const n = parseMoney(v);
@@ -107,9 +117,10 @@ export function cleanProducts(rows: Record<string, unknown>[], mapping: Record<s
       if (!m) blocked.push(`opening_stock: cannot read "${qty}"`);
       else if (m[2] && Number(m[2]) !== 0) blocked.push(`opening_stock: ${qty} is fractional; stock must be a whole number (decide the unit)`);
       else {
-        const n = Number(m[1].replace(/,/g, ''));
+        const n = parseMoney(m[1]);
+        if(n===null || !Number.isSafeInteger(n)) { blocked.push('opening_stock: invalid whole number'); return {index:i+1, original:raw, fixes, blocked, data:{name,sku,barcode:s(pick('barcode')),selling_price,cost_price,opening_stock:qty}}; }
         if (n < 0) fix('opening_stock', qty, 0, `Negative stock (${n}) not allowed by the importer; original kept in the migration record.`, 'review');
-        else { stock = String(n); if (qty !== stock) fix('opening_stock', qty, n, 'Unit text/commas removed.'); }
+        else { stock = String(n); if (qty !== stock) fix('opening_stock', qty, n, 'Unit text/commas removed.', /[a-z]/i.test(qty) ? 'review' : 'auto'); }
       }
     }
     return { index: i + 1, original: raw, fixes, blocked, data: { name, sku, barcode: s(pick('barcode')), selling_price, cost_price, opening_stock: stock } };
@@ -129,20 +140,30 @@ export function cleanSales(rows: Record<string, unknown>[], mapping: Record<stri
     const head = lines[0], fixes: Fix[] = [], blocked: string[] = [];
     const fix = (field: string, from: unknown, to: unknown, reason: string, severity: Severity = 'auto') => fixes.push({ field, from: s(from), to: String(to), reason, severity });
     if (!id) blocked.push('invoice_number: missing sale id');
-    if (lines.length > 1) fix('rows', `${lines.length} item lines`, '1 sale', 'Item lines rolled up to one sale; every line is kept in the migration record.');
+    if (lines.length > 1) fix('rows', `${lines.length} item lines`, '1 sale', 'Item lines rolled up to one sale; every line is kept in the migration record.', opt.saleTotalKey ? 'auto' : 'review');
+    if(lines.some(l=>s(l[dateKey])!==s(head[dateKey]) || s(l[payKey])!==s(head[payKey]) || (mapping.amount_paid && s(l[mapping.amount_paid])!==s(head[mapping.amount_paid])) || (opt.saleTotalKey && s(l[opt.saleTotalKey])!==s(head[opt.saleTotalKey])))) blocked.push('Conflicting date or payment details within the same sale; resolve the source records');
     if (s(head[idKey]) !== id) fix('invoice_number', head[idKey], id, 'Screen wording removed; old sale number kept.');
     const saleTotal = opt.saleTotalKey ? parseMoney(head[opt.saleTotalKey]) : null;
     if (lines.some(l => parseMoney(l[opt.lineTotalKey || mapping.total]) === null)) blocked.push('total: unreadable or missing line amount');
     if (opt.saleTotalKey && saleTotal === null) blocked.push('total: unreadable sale total');
     const lineSum = lines.reduce((a, l) => a + (parseMoney(l[opt.lineTotalKey || mapping.total]) ?? 0), 0);
-    const total = saleTotal ?? lineSum;
+    const total = saleTotal ?? Math.round(lineSum*100)/100;
     if (saleTotal !== null && Math.abs(saleTotal - lineSum) > 0.01) fix('total', lineSum, saleTotal, 'Item lines do not add up to the sale total; the sale total was used.', 'review');
     const sold_at = parseDate(head[dateKey], order, opt.utcOffset);
     if (!sold_at) blocked.push(order === 'unknown' ? 'sold_at: day/month order is ambiguous in this file; choose it once for the whole file' : `sold_at: cannot read "${s(head[dateKey])}"`);
     else if (s(head[dateKey]) !== sold_at) fix('sold_at', head[dateKey], sold_at, `Date reformatted (${order === 'dmy' ? 'day first' : 'month first'}, UTC${opt.utcOffset || '+01:00'} assumed).`);
+    if(s(head[payKey]).includes(':') && s(head[payKey]).replace(/([A-Za-z][A-Za-z .&-]*?):\s*(-?[\d,]*\.?\d+)/g,'').trim()) blocked.push('payment_method: unreadable payment details; resolve the source record');
     const parts = parsePayments(head[payKey]); const kinds = new Set<string>();
+    if(!parts.length && !s(head[payKey]).includes(':')) {
+      const method=mapPaymentLabel(s(head[payKey]),opt.paymentMap);
+      const amount=parseMoney(head[mapping.amount_paid]);
+      if(!method) blocked.push(`payment_method: unrecognised "${s(head[payKey])}" - map it once for the whole file`);
+      if(amount===null) blocked.push('amount_paid: unreadable or missing amount');
+      if(method && amount!==null) parts.push({label:s(head[payKey]),amount});
+    }
     for (const p of parts) { const m = mapPaymentLabel(p.label, opt.paymentMap); if (m) kinds.add(m); else blocked.push(`payment_method: unrecognised "${p.label}" - map it once for the whole file`); }
-    const paid = parts.reduce((a, p) => a + p.amount, 0);
+    const paid = Math.round(parts.reduce((a, p) => a + p.amount, 0)*100)/100;
+    if(parts.some(p=>!Number.isFinite(p.amount))) blocked.push('amount_paid: unreadable payment amount');
     if (parts.some(p => p.amount < 0)) fix('amount_paid', head[payKey], paid, 'Negative payment line (change given) netted into one amount paid.');
     const payment_method = kinds.size > 1 ? 'split' : [...kinds][0] || '';
     if (!parts.length) blocked.push('payment_method: no payment found');

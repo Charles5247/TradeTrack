@@ -158,11 +158,15 @@ it('prevents cashier self-escalation, discounts and ad-hoc stock changes',async(
 it('imports opening stock idempotently and reverses without deleting records',async()=>{
  const batch='60000000-0000-0000-0000-000000000001';const imported='70000000-0000-0000-0000-000000000001';
  await db.exec(`INSERT INTO import_batches(id,organization_id,kind,created_by) VALUES('${batch}','${org}','products','${owner}')`);
- const args=[batch,1,JSON.stringify({name:'Beans',sku:'BEANS',selling_price:20,cost_price:10,opening_stock:5}),'skip',warehouse,imported];
+ const args=[batch,1,JSON.stringify({name:'Beans',sku:'BEANS',selling_price:20,cost_price:10,opening_stock:5,_import_source:{'Item Name':'Beans',Quantity:'5 packs',Unused:'keep me'},_import_fixes:[{field:'opening_stock',from:'5 packs',to:'5',severity:'review'}],_import_review_accepted:true}),'skip',warehouse,imported];
  const r=await db.query<{v:{outcome:string}}>('SELECT apply_import_row($1,$2,$3,$4,$5,$6) v',args);expect(r.rows[0].v.outcome).toBe('create');
  await db.query('SELECT apply_import_row($1,$2,$3,$4,$5,$6)',args);
  expect((await db.query<{quantity:number}>(`SELECT quantity FROM inventory WHERE product_id='${imported}'`)).rows[0].quantity).toBe(5);
  expect((await db.query<{summary:{create:number}}>(`SELECT summary FROM import_batches WHERE id='${batch}'`)).rows[0].summary.create).toBe(1);
+ const audit=(await db.query<{before_values:Record<string,unknown>;after_values:Record<string,unknown>}>(`SELECT before_values,after_values FROM import_rows WHERE import_batch_id='${batch}'`)).rows[0];
+ expect(audit.before_values._import_source).toEqual({'Item Name':'Beans',Quantity:'5 packs',Unused:'keep me'});
+ expect(audit.before_values._import_review_accepted).toBe(true);
+ expect(audit.after_values).not.toHaveProperty('_import_source');
  await db.query('SELECT reverse_import($1,$2)',[batch,'Wrong opening file']);
  expect((await db.query<{status:string}>(`SELECT status FROM products WHERE id='${imported}'`)).rows[0].status).toBe('inactive');
  expect((await db.query<{quantity:number}>(`SELECT quantity FROM inventory WHERE product_id='${imported}'`)).rows[0].quantity).toBe(0);

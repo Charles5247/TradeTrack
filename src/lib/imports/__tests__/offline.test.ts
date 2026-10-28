@@ -8,11 +8,13 @@ afterEach(()=>{vi.restoreAllMocks();vi.unstubAllGlobals();});
 it('atomically stores products, opening stock and append-only import commands offline', async()=>{
  vi.spyOn(navigator,'onLine','get').mockReturnValue(false);
  const rows=previewImport([{name:'Rice',sku:'OFFLINE-RICE',opening_stock:5,selling_price:100}],'products','skip',[]);
+ rows[0].original={SKU:'OFFLINE-RICE',notes:'source preserved'};rows[0].fixes=[];
  const results=await executeImport({batchId:'batch-offline',kind:'products',mode:'skip',warehouseId:'warehouse',org:'org',userId:'user',role:'business_owner',rows},()=>{});
  const db=await getDB();
  expect((await db.get('products',rows[0].id)).name).toBe('Rice');
  expect((await db.getAll('inventory')).some(r=>r.product_id===rows[0].id&&r.quantity===5)).toBe(true);
  const queue=await db.getAll('sync_queue');expect(queue.filter(r=>r.table_name==='import_commands'&&r.operation==='INSERT')).toHaveLength(1);
+ expect(queue.find(r=>r.table_name==='import_commands')?.payload).toMatchObject({row_data:{_import_source:{notes:'source preserved'}}});
  expect(results[0].outcome).toBe('queued');
 });
 it('requires connectivity for unsupported local tables and restricts staff to owners',async()=>{

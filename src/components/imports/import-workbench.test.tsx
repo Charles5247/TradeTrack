@@ -16,7 +16,7 @@ it.each([375,1280])('requires preview and confirmation before importing at %ipx'
   const host=document.createElement('div');document.body.append(host);const root=createRoot(host);
   const button=(text:string)=>Array.from(host.querySelectorAll('button')).find(b=>b.textContent===text)!;
   try {
-    await act(async()=>root.render(<QueryClientProvider client={client}><ImportWorkbench initialRows={[{name:'Rice',sku:'RICE',price:100,qty:0}]} /></QueryClientProvider>));
+    await act(async()=>root.render(<QueryClientProvider client={client}><ImportWorkbench initialRows={[{name:'Rice',sku:'RICE',price:'NGN 100',qty:width===375?0:-1,legacy_note:'preserve this'}]} /></QueryClientProvider>));
     await act(async()=>button('Validate and preview').click());
     expect(host.textContent).toContain('Choose a warehouse');expect(mocks.execute).not.toHaveBeenCalled();
     const warehouse=Array.from(host.querySelectorAll('select')).find(s=>s.parentElement?.textContent?.startsWith('Opening-stock warehouse'))!;
@@ -24,8 +24,11 @@ it.each([375,1280])('requires preview and confirmation before importing at %ipx'
     await act(()=>{warehouse.value='warehouse';warehouse.dispatchEvent(new Event('change',{bubbles:true}));});
     await act(async()=>button('Validate and preview').click());
     expect(host.textContent).toContain('1 create');expect(mocks.execute).not.toHaveBeenCalled();
+    expect(host.textContent).toContain('rows auto-fixed');
+    if(width===1280){expect(button('Confirm 1 rows').disabled).toBe(true);await act(()=>{host.querySelector<HTMLInputElement>('input[type=checkbox]')!.click();});}
     await act(async()=>{button('Confirm 1 rows').click();await new Promise(resolve=>setTimeout(resolve,20));});
     expect(mocks.execute).toHaveBeenCalledWith(expect.objectContaining({kind:'products',warehouseId:'warehouse',org:'org'}),expect.any(Function));
+    expect(mocks.execute.mock.calls[0][0].rows[0]).toMatchObject({original:{legacy_note:'preserve this'},fixes:expect.arrayContaining([expect.objectContaining({field:'selling_price'})])});
     expect(button('Confirm 1 rows').disabled).toBe(true);
   }finally{await act(()=>root.unmount());client.clear();host.remove();vi.unstubAllGlobals();}
 });
