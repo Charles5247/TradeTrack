@@ -35,22 +35,29 @@ import { useI18n } from '@/i18n';
 
 async function fetchProducts(search?: string, categoryId?: string) {
   const supabase = createClient();
-  let query = supabase
-    .from('products')
-    .select('*, category:categories(name), supplier:suppliers(name)')
-    .order('created_at', { ascending: false });
+  const products: Product[] = [];
+  const pageSize = 500;
+  for (let start = 0; ; start += pageSize) {
+    let query = supabase
+      .from('products')
+      .select('*, category:categories(name), supplier:suppliers(name)')
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
+      .range(start, start + pageSize - 1);
 
-  if (search) {
-    query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%,barcode.ilike.%${search}%`);
-  }
-  if (categoryId && categoryId !== 'all') {
-    query = query.eq('category_id', categoryId);
-  }
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%,barcode.ilike.%${search}%`);
+    }
+    if (categoryId && categoryId !== 'all') {
+      query = query.eq('category_id', categoryId);
+    }
 
-  const { data, error } = await query;
-  if (error) throw error;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (data as any) as Product[];
+    const { data, error } = await query;
+    if (error) throw error;
+    products.push(...((data || []) as unknown as Product[]));
+    if (!data || data.length < pageSize) break;
+  }
+  return products;
 }
 
 async function fetchCategories() {
