@@ -87,12 +87,7 @@ async function lookupSale(
     .maybeSingle();
 
   if (error) throw error;
-  if (!sale) {
-    return NextResponse.json(
-      { error: "No receipt found for this barcode" },
-      { status: 404 },
-    );
-  }
+  if (!sale) return lookupHistoricalSale(supabase, invoiceNumber);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const s = sale as any;
@@ -132,6 +127,14 @@ async function lookupSale(
       ),
     },
   });
+}
+
+async function lookupHistoricalSale(supabase: Awaited<ReturnType<typeof getSupabase>>, invoiceNumber: string) {
+  const { data, error } = await supabase.from('historical_sales' as never).select('invoice_number,sold_at,total,amount_paid,payment_method,status').eq('invoice_number',invoiceNumber).maybeSingle();
+  if (error) throw error;
+  if (!data || (data as {status:string}).status === 'reversed') return NextResponse.json({ error: 'No receipt found for this barcode' }, { status: 404 });
+  const sale=data as {invoice_number:string;sold_at:string;total:number;amount_paid:number;payment_method:string;status:string};
+  return NextResponse.json({kind:'historical_sale',receipt:{invoiceNumber:sale.invoice_number,dateISO:sale.sold_at,total:sale.total,amountPaid:sale.amount_paid,paymentMethod:sale.payment_method,status:sale.status,itemsImported:false,printable:false}});
 }
 
 async function lookupTransfer(

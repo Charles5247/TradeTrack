@@ -38,3 +38,27 @@ it('yields between chunks for more than a thousand rows',async()=>{
  const progress=vi.fn();const result=await executeImport({batchId:'large',kind:'suppliers',mode:'skip',warehouseId:'',org:'org',userId:'user',role:'admin',rows},progress);
  expect(result).toHaveLength(1001);expect(request).toHaveBeenCalledTimes(21);expect(progress).toHaveBeenLastCalledWith(1001);
 });
+it('retries a timed-out historical-sales chunk online instead of sending it to the offline queue',async()=>{
+ vi.spyOn(navigator,'onLine','get').mockReturnValue(true);
+ const request=vi.fn()
+  .mockRejectedValueOnce(new Error('Operation timed out'))
+  .mockResolvedValueOnce(Response.json([{row_number:1,outcome:'create'}]));
+ vi.stubGlobal('fetch',request);
+ const rows=previewImport([{invoice_number:'OLD-1',sold_at:'2026-01-01T10:00:00+01:00',total:100,amount_paid:100,payment_method:'cash'}],'historical_sales','skip',[]);
+ const result=await executeImport({batchId:'history-retry',kind:'historical_sales',mode:'skip',warehouseId:'',org:'org',userId:'user',role:'business_owner',rows},()=>{});
+ expect(request).toHaveBeenCalledTimes(2);expect(result).toEqual([{row_number:1,outcome:'create'}]);
+});
+it('reports every unsaved online-only row after bounded retries and continues later chunks',async()=>{
+ vi.spyOn(navigator,'onLine','get').mockReturnValue(true);
+ const request=vi.fn(async (_url,options)=>{
+  const body=JSON.parse(options.body);
+  if(body.rows[0].index===1)return new Response('upstream unavailable',{status:503});
+  return Response.json(body.rows.map((row:any)=>({row_number:row.index,outcome:'create'})));
+ });
+ vi.stubGlobal('fetch',request);
+ const rows=previewImport(Array.from({length:51},(_,index)=>({invoice_number:`OLD-${index}`,sold_at:'2026-01-01T10:00:00+01:00',total:100,amount_paid:100,payment_method:'cash'})),'historical_sales','skip',[]);
+ const result=await executeImport({batchId:'history-partial',kind:'historical_sales',mode:'skip',warehouseId:'',org:'org',userId:'user',role:'business_owner',rows},()=>{});
+ expect(request).toHaveBeenCalledTimes(4);
+ expect(result.filter(row=>row.outcome==='error')).toHaveLength(50);
+ expect(result.at(-1)).toMatchObject({row_number:51,outcome:'create'});
+});

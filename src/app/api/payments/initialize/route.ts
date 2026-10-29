@@ -35,14 +35,26 @@ export async function POST(request: NextRequest) {
     const callback = new URL('/api/payments/verify', process.env.NEXT_PUBLIC_APP_URL);
     callback.searchParams.set('txnRef', reference);
     callback.searchParams.set('redirect', '1');
-    const response = await fetch(`${config.baseUrl}/zainbox/card/initialize/payment`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.publicKey}` },
-      body: JSON.stringify({ amount: String(amount), txnRef: reference, emailAddress: user.email,
-        mobileNumber: mobile, zainboxCode: zainbox, callBackUrl: callback.href }),
-      signal: AbortSignal.timeout(20000),
-    });
-    const url = response.ok ? checkoutUrl(await response.json()) : null;
-    if (!url) return NextResponse.json({ error: 'Payment gateway could not start checkout. Please retry.' }, { status: 502 });
+    const providerPayload = JSON.stringify({ amount: String(amount), txnRef: reference, emailAddress: user.email,
+      mobileNumber: mobile, zainboxCode: zainbox, callBackUrl: callback.href });
+    let providerStatus = 503;
+    let url: string | null = null;
+    for (let attempt = 0; attempt < 3 && !url; attempt += 1) {
+      try {
+        const response = await fetch(`${config.baseUrl}/zainbox/card/initialize/payment`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.publicKey}` },
+          body: providerPayload, signal: AbortSignal.timeout(20000),
+        });
+        providerStatus = response.status;
+        if (response.ok) url = checkoutUrl(await response.json());
+        if (response.status < 500) break;
+      } catch { providerStatus = 503; }
+      if (!url && attempt < 2) await new Promise(resolve => setTimeout(resolve, 400 * (attempt + 1)));
+    }
+    if (!url) {
+      console.error('[Zainpay] checkout initialization unavailable', { providerStatus, reference });
+      return NextResponse.json({ error: 'Zainpay is temporarily unavailable. Retry this checkout; do not make another payment.' }, { status: 503 });
+    }
     return NextResponse.json({ success: true, txnRef: reference, paymentUrl: url, amount: amount / 100, currency: 'NGN' });
   } catch {
     return NextResponse.json({ error: 'Unable to start payment. Please retry.' }, { status: 503 });

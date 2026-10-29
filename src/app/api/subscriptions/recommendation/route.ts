@@ -10,10 +10,13 @@ export async function GET(){
  const {data:profile}=await db.from('users').select('organization_id,role,status').eq('id',user.id).single();
  if(!profile?.organization_id||profile.role!=='business_owner'||profile.status!=='active')return NextResponse.json({error:'Business owner access required.'},{status:403});
  const org=profile.organization_id;
- // The earliest subscription is the onboarding period; cap observation at 30 days.
- const {data:trial,error:trialError}=await db.from('subscriptions').select('starts_at').eq('organization_id',org).order('starts_at').limit(1).maybeSingle();
- if(trialError||!trial)return NextResponse.json({error:'Trial history is unavailable.'},{status:503});
- const start=new Date(trial.starts_at);
+ // Trial dates belong to the organization. A merchant may have no subscription
+ // row yet (or it may have been removed by older onboarding code), so the
+ // recommendation must not depend on subscription history existing.
+ const {data:organizationRow,error:organizationError}=await db.from('organizations').select('*').eq('id',org).single();
+ const organization=organizationRow as (typeof organizationRow & {trial_started_at?:string|null});
+ if(organizationError||!organization)return NextResponse.json({error:'Trial history is unavailable.'},{status:503});
+ const start=new Date(organization.trial_started_at || organization.created_at);
  if(!Number.isFinite(start.getTime())||start.getTime()>Date.now())return NextResponse.json({error:'Trial history is unavailable.'},{status:503});
  const end=new Date(Math.min(Date.now(),start.getTime()+30*86400000)).toISOString();
  const results=await Promise.all([

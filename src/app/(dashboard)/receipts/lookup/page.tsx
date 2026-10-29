@@ -29,6 +29,7 @@ interface TransferLookupResult {
   initiatedBy?: string; approvedBy?: string; coordinatedBy?: string; sentBy?: string; receivedBy?: string;
   notes?: string; items: SaleItem[];
 }
+interface HistoricalSaleLookupResult { invoiceNumber:string;dateISO:string;status:string;paymentMethod:string;total:number;amountPaid:number;itemsImported:false;printable:false }
 
 export default function ReceiptLookupPage() {
   const copy = useCopy();
@@ -45,6 +46,7 @@ export default function ReceiptLookupPage() {
   const [result, setResult] = useState<
     | { kind: 'sale'; receipt: SaleLookupResult }
     | { kind: 'transfer'; receipt: TransferLookupResult }
+    | { kind: 'historical_sale'; receipt: HistoricalSaleLookupResult }
     | null
   >(null);
 
@@ -219,6 +221,7 @@ export default function ReceiptLookupPage() {
           </CardContent>
         </Card>
       )}
+      {result?.kind === 'historical_sale' && <Card><CardContent className="space-y-4 p-5"><div className="flex items-center justify-between"><h2 className="tt-head text-lg">Imported sale totals</h2><Badge variant="outline">Imported</Badge></div><div className="grid gap-2 text-sm sm:grid-cols-2"><p>Invoice: <strong>{result.receipt.invoiceNumber}</strong></p><p>Date: {formatDateTime(result.receipt.dateISO)}</p><p>Total: <strong>{formatCurrency(result.receipt.total)}</strong></p><p>Paid: {formatCurrency(result.receipt.amountPaid)}</p><p>Payment: {result.receipt.paymentMethod}</p></div><p className="rounded-lg bg-muted p-3 text-sm">Item details were not imported. This historical record is not a printable TracKasuwa receipt.</p><Button variant="outline" className="w-full" onClick={reset}>{t.receiptLookup.scan_another}</Button></CardContent></Card>}
       </div></div>
       {receipt && <Receipt data={receipt} />}
     </div>

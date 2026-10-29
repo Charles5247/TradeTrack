@@ -46,3 +46,16 @@ it.each(['quarter','constructor','__proto__',''])('rejects invalid billing cycle
 });
 
 it('requires a payment phone number before contacting the provider',async()=>{expect((await POST(request({planId:'p',billingCycle:'monthly',mobile:'bad'}))).status).toBe(400);expect(mocks.fetch).not.toHaveBeenCalled();});
+it('retries temporary Zainpay gateway failures and keeps the same checkout reference',async()=>{
+ mocks.fetch.mockResolvedValueOnce(new Response('<html>bad gateway</html>',{status:502})).mockResolvedValueOnce(new Response(JSON.stringify({code:'00',data:'https://pay.zainpay.ng/checkout'})));
+ const response=await POST(request({planId:'p',billingCycle:'monthly'}));
+ expect(response.status).toBe(200);expect(mocks.fetch).toHaveBeenCalledTimes(2);
+ const first=JSON.parse(mocks.fetch.mock.calls[0][1].body);const second=JSON.parse(mocks.fetch.mock.calls[1][1].body);
+ expect(first.txnRef).toBe(second.txnRef);
+});
+it('returns a retryable message when Zainpay remains unavailable',async()=>{
+ mocks.fetch.mockResolvedValue(new Response('<html>bad gateway</html>',{status:502}));
+ const response=await POST(request({planId:'p',billingCycle:'monthly'}));
+ expect(response.status).toBe(503);expect(mocks.fetch).toHaveBeenCalledTimes(3);
+ expect(await response.json()).toMatchObject({error:expect.stringContaining('temporarily unavailable')});
+});

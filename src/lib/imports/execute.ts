@@ -5,6 +5,8 @@ import { withTimeout } from '@/lib/utils/timeout';
 import type { DuplicateMode, ImportKind, PreviewRow } from './preview';
 export interface ImportOptions { batchId: string; kind: ImportKind; mode: DuplicateMode; warehouseId: string; org: string; userId: string; role: string; rows: PreviewRow[]; }
 export interface RowResult { row_number: number; outcome: string; error?: string; entity_id?: string; }
+const IMPORT_CHUNK_ATTEMPTS = 3;
+const retryDelay = (attempt: number) => new Promise(resolve => setTimeout(resolve, 400 * 2 ** attempt));
 export async function loadImportCatalog(kind: ImportKind, org: string): Promise<Record<string,any>[]> {
   const cached = async () => {
     if (!['products','suppliers'].includes(kind)) throw new Error('Connect to import customers, historical sales or staff invitations.');
@@ -52,15 +54,30 @@ export async function executeImport(options: ImportOptions, progress: (done: num
     const rows = options.rows.slice(start,start+50).map(r => ({ ...r, data: { ...r.data, inventory_id: r.data.inventory_id || crypto.randomUUID() } }));
     if (isOffline()) results.push(...await queueChunk(options,rows));
     else {
-      try {
-        const response = await withTimeout(fetch(options.kind === 'staff_invites' ? '/api/users' : '/api/imports', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: options.mode, action: options.kind === 'staff_invites' ? 'import_invites' : 'import', confirm: true, batch_id: options.batchId, kind: options.kind, warehouse_id: options.warehouseId, summary: { rows: options.rows.length }, rows }) }),15000);
-        const body = await response.json();
-        if (!response.ok) { results.push(...rows.map(r => ({ row_number: r.index, outcome: 'error', error: body.error || 'Import rejected' }))); }
-        else results.push(...body);
-      } catch (error) {
-        if (error instanceof TypeError || isOffline() || (error instanceof Error && error.message === 'Operation timed out')) results.push(...await queueChunk(options,rows));
-        else throw error;
+      let completed = false;
+      let lastError = 'Import request failed';
+      let networkFailure = false;
+      for (let attempt = 0; attempt < IMPORT_CHUNK_ATTEMPTS && !completed; attempt += 1) {
+        try {
+          const response = await withTimeout(fetch(options.kind === 'staff_invites' ? '/api/users' : '/api/imports', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: options.mode, action: options.kind === 'staff_invites' ? 'import_invites' : 'import', confirm: true, batch_id: options.batchId, kind: options.kind, warehouse_id: options.warehouseId, summary: { rows: options.rows.length }, rows }) }),15000);
+          const body = await response.json().catch(() => ({}));
+          if (response.ok) { results.push(...body); completed = true; break; }
+          lastError = body.error || `Import service returned ${response.status}`;
+          if (response.status < 500) { results.push(...rows.map(r => ({ row_number: r.index, outcome: 'error', error: lastError }))); completed = true; }
+        } catch (error) {
+          networkFailure = true;
+          lastError = error instanceof Error ? error.message : 'Import request failed';
+          if (isOffline() && ['products','suppliers'].includes(options.kind)) {
+            results.push(...await queueChunk(options,rows)); completed = true; break;
+          }
+        }
+        if (!completed && attempt < IMPORT_CHUNK_ATTEMPTS - 1) await retryDelay(attempt);
       }
+      if (!completed && networkFailure && ['products','suppliers'].includes(options.kind)) {
+        results.push(...await queueChunk(options, rows));
+        completed = true;
+      }
+      if (!completed) results.push(...rows.map(r => ({ row_number: r.index, outcome: 'error', error: `${lastError}. Retry these rows when online.` })));
     }
     progress(Math.min(start+50,options.rows.length));
     await new Promise(resolve => setTimeout(resolve,0));
