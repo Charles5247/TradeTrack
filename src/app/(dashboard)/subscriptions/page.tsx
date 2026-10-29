@@ -561,7 +561,7 @@ export default function SubscriptionsPage() {
           </DialogHeader>
           <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); if (checkoutPlan) upgradeMutation.mutate({planId: checkoutPlan.id, cycle: billingCycle}); }}>
             <p className="text-sm text-muted-foreground">{copy('Renewing the same plan keeps your remaining paid time. A different plan replaces your current plan immediately after payment.')}</p>
-            <div className="space-y-2"><Label htmlFor="checkout-phone">{copy('Phone number')}</Label><Input id="checkout-phone" type="tel" autoComplete="tel" required pattern="[-+0-9 ()]{10,20}" value={checkoutPhone} onChange={event => setCheckoutPhone(event.target.value)} /></div>
+            <div className="space-y-2"><Label htmlFor="checkout-phone">{copy('Phone number')}</Label><Input id="checkout-phone" type="tel" inputMode="tel" autoComplete="tel" required value={checkoutPhone} onChange={event => setCheckoutPhone(event.target.value)} /></div>
             <Button className="w-full" type="submit" disabled={upgradeMutation.isPending}>{copy('Continue to secure payment')}</Button>
           </form>
         </DialogContent>
