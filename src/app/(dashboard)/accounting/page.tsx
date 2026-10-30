@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { NativeSelect } from '@/components/ui/native-select';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { useState } from 'react';
@@ -23,14 +23,14 @@ function Accounting() {
   const [report, setReport] = useState('daily');
   const [from, setFrom] = useState(''); const [to, setTo] = useState('');
   const [includeHistory, setIncludeHistory] = useState(false);
-  const [action, setAction] = useState<any>(null); const [reason, setReason] = useState('');
+  const [action, setAction] = useState<Record<string, unknown> | null>(null); const [reason, setReason] = useState('');
   const [cashier, setCashier] = useState(''); const [opened, setOpened] = useState('');
   const [counted, setCounted] = useState<Record<string, string>>({ cash: '', transfer: '', pos_terminal: '', split: '', partial: '' });
   const [pending, setPending] = useState(false);
   const { data, error, isLoading } = useQuery({ queryKey: ['accounting', from, to, includeHistory], queryFn: async () => {
     const r = await fetch(`/api/accounting?from=${from}&to=${to}&include_history=${includeHistory}`); const body = await r.json(); if (!r.ok) throw new Error(body.error); return body;
   } });
-  const rows: Record<string, any>[] = data?.[report] || [];
+  const rows: Record<string, unknown>[] = data?.[report] || [];
   const columns = Array.from(new Set(rows.flatMap(Object.keys)));
   const text = (v: unknown) => typeof v === 'object' ? JSON.stringify(v) : String(v ?? '');
   const exportCSV = () => {
@@ -51,7 +51,7 @@ function Accounting() {
       <label className="block min-w-0 space-y-2 text-sm font-medium"><TranslatedText text={"From"} />{" "}<Input type="date" value={from} onChange={e => setFrom(e.target.value)} /></label><label className="block min-w-0 space-y-2 text-sm font-medium"><TranslatedText text={"To"} />{" "}<Input type="date" value={to} onChange={e => setTo(e.target.value)} /></label>
       <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={exportCSV}><TranslatedText text={"Export CSV"} /></Button><Button variant="outline" onClick={() => downloadTablePDF({ title: report, headers: columns, rows: rows.map(r => columns.map(k => text(r[k]))), filename: report })}><TranslatedText text={"Export PDF"} /></Button></div></CardContent></Card>
     {isLoading && <p><TranslatedText text={"Loading…"} /></p>}{error && <p role="alert">{error.message}</p>}
-    <div className="overflow-auto"><table className="w-full min-w-[600px] text-sm tt-tabular [&_th]:bg-muted [&_th]:p-3 [&_th]:text-left [&_td]:border-b [&_td]:border-border [&_td]:p-3"><thead><tr>{columns.map(k => <th  key={k}>{k.replaceAll('_',' ')}</th>)}<th><TranslatedText text={"Action"} /></th></tr></thead><tbody>{rows.map((r,i) => <tr key={r.id || i}>{columns.map(k => <td key={k} className="max-w-sm border p-2 break-words">{text(r[k])}</td>)}<td>{report === 'mismatches' && r.sale_id && <Button onClick={() => setAction({ sale_id: r.sale_id, kind: 'vendor_payment_correction' })}><TranslatedText text={"Review correction"} /></Button>}{report === 'sales' && !r.imported && ['void','refund','return'].map(kind => <Button className="p-1 underline" key={kind} onClick={() => setAction({ sale_id: r.id, kind })}><TranslatedText text={kind} /></Button>)}</td></tr>)}</tbody></table></div>
+    <div className="tt-responsive-table overflow-x-hidden sm:overflow-auto"><table className="w-full text-sm tt-tabular [&_th]:bg-muted [&_th]:p-3 [&_th]:text-left [&_td]:border-b [&_td]:border-border [&_td]:p-3"><thead><tr>{columns.map(k => <th key={k}>{k.replaceAll('_',' ')}</th>)}<th><TranslatedText text={"Action"} /></th></tr></thead><tbody>{rows.map((r,i) => <tr key={text(r.id ?? i)}>{columns.map(k => <td data-label={k.replaceAll('_',' ')} key={k} className="max-w-sm border p-2 break-words">{text(r[k])}</td>)}<td data-label="Action">{report === 'mismatches' && typeof r.sale_id === 'string' && <Button onClick={() => setAction({ sale_id: r.sale_id, kind: 'vendor_payment_correction' })}><TranslatedText text={"Review correction"} /></Button>}{report === 'sales' && !r.imported && ['void','refund','return'].map(kind => <Button className="min-h-11 p-1 underline" key={kind} onClick={() => setAction({ sale_id: r.id, kind })}><TranslatedText text={kind} /></Button>)}</td></tr>)}</tbody></table></div>
     <details className="space-y-4 rounded-[var(--radius-lg)] border border-border bg-card p-4 sm:p-6"><summary className="min-h-11 cursor-pointer py-2 font-semibold"><TranslatedText text={"Close a cash-up period"} /></summary><p><TranslatedText text={"Owner/manager sign-off. Enter actual counted totals per payment method."} /></p>
       <label className="block min-w-0 space-y-2 text-sm font-medium"><TranslatedText text={"Cashier ID"} />{" "}<Input  value={cashier} onChange={e => setCashier(e.target.value)} /></label><label className="block min-w-0 space-y-2 text-sm font-medium"><TranslatedText text={"Opened"} />{" "}<Input type="datetime-local" value={opened} onChange={e => setOpened(e.target.value)} /></label>
       {Object.keys(counted).map(k => <label className="block" key={k}>{k} <Input type="number" min="0" step="0.01" value={counted[k]} onChange={e => setCounted({ ...counted, [k]: e.target.value })} /></label>)}

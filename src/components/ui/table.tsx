@@ -1,16 +1,32 @@
+'use client';
+
 import * as React from 'react';
 import { cn } from '@/lib/utils/cn';
 
 const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
-  ({ className, ...props }, ref) => (
-    <div className="relative min-w-0 w-full max-w-full overflow-auto overscroll-x-contain">
-      <table
-        ref={ref}
-        className={cn('w-full caption-bottom text-[length:var(--base-font)] tabular-nums', className)}
-        {...props}
-      />
-    </div>
-  )
+  ({ className, children, ...props }, forwardedRef) => {
+    const localRef = React.useRef<HTMLTableElement | null>(null);
+    React.useLayoutEffect(() => {
+      const table = localRef.current;
+      if (!table) return;
+      const labels = Array.from(table.querySelectorAll('thead th')).map(cell => cell.textContent?.trim() || '');
+      for (const row of table.querySelectorAll('tbody tr')) {
+        Array.from(row.querySelectorAll(':scope > td')).forEach((cell, index) => {
+          if (labels[index] && !cell.hasAttribute('colspan')) cell.setAttribute('data-label', labels[index]);
+        });
+      }
+    }, [children]);
+    const setRef = (node: HTMLTableElement | null) => {
+      localRef.current = node;
+      if (typeof forwardedRef === 'function') forwardedRef(node);
+      else if (forwardedRef) forwardedRef.current = node;
+    };
+    return (
+      <div className="tt-responsive-table relative min-w-0 w-full max-w-full overflow-x-hidden sm:overflow-x-auto sm:overscroll-x-contain">
+        <table ref={setRef} className={cn('w-full caption-bottom text-[length:var(--base-font)] tabular-nums', className)} {...props}>{children}</table>
+      </div>
+    );
+  }
 );
 Table.displayName = 'Table';
 
