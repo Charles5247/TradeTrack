@@ -25,6 +25,7 @@ beforeAll(async () => {
    try { await db.exec(readFileSync(`supabase/migrations/${f}`,'utf8')); }
    catch(e){throw new Error(`Migration ${f}: ${e instanceof Error?e.message:e}`);}
  }
+ await db.exec(readFileSync('supabase/migrations/20261030062000_notification_delivery_system.sql','utf8'));
  await db.exec(`INSERT INTO organizations(id,name,slug) VALUES('${org}','Test','test');
  INSERT INTO users(id,email,full_name,role,organization_id) VALUES('${owner}','owner@test.local','Owner','business_owner','${org}'),('${cashier}','cashier@test.local','Cashier','cashier','${org}'),('${platformOwner}','platform@test.local','Platform Owner','platform_owner',NULL);
  INSERT INTO merchants(organization_id,business_name,registration_number,contact_name,contact_email,business_owner_user_id)
@@ -54,6 +55,15 @@ it('rejects direct medical RPC calls by ordinary retail businesses',async()=>{
    await expect(db.exec(`SELECT public.issue_medical_stock('60000000-0000-0000-0000-000000000096','${product}','${warehouse}',1,'sale','customer','reason',100,'cash')`)).rejects.toThrow('medical business industry');
   } finally {await db.exec(`RESET ROLE; UPDATE merchants SET business_type='pharmacy' WHERE organization_id='${org}';`);}
  }
+});
+it('creates one owner notification per sale and keeps the final item count', async () => {
+ await db.exec(`SELECT set_config('test.uid','${cashier}',false);
+  INSERT INTO sales(id,organization_id,invoice_number,cashier_id,warehouse_id,subtotal,total,amount_paid,payment_method)
+  VALUES('${sale}','${org}','NOTIFY-001','${cashier}','${warehouse}',300,300,300,'cash');
+  INSERT INTO sale_items(sale_id,product_id,warehouse_id,quantity,unit_price,cost_price,total)
+  VALUES('${sale}','${product}','${warehouse}',3,100,50,300);`);
+ const result=await db.query<{type:string;items_count:number}>(`SELECT type,(data->>'items_count')::int items_count FROM notifications WHERE dedupe_key LIKE 'sale:${sale}:%'`);
+ expect(result.rows).toEqual([{type:'sale_made',items_count:3}]);
 });
 it('isolates medical batch receipts, preserves expiry and makes retries exactly-once',async()=>{
  const med='30000000-0000-0000-0000-000000009901';

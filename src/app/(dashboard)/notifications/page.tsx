@@ -16,14 +16,23 @@ import { formatRelativeTime } from '@/lib/utils/format';
 import { cn } from '@/lib/utils/cn';
 import type { Notification } from '@/types';
 import { useI18n } from '@/i18n';
+import { useNotificationStore } from '@/store';
+import { NativeSelect } from '@/components/ui/native-select';
 
-async function fetchNotifications() {
+async function fetchNotifications(page: number, filter: string, eventType: string, staffId: string) {
   const supabase = createClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from('notifications')
     .select('*')
+    .eq('in_app_visible', true)
     .order('created_at', { ascending: false })
-    .limit(50);
+    .range(page * 25, page * 25 + 24);
+  if (filter === 'unread') query = query.eq('is_read', false);
+  else if (filter === 'inventory') query = query.in('type', ['low_stock','out_of_stock','stock_in','stock_adjustment','pending_transfer']);
+  else if (filter === 'payments') query = query.in('type', ['pending_payment','payment_confirmed','payment_failed','subscription_expiry']);
+  if (eventType !== 'all') query = query.eq('type', eventType);
+  if (staffId !== 'all') query = query.eq('staff_user_id', staffId);
+  const { data, error } = await query;
   if (error) throw error;
   return data as Notification[];
 }
@@ -64,15 +73,26 @@ export default function NotificationsPage() {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState("all");
+  const [eventType, setEventType] = useState('all');
+  const [staffId, setStaffId] = useState('all');
+  const [page, setPage] = useState(0);
+  const setUnreadCount = useNotificationStore(state => state.setUnreadCount);
+  const decrementUnread = useNotificationStore(state => state.decrementUnread);
 
   const { data: notifications = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['notifications'],
-    queryFn: fetchNotifications,
+    queryKey: ['notifications', page, filter, eventType, staffId],
+    queryFn: () => fetchNotifications(page, filter, eventType, staffId),
   });
+  const { data: staff = [] } = useQuery({ queryKey: ['notification-staff'], queryFn: async () => {
+    const { data, error } = await createClient().from('users').select('id,full_name').order('full_name');
+    if (error) throw error;
+    return data || [];
+  }});
+  const staffRows = Array.isArray(staff) ? staff : [];
 
   const markAllReadMutation = useMutation({
     mutationFn: markAllRead,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
+    onSuccess: () => { setUnreadCount(0); queryClient.invalidateQueries({ queryKey: ['notifications'] }); },
   });
 
   const markOneMutation = useMutation({
@@ -81,12 +101,12 @@ export default function NotificationsPage() {
       const { error } = await supabase.from('notifications').update({ is_read: true }).eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
+    onSuccess: () => { decrementUnread(); queryClient.invalidateQueries({ queryKey: ['notifications'] }); },
   });
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-  const visible = notifications.filter(n => filter === 'all' || (filter === 'unread' ? !n.is_read : filter === 'inventory' ? ['low_stock','out_of_stock','pending_transfer'].includes(n.type) : ['pending_payment','subscription_expiry'].includes(n.type)));
+  const visible = notifications;
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -108,7 +128,8 @@ export default function NotificationsPage() {
         )}
       </div>
 
-      <Tabs value={filter} onValueChange={setFilter}><TabsList aria-label={copy("Notification filters")}><TabsTrigger value="all"><TranslatedText text={"All ("} />{notifications.length})</TabsTrigger><TabsTrigger value="unread"><TranslatedText text={"Unread ("} />{unreadCount})</TabsTrigger><TabsTrigger value="inventory"><TranslatedText text={"Inventory"} /></TabsTrigger><TabsTrigger value="payments"><TranslatedText text={"Payments"} /></TabsTrigger></TabsList></Tabs>
+      <Tabs value={filter} onValueChange={value => { setFilter(value); setPage(0); }}><TabsList aria-label={copy("Notification filters")}><TabsTrigger value="all"><TranslatedText text={"All"} /></TabsTrigger><TabsTrigger value="unread"><TranslatedText text={"Unread"} /></TabsTrigger><TabsTrigger value="inventory"><TranslatedText text={"Inventory"} /></TabsTrigger><TabsTrigger value="payments"><TranslatedText text={"Payments"} /></TabsTrigger></TabsList></Tabs>
+      <div className="grid gap-3 sm:grid-cols-2"><label className="text-sm">{copy('Event type')}<NativeSelect value={eventType} onChange={event => { setEventType(event.target.value); setPage(0); }}><option value="all">{copy('All event types')}</option>{Array.from(new Set(notifications.map(item => item.type))).map(type => <option key={type} value={type}>{type.replaceAll('_',' ')}</option>)}</NativeSelect></label><label className="text-sm">{copy('Staff member')}<NativeSelect value={staffId} onChange={event => { setStaffId(event.target.value); setPage(0); }}><option value="all">{copy('All staff')}</option>{staffRows.map(member => <option key={member.id} value={member.id}>{member.full_name}</option>)}</NativeSelect></label></div>
       {(markAllReadMutation.error || markOneMutation.error) && <p role="alert" className="text-sm text-destructive"><TranslatedText text={"Could not update notifications. Try again."} /></p>}
       <div className="overflow-hidden rounded-lg border bg-card [&>div]:rounded-none [&>div]:border-x-0 [&>div]:border-t-0 [&>div]:shadow-none">
         {error ? <ErrorState title={copy("Could not load notifications")} body={error.message} onRetry={() => refetch()} /> : isLoading ? (
@@ -185,6 +206,7 @@ export default function NotificationsPage() {
           })
         )}
       </div>
+      <div className="flex items-center justify-between"><Button variant="outline" disabled={page === 0} onClick={() => setPage(value => value - 1)}>{copy('Previous')}</Button><span className="text-sm text-muted-foreground">{copy('Page')} {page + 1}</span><Button variant="outline" disabled={notifications.length < 25} onClick={() => setPage(value => value + 1)}>{copy('Next')}</Button></div>
     </div>
   );
 }

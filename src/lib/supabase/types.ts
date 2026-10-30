@@ -592,22 +592,40 @@ export type Database = {
       notifications: {
         Row: {
           id: string;
-          organization_id: string;
+          organization_id: string | null;
           user_id: string | null;
           type: string;
           title: string;
           message: string;
+          body: string | null;
+          recipient_role: string | null;
+          severity: string;
+          entity_type: string | null;
+          entity_id: string | null;
+          dedupe_key: string | null;
+          read_at: string | null;
+          staff_user_id: string | null;
+          in_app_visible: boolean;
           data: Record<string, unknown>;
           is_read: boolean;
           created_at: string;
         };
         Insert: {
           id?: string;
-          organization_id: string;
+          organization_id?: string | null;
           user_id?: string | null;
           type: string;
           title: string;
           message: string;
+          body?: string | null;
+          recipient_role?: string | null;
+          severity?: string;
+          entity_type?: string | null;
+          entity_id?: string | null;
+          dedupe_key?: string | null;
+          read_at?: string | null;
+          staff_user_id?: string | null;
+          in_app_visible?: boolean;
           data?: Record<string, unknown>;
           is_read?: boolean;
           created_at?: string;
@@ -615,6 +633,24 @@ export type Database = {
         Update: Partial<
           Database["public"]["Tables"]["notifications"]["Insert"]
         >;
+        Relationships: [];
+      };
+      notification_preferences: {
+        Row: { id: string; organization_id: string; user_id: string; event_type: string; in_app_enabled: boolean; email_enabled: boolean; sms_enabled: boolean; created_at: string; updated_at: string };
+        Insert: { id?: string; organization_id: string; user_id: string; event_type: string; in_app_enabled?: boolean; email_enabled?: boolean; sms_enabled?: boolean; created_at?: string; updated_at?: string };
+        Update: Partial<Database["public"]["Tables"]["notification_preferences"]["Insert"]>;
+        Relationships: [];
+      };
+      notification_channel_settings: {
+        Row: { organization_id: string; sms_provider: string | null; sms_provider_enabled: boolean; sms_unit_price_kobo: number | null; low_balance_threshold_credits: number; updated_by: string | null; updated_at: string };
+        Insert: { organization_id: string; sms_provider?: string | null; sms_provider_enabled?: boolean; sms_unit_price_kobo?: number | null; low_balance_threshold_credits?: number; updated_by?: string | null; updated_at?: string };
+        Update: Partial<Database["public"]["Tables"]["notification_channel_settings"]["Insert"]>;
+        Relationships: [];
+      };
+      sms_credit_accounts: {
+        Row: { organization_id: string; balance_credits: number; updated_at: string };
+        Insert: { organization_id: string; balance_credits?: number; updated_at?: string };
+        Update: Partial<Database["public"]["Tables"]["sms_credit_accounts"]["Insert"]>;
         Relationships: [];
       };
       settings: {

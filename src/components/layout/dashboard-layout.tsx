@@ -6,6 +6,7 @@ import { AppScreen } from '@/components/ui/app-screen';
 import { isPosRoute, isDenseRoute } from '@/lib/utils/route-mode';
 import { useAuthStore } from '@/store';
 import { ResponsiveTableScope } from '@/components/ui/responsive-table-scope';
+import { NotificationSync } from '@/components/notifications/notification-sync';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -36,6 +37,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   // hack to counteract it.
   return (
     <AppScreen pos={pos} dense={dense} noPadding={pos}>
+      <NotificationSync />
       <ResponsiveTableScope>{children}</ResponsiveTableScope>
     </AppScreen>
   );

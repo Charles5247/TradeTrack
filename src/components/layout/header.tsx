@@ -289,16 +289,17 @@ export function Header() {
           className="relative"
           onClick={() => router.push("/notifications")}
           title={t.header.notifications}
+          aria-label={`${t.header.notifications}${unreadCount > 0 ? ` (${unreadCount})` : ''}`}
         >
           <Bell className="h-4 w-4" strokeWidth={1.75} />
           {unreadCount > 0 && (
             <span
-              className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full border-2"
+              className="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full border-2 px-1 text-[10px] font-bold text-white"
               style={{
                 background: "var(--c-danger)",
                 borderColor: "var(--c-bg)",
               }}
-            />
+            >{unreadCount > 99 ? '99+' : unreadCount}</span>
           )}
         </Button>
 

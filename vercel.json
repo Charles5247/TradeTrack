@@ -14,5 +14,6 @@
       "NEXT_PUBLIC_ANDROID_APK_URL": "https://github.com/Charles5247/TradeTrack/releases/download/v1.0.1/TracKasuwa-1.0.1.apk",
       "NEXT_PUBLIC_WINDOWS_EXE_URL": "https://github.com/Charles5247/TradeTrack/releases/download/v1.0.1/TracKasuwa-Setup-1.0.1.exe"
     }
-  }
+  },
+  "crons": [{ "path": "/api/cron/notifications", "schedule": "0 * * * *" }]
 }

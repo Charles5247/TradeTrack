@@ -338,13 +338,32 @@ export interface AuditLog {
 
 // ── Notifications ────────────────────────────────────────────
 export type NotificationType =
+  | "staff_login"
+  | "sale_made"
   | "low_stock"
   | "out_of_stock"
+  | "stock_in"
+  | "stock_adjustment"
+  | "discount_requested"
+  | "discount_approved"
+  | "discount_rejected"
+  | "discount_given"
   | "pending_payment"
   | "pending_transfer"
+  | "purchase_order_status"
+  | "import_finished"
+  | "import_failed"
+  | "payment_confirmed"
+  | "payment_failed"
+  | "trial_ending"
+  | "trial_expired"
   | "subscription_expiry"
+  | "subscription_changed"
   | "sync_completed"
   | "sync_failed"
+  | "app_update"
+  | "merchant_signup"
+  | "low_sms_balance"
   | "general";
 
 export interface Notification {
@@ -354,8 +373,16 @@ export interface Notification {
   type: NotificationType;
   title: string;
   message: string;
+  body?: string;
+  severity?: 'info' | 'success' | 'warning' | 'error';
+  recipient_role?: string;
+  entity_type?: string;
+  entity_id?: string;
+  staff_user_id?: string;
+  dedupe_key?: string;
   data?: Record<string, unknown>;
   is_read: boolean;
+  read_at?: string;
   created_at: string;
 }
 
