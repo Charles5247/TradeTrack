@@ -35,13 +35,18 @@ interface ProductFormProps {
 
 export function ProductForm({ product: initialProduct, categories, onSuccess, onCancel }: ProductFormProps) {
   const copy = useCopy();
-  const { industry } = useOrganization();
+  const { industry, organization } = useOrganization();
   const workflow = industryProfile(industry);
   const [scannedProduct, setScannedProduct] = useState<CodeMatch | null>(null);
   const [cachedMatch, setCachedMatch] = useState(false);
   const product = scannedProduct ?? initialProduct;
   const [isLoading, setIsLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(product?.image_url ?? null);
+  const [createdCategories, setCreatedCategories] = useState<Array<{ id: string; name: string }>>([]);
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [categoryName, setCategoryName] = useState('');
+  const [isSavingCategory, setIsSavingCategory] = useState(false);
+  const availableCategories = [...categories, ...createdCategories.filter(created => !categories.some(category => category.id === created.id))];
 
   const {
     register,
@@ -69,6 +74,26 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
       status: (product?.status as ProductFormData['status']) || 'active',
     },
   });
+
+  const addCategory = async () => {
+    const name = categoryName.trim();
+    if (!name || !organization?.id) return;
+    setIsSavingCategory(true);
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.from('categories').insert({ organization_id: organization.id, name }).select('id,name').single();
+      if (error) throw error;
+      setCreatedCategories(current => [...current, data]);
+      setValue('category_id', data.id, { shouldDirty: true });
+      setCategoryName('');
+      setIsAddingCategory(false);
+      toast.success(copy('Category created'));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : copy('Could not create category'));
+    } finally {
+      setIsSavingCategory(false);
+    }
+  };
 
   const onSubmit = async (data: ProductFormData) => {
     if (cachedMatch) {
@@ -318,13 +343,27 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
               <SelectValue placeholder={copy("Select category")} />
             </SelectTrigger>
             <SelectContent>
-              {categories.map((cat) => (
+              {availableCategories.map((cat) => (
                 <SelectItem key={cat.id} value={cat.id}>
                   {cat.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+          {availableCategories.length === 0 && !isAddingCategory && (
+            <div role="status" className="flex min-h-11 items-center justify-between gap-3 rounded-lg border border-dashed border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+              <span>{copy('No categories yet.')}</span>
+              <Button type="button" variant="outline" size="sm" className="min-h-11 shrink-0" onClick={() => setIsAddingCategory(true)}>{copy('Add category')}</Button>
+            </div>
+          )}
+          {availableCategories.length === 0 && isAddingCategory && (
+            <div className="flex flex-col gap-2 rounded-lg border border-border bg-muted/30 p-3 sm:flex-row">
+              <Input aria-label={copy('Category name')} value={categoryName} onChange={event => setCategoryName(event.target.value)} maxLength={100} autoFocus />
+              <Button type="button" className="min-h-11 shrink-0" disabled={!categoryName.trim() || isSavingCategory || !organization?.id} onClick={() => void addCategory()}>
+                {isSavingCategory && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{copy('Save category')}
+              </Button>
+            </div>
+          )}
         </div>
         <div className="space-y-2">
           <Label><TranslatedText text={"Status"} /></Label>
