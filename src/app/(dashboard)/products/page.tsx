@@ -6,7 +6,7 @@ import { productVariantLabel } from '@/lib/industries';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Edit, Trash2, Package, MoreHorizontal, Eye } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Package, MoreHorizontal, Eye, AlertTriangle, SlidersHorizontal } from 'lucide-react';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import { ErrorState } from '@/components/ui/error-state';
@@ -32,6 +32,14 @@ import { formatCurrency, formatDate } from '@/lib/utils/format';
 import type { Product } from '@/types';
 import { ProductForm } from '@/components/products/product-form';
 import { useI18n } from '@/i18n';
+import { useAuthStore } from '@/store';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { adjustProductStock } from '@/lib/inventory/adjust-stock';
+import type { Warehouse } from '@/types';
+
+type ProductStockRow = { id: string; warehouse_id: string; quantity: number; min_stock_level: number | null; warehouse: { name?: string } | null };
+type ProductWithStock = Product & { inventory?: ProductStockRow[] };
 
 async function fetchProducts(search?: string, categoryId?: string) {
   const supabase = createClient();
@@ -40,7 +48,7 @@ async function fetchProducts(search?: string, categoryId?: string) {
   for (let start = 0; ; start += pageSize) {
     let query = supabase
       .from('products')
-      .select('*, category:categories(name), supplier:suppliers(name)')
+      .select('*, category:categories(name), supplier:suppliers(name), inventory(id,warehouse_id,quantity,min_stock_level,warehouse:warehouses(name))')
       .order('created_at', { ascending: false })
       .order('id', { ascending: false })
       .range(start, start + pageSize - 1);
@@ -54,10 +62,10 @@ async function fetchProducts(search?: string, categoryId?: string) {
 
     const { data, error } = await query;
     if (error) throw error;
-    products.push(...((data || []) as unknown as Product[]));
+    products.push(...((data || []) as unknown as ProductWithStock[]));
     if (!data || data.length < pageSize) break;
   }
-  return products;
+  return products as ProductWithStock[];
 }
 
 async function fetchCategories() {
@@ -74,7 +82,7 @@ async function deleteProduct(id: string) {
 
 export default function ProductsPage() {
   return (
-    <AccessGuard allow={['business_owner', 'admin']}>
+    <AccessGuard allow={['business_owner', 'admin', 'cashier']}>
       <ProductsPageInner />
     </AccessGuard>
   );
@@ -85,11 +93,18 @@ function ProductsPageInner() {
   const router = useRouter();
   const { t } = useI18n();
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+  const canManageStock = user?.role === 'business_owner' || user?.role === 'admin';
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
-  const [viewProduct, setViewProduct] = useState<Product | null>(null);
+  const [viewProduct, setViewProduct] = useState<ProductWithStock | null>(null);
+  const [adjustProduct, setAdjustProduct] = useState<ProductWithStock | null>(null);
+  const [adjustWarehouse, setAdjustWarehouse] = useState('');
+  const [adjustDirection, setAdjustDirection] = useState<'increase' | 'reduce'>('increase');
+  const [adjustQuantity, setAdjustQuantity] = useState('');
+  const [adjustReason, setAdjustReason] = useState('');
 
   const { data: products = [], isLoading, error: pageError, refetch: retryPage } = useQuery({
     queryKey: ['products', search, categoryFilter],
@@ -100,6 +115,46 @@ function ProductsPageInner() {
     queryKey: ['categories'],
     queryFn: fetchCategories,
   });
+  const { data: warehouses = [] } = useQuery({
+    queryKey: ['warehouses'],
+    queryFn: async () => {
+      const { data, error } = await createClient().from('warehouses').select('*').order('name');
+      if (error) throw error;
+      return (data || []) as Warehouse[];
+    },
+  });
+
+  const stockRows = (product: ProductWithStock) => product.inventory || [];
+  const totalStock = (product: ProductWithStock) => stockRows(product).reduce((sum, row) => sum + Number(row.quantity), 0);
+  const lowStock = (product: ProductWithStock) => stockRows(product).some(row => Number(row.quantity) <= Number(row.min_stock_level ?? 5));
+  const openAdjustment = (product: ProductWithStock) => {
+    setAdjustProduct(product);
+    setAdjustWarehouse(stockRows(product)[0]?.warehouse_id || warehouses[0]?.id || '');
+    setAdjustDirection('increase'); setAdjustQuantity(''); setAdjustReason('');
+  };
+  const adjustMutation = useMutation({
+    networkMode: 'always',
+    mutationFn: adjustProductStock,
+    onSuccess: result => {
+      void queryClient.invalidateQueries({ queryKey: ['products'] });
+      void queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      setAdjustProduct(null);
+      toast.success(result.offline ? copy('Stock adjustment saved offline and will sync automatically.') : copy('Stock adjusted successfully'));
+    },
+    onError: error => toast.error(error.message),
+  });
+  const submitAdjustment = () => {
+    if (!adjustProduct || !user || !adjustWarehouse || adjustReason.trim().length < 3) return;
+    const quantity = Number(adjustQuantity);
+    if (!Number.isSafeInteger(quantity) || quantity <= 0) return toast.error(copy('Enter a valid whole-number adjustment.'));
+    const row = stockRows(adjustProduct).find(item => item.warehouse_id === adjustWarehouse);
+    adjustMutation.mutate({
+      organization_id: String(user.organization_id), user_id: user.id, product_id: adjustProduct.id,
+      warehouse_id: adjustWarehouse, inventory_id: row?.id, current_quantity: row?.quantity ?? 0,
+      min_stock_level: row?.min_stock_level ?? 5, quantity_change: adjustDirection === 'reduce' ? -quantity : quantity,
+      reason: adjustReason,
+    });
+  };
 
   const deleteMutation = useMutation({
     mutationFn: deleteProduct,
@@ -136,10 +191,10 @@ function ProductsPageInner() {
             {t.products.subtitle.replace('{count}', String(products.length))}
           </p>
         </div>
-        <Button onClick={() => { setEditProduct(null); setIsFormOpen(true); }}>
+        {canManageStock && <Button onClick={() => { setEditProduct(null); setIsFormOpen(true); }}>
           <Plus className="h-4 w-4" strokeWidth={1.75} />
           {t.products.add_product}
-        </Button>
+        </Button>}
       </div>
 
       {/* Filters */}
@@ -180,6 +235,7 @@ function ProductsPageInner() {
             t.products.category,
             t.products.cost_price,
             t.products.selling_price,
+            copy('Stock'),
             t.products.product_status,
             t.common.actions,
           ]}
@@ -212,6 +268,7 @@ function ProductsPageInner() {
                   <TableHead>{t.products.category}</TableHead>
                   <TableHead>{t.products.cost_price}</TableHead>
                   <TableHead>{t.products.selling_price}</TableHead>
+                  <TableHead>{copy('Stock')}</TableHead>
                   <TableHead>{t.products.product_status}</TableHead>
                   <TableHead className="text-right">{t.common.actions}</TableHead>
                 </TableRow>
@@ -260,6 +317,12 @@ function ProductsPageInner() {
                     </TableCell>
                     <TableCell className="tt-tabular">{formatCurrency(product.cost_price)}</TableCell>
                     <TableCell className="tt-tabular font-semibold">{formatCurrency(product.selling_price)}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold tabular-nums">{totalStock(product as ProductWithStock)}</span>
+                        {lowStock(product as ProductWithStock) && <Badge variant="warning" className="gap-1"><AlertTriangle className="h-3 w-3" />{t.inventory.low_stock}</Badge>}
+                      </div>
+                    </TableCell>
                     <TableCell>{getStatusBadge(product.status)}</TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
@@ -272,6 +335,10 @@ function ProductsPageInner() {
                           <DropdownMenuItem onClick={() => setViewProduct(product)}>
                             <Eye className="h-4 w-4 mr-2" strokeWidth={1.75} /> {t.products.view_details}
                           </DropdownMenuItem>
+                          {canManageStock && <DropdownMenuItem onClick={() => openAdjustment(product as ProductWithStock)}>
+                            <SlidersHorizontal className="h-4 w-4 mr-2" strokeWidth={1.75} /> {t.inventory.adjust_stock}
+                          </DropdownMenuItem>}
+                          {canManageStock && <>
                           <DropdownMenuItem onClick={() => router.push(`/products/${product.id}/edit`)}>
                             <Edit className="h-4 w-4 mr-2" strokeWidth={1.75} /> {t.products.edit}
                           </DropdownMenuItem>
@@ -281,6 +348,7 @@ function ProductsPageInner() {
                           >
                             <Trash2 className="h-4 w-4 mr-2" strokeWidth={1.75} /> {t.products.delete}
                           </DropdownMenuItem>
+                          </>}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -349,6 +417,16 @@ function ProductsPageInner() {
                 </span></div>
                 <div><span className="tt-muted">{t.products.added}:</span> <span className="font-medium">{formatDate(viewProduct.created_at)}</span></div>
               </div>
+              <div className="space-y-2 rounded-lg border border-border p-3">
+                <div className="flex items-center justify-between gap-3"><p className="font-medium">{copy('Stock by location')}</p><Badge variant={lowStock(viewProduct) ? 'warning' : 'success'}>{totalStock(viewProduct)} {copy(viewProduct.stock_unit || 'piece')}</Badge></div>
+                {stockRows(viewProduct).length ? stockRows(viewProduct).map(row => (
+                  <div key={row.id} className="flex min-h-11 items-center justify-between border-t border-border pt-2 text-sm">
+                    <span>{row.warehouse?.name || copy('Location')}</span>
+                    <span className={Number(row.quantity) <= Number(row.min_stock_level ?? 5) ? 'font-semibold text-[var(--c-warn)]' : 'font-semibold'}>{row.quantity}</span>
+                  </div>
+                )) : <p className="text-sm text-muted-foreground">{copy('No stock recorded at any location.')}</p>}
+                {canManageStock && <Button type="button" variant="outline" className="min-h-11 w-full" onClick={() => { setViewProduct(null); openAdjustment(viewProduct); }}><SlidersHorizontal className="h-4 w-4" />{t.inventory.adjust_stock}</Button>}
+              </div>
               {viewProduct.description && (
                 <div>
                   <p className="text-sm tt-muted">{t.products.description}</p>
@@ -359,6 +437,21 @@ function ProductsPageInner() {
           </DialogContent>
         </Dialog>
       )}
+
+      <Dialog open={!!adjustProduct} onOpenChange={open => { if (!open) setAdjustProduct(null); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{t.inventory.adjust_stock}</DialogTitle></DialogHeader>
+          {adjustProduct && <div className="space-y-4">
+            <p className="font-medium">{productVariantLabel(adjustProduct)}</p>
+            <div className="space-y-2"><Label>{copy('Location')}</Label><Select value={adjustWarehouse} onValueChange={setAdjustWarehouse}><SelectTrigger><SelectValue placeholder={copy('Choose a location')} /></SelectTrigger><SelectContent>{warehouses.map(warehouse => <SelectItem key={warehouse.id} value={warehouse.id}>{warehouse.name}</SelectItem>)}</SelectContent></Select></div>
+            <div className="space-y-2"><Label>{t.inventory.movement_type}</Label><Select value={adjustDirection} onValueChange={value => setAdjustDirection(value as 'increase' | 'reduce')}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="increase">{t.inventory.stock_in_plus}</SelectItem><SelectItem value="reduce">{t.inventory.stock_out_minus}</SelectItem></SelectContent></Select></div>
+            <div className="space-y-2"><Label>{t.inventory.quantity_required}</Label><Input type="number" min="1" step="1" value={adjustQuantity} onChange={event => setAdjustQuantity(event.target.value)} /></div>
+            <div className="space-y-2"><Label>{t.inventory.reason_required}</Label><Textarea value={adjustReason} onChange={event => setAdjustReason(event.target.value)} minLength={3} required /></div>
+            <p className="text-sm text-muted-foreground">{copy('Current stock at this location: {count}', { count: stockRows(adjustProduct).find(row => row.warehouse_id === adjustWarehouse)?.quantity ?? 0 })}</p>
+            <Button className="min-h-11 w-full" disabled={!adjustWarehouse || !adjustQuantity || adjustReason.trim().length < 3 || adjustMutation.isPending} onClick={submitAdjustment}>{t.inventory.confirm_adjustment}</Button>
+          </div>}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

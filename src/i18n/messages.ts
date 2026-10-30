@@ -32,6 +32,18 @@ messages['Add up to 1,500 products during your 30-day free trial.'] = {
   ig: 'Tinye ngwaahịa ruru 1,500 n’oge nnwale efu ụbọchị 30 gị.',
   pcm: 'Add reach 1,500 products during your 30-day free trial.',
 };
+// Machine translated: native-speaker review required before rollout.
+Object.assign(messages, {
+  'Stock': { ha: 'Kaya', yo: 'Ọjà', ig: 'Ngwaahịa', pcm: 'Stock' },
+  'Stock by location': { ha: 'Kaya bisa wuri', yo: 'Ọjà ní ibi kọ̀ọ̀kan', ig: 'Ngwaahịa site n’ebe', pcm: 'Stock for each location' },
+  'Location': { ha: 'Wuri', yo: 'Ibi', ig: 'Ebe', pcm: 'Location' },
+  'Choose a location': { ha: 'Zaɓi wuri', yo: 'Yan ibi kan', ig: 'Họrọ ebe', pcm: 'Choose location' },
+  'No stock recorded at any location.': { ha: 'Ba a rubuta kaya a kowane wuri ba.', yo: 'Kò sí ọjà tí a kọ sílẹ̀ ní ibikíbi.', ig: 'Enweghị ngwaahịa edere n’ebe ọ bụla.', pcm: 'No stock record for any location.' },
+  'Stock adjustment saved offline and will sync automatically.': { ha: 'An ajiye gyaran kaya ba tare da intanet ba kuma zai daidaita da kansa.', yo: 'A fi àtúnṣe ọjà pamọ́ láìsí ìkànnì, yóò sì múra pọ̀ fúnra rẹ̀.', ig: 'Echekwara mmezi ngwaahịa na-anọghị n’ịntanetị, ọ ga-emekọrịta n’onwe ya.', pcm: 'Stock adjustment save offline and e go sync by itself.' },
+  'Stock adjusted successfully': { ha: 'An gyara kaya cikin nasara', yo: 'A ti ṣàtúnṣe ọjà', ig: 'Emezila ngwaahịa nke ọma', pcm: 'Stock don adjust well' },
+  'Enter a valid whole-number adjustment.': { ha: 'Shigar da ingantaccen adadin lamba cikakke.', yo: 'Tẹ àtúnṣe nọ́mbà odidi tó péye.', ig: 'Tinye mmezi ọnụọgụ zuru ezu ziri ezi.', pcm: 'Enter correct whole number adjustment.' },
+  'Current stock at this location: {count}': { ha: 'Kayan yanzu a wannan wurin: {count}', yo: 'Ọjà tó wà ní ibi yìí: {count}', ig: 'Ngwaahịa dị ugbu a n’ebe a: {count}', pcm: 'Current stock for this location: {count}' },
+});
 for (const [locale, copy] of Object.entries({ ha: { ...haDownloads, ...haPilot }, yo: { ...yoDownloads, ...yoPilot }, ig: { ...igDownloads, ...igPilot }, pcm: { ...pcmDownloads, ...pcmPilot } })) {
   for (const [source, value] of Object.entries(copy)) {
     messages[source] = { ...messages[source], [locale]: value };
