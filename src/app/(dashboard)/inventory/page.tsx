@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Package, AlertTriangle, XCircle, TrendingUp, TrendingDown } from 'lucide-react';
 import { toast } from 'sonner';
@@ -23,35 +23,29 @@ import { useAuthStore } from '@/store';
 import type { Warehouse } from '@/types';
 import { AccessGuard } from '@/components/shared/access-guard';
 import { useI18n } from '@/i18n';
+import { useCopy } from '@/i18n/text';
 import { generateId } from '@/lib/utils/id';
 import { saveToOfflineDB, addToSyncQueue, getAllFromOfflineDB } from '@/lib/offline/db';
 import { requireTransactionSubscription } from '@/lib/subscriptions/verification';
 import type { InventoryRecord } from '@/lib/offline/db';
+import { compareListRows, useListPreference, type ListSort, type ProductGroup } from '@/lib/lists/preferences';
 
-async function fetchInventory(warehouseId: string, filter: string, search: string) {
+async function fetchInventory(warehouseId: string, filter: string, search: string, sort: ListSort) {
   const supabase = createClient();
-  let query = supabase
-    .from('inventory')
-    .select(`
-      *,
-      product:products(id, name, sku, barcode, selling_price, cost_price, image_url, status),
-      warehouse:warehouses(name)
-    `)
-    .order('updated_at', { ascending: false });
-
-  if (warehouseId && warehouseId !== 'all') {
-    query = query.eq('warehouse_id', warehouseId);
+  const items: Record<string, unknown>[] = [];
+  const pageSize = 500;
+  for (let start = 0; ; start += pageSize) {
+    let query = supabase.from('inventory').select(`*,product:products(id,name,sku,barcode,selling_price,cost_price,image_url,status,created_at,category:categories(name),supplier:suppliers(name)),warehouse:warehouses(name)`)
+      .order(sort === 'newest' || sort === 'oldest' ? 'created_at' : 'name', { ascending: sort === 'az' || sort === 'oldest', referencedTable: 'products' })
+      .range(start, start + pageSize - 1);
+    if (warehouseId && warehouseId !== 'all') query = query.eq('warehouse_id', warehouseId);
+    if (filter === 'low') query = query.filter('quantity', 'gt', 0).filter('quantity', 'lt', 10);
+    else if (filter === 'out') query = query.eq('quantity', 0);
+    const { data, error } = await query;
+    if (error) throw error;
+    items.push(...((data || []) as Record<string, unknown>[]));
+    if (!data || data.length < pageSize) break;
   }
-  if (filter === 'low') {
-    query = query.filter('quantity', 'gt', 0).filter('quantity', 'lt', 10);
-  } else if (filter === 'out') {
-    query = query.eq('quantity', 0);
-  }
-
-  const { data, error } = await query;
-  if (error) throw error;
-
-  const items = data || [];
   if (search) {
     return items.filter((i: Record<string, unknown>) => {
       const product = i.product as { name?: string; sku?: string } | null;
@@ -233,12 +227,15 @@ export default function InventoryPage() {
 
 function InventoryPageInner() {
   const { t } = useI18n();
+  const copy = useCopy();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
-  const [warehouseFilter, setWarehouseFilter] = useState('all');
-  useEffect(() => { setWarehouseFilter(new URLSearchParams(window.location.search).get('warehouse') || 'all'); }, []);
+  const [warehouseFilter, setWarehouseFilter] = useState(() => typeof window === 'undefined' ? 'all' : new URLSearchParams(window.location.search).get('warehouse') || 'all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const preferenceKey = `trackasuwa:list:inventory:${user?.id || 'session'}`;
+  const [sort, setSort] = useListPreference<ListSort>(`${preferenceKey}:sort`, 'az');
+  const [groupBy, setGroupBy] = useListPreference<ProductGroup>(`${preferenceKey}:group`, 'none');
   const [adjustDialog, setAdjustDialog] = useState<Record<string, unknown> | null>(null);
   const [adjustType, setAdjustType] = useState<'in' | 'out' | 'adjustment'>('in');
   const [adjustQty, setAdjustQty] = useState('');
@@ -255,8 +252,19 @@ function InventoryPageInner() {
   });
 
   const { data: inventory = [], isLoading } = useQuery({
-    queryKey: ['inventory', warehouseFilter, statusFilter, search],
-    queryFn: () => fetchInventory(warehouseFilter, statusFilter, search),
+    queryKey: ['inventory', warehouseFilter, statusFilter, search, sort],
+    queryFn: () => fetchInventory(warehouseFilter, statusFilter, search, sort),
+  });
+
+  const inventoryGroup = (item: Record<string, unknown>) => {
+    const product = item.product as { category?: { name?: string } | null; supplier?: { name?: string } | null } | null;
+    return groupBy === 'category' ? product?.category?.name || copy('Uncategorised') : product?.supplier?.name || copy('No supplier');
+  };
+  const displayInventory = groupBy === 'none' ? inventory : [...inventory].sort((left, right) => {
+    const groupDelta = inventoryGroup(left).localeCompare(inventoryGroup(right), undefined, { sensitivity: 'base' });
+    const leftProduct = left.product as { name?: string; created_at?: string } | null;
+    const rightProduct = right.product as { name?: string; created_at?: string } | null;
+    return groupDelta || compareListRows(leftProduct || {}, rightProduct || {}, sort);
   });
 
   const adjustMutation = useMutation({
@@ -310,9 +318,9 @@ function InventoryPageInner() {
 
   const stats = {
     total: inventory.length,
-    inStock: inventory.filter((i: { quantity: number }) => i.quantity > 0).length,
-    low: inventory.filter((i: { quantity: number; min_stock_level: number }) => i.quantity > 0 && i.quantity <= i.min_stock_level).length,
-    out: inventory.filter((i: { quantity: number }) => i.quantity === 0).length,
+    inStock: inventory.filter(i => Number(i.quantity) > 0).length,
+    low: inventory.filter(i => Number(i.quantity) > 0 && Number(i.quantity) <= Number(i.min_stock_level)).length,
+    out: inventory.filter(i => Number(i.quantity) === 0).length,
   };
 
   return (
@@ -381,6 +389,8 @@ function InventoryPageInner() {
             <SelectItem value="out">{t.inventory.out_of_stock}</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={sort} onValueChange={value => setSort(value as ListSort)}><SelectTrigger aria-label={copy('Sort by')} className="w-44"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="az">{copy('A–Z')}</SelectItem><SelectItem value="za">{copy('Z–A')}</SelectItem><SelectItem value="newest">{copy('Newest first')}</SelectItem><SelectItem value="oldest">{copy('Oldest first')}</SelectItem></SelectContent></Select>
+        <Select value={groupBy} onValueChange={value => setGroupBy(value as ProductGroup)}><SelectTrigger aria-label={copy('Group by')} className="w-48"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">{copy('No grouping')}</SelectItem><SelectItem value="category">{copy('Group by category')}</SelectItem><SelectItem value="supplier">{copy('Group by supplier')}</SelectItem></SelectContent></Select>
       </div>
 
       {/* Table */}
@@ -421,7 +431,7 @@ function InventoryPageInner() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {inventory.map((item: Record<string, unknown>) => {
+                {displayInventory.map((item: Record<string, unknown>, index) => {
                   const product = item.product as { id: string; name: string; sku: string } | null;
                   const warehouse = item.warehouse as { name: string } | null;
                   const qty = Number(item.quantity);
@@ -432,7 +442,8 @@ function InventoryPageInner() {
                       : qty <= minStock
                         ? 'var(--c-warn)'
                         : null;
-                  return (
+                  return (<React.Fragment key={String(item.id)}>
+                    {groupBy !== 'none' && (index === 0 || inventoryGroup(displayInventory[index - 1]) !== inventoryGroup(item)) && <TableRow><TableCell colSpan={8} className="bg-muted font-semibold">{inventoryGroup(item)} <span className="ml-2 text-xs font-normal text-muted-foreground">{displayInventory.filter(row => inventoryGroup(row) === inventoryGroup(item)).length}</span></TableCell></TableRow>}
                     <TableRow
                       key={String(item.id)}
                       style={
@@ -480,7 +491,7 @@ function InventoryPageInner() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  );
+                  </React.Fragment>);
                 })}
               </TableBody>
             </Table>

@@ -37,11 +37,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { adjustProductStock } from '@/lib/inventory/adjust-stock';
 import type { Warehouse } from '@/types';
+import { compareListRows, useListPreference, type ListSort, type ProductGroup } from '@/lib/lists/preferences';
 
 type ProductStockRow = { id: string; warehouse_id: string; quantity: number; min_stock_level: number | null; warehouse: { name?: string } | null };
-type ProductWithStock = Product & { inventory?: ProductStockRow[] };
+type ProductWithStock = Product & { inventory?: ProductStockRow[]; category?: { name?: string } | null; supplier?: { name?: string } | null };
 
-async function fetchProducts(search?: string, categoryId?: string) {
+async function fetchProducts(search?: string, categoryId?: string, sort: ListSort = 'az') {
   const supabase = createClient();
   const products: Product[] = [];
   const pageSize = 500;
@@ -49,8 +50,8 @@ async function fetchProducts(search?: string, categoryId?: string) {
     let query = supabase
       .from('products')
       .select('*, category:categories(name), supplier:suppliers(name), inventory(id,warehouse_id,quantity,min_stock_level,warehouse:warehouses(name))')
-      .order('created_at', { ascending: false })
-      .order('id', { ascending: false })
+      .order(sort === 'newest' || sort === 'oldest' ? 'created_at' : 'name', { ascending: sort === 'az' || sort === 'oldest' })
+      .order('id', { ascending: sort !== 'newest' })
       .range(start, start + pageSize - 1);
 
     if (search) {
@@ -97,6 +98,9 @@ function ProductsPageInner() {
   const canManageStock = user?.role === 'business_owner' || user?.role === 'admin';
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const preferenceKey = `trackasuwa:list:products:${user?.id || 'session'}`;
+  const [sort, setSort] = useListPreference<ListSort>(`${preferenceKey}:sort`, 'az');
+  const [groupBy, setGroupBy] = useListPreference<ProductGroup>(`${preferenceKey}:group`, 'none');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [viewProduct, setViewProduct] = useState<ProductWithStock | null>(null);
@@ -107,8 +111,8 @@ function ProductsPageInner() {
   const [adjustReason, setAdjustReason] = useState('');
 
   const { data: products = [], isLoading, error: pageError, refetch: retryPage } = useQuery({
-    queryKey: ['products', search, categoryFilter],
-    queryFn: () => fetchProducts(search || undefined, categoryFilter),
+    queryKey: ['products', search, categoryFilter, sort],
+    queryFn: () => fetchProducts(search || undefined, categoryFilter, sort),
   });
 
   const { data: categories = [] } = useQuery({
@@ -127,6 +131,14 @@ function ProductsPageInner() {
   const stockRows = (product: ProductWithStock) => product.inventory || [];
   const totalStock = (product: ProductWithStock) => stockRows(product).reduce((sum, row) => sum + Number(row.quantity), 0);
   const lowStock = (product: ProductWithStock) => stockRows(product).some(row => Number(row.quantity) <= Number(row.min_stock_level ?? 5));
+  const groupName = (product: ProductWithStock) => groupBy === 'category'
+    ? product.category?.name || copy('Uncategorised')
+    : product.supplier?.name || copy('No supplier');
+  const displayProducts = groupBy === 'none' ? products : [...products].sort((left, right) => {
+    const groupDelta = groupName(left).localeCompare(groupName(right), undefined, { sensitivity: 'base' });
+    return groupDelta || compareListRows(left, right, sort);
+  });
+  const groupCount = (name: string) => displayProducts.filter(product => groupName(product) === name).length;
   const openAdjustment = (product: ProductWithStock) => {
     setAdjustProduct(product);
     setAdjustWarehouse(stockRows(product)[0]?.warehouse_id || warehouses[0]?.id || '');
@@ -220,6 +232,14 @@ function ProductsPageInner() {
                 ))}
               </SelectContent>
             </Select>
+            <Select value={sort} onValueChange={value => setSort(value as ListSort)}>
+              <SelectTrigger aria-label={copy('Sort by')} className="w-full sm:w-44"><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem value="az">{copy('A–Z')}</SelectItem><SelectItem value="za">{copy('Z–A')}</SelectItem><SelectItem value="newest">{copy('Newest first')}</SelectItem><SelectItem value="oldest">{copy('Oldest first')}</SelectItem></SelectContent>
+            </Select>
+            <Select value={groupBy} onValueChange={value => setGroupBy(value as ProductGroup)}>
+              <SelectTrigger aria-label={copy('Group by')} className="w-full sm:w-48"><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem value="none">{copy('No grouping')}</SelectItem><SelectItem value="category">{copy('Group by category')}</SelectItem><SelectItem value="supplier">{copy('Group by supplier')}</SelectItem></SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
@@ -274,7 +294,9 @@ function ProductsPageInner() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {products.map((product) => (
+                {displayProducts.map((product, index) => (
+                  <React.Fragment key={product.id}>
+                  {groupBy !== 'none' && (index === 0 || groupName(displayProducts[index - 1]) !== groupName(product)) && <TableRow><TableCell colSpan={9} className="bg-muted font-semibold">{groupName(product)} <span className="ml-2 text-xs font-normal text-muted-foreground">{copy('{count} products', { count: groupCount(groupName(product)) })}</span></TableCell></TableRow>}
                   <TableRow key={product.id}>
                     <TableCell>
                       <div
@@ -353,6 +375,7 @@ function ProductsPageInner() {
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
+                  </React.Fragment>
                 ))}
               </TableBody>
             </Table>

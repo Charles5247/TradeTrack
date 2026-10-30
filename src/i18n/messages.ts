@@ -44,6 +44,21 @@ Object.assign(messages, {
   'Enter a valid whole-number adjustment.': { ha: 'Shigar da ingantaccen adadin lamba cikakke.', yo: 'Tẹ àtúnṣe nọ́mbà odidi tó péye.', ig: 'Tinye mmezi ọnụọgụ zuru ezu ziri ezi.', pcm: 'Enter correct whole number adjustment.' },
   'Current stock at this location: {count}': { ha: 'Kayan yanzu a wannan wurin: {count}', yo: 'Ọjà tó wà ní ibi yìí: {count}', ig: 'Ngwaahịa dị ugbu a n’ebe a: {count}', pcm: 'Current stock for this location: {count}' },
 });
+// Machine translated: native-speaker review required before rollout.
+Object.assign(messages, {
+  'Sort by': { ha: 'Jera ta', yo: 'Tò nípasẹ̀', ig: 'Hazie site na', pcm: 'Arrange by' },
+  'A–Z': { ha: 'A–Z', yo: 'A–Z', ig: 'A–Z', pcm: 'A–Z' },
+  'Z–A': { ha: 'Z–A', yo: 'Z–A', ig: 'Z–A', pcm: 'Z–A' },
+  'Newest first': { ha: 'Sabbi da farko', yo: 'Titun jù lọ lákọ̀ọ́kọ́', ig: 'Nke kachasị ọhụrụ mbụ', pcm: 'Newest first' },
+  'Oldest first': { ha: 'Tsofaffi da farko', yo: 'Àtijọ́ jù lọ lákọ̀ọ́kọ́', ig: 'Nke kacha ochie mbụ', pcm: 'Oldest first' },
+  'Group by': { ha: 'Raba ta', yo: 'Pín nípasẹ̀', ig: 'Kewaa site na', pcm: 'Group by' },
+  'No grouping': { ha: 'Ba a raba ba', yo: 'Kò sí pípín', ig: 'Enweghị nkewa', pcm: 'No grouping' },
+  'Group by category': { ha: 'Raba ta rukuni', yo: 'Pín nípasẹ̀ ẹ̀ka', ig: 'Kewaa site na ngalaba', pcm: 'Group by category' },
+  'Group by supplier': { ha: 'Raba ta mai kawo kaya', yo: 'Pín nípasẹ̀ olùpèsè', ig: 'Kewaa site na onye na-ebubata', pcm: 'Group by supplier' },
+  'Uncategorised': { ha: 'Ba shi da rukuni', yo: 'Kò ní ẹ̀ka', ig: 'Enweghị ngalaba', pcm: 'No category' },
+  'No supplier': { ha: 'Babu mai kawo kaya', yo: 'Kò sí olùpèsè', ig: 'Enweghị onye na-ebubata', pcm: 'No supplier' },
+  '{count} products': { ha: 'Kaya {count}', yo: 'Ọjà {count}', ig: 'Ngwaahịa {count}', pcm: '{count} products' },
+});
 for (const [locale, copy] of Object.entries({ ha: { ...haDownloads, ...haPilot }, yo: { ...yoDownloads, ...yoPilot }, ig: { ...igDownloads, ...igPilot }, pcm: { ...pcmDownloads, ...pcmPilot } })) {
   for (const [source, value] of Object.entries(copy)) {
     messages[source] = { ...messages[source], [locale]: value };
