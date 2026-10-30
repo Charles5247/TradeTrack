@@ -56,6 +56,7 @@ import { formatDateTime } from "@/lib/utils/format";
 import { useAuthStore } from "@/store";
 import type { User } from "@/types";
 import { useI18n } from "@/i18n";
+import { DiscountPolicySettings } from '@/components/users/discount-policy-settings';
 
 // ── API Helpers ───────────────────────────────────────────────
 
@@ -283,6 +284,8 @@ export default function UsersPage() {
         </Button>
       </div>
 
+      <DiscountPolicySettings />
+
       {/* Table */}
       <Card>
         <CardContent className="min-w-0 overflow-hidden p-0">
@@ -366,6 +369,8 @@ export default function UsersPage() {
                                 full_name: u.full_name,
                                 phone: u.phone,
                                 role: u.role,
+                                can_give_discounts: u.can_give_discounts,
+                                max_discount_percent: u.max_discount_percent,
                               });
                             }}
                           >
@@ -575,6 +580,8 @@ export default function UsersPage() {
                   </SelectContent>
                 </Select>
               </div>
+              <label className="flex min-h-11 items-center gap-3 rounded-lg border p-3"><input type="checkbox" checked={Boolean(editData.can_give_discounts)} onChange={event => setEditData({ ...editData, can_give_discounts: event.target.checked })} /><span><span className="block font-medium">{copy('Can give discounts')}</span><span className="text-xs text-muted-foreground">{copy('Permission is off by default and takes effect immediately.')}</span></span></label>
+              {editData.can_give_discounts && <div className="space-y-2"><Label>{copy('Maximum discount percent')}</Label><Input type="number" min="0" max="100" step="0.01" value={editData.max_discount_percent ?? ''} onChange={event => setEditData({ ...editData, max_discount_percent: Number(event.target.value) })} /></div>}
               <div className="flex gap-3 pt-2">
                 <Button
                   variant="outline"

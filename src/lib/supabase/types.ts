@@ -42,6 +42,8 @@ export type Database = {
           settings: Record<string, unknown>;
           created_at: string;
           updated_at: string;
+          max_discount_percent: number;
+          discount_approval_minutes: number;
         };
         Insert: {
           id?: string;
@@ -59,6 +61,8 @@ export type Database = {
           settings?: Record<string, unknown>;
           created_at?: string;
           updated_at?: string;
+          max_discount_percent?: number;
+          discount_approval_minutes?: number;
         };
         Update: Partial<
           Database["public"]["Tables"]["organizations"]["Insert"]
@@ -80,6 +84,8 @@ export type Database = {
           settings: Record<string, unknown>;
           created_at: string;
           updated_at: string;
+          can_give_discounts: boolean;
+          max_discount_percent: number | null;
         };
         Insert: {
           id?: string;
@@ -95,6 +101,8 @@ export type Database = {
           settings?: Record<string, unknown>;
           created_at?: string;
           updated_at?: string;
+          can_give_discounts?: boolean;
+          max_discount_percent?: number | null;
         };
         Update: Partial<Database["public"]["Tables"]["users"]["Insert"]>;
         Relationships: [];
@@ -421,6 +429,11 @@ export type Database = {
           customer_phone: string | null;
           sale_type: "retail" | "b2b" | "b2c";
           credit_authorized_by: string | null;
+          discount_authorized_by: string | null;
+          discount_request_id: string | null;
+          discount_reason: string | null;
+          discount_cart_hash: string | null;
+          discount_permission_snapshot: Record<string, unknown> | null;
           subtotal: number;
           discount: number;
           tax: number;
@@ -446,6 +459,11 @@ export type Database = {
           customer_phone?: string | null;
           sale_type?: "retail" | "b2b" | "b2c";
           credit_authorized_by?: string | null;
+          discount_authorized_by?: string | null;
+          discount_request_id?: string | null;
+          discount_reason?: string | null;
+          discount_cart_hash?: string | null;
+          discount_permission_snapshot?: Record<string, unknown> | null;
           subtotal?: number;
           discount?: number;
           tax?: number;
@@ -958,7 +976,8 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      request_discount_approval: { Args: { p_cart_snapshot: Record<string, unknown>; p_cart_hash: string; p_cart_subtotal: number; p_discount_amount: number; p_reason: string }; Returns: string };
+      decide_discount_request: { Args: { p_request_id: string; p_approve: boolean; p_reason?: string | null }; Returns: Record<string, unknown> };
     };
     Enums: {
       [_ in never]: never;

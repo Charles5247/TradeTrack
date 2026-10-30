@@ -57,6 +57,12 @@ import { persistOfflineSale } from "@/lib/offline/sales";
 import { generateId } from "@/lib/utils/id";
 import { requireOnline } from "@/lib/utils/network";
 
+async function cartFingerprint(items: CartItem[], subtotal: number) {
+  const canonical = JSON.stringify({ subtotal: Number(subtotal.toFixed(2)), items: items.map(item => ({ product_id: item.product.id, warehouse_id: item.warehouse_id, quantity: item.quantity, unit_price: item.unit_price, discount: item.discount })).sort((a, b) => `${a.product_id}:${a.warehouse_id}`.localeCompare(`${b.product_id}:${b.warehouse_id}`)) });
+  const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(canonical));
+  return Array.from(new Uint8Array(bytes), byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
 async function searchProducts(query: string, warehouseId: string) {
   const supabase = createClient();
 
@@ -190,6 +196,11 @@ async function completeSale(payload: {
   payment_method: string;
   notes?: string;
   receipt_url?: string;
+  discount_authorized_by?: string;
+  discount_request_id?: string;
+  discount_reason?: string;
+  discount_cart_hash?: string;
+  discount_permission_snapshot?: Record<string, unknown>;
 }) {
   const invoiceNumber = `INV-${String(Date.now()).slice(-6)}`;
   // Always commit locally first. A stale `navigator.onLine` state must never
@@ -245,6 +256,12 @@ function POSPageInner() {
   const [creditAuthorizedBy, setCreditAuthorizedBy] = useState('');
   const [notes, setNotes] = useState("");
   const [paymentReceiptUrl, setPaymentReceiptUrl] = useState("");
+  const [discountInput, setDiscountInput] = useState('');
+  const [discountReason, setDiscountReason] = useState('');
+  const [discountRequestId, setDiscountRequestId] = useState('');
+  const [discountCartHash, setDiscountCartHash] = useState('');
+  const [discountStatus, setDiscountStatus] = useState<'none' | 'pending' | 'approved' | 'rejected' | 'expired'>('none');
+  const [discountBusy, setDiscountBusy] = useState(false);
   const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [lastSale, setLastSale] = useState<Record<string, unknown> | null>(
@@ -350,6 +367,11 @@ function POSPageInner() {
       setCreditAuthorizedBy('');
       setNotes("");
       setPaymentReceiptUrl("");
+      setDiscountInput('');
+      setDiscountReason('');
+      setDiscountRequestId('');
+      setDiscountCartHash('');
+      setDiscountStatus('none');
       toast.success(
         t.pos.sale_completed_toast.replace("{invoice}", sale.invoice_number),
       );
@@ -392,6 +414,22 @@ function POSPageInner() {
     if (!(await (await import("@/lib/subscriptions/verification")).allowCheckout(user?.organization_id || "", toast.error))) return;
     if (!user) return toast.error(t.pos.not_authenticated);
     if (cart.items.length === 0) return toast.error(t.pos.cart_is_empty_toast);
+
+    let discountAuthorization: { discount_authorized_by?: string; discount_request_id?: string; discount_reason?: string; discount_cart_hash?: string; discount_permission_snapshot?: Record<string, unknown> } = {};
+    if (cart.discount > 0) {
+      if (discountReason.trim().length < 3) return toast.error(copy('Enter a reason for the discount'));
+      const currentHash = await cartFingerprint(cart.items, cart.getSubtotal());
+      const staffLimit = Number(user.max_discount_percent ?? 0);
+      if (user.role === 'business_owner' || (Boolean(user.can_give_discounts) && cart.discount <= staffLimit)) {
+        discountAuthorization = { discount_authorized_by: user.id, discount_reason: discountReason.trim(), discount_cart_hash: currentHash, discount_permission_snapshot: { role: user.role, can_give_discounts: Boolean(user.can_give_discounts), max_discount_percent: staffLimit } };
+      } else {
+        if (!navigator.onLine) return toast.error(copy('Discount approval requires an internet connection'));
+        if (!discountRequestId || discountCartHash !== currentHash) return toast.error(copy('Request owner approval for this exact cart before checkout'));
+        const { data, error } = await createClient().from('discount_requests').select('status,expires_at,cart_hash').eq('id', discountRequestId).single();
+        if (error || data?.status !== 'approved' || data.cart_hash !== currentHash || new Date(data.expires_at).getTime() <= Date.now()) return toast.error(copy('This discount approval is not valid for the current cart'));
+        discountAuthorization = { discount_request_id: discountRequestId, discount_reason: discountReason.trim(), discount_cart_hash: currentHash };
+      }
+    }
 
     const total = cart.getTotal();
     const paid = parseFloat(amountPaid) || 0;
@@ -448,7 +486,29 @@ function POSPageInner() {
       payment_method: cart.payment_method,
       notes: notes || undefined,
       receipt_url: paymentReceiptUrl || undefined,
+      ...discountAuthorization,
     });
+  };
+
+  const applyOrRequestDiscount = async () => {
+    const percent = Number(discountInput);
+    if (!user || !Number.isFinite(percent) || percent <= 0 || percent > 100) return toast.error(copy('Enter a discount from 0.01% to 100%'));
+    if (!cart.items.length) return toast.error(t.pos.cart_is_empty_toast);
+    if (discountReason.trim().length < 3) return toast.error(copy('Enter a reason for the discount'));
+    const hash = await cartFingerprint(cart.items, cart.getSubtotal());
+    if (user.role === 'business_owner' || (Boolean(user.can_give_discounts) && percent <= Number(user.max_discount_percent ?? 0))) {
+      cart.setCartDiscount(percent); setDiscountCartHash(hash); setDiscountRequestId(''); setDiscountStatus('approved');
+      return toast.success(copy('Discount applied'));
+    }
+    if (!navigator.onLine) return toast.error(copy('Discount approval requires an internet connection'));
+    setDiscountBusy(true);
+    try {
+      const { data, error } = await createClient().rpc('request_discount_approval', { p_cart_snapshot: { items: cart.items.map(i => ({ product_id: i.product.id, quantity: i.quantity, unit_price: i.unit_price, discount: i.discount })) }, p_cart_hash: hash, p_cart_subtotal: cart.getSubtotal(), p_discount_amount: cart.getSubtotal() * percent / 100, p_reason: discountReason.trim() });
+      if (error) throw error;
+      cart.setCartDiscount(percent); setDiscountRequestId(String(data)); setDiscountCartHash(hash); setDiscountStatus('pending');
+      toast.success(copy('Discount approval requested'));
+    } catch (error) { toast.error(error instanceof Error ? error.message : copy('Could not request discount approval')); }
+    finally { setDiscountBusy(false); }
   };
 
   const subtotal = isHydrated ? cart.getSubtotal() : 0;
@@ -877,6 +937,13 @@ function POSPageInner() {
                 />
               </label>
             )}
+          </div>
+
+          <div className="rounded-lg border p-3 space-y-2">
+            <Label className="text-xs">{copy('Cart discount percent')}</Label>
+            <div className="flex gap-2"><Input type="number" min="0" max="100" step="0.01" value={discountInput} onChange={event => { setDiscountInput(event.target.value); setDiscountStatus('none'); }} className="h-10" /><Button type="button" variant="outline" className="min-h-11" disabled={discountBusy} onClick={applyOrRequestDiscount}>{discountBusy ? copy('Requesting') : copy('Apply or request')}</Button></div>
+            <Input value={discountReason} onChange={event => setDiscountReason(event.target.value)} placeholder={copy('Required discount reason')} className="h-10" />
+            {discountStatus !== 'none' && <p className="text-xs text-muted-foreground" role="status">{copy('Discount status')}: {copy(discountStatus)}</p>}
           </div>
 
           {/* Totals */}

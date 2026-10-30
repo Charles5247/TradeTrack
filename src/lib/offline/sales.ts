@@ -29,6 +29,11 @@ export interface OfflineSalePayload {
   credit_authorized_by?: string;
   notes?: string;
   receipt_url?: string;
+  discount_authorized_by?: string;
+  discount_request_id?: string;
+  discount_reason?: string;
+  discount_cart_hash?: string;
+  discount_permission_snapshot?: Record<string, unknown>;
 }
 
 export async function persistOfflineSale(payload: OfflineSalePayload) {
@@ -59,6 +64,11 @@ export async function persistOfflineSale(payload: OfflineSalePayload) {
     status: 'completed',
     notes: payload.notes ?? null,
     receipt_url: payload.receipt_url ?? null,
+    discount_authorized_by: payload.discount_authorized_by ?? null,
+    discount_request_id: payload.discount_request_id ?? null,
+    discount_reason: payload.discount_reason ?? null,
+    discount_cart_hash: payload.discount_cart_hash ?? null,
+    discount_permission_snapshot: payload.discount_permission_snapshot ?? null,
     created_at: createdAt,
     updated_at: createdAt,
     synced: false,

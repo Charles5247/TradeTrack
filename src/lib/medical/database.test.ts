@@ -26,6 +26,7 @@ beforeAll(async () => {
    catch(e){throw new Error(`Migration ${f}: ${e instanceof Error?e.message:e}`);}
  }
  await db.exec(readFileSync('supabase/migrations/20261030062000_notification_delivery_system.sql','utf8'));
+ await db.exec(readFileSync('supabase/migrations/20261030070000_discount_approval_controls.sql','utf8'));
  await db.exec(`INSERT INTO organizations(id,name,slug) VALUES('${org}','Test','test');
  INSERT INTO users(id,email,full_name,role,organization_id) VALUES('${owner}','owner@test.local','Owner','business_owner','${org}'),('${cashier}','cashier@test.local','Cashier','cashier','${org}'),('${platformOwner}','platform@test.local','Platform Owner','platform_owner',NULL);
  INSERT INTO merchants(organization_id,business_name,registration_number,contact_name,contact_email,business_owner_user_id)

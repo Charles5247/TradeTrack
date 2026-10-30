@@ -109,7 +109,7 @@ export async function PATCH(
     }
 
     const body = (await request.json()) as Record<string, unknown>;
-    const { full_name, phone, role, status, password } = body;
+    const { full_name, phone, role, status, password, can_give_discounts, max_discount_percent } = body;
 
     if (
       isBusinessOwner &&
@@ -135,6 +135,15 @@ export async function PATCH(
     if (role !== undefined) profileUpdates.role = role as UserRow["role"];
     if (status !== undefined)
       profileUpdates.status = status as UserRow["status"];
+    if (can_give_discounts !== undefined) {
+      if (!isBusinessOwner || typeof can_give_discounts !== 'boolean') return NextResponse.json({ error: 'Only the business owner can change discount permission' }, { status: 403 });
+      profileUpdates.can_give_discounts = can_give_discounts;
+    }
+    if (max_discount_percent !== undefined) {
+      const limit = Number(max_discount_percent);
+      if (!isBusinessOwner || !Number.isFinite(limit) || limit < 0 || limit > 100) return NextResponse.json({ error: 'Discount limit must be between 0 and 100' }, { status: 400 });
+      profileUpdates.max_discount_percent = limit;
+    }
 
     const { data: updatedProfile, error: profileErr } = await serviceSupabase
       .from("users")

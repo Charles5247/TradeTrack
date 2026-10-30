@@ -31,6 +31,8 @@ export interface User {
   phone?: string;
   last_login?: string;
   must_change_password?: boolean;
+  can_give_discounts?: boolean;
+  max_discount_percent?: number | null;
   created_at: string;
   updated_at: string;
 }
