@@ -106,6 +106,7 @@ export interface SubscriptionLike {
 
 /** Sentinel value used in the DB for "unlimited" on a numeric plan limit. */
 export const UNLIMITED = -1;
+export const TRIAL_PRODUCT_LIMIT = 1500;
 
 /**
  * Resolves the plan attached to a subscription via its `plan_id` foreign
@@ -132,7 +133,7 @@ export function resolveSubscriptionPlan<T extends PlanLike>(
 ): T | null {
   if (!subscription) return null;
   const plan = allPlans.find((p) => p.id === subscription.plan_id) ?? null;
-  return plan && subscription.status === 'trial' ? { ...plan, max_products: 1000 } : plan;
+  return plan && subscription.status === 'trial' ? { ...plan, max_products: TRIAL_PRODUCT_LIMIT } : plan;
 }
 
 /** Treats `null`/`undefined`/`-1` all as "no limit". */

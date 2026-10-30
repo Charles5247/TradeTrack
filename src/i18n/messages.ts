@@ -25,6 +25,13 @@ Object.assign(messages, {
   'Category created': { ha: 'An ƙirƙiri rukuni', yo: 'A ti dá ẹ̀ka sílẹ̀', ig: 'E mepụtala ngalaba', pcm: 'Category don create' },
   'Could not create category': { ha: 'Ba a iya ƙirƙirar rukuni ba', yo: 'A kò lè dá ẹ̀ka sílẹ̀', ig: 'Enweghị ike imepụta ngalaba', pcm: 'Category no fit create' },
 });
+// Machine translated: native-speaker review required before rollout.
+messages['Add up to 1,500 products during your 30-day free trial.'] = {
+  ha: 'Ƙara kaya har 1,500 a lokacin gwajin kyauta na kwanaki 30.',
+  yo: 'Fi ẹrù tó 1,500 kún un ní àkókò ìdánwò ọ̀fẹ́ ọjọ́ 30 rẹ.',
+  ig: 'Tinye ngwaahịa ruru 1,500 n’oge nnwale efu ụbọchị 30 gị.',
+  pcm: 'Add reach 1,500 products during your 30-day free trial.',
+};
 for (const [locale, copy] of Object.entries({ ha: { ...haDownloads, ...haPilot }, yo: { ...yoDownloads, ...yoPilot }, ig: { ...igDownloads, ...igPilot }, pcm: { ...pcmDownloads, ...pcmPilot } })) {
   for (const [source, value] of Object.entries(copy)) {
     messages[source] = { ...messages[source], [locale]: value };

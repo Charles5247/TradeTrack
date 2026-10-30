@@ -29,8 +29,14 @@ it('repairs the hosted merchant foreign-key failure and creates exactly one 30-d
   const business=(await db.query<{price:string;features:string[]}>(`SELECT price,features FROM subscription_plans WHERE id='c3d4e5f6-a7b8-9012-cdef-123456789012'`)).rows[0];
   expect(Number(business.price)).toBe(20000);
   expect(business.features).toEqual(['low_stock_alerts','purchase_orders','sales']);
-  await db.exec(`INSERT INTO products SELECT md5(n::text)::uuid,'11111111-1111-1111-1111-111111111111' FROM generate_series(1,1000) n`);
-  await expect(db.exec(`INSERT INTO products VALUES(md5('1001')::uuid,'11111111-1111-1111-1111-111111111111')`)).rejects.toThrow('1000 products');
+  const raisedLimit=readFileSync('supabase/migrations/20261030045409_raise_trial_product_limit_1500.sql','utf8');
+  await db.exec(raisedLimit); await db.exec(raisedLimit);
+  expect((await db.query(`SELECT max_products FROM subscription_plans WHERE id='b4000000-0000-0000-0000-000000000004'`)).rows[0]).toEqual({max_products:1500});
+  await db.exec(`INSERT INTO products SELECT md5(n::text)::uuid,'11111111-1111-1111-1111-111111111111' FROM generate_series(1,1500) n`);
+  await expect(db.exec(`INSERT INTO products VALUES(md5('1501')::uuid,'11111111-1111-1111-1111-111111111111')`)).rejects.toThrow('1500 products');
+  const unchangedBusiness=(await db.query<{price:string;max_cashiers:number;max_products:number;max_warehouses:number}>(`SELECT price,max_cashiers,max_products,max_warehouses FROM subscription_plans WHERE id='c3d4e5f6-a7b8-9012-cdef-123456789012'`)).rows[0];
+  expect(unchangedBusiness).toMatchObject({max_cashiers:10,max_products:5000,max_warehouses:-1});
+  expect(Number(unchangedBusiness.price)).toBe(20000);
 
  }finally{await db.close();}
 },30000);

@@ -125,6 +125,11 @@ describe("resolveSubscriptionPlan", () => {
     expect(resolveSubscriptionPlan(subscription, ALL_PLANS)?.name).toBe("Growth");
   });
 
+  it("gives every trial the current 1,500-product allowance", () => {
+    const subscription = { id: "trial-1", plan_id: LEGACY_STANDARD_PLAN.id, status: "trial" };
+    expect(resolveSubscriptionPlan(subscription, ALL_PLANS)?.max_products).toBe(1500);
+  });
+
   it("returns null for a null/undefined subscription", () => {
     expect(resolveSubscriptionPlan(null, ALL_PLANS)).toBeNull();
     expect(resolveSubscriptionPlan(undefined, ALL_PLANS)).toBeNull();

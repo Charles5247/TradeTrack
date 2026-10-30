@@ -14,7 +14,10 @@ export function Hero() {
           </h1>
           <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground"><T text="Record every sale, stay on top of stock, and understand your business. Built for the realities of trading in Nigeria — including unreliable internet." /></p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link href="/signup" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 font-semibold text-primary-foreground shadow-sm"><T text="Start 30-day free trial" /><ArrowRight className="h-4 w-4" /></Link>
+            <div className="space-y-2">
+              <Link href="/signup" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 font-semibold text-primary-foreground shadow-sm"><T text="Start 30-day free trial" /><ArrowRight className="h-4 w-4" /></Link>
+              <p className="text-sm text-muted-foreground"><T text="Add up to 1,500 products during your 30-day free trial." /></p>
+            </div>
             <Link href="#how-it-works" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-border bg-card px-5 py-3 font-semibold"><T text="See how it works" /></Link>
           </div>
           <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
