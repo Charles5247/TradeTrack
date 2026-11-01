@@ -1,7 +1,11 @@
 "use client";
 
+import React from "react";
 import { PlanCard, type Plan } from "@/components/subscriptions/plan-card";
 import { Reveal } from "@/components/marketing/reveal";
+import { Segmented } from "@/components/ui/segmented";
+import { useCopy } from "@/i18n/text";
+import type { BillingCycle } from "@/lib/subscriptions/billing-cycle";
 
 /**
  * Client-side plan grid for the public Pricing page. `plans` (plain, serializable data)
@@ -21,15 +25,30 @@ import { Reveal } from "@/components/marketing/reveal";
  * Components — only serializable data may cross that boundary.
  */
 export function PricingClient({ plans }: { plans: Plan[] }) {
+  const [billingCycle, setBillingCycle] = React.useState<BillingCycle>("monthly");
+  const copy = useCopy();
+
   return (
     <div>
+      <div className="mb-8 flex justify-center">
+        <Segmented<BillingCycle>
+          value={billingCycle}
+          onChange={setBillingCycle}
+          options={[
+            { value: "monthly", label: copy("Monthly") },
+            { value: "quarterly", label: copy("Every 3 months") },
+            { value: "biannual", label: copy("Every 6 months") },
+            { value: "yearly", label: copy("Yearly · save 20%") },
+          ]}
+        />
+      </div>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {plans.map((plan, i) => (
           <Reveal key={plan.id} delay={i * 80} className="h-full">
             <PlanCard
               plan={plan}
               allPlans={plans}
-              billingCycle="monthly"
+              billingCycle={billingCycle}
               selectHref={`/signup?plan=${plan.id}`}
               selectLabel="Get Started"
             />

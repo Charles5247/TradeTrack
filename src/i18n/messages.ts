@@ -26,11 +26,11 @@ Object.assign(messages, {
   'Could not create category': { ha: 'Ba a iya ƙirƙirar rukuni ba', yo: 'A kò lè dá ẹ̀ka sílẹ̀', ig: 'Enweghị ike imepụta ngalaba', pcm: 'Category no fit create' },
 });
 // Machine translated: native-speaker review required before rollout.
-messages['Add up to 1,500 products during your 30-day free trial.'] = {
-  ha: 'Ƙara kaya har 1,500 a lokacin gwajin kyauta na kwanaki 30.',
-  yo: 'Fi ẹrù tó 1,500 kún un ní àkókò ìdánwò ọ̀fẹ́ ọjọ́ 30 rẹ.',
-  ig: 'Tinye ngwaahịa ruru 1,500 n’oge nnwale efu ụbọchị 30 gị.',
-  pcm: 'Add reach 1,500 products during your 30-day free trial.',
+messages['Add up to 2,000 products during your 30-day free trial.'] = {
+  ha: 'Ƙara kaya har 2,000 a lokacin gwajin kyauta na kwanaki 30.',
+  yo: 'Fi ẹrù tó 2,000 kún un ní àkókò ìdánwò ọ̀fẹ́ ọjọ́ 30 rẹ.',
+  ig: 'Tinye ngwaahịa ruru 2,000 n’oge nnwale efu ụbọchị 30 gị.',
+  pcm: 'Add reach 2,000 products during your 30-day free trial.',
 };
 // Machine translated: native-speaker review required before rollout.
 Object.assign(messages, {

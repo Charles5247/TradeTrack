@@ -16,7 +16,7 @@ export function Hero() {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <div className="space-y-2">
               <Link href="/signup" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 font-semibold text-primary-foreground shadow-sm"><T text="Start 30-day free trial" /><ArrowRight className="h-4 w-4" /></Link>
-              <p className="text-sm text-muted-foreground"><T text="Add up to 1,500 products during your 30-day free trial." /></p>
+              <p className="text-sm text-muted-foreground"><T text="Add up to 2,000 products during your 30-day free trial." /></p>
             </div>
             <Link href="#how-it-works" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-border bg-card px-5 py-3 font-semibold"><T text="See how it works" /></Link>
           </div>

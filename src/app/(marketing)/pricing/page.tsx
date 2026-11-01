@@ -12,7 +12,7 @@ import { Reveal } from "@/components/marketing/reveal";
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description: "Transparent monthly plans for Nigerian retailers. Choose the paid TracKasuwa plan that fits your shop.",
+  description: "Transparent flexible plans for Nigerian retailers. Choose monthly, 3-month, 6-month or yearly TracKasuwa billing.",
 };
 
 // Always fetch live from the DB — pricing must reflect a plan change
@@ -78,7 +78,7 @@ export default async function PricingPage() {
                 maxWidth: 620,
                 margin: "0 auto",
               }}
-            ><TranslatedText text={"Choose a monthly plan that fits your shop and team."} /></p>
+            ><TranslatedText text={"Choose a billing cycle that fits your shop and team."} /></p>
           </Reveal>
         </div>
       </section>
@@ -90,7 +90,7 @@ export default async function PricingPage() {
           <p
             className="text-center text-xs mx-auto mt-10 max-w-2xl"
             style={{ color: "var(--c-textMuted)" }}
-          ><TranslatedText text={"All listed plans are paid monthly in Nigerian Naira (₦). Enterprise pricing is custom — talk to sales. Offline-first access and automatic data sync are included."} /></p>
+          ><TranslatedText text={"Prices are in Nigerian Naira (₦). Yearly billing saves 20%; other billing periods are the monthly rate for the full selected period. Enterprise pricing is custom — talk to sales."} /></p>
         </div>
       </section>
     </div>

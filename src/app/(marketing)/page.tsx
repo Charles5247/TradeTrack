@@ -12,6 +12,7 @@ import { CTABand } from "@/components/marketing/cta-band";
 import { SocialProofBand } from "@/components/marketing/social-proof-band";
 import { showSocialProof } from "@/content/social-proof";
 import { siteImages } from "@/content/images";
+import { InteractiveProductDemo, ServiceCommitments } from "@/components/marketing/interactive-product-demo";
 
 export const metadata: Metadata = {
   title: "Offline POS & Inventory Built for Accountability",
@@ -66,6 +67,8 @@ export default function MarketingHomePage() {
       {showSocialProof ? <SocialProofBand /> : null}
       <StatsBand />
       <GettingStarted />
+      <InteractiveProductDemo />
+      <ServiceCommitments />
       <FeatureGrid />
       <AIAssistantBand />
       <IndustriesBand />
