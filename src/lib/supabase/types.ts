@@ -19,6 +19,46 @@ export type Database = {
         Update: { supplier_id?: string; product_id?: string };
         Relationships: [];
       };
+      discount_requests: {
+        Row: {
+          id: string;
+          organization_id: string;
+          requester_id: string;
+          cart_snapshot: Record<string, unknown>;
+          cart_hash: string;
+          cart_subtotal: number;
+          discount_amount: number;
+          discount_percent: number;
+          reason: string;
+          status: "pending" | "approved" | "rejected" | "expired";
+          decider_id: string | null;
+          decided_at: string | null;
+          expires_at: string;
+          used_at: string | null;
+          sale_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          requester_id: string;
+          cart_snapshot: Record<string, unknown>;
+          cart_hash: string;
+          cart_subtotal: number;
+          discount_amount: number;
+          discount_percent: number;
+          reason: string;
+          status?: "pending" | "approved" | "rejected" | "expired";
+          decider_id?: string | null;
+          decided_at?: string | null;
+          expires_at: string;
+          used_at?: string | null;
+          sale_id?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["discount_requests"]["Insert"]>;
+        Relationships: [];
+      };
       warehouse_staff: {
         Row: { id: string; organization_id: string; warehouse_id: string; user_id: string; assignment_role: 'manager' | 'cashier'; created_at: string };
         Insert: { id?: string; organization_id: string; warehouse_id: string; user_id: string; assignment_role: 'manager' | 'cashier'; created_at?: string };
