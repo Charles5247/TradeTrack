@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   if (saveError) return NextResponse.json({ error: 'Unable to save checkout; no payment was started' }, { status: 503 });
   const callback = new URL('/api/sms-credits/verify', process.env.NEXT_PUBLIC_APP_URL);
   callback.searchParams.set('txnRef', reference); callback.searchParams.set('redirect', '1');
-  const response = await fetch(`${config.baseUrl}/zainbox/card/initialize/payment`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.publicKey}` }, body: JSON.stringify({ amount: String(amount), txnRef: reference, emailAddress: user.email, mobileNumber: mobile, zainboxCode: zainbox, callBackUrl: callback.href }), signal: AbortSignal.timeout(20000) }).catch(() => null);
+  const response = await fetch(`${config.baseUrl}/zainbox/card/initialize/payment`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.publicKey}` }, body: JSON.stringify({ amount: String(amount / 100), currency: 'NGN', txnRef: reference, emailAddress: user.email, mobileNumber: mobile, zainboxCode: zainbox, callBackUrl: callback.href }), signal: AbortSignal.timeout(20000) }).catch(() => null);
   const url = response?.ok ? checkoutUrl(await response.json()) : null;
   if (!url) return NextResponse.json({ error: 'Zainpay is temporarily unavailable. Retry this checkout; do not make another payment.' }, { status: 503 });
   return NextResponse.json({ paymentUrl: url, reference, credits, amount: amount / 100 });

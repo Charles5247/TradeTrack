@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     const callback = new URL('/api/payments/verify', process.env.NEXT_PUBLIC_APP_URL);
     callback.searchParams.set('txnRef', reference);
     callback.searchParams.set('redirect', '1');
-    const providerPayload = JSON.stringify({ amount: String(amount), txnRef: reference, emailAddress: user.email,
+    const providerPayload = JSON.stringify({ amount: String(amount / 100), currency: 'NGN', txnRef: reference, emailAddress: user.email,
       mobileNumber: mobile, zainboxCode: zainbox, callBackUrl: callback.href });
     let providerStatus = 503;
     let url: string | null = null;
