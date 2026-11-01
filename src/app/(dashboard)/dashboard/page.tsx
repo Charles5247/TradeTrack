@@ -40,6 +40,25 @@ type RangeKey = "today" | "week" | "month";
 
 async function fetchDashboardData() {
   const supabase = createClient();
+
+  const fetchAllInventoryRows = async () => {
+    const rows: { id: string; quantity: number; min_stock_level: number | null }[] = [];
+    const pageSize = 1000;
+
+    for (let offset = 0; ; offset += pageSize) {
+      const { data, error } = await supabase
+        .from("inventory")
+        .select("id, quantity, min_stock_level")
+        .range(offset, offset + pageSize - 1);
+
+      if (error) throw error;
+      const page = data || [];
+      rows.push(...page);
+      if (page.length < pageSize) break;
+    }
+
+    return rows;
+  };
   const today = new Date();
   const todayStart = new Date(
     today.getFullYear(),
@@ -92,8 +111,10 @@ async function fetchDashboardData() {
       .select("total")
       .gte("created_at", monthStart)
       .eq("status", "completed"),
-    supabase.from("products").select("id").eq("status", "active"),
-    supabase.from("inventory").select("id, quantity, min_stock_level"),
+    supabase
+      .from("products")
+      .select("id", { count: "exact", head: true }),
+    fetchAllInventoryRows(),
     supabase
       .from("vendor_transactions")
       .select("id,total_value,amount_paid")
@@ -135,8 +156,8 @@ async function fetchDashboardData() {
     recentSales,
     revenueData,
     prevRevenueData,
-  ].find((r) => r.error)?.error;
-  if (firstError) throw new Error(firstError.message);
+  ].map((r) => r && typeof r === "object" && "error" in r ? r.error : null).find((error) => error)?.message;
+  if (firstError) throw new Error(firstError);
 
   const sum = (rows: { total: number }[] | null) =>
     (rows || []).reduce((s, r) => s + (r.total || 0), 0);
@@ -150,7 +171,7 @@ async function fetchDashboardData() {
     0,
   );
 
-  const inventoryRows = allInventory.data || [];
+  const inventoryRows = allInventory || [];
   const outOfStockCount = inventoryRows.filter((r) => r.quantity === 0).length;
   const lowStockCount = inventoryRows.filter(
     (r) => r.quantity > 0 && r.quantity <= (r.min_stock_level || 5),
@@ -192,7 +213,7 @@ async function fetchDashboardData() {
       weekly_revenue: weeklyRevenue,
       weekly_delta: weeklyDelta,
       monthly_revenue: monthlyRevenue,
-      total_products: products.data?.length || 0,
+      total_products: products.count || 0,
       low_stock_count: lowStockCount,
       out_of_stock_count: outOfStockCount,
       pending_vendor_debts: pendingDebt,
