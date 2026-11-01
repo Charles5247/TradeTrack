@@ -137,7 +137,7 @@ export function InteractiveProductDemo() {
         </Reveal>
 
         <div className="grid overflow-hidden rounded-2xl border border-border bg-card shadow-xl shadow-black/5 lg:grid-cols-[220px_1fr]">
-          <div className="flex gap-2 border-b border-border p-3 lg:flex-col lg:border-b-0 lg:border-r lg:p-4">
+          <div className="flex max-w-full gap-2 overflow-x-auto border-b border-border p-3 lg:overflow-visible lg:flex-col lg:border-b-0 lg:border-r lg:p-4">
             {(Object.keys(demos) as Array<keyof typeof demos>).map((key) => {
               const item = demos[key];
               const ItemIcon = item.icon;
@@ -146,7 +146,7 @@ export function InteractiveProductDemo() {
                   key={key}
                   type="button"
                   onClick={() => setActive(key)}
-                  className={`flex min-w-[150px] flex-1 items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold transition-colors lg:flex-none ${active === key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
+                  className={`flex min-w-[132px] shrink-0 items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold transition-colors lg:min-w-0 lg:w-full lg:flex-none ${active === key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
                 >
                   <ItemIcon className="h-4 w-4" />
                   <TranslatedText text={item.label} />

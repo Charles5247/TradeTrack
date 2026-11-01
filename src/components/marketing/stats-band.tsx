@@ -21,8 +21,10 @@ export async function StatsBand() {
   try {
     const supabase = await createClient();
     if (supabase) {
-      const { data } = await supabase.rpc("get_marketing_traction");
-      if (data && typeof data === "object" && !Array.isArray(data)) traction = data as Traction;
+      const { data, error } = await supabase.rpc("get_marketing_traction");
+      if (!error && data && typeof data === "object" && !Array.isArray(data)) {
+        traction = data as Traction;
+      }
     }
   } catch {
     traction = {};
@@ -38,7 +40,7 @@ export async function StatsBand() {
 
   return (
     <>
-    <section className="border-y border-border" style={{ padding: "36px 0" }}>
+    <section className="w-full max-w-full overflow-hidden border-y border-border" style={{ padding: "36px 0" }}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
           {stats.map((s, i) => (
@@ -55,7 +57,7 @@ export async function StatsBand() {
       </div>
     </section>
     {names.length > 0 ? (
-      <section className="border-b border-border py-5" aria-label="Businesses using TracKasuwa">
+      <section className="w-full max-w-full overflow-hidden border-b border-border py-5" aria-label="Businesses using TracKasuwa">
         <div className="mx-auto max-w-6xl overflow-hidden px-4 sm:px-6">
           <p className="mb-3 text-center text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Trusted businesses</p>
           <div className="flex w-max gap-3 tt-marquee" aria-hidden="true">

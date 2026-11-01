@@ -22,7 +22,6 @@ AS $$
       FROM public.products p
       JOIN public.organizations o ON o.id = p.organization_id
       WHERE o.subscription_status IN ('active', 'trial')
-        AND p.status = 'active'
     ),
     'transactions', (
       SELECT count(*)::int
