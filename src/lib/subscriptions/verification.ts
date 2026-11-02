@@ -110,14 +110,14 @@ export async function verifySubscription(org: string) {
 
 export async function requireTransactionSubscription(org: string) {
   if (!org) throw new Error('Your account is not linked to a business.');
-  const state = await readVerification(org);
+  const state = await verifySubscription(org);
   const decision = evaluateVerification(state, Date.now());
   if (!decision.allowed) throw new Error(decision.message);
 }
 
 // The POS keeps its existing synchronous checkout body and error presentation.
-// Verification is hydrated by the shared banner; the guard never makes checkout
-// wait on a network request.
+// Verify once from the network when available, while allowing cached verification
+// to preserve offline checkout during the 30-day window.
 export async function allowCheckout(org: string, notify: (message: string) => void) {
   try { await requireTransactionSubscription(org); return true; }
   catch (error) { notify(error instanceof Error ? error.message : 'Subscription verification required.'); return false; }
