@@ -20,12 +20,13 @@ import type { Locale } from '@/types';
 import { BusinessSettings } from '@/components/settings/business-settings';
 import { OperationsSettings } from '@/components/settings/operations-settings';
 import { cacheUserSession } from '@/lib/offline/db';
+import { canManageBusinessSettings } from '@/lib/auth-role-access';
 
 export default function SettingsPage() {
   const copy = useCopy();
   const { user, setUser } = useAuthStore();
   const isPlatformOwner = user?.role === 'platform_owner';
-  const hasBusiness = !isPlatformOwner && Boolean(user?.organization_id);
+  const hasBusiness = canManageBusinessSettings(user?.role, user?.organization_id);
   const { theme, setTheme } = useTheme();
   const { t, locale, setLocale } = useI18n();
   const [isProfileLoading, setIsProfileLoading] = useState(false);

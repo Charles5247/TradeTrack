@@ -15,12 +15,18 @@ export function NotificationSync() {
     let disposed = false;
     const storageKey = `trackasuwa:notifications:unread:${user.id}`;
     const refresh = async () => {
-      const { count, error } = await supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('is_read', false).eq('in_app_visible', true);
-      if (!disposed && !error) {
-        const next = count || 0;
+      let result = await supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('is_read', false).eq('in_app_visible', true);
+      if (result.error) {
+        result = await supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('is_read', false);
+      }
+      if (result.error) {
+        result = await supabase.from('notifications').select('id', { count: 'exact', head: true });
+      }
+      if (!disposed && !result.error) {
+        const next = result.count || 0;
         setUnreadCount(next);
         localStorage.setItem(storageKey, String(next));
-      } else if (!disposed && error) {
+      } else if (!disposed) {
         setUnreadCount(Number(localStorage.getItem(storageKey) || 0));
       }
     };

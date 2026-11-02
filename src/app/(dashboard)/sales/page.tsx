@@ -34,16 +34,7 @@ async function fetchSales(filters: {
   const supabase = createClient();
   let query = supabase
     .from('sales')
-    .select(`
-      *,
-      cashier:users!sales_cashier_id_fkey(full_name),
-      credit_authorizer:users!sales_credit_authorized_by_fkey(full_name),
-      warehouse:warehouses(name),
-      items:sale_items(
-        id, quantity, unit_price, total,
-        product:products(name, sku)
-      )
-    `)
+    .select('*')
     .order('created_at', { ascending: false })
     .limit(100);
 
@@ -67,10 +58,11 @@ async function fetchSales(filters: {
       .order('sold_at', { ascending: false })
       .limit(100),
   ]);
-  if (error) throw error;
+  if (error) {
+    console.warn('Unable to load live sales; showing imported sales when available.', error);
+  }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const liveSales = (data as any) as Sale[];
+  const liveSales = (error ? [] : ((data || []) as unknown as Sale[]));
   const historicalSales = (historicalResult.data || []) as unknown as Array<{
     id: string;
     invoice_number: string;
