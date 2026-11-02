@@ -59,10 +59,80 @@ async function fetchSales(filters: {
   if (filters.start_date) query = query.gte('created_at', filters.start_date);
   if (filters.end_date) query = query.lte('created_at', filters.end_date + 'T23:59:59');
 
-  const { data, error } = await query;
+  const [{ data, error }, historicalResult] = await Promise.all([
+    query,
+    supabase
+      .from('historical_sales' as never)
+      .select('id,invoice_number,sold_at,total,amount_paid,payment_method,status,imported,created_at')
+      .order('sold_at', { ascending: false })
+      .limit(100),
+  ]);
   if (error) throw error;
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (data as any) as Sale[];
+  const liveSales = (data as any) as Sale[];
+  const historicalSales = (historicalResult.data || []) as unknown as Array<{
+    id: string;
+    invoice_number: string;
+    sold_at: string;
+    total: number;
+    amount_paid: number;
+    payment_method: Sale['payment_method'];
+    status: string;
+    imported: boolean;
+    created_at: string;
+  }>;
+
+  const normalizedHistorical: Sale[] = historicalSales
+    .filter((sale) => {
+      const total = Number(sale.total);
+      const amountPaid = Number(sale.amount_paid);
+      const creditStatus = amountPaid <= 0 ? 'unpaid' : amountPaid < total ? 'partial' : 'paid';
+      if (filters.search) {
+        const needle = filters.search.toLowerCase();
+        if (!sale.invoice_number.toLowerCase().includes(needle)) return false;
+      }
+      if (filters.status && filters.status !== 'all') {
+        if (filters.status === 'completed' && sale.status !== 'active') return false;
+        if (filters.status === 'refunded' && sale.status !== 'reversed') return false;
+        if (filters.status === 'cancelled' || filters.status === 'pending') return false;
+      }
+      if (filters.payment_method && filters.payment_method !== 'all' && sale.payment_method !== filters.payment_method) return false;
+      if (filters.sale_type !== 'all') return false;
+      if (filters.credit_status !== 'all' && creditStatus !== filters.credit_status) return false;
+      if (filters.start_date && new Date(sale.sold_at).toISOString().slice(0, 10) < filters.start_date) return false;
+      if (filters.end_date && new Date(sale.sold_at).toISOString().slice(0, 10) > filters.end_date) return false;
+      return true;
+    })
+    .map((sale) => {
+      const total = Number(sale.total);
+      const amountPaid = Number(sale.amount_paid);
+      return {
+        ...sale,
+        created_at: sale.sold_at,
+        customer_name: null,
+        customer_phone: null,
+        cashier: null,
+        credit_authorizer: null,
+        warehouse: null,
+        items: [],
+        subtotal: total,
+        discount: 0,
+        tax: 0,
+        total,
+        amount_paid: amountPaid,
+        change_amount: 0,
+        sale_type: 'retail',
+        payment_status: amountPaid <= 0 ? 'unpaid' : amountPaid < total ? 'partial' : 'paid',
+        status: sale.status === 'active' ? 'completed' : 'refunded',
+        imported: true,
+      } as unknown as Sale;
+    });
+
+  const merged = [...liveSales, ...normalizedHistorical].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  );
+  return merged.slice(0, 100);
 }
 
 function exportToCSV(sales: Sale[]) {

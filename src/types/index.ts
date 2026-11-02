@@ -381,6 +381,7 @@ export interface Notification {
   entity_type?: string;
   entity_id?: string;
   staff_user_id?: string;
+  in_app_visible?: boolean;
   dedupe_key?: string;
   data?: Record<string, unknown>;
   is_read: boolean;

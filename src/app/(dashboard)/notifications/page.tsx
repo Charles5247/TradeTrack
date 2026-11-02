@@ -24,17 +24,34 @@ async function fetchNotifications(page: number, filter: string, eventType: strin
   let query = supabase
     .from('notifications')
     .select('*')
-    .eq('in_app_visible', true)
     .order('created_at', { ascending: false })
     .range(page * 25, page * 25 + 24);
   if (filter === 'unread') query = query.eq('is_read', false);
   else if (filter === 'inventory') query = query.in('type', ['low_stock','out_of_stock','stock_in','stock_adjustment','pending_transfer']);
   else if (filter === 'payments') query = query.in('type', ['pending_payment','payment_confirmed','payment_failed','subscription_expiry']);
   if (eventType !== 'all') query = query.eq('type', eventType);
-  if (staffId !== 'all') query = query.eq('staff_user_id', staffId);
-  const { data, error } = await query;
-  if (error) throw error;
-  return data as Notification[];
+
+  let result = await query;
+  if (result.error) {
+    // Compatibility path for deployments whose notification migration is not fully applied.
+    result = await supabase
+      .from('notifications')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .range(page * 25, page * 25 + 24);
+  }
+  if (result.error) throw result.error;
+  const inventoryTypes = ['low_stock','out_of_stock','stock_in','stock_adjustment','pending_transfer'];
+  const paymentTypes = ['pending_payment','payment_confirmed','payment_failed','subscription_expiry'];
+
+  return ((result.data || []) as Notification[]).filter((notification) => {
+    if (filter === 'unread' && notification.is_read) return false;
+    if (filter === 'inventory' && !inventoryTypes.includes(notification.type)) return false;
+    if (filter === 'payments' && !paymentTypes.includes(notification.type)) return false;
+    if (eventType !== 'all' && notification.type !== eventType) return false;
+    if (staffId !== 'all' && notification.staff_user_id !== staffId) return false;
+    return notification.in_app_visible !== false;
+  });
 }
 
 async function markAllRead() {
