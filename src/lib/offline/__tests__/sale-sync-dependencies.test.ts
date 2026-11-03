@@ -2,11 +2,12 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 import { getDB, type SyncQueueRecord } from '../db';
 
-const { upsert, from } = vi.hoisted(() => ({
+const { upsert, from, rpc } = vi.hoisted(() => ({
   upsert: vi.fn(),
   from: vi.fn(),
+  rpc: vi.fn(),
 }));
-vi.mock('@/lib/supabase/client', () => ({ createClient: () => ({ from }) }));
+vi.mock('@/lib/supabase/client', () => ({ createClient: () => ({ from, rpc }) }));
 import { syncEngine } from '../sync-engine';
 
 beforeEach(async () => {
@@ -15,6 +16,28 @@ beforeEach(async () => {
   await db.clear('sync_queue');
   from.mockReturnValue({ upsert });
   upsert.mockResolvedValue({ error: { message: 'sale column missing' } });
+  rpc.mockResolvedValue({ error: null });
+});
+
+it('applies stock once per sale only after its item upload succeeds', async () => {
+  const db = await getDB();
+  const timestamp = '2026-11-03T10:00:00.000Z';
+  for (const entry of [
+    { id: 'q-sale', table_name: 'sales', operation: 'INSERT', record_id: 'sale-1', payload: { id: 'sale-1', created_at: timestamp } },
+    { id: 'q-line', table_name: 'sale_items', operation: 'INSERT', record_id: 'line-1', payload: { id: 'line-1', sale_id: 'sale-1' } },
+    { id: 'q-stock', table_name: 'sale_stock', operation: 'INSERT', record_id: 'sale-1', payload: { sale_id: 'sale-1', item_ids: ['line-1'] } },
+  ] as const) await db.put('sync_queue', { ...entry, status: 'pending', retry_count: 0, created_at: timestamp });
+
+  upsert.mockResolvedValueOnce({ error: null }).mockResolvedValueOnce({ error: { message: 'item rejected' } });
+  await (syncEngine as unknown as { pushChanges(): Promise<void> }).pushChanges();
+  expect(rpc).not.toHaveBeenCalled();
+  expect((await db.get('sync_queue', 'q-stock'))?.status).toBe('pending');
+
+  upsert.mockResolvedValue({ error: null });
+  await (syncEngine as unknown as { pushChanges(): Promise<void> }).pushChanges();
+  expect(rpc).toHaveBeenCalledOnce();
+  expect(rpc).toHaveBeenCalledWith('apply_sale_stock', { p_sale_id: 'sale-1' });
+  expect((await db.get('sync_queue', 'q-stock'))?.status).toBe('synced');
 });
 
 it('does not upload sale lines or stock when the parent sale is rejected', async () => {

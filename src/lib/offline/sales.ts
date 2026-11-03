@@ -96,7 +96,6 @@ export async function persistOfflineSale(payload: OfflineSalePayload) {
     const product = await transaction.objectStore('products').get(item.product_id);
     if (product?.medical_stock_managed) throw new Error('Use the medical batch workflow for this product');
   }
-  const inventoryUpdates: Record<string, unknown>[] = [];
   await transaction.objectStore('sales').put(saleRecord);
 
   // Fetch the full inventory list ONCE up front and look up each cart
@@ -119,7 +118,7 @@ export async function persistOfflineSale(payload: OfflineSalePayload) {
     await transaction.objectStore('sale_items').put(item);
 
     // Apply the stock reduction locally so subsequent offline sales see the
-    // correct availability. The update is queued after the transaction.
+    // correct availability. The sale-specific stock command is queued below.
     const stock = inventoryByProductWarehouse.get(
       `${item.product_id}::${item.warehouse_id}`,
     );
@@ -130,7 +129,6 @@ export async function persistOfflineSale(payload: OfflineSalePayload) {
         updated_at: createdAt,
       };
       await transaction.objectStore('inventory').put(updated);
-      inventoryUpdates.push(updated);
       // Keep the in-memory snapshot consistent in case the same
       // product/warehouse appears in more than one cart line.
       inventoryByProductWarehouse.set(
@@ -145,13 +143,12 @@ export async function persistOfflineSale(payload: OfflineSalePayload) {
     addToSyncQueue('sales', 'INSERT', saleId, saleRecord, transaction),
     ...saleItems.map((item) => addToSyncQueue('sale_items', 'INSERT', item.id, item, transaction)),
   ]);
-  // Keep the final snapshot when repeated offline sales touch the same row.
-  // Serialize updates so duplicate cart lines cannot race queue coalescing.
-  for (const inv of inventoryUpdates) {
-    await addToSyncQueue('inventory', 'UPDATE', String(inv.id), inv, transaction, {
-      refreshPendingInventoryUpdate: true,
-    });
-  }
+  // The server applies each confirmed sale to its current stock. Queuing an
+  // absolute inventory snapshot here could overwrite or drop older sales.
+  await addToSyncQueue('sale_stock', 'INSERT', saleId, {
+    sale_id: saleId,
+    item_ids: saleItems.map((item) => item.id),
+  }, transaction);
   await done;
 
   return saleRecord;

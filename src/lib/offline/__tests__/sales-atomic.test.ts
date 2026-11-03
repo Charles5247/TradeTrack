@@ -28,7 +28,7 @@ it('rolls back sale, items, stock and queue together if an outbox write fails',a
   expect(await db.count('sync_queue')).toBe(0);
   expect((await db.get('inventory','stock')).quantity).toBe(10);
 });
-it('keeps both receipts and the latest pending stock snapshot across offline sales',async()=>{
+it('keeps both receipts and queues each sale stock change separately',async()=>{
   await persistOfflineSale(payload);
   await persistOfflineSale({...payload,invoice_number:'ATOMIC-2'});
   const db=await getDB();
@@ -36,9 +36,10 @@ it('keeps both receipts and the latest pending stock snapshot across offline sal
   expect((await db.get('inventory','stock')).quantity).toBe(6);
   const queue=await db.getAll('sync_queue');
   expect(queue.filter(r=>r.table_name==='sales')).toHaveLength(2);
-  const stock=queue.filter(r=>r.table_name==='inventory');
-  expect(stock).toHaveLength(1);
-  expect(stock[0].payload.quantity).toBe(6);
+  const stock=queue.filter(r=>r.table_name==='sale_stock');
+  expect(stock).toHaveLength(2);
+  expect(new Set(stock.map(r=>r.payload.sale_id)).size).toBe(2);
+  expect(queue.filter(r=>r.table_name==='inventory')).toHaveLength(0);
 });
 it('cannot use ordinary offline checkout to bypass batch-managed stock',async()=>{
   const db=await getDB();

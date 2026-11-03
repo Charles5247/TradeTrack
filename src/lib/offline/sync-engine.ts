@@ -274,7 +274,7 @@ class SyncEngine {
         Number(b.table_name === "vendor_transactions") -
         Number(a.table_name === "vendor_transactions"),
     );
-    const dependencyOrder: Record<string, number> = { import_batches: -2, import_commands: -1, purchase_orders: 0, vendor_transactions: 1, sales: 2, sale_items: 3, inventory: 5 };
+    const dependencyOrder: Record<string, number> = { import_batches: -2, import_commands: -1, purchase_orders: 0, vendor_transactions: 1, sales: 2, sale_items: 3, sale_stock: 4, inventory: 5 };
     pendingItems.sort((a, b) => (dependencyOrder[a.table_name] ?? 4) - (dependencyOrder[b.table_name] ?? 4));
     if (pendingItems.length === 0) return;
 
@@ -290,6 +290,17 @@ class SyncEngine {
       if (queuedItem.table_name === "sale_items") {
         const parents = await db.getAllFromIndex("sync_queue", "by-queue-key", ["sales", String(queuedItem.payload.sale_id), "INSERT"]) as SyncQueueRecord[];
         if (parents.some(parent => parent.status !== "synced")) continue;
+      }
+      if (queuedItem.table_name === "sale_stock") {
+        const saleId = String(queuedItem.payload.sale_id);
+        const parents = await db.getAllFromIndex("sync_queue", "by-queue-key", ["sales", saleId, "INSERT"]) as SyncQueueRecord[];
+        if (parents.some(parent => parent.status !== "synced")) continue;
+        let awaitingItem = false;
+        for (const itemId of queuedItem.payload.item_ids as string[]) {
+          const lines = await db.getAllFromIndex("sync_queue", "by-queue-key", ["sale_items", itemId, "INSERT"]) as SyncQueueRecord[];
+          if (lines.some(line => line.status !== "synced")) { awaitingItem = true; break; }
+        }
+        if (awaitingItem) continue;
       }
       if (queuedItem.table_name === "inventory" && queuedItem.operation === "UPDATE" && !queuedItem.stock_sync) {
         const timestamp = String(queuedItem.payload.original_device_timestamp ?? queuedItem.payload.updated_at ?? "");
@@ -483,6 +494,9 @@ class SyncEngine {
     // Use type assertion to allow dynamic table name
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const client = supabase as any;
+    if (item.table_name === "sale_stock") {
+      return client.rpc("apply_sale_stock", { p_sale_id: item.payload.sale_id });
+    }
     if (item.table_name === "import_commands") {
       const { batch, row_index, row_data, duplicate_mode, warehouse, proposed_id } = item.payload;
       const result = await client.rpc("apply_import_row", { batch, row_index, row_data, duplicate_mode, warehouse, proposed_id });
