@@ -13,10 +13,14 @@ export function NotificationSync() {
     if (!user?.id || !user.organization_id) return;
     const supabase = createClient();
     let disposed = false;
+    let hasVisibilityColumn = true;
     const storageKey = `trackasuwa:notifications:unread:${user.id}`;
     const refresh = async () => {
-      let result = await supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('is_read', false).eq('in_app_visible', true);
-      if (result.error) {
+      let result = hasVisibilityColumn
+        ? await supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('is_read', false).eq('in_app_visible', true)
+        : await supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('is_read', false);
+      if (result.error && hasVisibilityColumn) {
+        if (result.error.code === '42703' || result.error.message.includes('in_app_visible')) hasVisibilityColumn = false;
         result = await supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('is_read', false);
       }
       if (result.error) {

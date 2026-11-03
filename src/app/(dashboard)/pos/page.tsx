@@ -202,7 +202,7 @@ async function completeSale(payload: {
   discount_cart_hash?: string;
   discount_permission_snapshot?: Record<string, unknown>;
 }) {
-  const invoiceNumber = `INV-${String(Date.now()).slice(-6)}`;
+  const invoiceNumber = `INV-${generateId().toUpperCase()}`;
   // Always commit locally first. A stale `navigator.onLine` state must never
   // block checkout or prevent a receipt from being available.
   const saleRecord = await persistOfflineSale({
@@ -372,9 +372,7 @@ function POSPageInner() {
       setDiscountRequestId('');
       setDiscountCartHash('');
       setDiscountStatus('none');
-      toast.success(
-        t.pos.sale_completed_toast.replace("{invoice}", sale.invoice_number),
-      );
+      toast.success(`${t.pos.sale_completed_toast.replace("{invoice}", sale.invoice_number)} · Saved on this device; upload pending`);
     },
     onError: (err) => {
       toast.error(

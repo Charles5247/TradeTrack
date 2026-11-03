@@ -180,6 +180,14 @@ class SyncEngine {
         this.setState({ status: "error", error: "Please sign in again to resume sync. Your queued data is safe." });
         return;
       }
+      if (force) {
+        const queue = await getDB();
+        const failed = await queue.getAllFromIndex("sync_queue", "by-status", "failed") as SyncQueueRecord[];
+        for (const entry of failed) {
+          if (entry.stock_sync?.review_reason) continue;
+          await queue.put("sync_queue", { ...entry, status: "pending", retry_count: 0 });
+        }
+      }
       await this.pushChanges();
       const pullStartedAt = new Date();
       await this.pullData(orgId, supabase);
@@ -197,12 +205,16 @@ class SyncEngine {
       }
 
       const remaining = await getPendingSyncItems();
+      const failed = await (await getDB()).getAllFromIndex("sync_queue", "by-status", "failed") as SyncQueueRecord[];
+      const rejected = failed.find((entry) => entry.error) ?? remaining.find((entry) => entry.error);
       const needsStockCheck = remaining.some((entry) => entry.stock_sync?.review_reason);
       this.setState({
-        status: needsStockCheck ? "error" : "idle",
+        status: needsStockCheck || rejected ? "error" : "idle",
         lastSync: pullStartedAt,
-        pendingCount: remaining.length,
-        error: needsStockCheck ? "This stock update needs a quick check. Open Vendors for details." : null,
+        pendingCount: remaining.length + failed.length,
+        error: needsStockCheck
+          ? "This stock update needs a quick check. Open Vendors for details."
+          : rejected ? `Queued data has not uploaded: ${rejected.error}` : null,
       });
     } catch (err) {
       // A bare "Failed to fetch" TypeError means the request never even
@@ -268,8 +280,26 @@ class SyncEngine {
 
     const supabase = createClient();
     const db = await getDB();
+    const thisSaleSynced = new Set<string>();
+    const thisLineSynced = new Set<string>();
+    const failedDependencies = await db.getAllFromIndex("sync_queue", "by-status", "failed") as SyncQueueRecord[];
 
     for (const queuedItem of pendingItems) {
+      // A sale's lines and stock change must wait until the parent exists on
+      // the server. Keep them pending when a schema or policy error rejects it.
+      if (queuedItem.table_name === "sale_items") {
+        const parents = await db.getAllFromIndex("sync_queue", "by-queue-key", ["sales", String(queuedItem.payload.sale_id), "INSERT"]) as SyncQueueRecord[];
+        if (parents.some(parent => parent.status !== "synced")) continue;
+      }
+      if (queuedItem.table_name === "inventory" && queuedItem.operation === "UPDATE" && !queuedItem.stock_sync) {
+        const timestamp = String(queuedItem.payload.original_device_timestamp ?? queuedItem.payload.updated_at ?? "");
+        const dependencies = [...pendingItems, ...failedDependencies];
+        const sales = dependencies.filter(candidate => candidate.table_name === "sales" && candidate.operation === "INSERT" && candidate.payload.created_at === timestamp);
+        if (sales.some(sale => !thisSaleSynced.has(sale.record_id))) continue;
+        const saleIds = new Set(sales.map(sale => sale.record_id));
+        const lines = dependencies.filter(candidate => candidate.table_name === "sale_items" && saleIds.has(String(candidate.payload.sale_id)));
+        if (lines.some(line => !thisLineSynced.has(line.record_id))) continue;
+      }
       if (queuedItem.table_name === "import_commands") {
         const parents = await db.getAllFromIndex("sync_queue", "by-queue-key", ["import_batches", queuedItem.payload.batch, "INSERT"]) as SyncQueueRecord[];
         if (parents.some(parent => parent.status !== "synced")) continue;
@@ -329,6 +359,8 @@ class SyncEngine {
           status: "synced",
           synced_at: new Date().toISOString(),
         });
+        if (item.table_name === "sales") thisSaleSynced.add(item.record_id);
+        if (item.table_name === "sale_items") thisLineSynced.add(item.record_id);
       } catch (err) {
         const errMessage = err && typeof err === 'object' && 'message' in err ? String(err.message) : "Unknown error";
         const subscriptionBlocked = /Trial ended|active subscription|read.only/i.test(errMessage);
@@ -722,7 +754,8 @@ class SyncEngine {
 
   async getPendingCount(): Promise<number> {
     const items = await getPendingSyncItems();
-    return items.length;
+    const failed = await (await getDB()).getAllFromIndex("sync_queue", "by-status", "failed");
+    return items.length + failed.length;
   }
 }
 

@@ -25,6 +25,7 @@ function mapEngineStatus(status: string): SyncStatus {
 
 export function SyncProvider({ children }: { children: React.ReactNode }) {
   const [authError, setAuthError] = useState<string | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
   const [storageError, setStorageError] = useState<string | null>(null);
   const { setSyncStatus, setLastSync, setPendingCount } = useSyncStore();
 
@@ -41,6 +42,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
 
     const unsubscribe = engine.subscribe((state) => {
       setAuthError(state.error?.includes('sign in again') ? state.error : null);
+      setSyncError(state.status === 'error' && !state.error?.includes('sign in again') ? state.error : null);
       setSyncStatus(mapEngineStatus(state.status));
       if (state.lastSync) setLastSync(state.lastSync);
       setPendingCount(state.pendingCount);
@@ -71,5 +73,5 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     };
   }, [setSyncStatus, setLastSync, setPendingCount]);
 
-  return <><OfflineNavigation /><VerificationBanner />{storageError && <div role="alert" className="bg-[color-mix(in_oklch,var(--c-warn),transparent_90%)] p-3 text-[var(--c-warn)]">{storageError}</div>}{authError && <div role="alert" className="bg-[color-mix(in_oklch,var(--c-warn),transparent_90%)] p-3 text-[var(--c-warn)]">{authError} <a href="/login" className="underline"><TranslatedText text={"Sign in"} /></a></div>}{children}</>;
+  return <><OfflineNavigation /><VerificationBanner />{storageError && <div role="alert" className="bg-[color-mix(in_oklch,var(--c-warn),transparent_90%)] p-3 text-[var(--c-warn)]">{storageError}</div>}{authError && <div role="alert" className="bg-[color-mix(in_oklch,var(--c-warn),transparent_90%)] p-3 text-[var(--c-warn)]">{authError} <a href="/login" className="underline"><TranslatedText text={"Sign in"} /></a></div>}{syncError && <div role="alert" className="bg-[color-mix(in_oklch,var(--c-warn),transparent_90%)] p-3 text-[var(--c-warn)]">{syncError}</div>}{children}</>;
 }
