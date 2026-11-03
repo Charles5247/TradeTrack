@@ -23,6 +23,8 @@ import type { z } from 'zod';
 import type { CodeMatch } from '@/lib/products/lookup-code';
 import { useOrganization } from '@/components/shared/organization-provider';
 import { industryProfile, type StockUnit } from '@/lib/industries';
+import { generateId } from '@/lib/utils/id';
+import { adjustProductStock } from '@/lib/inventory/adjust-stock';
 
 type ProductFormData = z.infer<typeof productSchema>;
 
@@ -41,6 +43,28 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
   const [cachedMatch, setCachedMatch] = useState(false);
   const product = scannedProduct ?? initialProduct;
   const [isLoading, setIsLoading] = useState(false);
+  const [quantity, setQuantity] = useState('0');
+  const [warehouseId, setWarehouseId] = useState('');
+  const [warehouses, setWarehouses] = useState<Array<{ id: string; name: string }>>([]);
+  const [stockRows, setStockRows] = useState<Array<{ id: string; warehouse_id: string; quantity: number }>>([]);
+  const [showMore, setShowMore] = useState(false);
+  React.useEffect(() => {
+    let active = true;
+    void createClient().from('warehouses').select('id,name').order('name').then(async ({ data }) => {
+      if (!active) return;
+      const rows = data || [];
+      setWarehouses(rows);
+      setWarehouseId(current => current || rows[0]?.id || '');
+      if (product?.id) {
+        const { data: inventory } = await createClient().from('inventory').select('id,warehouse_id,quantity').eq('product_id', product.id);
+        if (!active) return;
+        const balances = inventory || [];
+        setStockRows(balances);
+        setQuantity(String(balances.find(row => row.warehouse_id === rows[0]?.id)?.quantity ?? 0));
+      }
+    });
+    return () => { active = false; };
+  }, [product?.id]);
   const [imageUrl, setImageUrl] = useState<string | null>(product?.image_url ?? null);
   const [createdCategories, setCreatedCategories] = useState<Array<{ id: string; name: string }>>([]);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
@@ -67,6 +91,7 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
       make: product?.make || '',
       description: product?.description || '',
       sku: product?.sku || '',
+      units_per_pack: product?.units_per_pack || 1,
       barcode: product?.barcode || '',
       selling_price: product?.selling_price || 0,
       cost_price: product?.cost_price || 0,
@@ -102,6 +127,9 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
     }
     setIsLoading(true);
     try {
+      const openingQuantity = Number(quantity);
+      if (!Number.isSafeInteger(openingQuantity) || openingQuantity < 0) throw new Error('Enter a valid whole-number quantity.');
+      if ((openingQuantity > 0 || product?.id) && !warehouseId) throw new Error('Choose a stock location first.');
       const supabase = createClient();
       const { data: { user } } = await withTimeout(supabase.auth.getUser(), AUTH_CHECK_TIMEOUT_MS);
       if (!user) throw new Error('Not authenticated');
@@ -167,7 +195,8 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
         name: data.name,
         make: data.make || null,
         description: data.description || null,
-        sku: data.sku,
+        sku: data.sku?.trim() || product?.sku || `AUTO-${generateId()}`,
+        units_per_pack: data.units_per_pack,
         barcode: data.barcode || null,
         selling_price: data.selling_price,
         cost_price: data.cost_price,
@@ -185,6 +214,12 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
           .update({ ...payload, updated_at: new Date().toISOString() })
           .eq('id', product.id);
         if (error) throw error;
+
+        const stockRow = stockRows.find(row => row.warehouse_id === warehouseId);
+        const change = openingQuantity - (stockRow?.quantity ?? 0);
+        if (change) await adjustProductStock({ organization_id: orgId, user_id: user.id, product_id: product.id,
+          warehouse_id: warehouseId, inventory_id: stockRow?.id, current_quantity: stockRow?.quantity ?? 0,
+          quantity_change: change, reason: 'Quantity updated from product form' });
 
         await createAuditEntry({
           organization_id: orgId,
@@ -214,6 +249,16 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
           .select()
           .single();
         if (error) throw error;
+        if (openingQuantity > 0 && warehouseId) {
+          try {
+            await adjustProductStock({ organization_id: orgId, user_id: user.id, product_id: newProduct.id,
+              warehouse_id: warehouseId, quantity_change: openingQuantity, reason: 'Opening stock' });
+          } catch (stockError) {
+            toast.error(`Product created, but stock was not saved: ${stockError instanceof Error ? stockError.message : 'unknown error'}. Set its quantity on the product page.`);
+            onSuccess();
+            return;
+          }
+        }
 
         await createAuditEntry({
           organization_id: orgId,
@@ -239,7 +284,7 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
   return (
     <form onSubmit={handleSubmit(onSubmit as Parameters<typeof handleSubmit>[0])} className="space-y-4">
       {/* Image Upload */}
-      <div className="space-y-2">
+      <div className={showMore ? 'space-y-2' : 'hidden'}>
         <Label><TranslatedText text={"Product Image"} /></Label>
         <ImageUpload
           currentImageUrl={imageUrl}
@@ -267,13 +312,13 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
             placeholder={copy(workflow.example)}
           />
         </div>
-        <div className="space-y-2">
+        <div className={showMore ? 'space-y-2' : 'hidden'}>
           <Label htmlFor="make"><TranslatedText text={"Make / Brand"} /></Label>
           <Input id="make" {...register('make')} placeholder={copy("e.g., Samsung, Nike")} />
         </div>
       </div>
 
-      <div className="space-y-2">
+      <div className={showMore ? 'space-y-2' : 'hidden'}>
         <Label htmlFor="stock_unit">{copy('Selling unit')}</Label>
         <select id="stock_unit" {...register('stock_unit')} className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2">
           {Array.from(new Set([...workflow.units,watch('stock_unit')||'piece'])).map(unit=><option key={unit} value={unit}>{copy(unit)}</option>)}
@@ -281,12 +326,12 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
         <p className="text-xs text-muted-foreground">{copy('Stock quantities and prices use this unit. Use whole units; use g, mL or cm for smaller quantities.')}</p>
         <p className="text-xs text-muted-foreground">{copy('Create a separate SKU for every size, colour, model or pack size you stock.')}</p>
       </div>
-      {(workflow.variant || product?.variant_size || product?.variant_colour) && <div className="grid grid-cols-2 gap-4">
+      {showMore && (workflow.variant || product?.variant_size || product?.variant_colour) && <div className="grid grid-cols-2 gap-4">
         <div><Label htmlFor="variant_size">{copy('Size')}</Label><Input id="variant_size" {...register('variant_size')} maxLength={60}/></div>
         <div><Label htmlFor="variant_colour">{copy('Colour')}</Label><Input id="variant_colour" {...register('variant_colour')} maxLength={60}/></div>
       </div>}
-      {(workflow.model || product?.model) && <div><Label htmlFor="model">{copy('Model / specification')}</Label><Input id="model" {...register('model')} maxLength={100}/></div>}
-      <div className="space-y-2">
+      {showMore && (workflow.model || product?.model) && <div><Label htmlFor="model">{copy('Model / specification')}</Label><Input id="model" {...register('model')} maxLength={100}/></div>}
+      <div className={showMore ? 'space-y-2' : 'hidden'}>
         <Label htmlFor="description"><TranslatedText text={"Description"} /></Label>
         <Textarea
           id="description"
@@ -296,10 +341,10 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className={showMore ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'hidden'}>
         <div className="space-y-2">
-          <Label htmlFor="sku"><TranslatedText text={"SKU *"} /></Label>
-          <Input id="sku" {...register('sku')} placeholder={copy("PROD-001")} error={errors.sku?.message} />
+          <Label htmlFor="sku">Product code (optional)</Label>
+          <Input id="sku" {...register('sku')} placeholder="Generated automatically" error={errors.sku?.message} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="barcode"><TranslatedText text={"Barcode"} /></Label>
@@ -332,7 +377,7 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className={showMore ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'hidden'}>
         <div className="space-y-2">
           <Label><TranslatedText text={"Category"} /></Label>
           <Select
@@ -383,6 +428,10 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
         </div>
       </div>
 
+      <div><Label htmlFor="units_per_pack">Individual units per pack</Label><Input id="units_per_pack" type="number" min="1" step="1" {...register('units_per_pack')} error={errors.units_per_pack?.message} /><p className="text-xs text-muted-foreground">Enter 1 if this product is not sold in packs.</p></div>
+      <div><Label htmlFor="opening-quantity">{product ? 'Quantity at this location' : 'Opening quantity'} (individual units)</Label><Input id="opening-quantity" type="number" min="0" step="1" value={quantity} onChange={event => setQuantity(event.target.value)} /></div>
+      {warehouses.length > 1 && <div><Label htmlFor="opening-location">Stock location</Label><select id="opening-location" className="min-h-11 w-full rounded-lg border border-input bg-background px-3" value={warehouseId} onChange={event => { setWarehouseId(event.target.value); setQuantity(String(stockRows.find(row => row.warehouse_id === event.target.value)?.quantity ?? 0)); }}>{warehouses.map(row => <option key={row.id} value={row.id}>{row.name}</option>)}</select></div>}
+      <button type="button" className="text-sm font-medium text-primary underline" onClick={() => setShowMore(value => !value)}>{showMore ? 'Hide optional details' : 'More details (category, barcode, image)'}</button>
       <div className="flex gap-3 pt-2">
         <Button type="button" variant="outline" onClick={onCancel} className="flex-1"><TranslatedText text={"Cancel"} /></Button>
         <Button type="submit" className="flex-1" disabled={isLoading || cachedMatch}>

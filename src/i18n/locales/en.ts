@@ -125,7 +125,7 @@ export const en = {
     today_sales: "Today's Sales",
     weekly_revenue: "Weekly Revenue",
     monthly_revenue: "Monthly Revenue",
-    total_products: "Total Products",
+    total_products: "Product types",
     low_stock: "Low Stock Items",
     out_of_stock: "Out of Stock",
     pending_debts: "Pending Vendor Debts",

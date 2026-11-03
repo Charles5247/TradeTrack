@@ -5,7 +5,7 @@ import { expect, it, vi } from 'vitest';
 const { update, insert, match }=vi.hoisted(()=>({update:vi.fn(),insert:vi.fn(),match:{id:'10000000-0000-0000-0000-000000000001',organization_id:'org',name:'Rice',sku:'RICE',barcode:'123',cost_price:100,selling_price:150,status:'active',supplier_id:'supplier',created_by:'creator'}}));
 vi.mock('./image-upload',()=>({ImageUpload:({onProductMatched}:{onProductMatched:(product:typeof match,cached:boolean)=>void})=><><button type="button" onClick={()=>onProductMatched(match,false)}>Select online match</button><button type="button" onClick={()=>onProductMatched(match,true)}>Select cached match</button></>}));
 vi.mock('@/lib/utils/client-audit',()=>({createAuditEntry:vi.fn()}));
-vi.mock('@/lib/supabase/client',()=>({createClient:()=>({auth:{getUser:async()=>({data:{user:{id:'actor'}}})},from:(table:string)=>table==='users'?{select:()=>({eq:()=>({single:async()=>({data:{organization_id:'org'}})})})}:{update,insert}})}));
+vi.mock('@/lib/supabase/client',()=>({createClient:()=>({auth:{getUser:async()=>({data:{user:{id:'actor'}}})},from:(table:string)=>table==='users'?{select:()=>({eq:()=>({single:async()=>({data:{organization_id:'org'}})})})}:table==='warehouses'?{select:()=>({order:async()=>({data:[{id:'warehouse',name:'Main'}]})})}:table==='inventory'?{select:()=>({eq:async()=>({data:[]})})}:{update,insert}})}));
 import { ProductForm } from './product-form';
 it('prefills an existing match and updates its ID rather than inserting a duplicate',async()=>{
  Object.assign(globalThis,{IS_REACT_ACT_ENVIRONMENT:true});const eq=vi.fn().mockResolvedValue({error:null});update.mockReturnValue({eq});

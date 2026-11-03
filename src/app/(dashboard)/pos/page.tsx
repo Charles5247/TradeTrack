@@ -103,12 +103,11 @@ async function searchProducts(query: string, warehouseId: string) {
         `
         *,
         category:categories(name),
-        inventory!inner(quantity, warehouse_id)
+        inventory(quantity, warehouse_id)
       `,
       )
       .eq("status", "active")
-      .eq("inventory.warehouse_id", warehouseId)
-      .gt("inventory.quantity", 0);
+      .eq("inventory.warehouse_id", warehouseId);
 
     if (query) {
       q = q.or(
@@ -116,7 +115,8 @@ async function searchProducts(query: string, warehouseId: string) {
       );
     }
 
-    const { data } = await q.limit(20);
+    const { data, error } = await q.limit(20);
+    if (error) throw error;
     return (data || []).map((p: any) => ({
       ...p,
       available_quantity: p.inventory?.[0]?.quantity || 0,
@@ -382,13 +382,13 @@ function POSPageInner() {
   });
 
   const handleAddToCart = useCallback(
-    (product: Product & { available_quantity: number }) => {
+    (product: Product & { available_quantity: number }, amount = 1) => {
       const existingItem = cart.items.find(
         (i: CartItem) => i.product.id === product.id,
       );
       const currentQty = existingItem?.quantity || 0;
 
-      if (currentQty >= product.available_quantity) {
+      if (currentQty + amount > product.available_quantity) {
         toast.error(
           t.pos.only_units_available.replace(
             "{count}",
@@ -400,7 +400,7 @@ function POSPageInner() {
 
       cart.addItem({
         product,
-        quantity: 1,
+        quantity: amount,
         unit_price: product.selling_price,
         warehouse_id: cart.warehouse_id,
       });
@@ -632,10 +632,12 @@ function POSPageInner() {
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
               {products.map(
                 (product: Product & { available_quantity: number }) => (
+                  <div key={product.id} className="flex min-w-0 flex-col rounded-xl border border-border bg-card p-2.5 sm:p-3">
                   <button
-                    key={product.id}
+                    type="button"
                     onClick={() => handleAddToCart(product)}
-                    className="flex min-w-0 flex-col rounded-xl border border-border bg-card p-2.5 text-left transition-shadow hover:shadow-md hover:border-primary/40 sm:p-3"
+                    disabled={product.available_quantity <= 0}
+                    className="flex min-w-0 flex-1 flex-col text-left transition-shadow hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <div
                       className="tt-placeholder mb-2 flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-[var(--radius)] sm:mb-2.5 sm:aspect-square"
@@ -674,7 +676,7 @@ function POSPageInner() {
                       </span>
                       {product.available_quantity <= 5 ? (
                         <Badge variant="warning" className="max-w-full whitespace-normal text-[11px] py-0">
-                          {product.available_quantity} {t.pos.units_left}
+                          {product.available_quantity ? `${product.available_quantity} ${t.pos.units_left}` : 'Out of stock — update quantity on Products'}
                         </Badge>
                       ) : (
                         <span className="text-[11px] tt-muted">
@@ -683,6 +685,8 @@ function POSPageInner() {
                       )}
                     </div>
                   </button>
+                  {product.stock_unit !== 'pack' && (product.units_per_pack ?? 1) > 1 && <Button type="button" variant="outline" size="sm" className="mt-2 w-full" disabled={product.available_quantity < (product.units_per_pack ?? 1)} onClick={() => handleAddToCart(product, product.units_per_pack)}>Add 1 pack ({product.units_per_pack})</Button>}
+                  </div>
                 ),
               )}
             </div>
@@ -763,6 +767,7 @@ function POSPageInner() {
                   <p className="tt-mono text-xs tt-muted">
                     {formatCurrency(item.unit_price)} / <TranslatedText text={item.product.stock_unit || 'piece'} />
                   </p>
+                  {item.product.stock_unit !== 'pack' && (item.product.units_per_pack ?? 1) > 1 && <p className="text-xs text-muted-foreground">{item.quantity} individual units · {item.product.units_per_pack} per pack</p>}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
                   <Button
@@ -780,12 +785,11 @@ function POSPageInner() {
                   <Button
                     variant="outline"
                     size="icon-sm"
-                    onClick={() =>
-                      cart.updateQuantity(item.product.id, item.quantity + 1)
-                    }
+                    onClick={() => handleAddToCart(item.product as Product & { available_quantity: number })}
                   >
                     <Plus className="h-3 w-3" strokeWidth={1.75} />
                   </Button>
+                  {item.product.stock_unit !== 'pack' && (item.product.units_per_pack ?? 1) > 1 && <Button variant="outline" size="sm" onClick={() => handleAddToCart(item.product as Product & { available_quantity: number }, item.product.units_per_pack)}>+ Pack</Button>}
                   <Button
                     variant="ghost"
                     size="icon-sm"

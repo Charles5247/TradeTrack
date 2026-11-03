@@ -58,6 +58,7 @@ export interface Organization {
 export type ProductStatus = "active" | "inactive" | "discontinued";
 
 export interface Product {
+  units_per_pack?: number;
   stock_unit?: string;
   variant_size?: string | null;
   variant_colour?: string | null;

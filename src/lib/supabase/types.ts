@@ -195,6 +195,7 @@ export type Database = {
       };
       products: {
         Row: {
+          units_per_pack: number;
           stock_unit: string;
           variant_size: string | null;
           variant_colour: string | null;
@@ -217,6 +218,7 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          units_per_pack?: number;
           stock_unit?: string;
           variant_size?: string | null;
           variant_colour?: string | null;

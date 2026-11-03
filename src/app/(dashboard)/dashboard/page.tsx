@@ -343,6 +343,7 @@ function MerchantDashboard() {
             <StatCard
               label={t.dashboard.total_products}
               value={stats?.total_products || 0}
+              sub="Different products, not stock units"
               icon={Package}
               loading={isLoading}
             />

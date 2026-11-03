@@ -106,7 +106,6 @@ function ProductsPageInner() {
   const [viewProduct, setViewProduct] = useState<ProductWithStock | null>(null);
   const [adjustProduct, setAdjustProduct] = useState<ProductWithStock | null>(null);
   const [adjustWarehouse, setAdjustWarehouse] = useState('');
-  const [adjustDirection, setAdjustDirection] = useState<'increase' | 'reduce'>('increase');
   const [adjustQuantity, setAdjustQuantity] = useState('');
   const [adjustReason, setAdjustReason] = useState('');
 
@@ -142,7 +141,7 @@ function ProductsPageInner() {
   const openAdjustment = (product: ProductWithStock) => {
     setAdjustProduct(product);
     setAdjustWarehouse(stockRows(product)[0]?.warehouse_id || warehouses[0]?.id || '');
-    setAdjustDirection('increase'); setAdjustQuantity(''); setAdjustReason('');
+    setAdjustQuantity(String(stockRows(product)[0]?.quantity ?? 0)); setAdjustReason('Quantity updated from product page');
   };
   const adjustMutation = useMutation({
     networkMode: 'always',
@@ -156,15 +155,17 @@ function ProductsPageInner() {
     onError: error => toast.error(error.message),
   });
   const submitAdjustment = () => {
-    if (!adjustProduct || !user || !adjustWarehouse || adjustReason.trim().length < 3) return;
+    if (!adjustProduct || !user || !adjustWarehouse) return;
     const quantity = Number(adjustQuantity);
-    if (!Number.isSafeInteger(quantity) || quantity <= 0) return toast.error(copy('Enter a valid whole-number adjustment.'));
+    if (!Number.isSafeInteger(quantity) || quantity < 0) return toast.error(copy('Enter a valid whole-number quantity.'));
     const row = stockRows(adjustProduct).find(item => item.warehouse_id === adjustWarehouse);
+    const change = quantity - (row?.quantity ?? 0);
+    if (change === 0) return setAdjustProduct(null);
     adjustMutation.mutate({
       organization_id: String(user.organization_id), user_id: user.id, product_id: adjustProduct.id,
       warehouse_id: adjustWarehouse, inventory_id: row?.id, current_quantity: row?.quantity ?? 0,
-      min_stock_level: row?.min_stock_level ?? 5, quantity_change: adjustDirection === 'reduce' ? -quantity : quantity,
-      reason: adjustReason,
+      min_stock_level: row?.min_stock_level ?? 5, quantity_change: change,
+      reason: adjustReason.trim().length >= 3 ? adjustReason : 'Quantity updated from product page',
     });
   };
 
@@ -199,9 +200,7 @@ function ProductsPageInner() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="tt-page-title">{t.products.title}</h1>
-          <p className="tt-muted text-sm mt-1">
-            {t.products.subtitle.replace('{count}', String(products.length))}
-          </p>
+          <p className="tt-muted text-sm mt-1">{products.length} product types · {products.reduce((sum, product) => sum + totalStock(product), 0)} individual units in stock</p>
         </div>
         {canManageStock && <Button onClick={() => { setEditProduct(null); setIsFormOpen(true); }}>
           <Plus className="h-4 w-4" strokeWidth={1.75} />
@@ -466,12 +465,11 @@ function ProductsPageInner() {
           <DialogHeader><DialogTitle>{t.inventory.adjust_stock}</DialogTitle></DialogHeader>
           {adjustProduct && <div className="space-y-4">
             <p className="font-medium">{productVariantLabel(adjustProduct)}</p>
-            <div className="space-y-2"><Label>{copy('Location')}</Label><Select value={adjustWarehouse} onValueChange={setAdjustWarehouse}><SelectTrigger><SelectValue placeholder={copy('Choose a location')} /></SelectTrigger><SelectContent>{warehouses.map(warehouse => <SelectItem key={warehouse.id} value={warehouse.id}>{warehouse.name}</SelectItem>)}</SelectContent></Select></div>
-            <div className="space-y-2"><Label>{t.inventory.movement_type}</Label><Select value={adjustDirection} onValueChange={value => setAdjustDirection(value as 'increase' | 'reduce')}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="increase">{t.inventory.stock_in_plus}</SelectItem><SelectItem value="reduce">{t.inventory.stock_out_minus}</SelectItem></SelectContent></Select></div>
-            <div className="space-y-2"><Label>{t.inventory.quantity_required}</Label><Input type="number" min="1" step="1" value={adjustQuantity} onChange={event => setAdjustQuantity(event.target.value)} /></div>
-            <div className="space-y-2"><Label>{t.inventory.reason_required}</Label><Textarea value={adjustReason} onChange={event => setAdjustReason(event.target.value)} minLength={3} required /></div>
+            <div className="space-y-2"><Label>{copy('Location')}</Label><Select value={adjustWarehouse} onValueChange={value => { setAdjustWarehouse(value); setAdjustQuantity(String(stockRows(adjustProduct).find(row => row.warehouse_id === value)?.quantity ?? 0)); }}><SelectTrigger><SelectValue placeholder={copy('Choose a location')} /></SelectTrigger><SelectContent>{warehouses.map(warehouse => <SelectItem key={warehouse.id} value={warehouse.id}>{warehouse.name}</SelectItem>)}</SelectContent></Select></div>
+            <div className="space-y-2"><Label>New quantity (individual units)</Label><Input type="number" min="0" step="1" value={adjustQuantity} onChange={event => setAdjustQuantity(event.target.value)} /></div>
+            <div className="space-y-2"><Label>Reason (optional)</Label><Textarea value={adjustReason} onChange={event => setAdjustReason(event.target.value)} /></div>
             <p className="text-sm text-muted-foreground">{copy('Current stock at this location: {count}', { count: stockRows(adjustProduct).find(row => row.warehouse_id === adjustWarehouse)?.quantity ?? 0 })}</p>
-            <Button className="min-h-11 w-full" disabled={!adjustWarehouse || !adjustQuantity || adjustReason.trim().length < 3 || adjustMutation.isPending} onClick={submitAdjustment}>{t.inventory.confirm_adjustment}</Button>
+            <Button className="min-h-11 w-full" disabled={!adjustWarehouse || adjustQuantity === '' || adjustMutation.isPending} onClick={submitAdjustment}>Save quantity</Button>
           </div>}
         </DialogContent>
       </Dialog>
