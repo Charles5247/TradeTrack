@@ -57,3 +57,33 @@ it('does not upload sale lines or stock when the parent sale is rejected', async
   expect((await db.get('sync_queue', 'q-line'))?.status).toBe('pending');
   expect((await db.get('sync_queue', 'q-stock'))?.status).toBe('pending');
 });
+
+it('removes reset sale work while preserving unrelated queued changes', async () => {
+  const db = await getDB();
+  const timestamp = '2026-11-02T19:18:49.967Z';
+  await db.put('sales', { id: 'sale-reset', organization_id: 'org-1', created_at: timestamp });
+  await db.put('sale_items', { id: 'line-reset', sale_id: 'sale-reset' });
+  for (const entry of [
+    { id: 'q-sale', table_name: 'sales', record_id: 'sale-reset', payload: { created_at: timestamp } },
+    { id: 'q-line', table_name: 'sale_items', record_id: 'line-reset', payload: { sale_id: 'sale-reset' } },
+    { id: 'q-stock', table_name: 'inventory', record_id: 'stock-1', payload: { updated_at: timestamp } },
+    { id: 'q-other', table_name: 'inventory', record_id: 'stock-2', payload: { updated_at: '2026-11-03T00:00:00Z' } },
+  ]) await db.put('sync_queue', { ...entry, operation: 'UPDATE', status: 'failed', retry_count: 3, created_at: timestamp });
+
+  const query = { select: vi.fn(), eq: vi.fn(), order: vi.fn(), range: vi.fn() };
+  query.select.mockReturnValue(query);
+  query.eq.mockReturnValue(query);
+  query.order.mockReturnValue(query);
+  query.range.mockResolvedValue({ data: [{ sale_id: 'sale-reset' }], error: null });
+  from.mockReturnValue(query);
+
+  const changed = await (syncEngine as unknown as {
+    discardResetSales(orgId: string, client: unknown): Promise<boolean>
+  }).discardResetSales('org-1', { from });
+
+  expect(changed).toBe(true);
+  expect(await db.get('sales', 'sale-reset')).toBeUndefined();
+  expect(await db.get('sale_items', 'line-reset')).toBeUndefined();
+  for (const id of ['q-sale', 'q-line', 'q-stock']) expect(await db.get('sync_queue', id)).toBeUndefined();
+  expect(await db.get('sync_queue', 'q-other')).toBeDefined();
+});

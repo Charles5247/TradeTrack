@@ -180,6 +180,8 @@ class SyncEngine {
         this.setState({ status: "error", error: "Please sign in again to resume sync. Your queued data is safe." });
         return;
       }
+      const resetSales = await this.discardResetSales(orgId, supabase);
+      if (resetSales) this.setState({ lastSync: null });
       if (force) {
         const queue = await getDB();
         const failed = await queue.getAllFromIndex("sync_queue", "by-status", "failed") as SyncQueueRecord[];
@@ -244,6 +246,65 @@ class SyncEngine {
       const message = err instanceof Error ? err.message : "Sync failed";
       this.setState({ status: "error", error: message });
     }
+  }
+
+  // A business reset may remove a sale after an offline till has queued it.
+  // Tombstones are fetched before any push so that device cannot recreate the
+  // receipt or upload its now-orphaned stock snapshot.
+  private async discardResetSales(orgId: string, supabase: ReturnType<typeof createClient>): Promise<boolean> {
+    const ids: string[] = [];
+    for (let offset = 0; ; offset += 500) {
+      const { data, error } = await (supabase as any).from("sale_reset_tombstones")
+        .select("sale_id").eq("organization_id", orgId).order("sale_id").range(offset, offset + 499);
+      // During rollout the app may deploy before the migration reaches a
+      // project. Keep ordinary sync working until reset markers are present.
+      if (error?.code === "PGRST205" || error?.code === "42P01") return false;
+      if (error) throw error;
+      ids.push(...(data ?? []).map((row: { sale_id: string }) => row.sale_id));
+      if (!data || data.length < 500) break;
+    }
+    if (!ids.length) return false;
+    const reset = new Set(ids);
+    const db = await getDB();
+    const tx = db.transaction(["sales", "sale_items", "sync_queue", "pending_receipts"], "readwrite");
+    const sales = await tx.objectStore("sales").getAll();
+    const saleItems = await tx.objectStore("sale_items").getAll();
+    const queued = await tx.objectStore("sync_queue").getAll() as SyncQueueRecord[];
+    const timestamps = new Set<string>();
+    for (const sale of sales) {
+      if (!reset.has(sale.id) || sale.organization_id !== orgId) continue;
+      timestamps.add(String(sale.created_at));
+      await tx.objectStore("sales").delete(sale.id);
+    }
+    for (const item of saleItems) {
+      if (reset.has(item.sale_id)) await tx.objectStore("sale_items").delete(item.id);
+    }
+    let changed = false;
+    for (const item of queued) {
+      if (item.table_name === "sales" && reset.has(item.record_id)) {
+        timestamps.add(String(item.payload.created_at));
+        await tx.objectStore("sync_queue").delete(item.id);
+        changed = true;
+      } else if (
+        (item.table_name === "sale_items" || item.table_name === "sale_stock") &&
+        reset.has(String(item.payload.sale_id))
+      ) {
+        await tx.objectStore("sync_queue").delete(item.id);
+        changed = true;
+      }
+    }
+    for (const item of queued) {
+      if (item.table_name !== "inventory" || item.operation !== "UPDATE" || item.stock_sync) continue;
+      const timestamp = String(item.payload.original_device_timestamp ?? item.payload.updated_at ?? "");
+      if (!timestamps.has(timestamp)) continue;
+      await tx.objectStore("sync_queue").delete(item.id);
+      changed = true;
+    }
+    for (const receipt of await tx.objectStore("pending_receipts").getAll()) {
+      if (reset.has(receipt.sale_id)) await tx.objectStore("pending_receipts").delete(receipt.id);
+    }
+    await tx.done;
+    return changed || sales.some((sale: { id: string; organization_id: string }) => reset.has(sale.id) && sale.organization_id === orgId);
   }
 
   private async pushChanges() {
