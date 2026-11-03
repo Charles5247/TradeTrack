@@ -41,3 +41,10 @@ it('keeps gallery selection separate from capture and makes removal available wi
   await act(()=>host.querySelector<HTMLButtonElement>('[aria-label="Remove image"]')!.click());
   expect(removed).toHaveBeenCalledOnce();expect(host.querySelector('img')).toBeNull();
 });
+it('updates the preview when the parent selects a different product image',async()=>{
+  const callbacks={onImageUploaded:vi.fn(),onImageRemoved:vi.fn(),onProductMatched:vi.fn(),onCodeSelected:vi.fn()};
+  await act(()=>root.render(<ImageUpload currentImageUrl="/first.png" {...callbacks} />));
+  expect(host.querySelector('img')?.getAttribute('src')).toBe('/first.png');
+  await act(()=>root.render(<ImageUpload currentImageUrl="/second.png" {...callbacks} />));
+  expect(host.querySelector('img')?.getAttribute('src')).toBe('/second.png');
+});

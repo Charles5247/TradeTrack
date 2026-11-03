@@ -3,7 +3,7 @@ import { TranslatedText, useCopy } from '@/i18n/text';
 
 
 import { withTimeout, AUTH_CHECK_TIMEOUT_MS } from "@/lib/utils/timeout";
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Upload, X, ImageOff, Loader2, Camera, ScanLine, FileSpreadsheet } from 'lucide-react';
@@ -82,13 +82,14 @@ export function ImageUpload({
 }: ImageUploadProps) {
   const copy = useCopy();
   const [isUploading, setIsUploading] = useState(false);
-  const [preview, setPreview] = useState<string | null>(currentImageUrl ?? null);
+  const [previewOverride, setPreviewOverride] = useState<{ source: string | null; url: string | null } | null>(null);
+  const preview = previewOverride?.source === (currentImageUrl ?? null) ? previewOverride.url : currentImageUrl ?? null;
+  const setPreview = useCallback((url: string | null) => setPreviewOverride({ source: currentImageUrl ?? null, url }), [currentImageUrl]);
   const [isDragOver, setIsDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scanning, setScanning] = useState(false);
-  useEffect(() => { setPreview(currentImageUrl ?? null); }, [currentImageUrl]);
   const openMenu = () => { setScanning(false); setMenuOpen(true); };
 
   const handleUpload = useCallback(
@@ -156,7 +157,7 @@ export function ImageUpload({
         URL.revokeObjectURL(localUrl);
       }
     },
-    [currentImageUrl, onImageUploaded, productId]
+    [currentImageUrl, onImageUploaded, productId, setPreview]
   );
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
