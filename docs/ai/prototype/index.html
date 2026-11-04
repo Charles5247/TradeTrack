@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Track Kasuwa · AI assistant design preview</title>
+    <link rel="icon" href="assets/brand.png" />
+    <link rel="stylesheet" href="prototype.css" />
+    <script defer src="prototype.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="preview-bar">
+      <span
+        >TRACK KASUWA
+        <span class="muted-on-dark">/ Design preview · Gate 2</span></span
+      ><button
+        id="controls-toggle"
+        aria-expanded="false"
+        aria-controls="controls"
+      >
+        Prototype controls
+      </button>
+    </div>
+    <section
+      id="controls"
+      class="controls"
+      hidden
+      aria-label="Developer-only prototype controls"
+    >
+      <p class="eyebrow">DEV ONLY · NOT PART OF THE PRODUCT</p>
+      <div class="control-grid">
+        <label>Example<select id="example"><option value="oil">6.5 · Oil receipt</option><option value="whatsapp">6.6 · WhatsApp list</option><option value="sheet">6.7 · 300-row sheet</option><option value="po">6.8 · Invoice vs PO</option></select></label>
+        <label>Wizard-of-Oz output<select id="rehearsal"><option value="correct">Correct fixture</option><option value="planted">Plausible mistake · facilitator only</option></select></label>
+        <label
+          >Scenario<select id="scenario">
+            <option value="normal">Normal</option>
+            <option value="low">Low confidence</option>
+            <option value="unreadable">Unreadable photo</option>
+            <option value="short">Short shipment</option>
+            <option value="offline">Offline</option>
+            <option value="limit">Allowance reached</option>
+          </select></label
+        >
+        <label
+          >Language<select id="language">
+            <option value="en">English</option>
+            <option value="ha">Hausa</option>
+          </select></label
+        >
+        <label
+          >Appearance<select id="theme">
+            <option value="light">Light</option>
+            <option value="dark">Dark mode</option>
+          </select></label
+        >
+        <label
+          >Preview width<select id="width">
+            <option value="desktop">Desktop</option>
+            <option value="phone">Phone · 360 px</option>
+          </select></label
+        >
+        <label
+          >Role<select id="role">
+            <option value="Owner">Owner</option>
+            <option value="Admin">Admin</option>
+            <option value="Cashier">Cashier</option>
+            <option value="Platform Owner">Platform Owner</option>
+          </select></label
+        >
+        <label
+          >Plan<select id="plan">
+            <option value="Business">Business</option>
+            <option value="Growth">Growth</option>
+            <option value="Starter">Starter</option>
+            <option value="Free">Free · assumption</option>
+          </select></label
+        >
+        <label
+          >Apply outcome<select id="outcome">
+            <option value="normal">Normal success</option>
+            <option value="partial">Partial failure · direct intake</option>
+            <option value="pending">Response lost</option>
+            <option value="failed">Receipt rollback / failure</option>
+          </select></label
+        >
+      </div>
+      <div class="inline">
+        <button id="reset" class="btn secondary">Reset synthetic demo</button
+        ><a href="screens.md">Screen specifications</a
+        ><a href="design-decisions.md">Design decisions</a
+        ><a href="usability-script.md">Owner test script</a><a href="receiving-review.md">Receiving critique and evidence</a>
+      </div>
+    </section>
+    <div id="preview" class="preview">
+      <div class="app">
+        <aside class="sidebar" aria-label="Main navigation">
+          <a class="brand" href="#home"
+            ><img src="assets/brand.png" alt="" width="32" height="32" /><span
+              >Track Kasuwa</span
+            ></a
+          >
+          <div class="workspace">
+            <span class="avatar">SP</span
+            ><span
+              ><strong>Sadiq Provisions</strong
+              ><small data-en="Sample workspace" data-ha="Wurin aikin misali"
+                >Sample workspace</small
+              ></span
+            >
+          </div>
+          <nav id="nav"></nav>
+          <div class="side-bottom">
+            <a
+              href="#settings"
+              class="nav-link"
+              data-en="AI settings"
+              data-ha="Saitunan AI"
+              >AI settings</a
+            ><a
+              href="#home"
+              class="nav-link"
+              data-en="Prototype guide"
+              data-ha="Jagorar samfurin gwaji"
+              >Prototype guide</a
+            >
+            <div class="profile">
+              <span class="avatar">SA</span
+              ><span
+                ><strong>Sadiq Ahmed</strong
+                ><small id="profile-role">Owner · Business plan</small></span
+              >
+            </div>
+          </div>
+        </aside>
+        <div class="main-column">
+          <header class="app-header">
+            <a href="#home" class="mobile-brand"
+              ><img
+                src="assets/brand.png"
+                alt="Track Kasuwa"
+                width="32"
+                height="32" /></a
+            ><span id="breadcrumb">Workspace / Assistant</span>
+            <div class="header-tools">
+              <span class="connection" id="connection">Online</span
+              ><button class="text-btn" data-action="assumptions">
+                <span class="assumption-tag">ASSUMPTION</span
+                ><span data-en="13 decisions" data-ha="Shawarwari 13"
+                  >13 decisions</span
+                >
+              </button>
+            </div>
+          </header>
+          <div class="sample-label">
+            <span>SYNTHETIC</span
+            ><span
+              data-en="All records are samples. All prices are illustrative. No real stock changes."
+              data-ha="Duk bayanai na misali ne. Farashi na misali ne. Ba a canza haja ta gaske ba."
+              >All records are samples. All prices are illustrative. No real
+              stock changes.</span
+            >
+          </div>
+          <main id="main" tabindex="-1"></main>
+          <footer class="app-footer">
+            <span
+              data-en="Only your Owner can use AI. You review every change."
+              data-ha="Mai kasuwanci kaɗai ke amfani da AI. Ka duba kowane canji."
+              >Only your Owner can use AI. You review every change.</span
+            ><a
+              href="#drafts"
+              data-en="Your saved drafts"
+              data-ha="Daftarin da ka ajiye"
+              >Your saved drafts</a
+            >
+          </footer>
+        </div>
+      </div>
+    </div>
+    <dialog id="detail-dialog" aria-labelledby="dialog-title">
+      <div id="dialog-content"></div>
+      <button
+        class="dialog-close icon-btn"
+        data-action="close-dialog"
+        aria-label="Close / Rufe"
+      >
+        ×
+      </button>
+    </dialog>
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+    <noscript
+      >This prototype needs JavaScript enabled. Open index.html in Chrome, Edge
+      or Firefox.</noscript
+    >
+  </body>
+</html>

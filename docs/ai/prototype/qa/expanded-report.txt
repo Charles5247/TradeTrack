@@ -1,0 +1,33 @@
+### Result
+"{\"views\":32,\"failures\":[],\"previewWidth\":360,\"assumptionCount\":13,\"screenshots\":[\"docs/ai/prototype/qa/desktop-oil-expanded.png\",\"docs/ai/prototype/qa/desktop-po-expanded.png\",\"docs/ai/prototype/qa/phone-oil-expanded.png\",\"docs/ai/prototype/qa/phone-po-expanded.png\"]}"
+### Ran Playwright code
+```js
+await (async (page) => {
+  await page.goto('file:///C:/dev/TradeTrack/docs/ai/prototype/index.html');
+  const failures=[], screenshots=[];
+  for(const width of [1440,360]){
+    await page.setViewportSize({width,height:1000});
+    for(const language of ['en','ha'])for(const theme of ['light','dark'])for(const example of ['oil','whatsapp','sheet','po']){
+      await page.evaluate(({example,language,theme})=>{const d=window.prototypeDemo;Object.assign(d.state,{language,theme,role:'Owner',plan:'Business',scenario:'normal',width:'desktop'});d.start(example,'review');d.state.openRows=[1,2];d.state.expandedConfident=true;d.render();},{example,language,theme});
+      await page.waitForTimeout(30);
+      const overflow=await page.evaluate(()=>[...document.querySelectorAll('#main *')].filter(e=>{const b=e.getBoundingClientRect();return b.width>0&&b.right>innerWidth+1;}).slice(0,3).map(e=>e.outerHTML.slice(0,160)));
+      if(overflow.length)failures.push({width,language,theme,example,overflow});
+      if(language==='en'&&theme==='light'&&['oil','po'].includes(example)){
+        const path=`docs/ai/prototype/qa/${width===360?'phone':'desktop'}-${example}-expanded.png`;
+        await page.screenshot({path,fullPage:false});screenshots.push(path);
+      }
+    }
+  }
+  await page.setViewportSize({width:1440,height:1000});
+  await page.evaluate(()=>{const d=window.prototypeDemo;Object.assign(d.state,{language:'ha',theme:'dark',width:'phone'});d.start('oil','review');});
+  const previewWidth=await page.locator('#preview').evaluate(e=>Math.round(e.getBoundingClientRect().width));
+  if(previewWidth!==360)failures.push({previewWidth});
+  await page.locator('.app-header [data-action="assumptions"]').click();
+  const assumptionCount=await page.locator('.assumption-entry').count();
+  if(assumptionCount!==13)failures.push({assumptionCount});
+  await page.screenshot({path:'docs/ai/prototype/qa/assumptions-ha-dark.png'});
+  await page.keyboard.press('Escape');
+  return JSON.stringify({views:32,failures,previewWidth,assumptionCount,screenshots});
+}
+)(page);
+```

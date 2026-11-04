@@ -1,0 +1,96 @@
+[
+  {
+    "theme": "light",
+    "checks": [
+      {
+        "name": "body/surface",
+        "ratio": 15.68,
+        "minimum": 4.5,
+        "pass": true
+      },
+      {
+        "name": "secondary/surface",
+        "ratio": 6.64,
+        "minimum": 4.5,
+        "pass": true
+      },
+      {
+        "name": "secondary/background",
+        "ratio": 6.18,
+        "minimum": 4.5,
+        "pass": true
+      },
+      {
+        "name": "primary button",
+        "ratio": 5.36,
+        "minimum": 4.5,
+        "pass": true
+      },
+      {
+        "name": "primary link",
+        "ratio": 5.51,
+        "minimum": 4.5,
+        "pass": true
+      },
+      {
+        "name": "notice text",
+        "ratio": 14.27,
+        "minimum": 4.5,
+        "pass": true
+      },
+      {
+        "name": "control boundary",
+        "ratio": 6.64,
+        "minimum": 3,
+        "pass": true
+      }
+    ]
+  },
+  {
+    "theme": "dark",
+    "checks": [
+      {
+        "name": "body/surface",
+        "ratio": 13.54,
+        "minimum": 4.5,
+        "pass": true
+      },
+      {
+        "name": "secondary/surface",
+        "ratio": 6.95,
+        "minimum": 4.5,
+        "pass": true
+      },
+      {
+        "name": "secondary/background",
+        "ratio": 7.85,
+        "minimum": 4.5,
+        "pass": true
+      },
+      {
+        "name": "primary button",
+        "ratio": 6,
+        "minimum": 4.5,
+        "pass": true
+      },
+      {
+        "name": "primary link",
+        "ratio": 5.31,
+        "minimum": 4.5,
+        "pass": true
+      },
+      {
+        "name": "notice text",
+        "ratio": 12.45,
+        "minimum": 4.5,
+        "pass": true
+      },
+      {
+        "name": "control boundary",
+        "ratio": 6.95,
+        "minimum": 3,
+        "pass": true
+      }
+    ]
+  }
+]

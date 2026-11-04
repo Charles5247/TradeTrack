@@ -1,0 +1,145 @@
+### Result
+"{\"views\":288,\"errors\":[],\"externalRequests\":[],\"failures\":[],\"touch\":[],\"screenshots\":[\"desktop-review.png\",\"phone-ha-dark-review.png\"]}"
+### Ran Playwright code
+```js
+await (async (page) => {
+  const errors = [],
+    requests = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  page.on("request", (r) => {
+    if (/^https?:/.test(r.url())) requests.push(r.url());
+  });
+  await page.goto("file:///C:/dev/TradeTrack/docs/ai/prototype/index.html");
+  await page.waitForFunction(() => !!window.prototypeDemo);
+  const failures = [],
+    touch = [],
+    screenshots = [];
+  const routes = await page.evaluate(() => window.prototypeDemo.routes);
+  for (const width of [1440, 360]) {
+    await page.setViewportSize({ width, height: 1000 });
+    for (const language of ["en", "ha"])
+      for (const theme of ["light", "dark"]) {
+        for (const route of routes) {
+          await page.evaluate(
+            ({ route, language, theme }) => {
+              const d = window.prototypeDemo;
+              Object.assign(d.state, {
+                language,
+                theme,
+                width: "desktop",
+                role: "Owner",
+                plan: "Business",
+                scenario: "normal",
+              });
+              Object.keys(d.state.switches).forEach(
+                (k) => (d.state.switches[k] = true),
+              );
+              d.go(route);
+              d.render();
+            },
+            { route, language, theme },
+          );
+          await page.waitForTimeout(35);
+          const result = await page.evaluate(() => {
+            const visible = (e) => {
+              const r = e.getBoundingClientRect();
+              return (
+                r.width > 0 &&
+                r.height > 0 &&
+                getComputedStyle(e).visibility !== "hidden"
+              );
+            };
+            const overflow = [
+              ...document.querySelectorAll(
+                "#main *,.app-header *,.app-footer *",
+              ),
+            ]
+              .filter(visible)
+              .filter(
+                (e) =>
+                  e.getBoundingClientRect().right >
+                  document.documentElement.clientWidth + 1,
+              )
+              .slice(0, 4)
+              .map((e) => ({
+                tag: e.tagName,
+                cls: e.className,
+                text: e.textContent.slice(0, 70),
+                right: e.getBoundingClientRect().right,
+              }));
+            const small = [
+              ...document.querySelectorAll(
+                "#main button,#main a,#main summary,.app-header button",
+              ),
+            ]
+              .filter(visible)
+              .filter((e) => e.getBoundingClientRect().height < 43.5)
+              .map((e) => e.textContent.trim().slice(0, 50));
+            return {
+              overflow,
+              small,
+              primary: document.querySelectorAll("#main .primary").length,
+            };
+          });
+          if (result.overflow.length)
+            failures.push({
+              width,
+              language,
+              theme,
+              route,
+              overflow: result.overflow,
+            });
+          if (result.small.length)
+            touch.push({ width, language, theme, route, small: result.small });
+          if (result.primary > 1)
+            failures.push({
+              width,
+              language,
+              theme,
+              route,
+              primary: result.primary,
+            });
+        }
+      }
+  }
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await page.evaluate(() => {
+    Object.assign(window.prototypeDemo.state, {
+      language: "en",
+      theme: "light",
+      width: "desktop",
+    });
+    window.prototypeDemo.start("oil", "review");
+  });
+  await page.waitForTimeout(250);
+  await page.screenshot({
+    path: "docs/ai/prototype/qa/desktop-review.png",
+    fullPage: true,
+  });
+  screenshots.push("desktop-review.png");
+  await page.setViewportSize({ width: 360, height: 1000 });
+  await page.evaluate(() => {
+    window.prototypeDemo.state.language = "ha";
+    window.prototypeDemo.state.theme = "dark";
+    window.prototypeDemo.render();
+  });
+  await page.waitForTimeout(250);
+  await page.screenshot({
+    path: "docs/ai/prototype/qa/phone-ha-dark-review.png",
+    fullPage: true,
+  });
+  screenshots.push("phone-ha-dark-review.png");
+  return JSON.stringify({
+    views: routes.length * 8,
+    errors,
+    externalRequests: requests,
+    failures,
+    touch,
+    screenshots,
+  });
+}
+)(page);
+```
+### Page
+- Page URL: file:///C:/dev/TradeTrack/docs/ai/prototype/index.html#review
+- Page Title: Track Kasuwa · AI assistant design preview

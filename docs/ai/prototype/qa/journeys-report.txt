@@ -1,0 +1,280 @@
+### Result
+"{\"passed\":12,\"results\":[\"6.5 oil: unit resolution, unchanged existing selling price, explicit approval, three rows applied\",\"Response-lost lookup does not duplicate an already applied action\",\"6.6 WhatsApp: price clarified; zero cost retains unknown flag and profit exclusion\",\"6.7 spreadsheet: correct grouping, 240 selected, resume after reload\",\"6.8 PO: received 4/5; held Kings Oil is not received\",\"Partial failure: successful rows preserved; repair requires approval and does not replay them\",\"D4: offline pending, online recheck, changed stock 18, renewed approval required\",\"Consent: explicit tier confirmation, independent tiers and revocation\",\"Memory: edit and confirmed delete\",\"Admin, Cashier and Platform Owner see no AI rows/approvals\",\"Starter plan denied\",\"All 13 tagged assumptions available; keyboard Escape dismisses dialog\"]}"
+### Ran Playwright code
+```js
+await (async (page) => {
+  const results = [];
+  const assert = (value, message) => {
+    if (!value) throw new Error(message);
+  };
+  const arrange = async (example) => {
+    await page.evaluate((example) => {
+      const d = window.prototypeDemo;
+      Object.assign(d.state, {
+        language: "en",
+        theme: "light",
+        role: "Owner",
+        plan: "Business",
+        scenario: "normal",
+        outcome: "normal",
+        width: "desktop",
+        chat: [],
+      });
+      Object.keys(d.state.switches).forEach(
+        (k) => (d.state.switches[k] = true),
+      );
+      d.start(example, "review");
+    }, example);
+    await page.waitForTimeout(40);
+  };
+  const select = async (ids) => {
+    for (const id of ids) {
+      const hiddenGroup = page.locator(`details[data-confident]:not([open]):has([data-select-row="${id}"]) > summary`);
+      if (await hiddenGroup.count()) await hiddenGroup.click();
+      await page.locator(`[data-select-row="${id}"]`).check();
+    }
+  };
+  const apply = async () => {
+    await page.locator('[data-action="confirm"]').click();
+    assert(
+      await page.locator("#apply-button").isDisabled(),
+      "Apply must require final confirmation",
+    );
+    await page.locator("#approval-check").check();
+    await page.locator("#apply-button").click();
+  };
+  await page.goto("file:///C:/dev/TradeTrack/docs/ai/prototype/index.html");
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await arrange("oil");
+  assert(
+    await page.locator('[data-select-row="3"]').isDisabled(),
+    "Unresolved pack must block approval",
+  );
+  await page.locator('[data-action="unit-pieces"]').click();
+  await select([1, 2, 3]);
+  await apply();
+  await page.waitForFunction(() => location.hash === "#result");
+  let state = await page.evaluate(() => window.prototypeDemo.state);
+  assert(
+    state.rows.filter((r) => r.applied).length === 3,
+    "Oil must apply all three selected rows",
+  );
+  assert(!state.rows[0].usePrice, "Power Oil price must stay unchanged");
+  assert(
+    state.rows[2].qty === 50 && state.rows[2].cost === 190,
+    "Pack conversion must be exact",
+  );
+  results.push(
+    "6.5 oil: unit resolution, unchanged existing selling price, explicit approval, three rows applied",
+  );
+  const keys = state.appliedKeys.length;
+  await page.evaluate(() => window.prototypeDemo.go("pending"));
+  await page.locator('[data-action="lookup"]').click();
+  assert(
+    (await page.evaluate(
+      () => window.prototypeDemo.state.appliedKeys.length,
+    )) === keys,
+    "Original-result lookup must not duplicate",
+  );
+  results.push(
+    "Response-lost lookup does not duplicate an already applied action",
+  );
+  await arrange("whatsapp");
+  await page.locator('[data-action="resolve-price"]').click();
+  await page.locator('[data-zero="3"]').check();
+  await select([1, 2, 3]);
+  await apply();
+  await page.waitForFunction(() => location.hash === "#result");
+  state = await page.evaluate(() => window.prototypeDemo.state);
+  assert(
+    state.rows[2].needsCost && state.rows[2].cost === 0,
+    "Missing cost must stay flagged",
+  );
+  results.push(
+    "6.6 WhatsApp: price clarified; zero cost retains unknown flag and profit exclusion",
+  );
+  await arrange("sheet");
+  await page.locator('[data-action="approve-confident"]').click();
+  state = await page.evaluate(() => window.prototypeDemo.state);
+  assert(
+    state.rows.filter((r) => r.selected).length === 240,
+    "Exactly 240 confident rows selected",
+  );
+  assert(state.rows.length === 300, "All 300 rows retained");
+  await page.locator('[data-action="leave"]').click();
+  await page.reload();
+  await page.locator('a[href="#review"]').first().click();
+  assert(
+    (await page.evaluate(
+      () => window.prototypeDemo.state.rows.filter((r) => r.selected).length,
+    )) === 240,
+    "Draft survives reload",
+  );
+  results.push(
+    "6.7 spreadsheet: correct grouping, 240 selected, resume after reload",
+  );
+  await arrange("po");
+  await page.locator('[data-action="skip-row"][data-id="4"]').click();
+  await select([1, 2, 3]);
+  await apply();
+  await page.waitForFunction(() => location.hash === "#result");
+  state = await page.evaluate(() => window.prototypeDemo.state);
+  assert(
+    state.rows[1].qty === 4 && state.rows[1].ordered === 5,
+    "Short shipment preserved",
+  );
+  assert(!state.rows[3].applied, "Held unordered product must not apply");
+  results.push("6.8 PO: received 4/5; held Kings Oil is not received");
+  await arrange("oil");
+  await page.locator('[data-action="unit-pieces"]').click();
+  await select([1, 2, 3]);
+  await page.evaluate(() => window.prototypeDemo.setOutcome("partial"));
+  await apply();
+  await page.waitForFunction(() => location.hash === "#partial");
+  state = await page.evaluate(() => window.prototypeDemo.state);
+  assert(
+    state.rows.filter((r) => r.applied).length === 2 &&
+      state.rows.filter((r) => r.failed).length === 1,
+    "Partial outcome must preserve two successes",
+  );
+  await page.locator('a[href="#repair"]').click();
+  assert(
+    await page.locator("#repair-button").isDisabled(),
+    "Repair needs fresh approval",
+  );
+  await page.locator("#repair-approval").check();
+  await page.locator("#repair-button").click();
+  state = await page.evaluate(() => window.prototypeDemo.state);
+  assert(
+    state.rows.filter((r) => r.applied).length === 3 &&
+      state.appliedKeys.length === 3,
+    "Repair adds only one effect",
+  );
+  results.push(
+    "Partial failure: successful rows preserved; repair requires approval and does not replay them",
+  );
+  await arrange("oil");
+  await select([1]);
+  await page.locator('[data-action="confirm"]').click();
+  await page.locator("#approval-check").check();
+  await page.evaluate(() => (window.prototypeDemo.state.scenario = "offline"));
+  await page.locator("#apply-button").click();
+  assert(
+    (await page.url()).endsWith("#offline"),
+    "Offline approval remains pending",
+  );
+  assert(
+    (await page.evaluate(
+      () => window.prototypeDemo.state.appliedKeys.length,
+    )) === 0,
+    "Offline has no confirmed effect",
+  );
+  await page.locator('[data-action="reconnect"]').click();
+  await page.locator('[data-action="recheck"]').click();
+  await page.locator('[data-action="accept-conflict"]').click();
+  state = await page.evaluate(() => window.prototypeDemo.state);
+  assert(
+    state.rows[0].stock === 18 && state.rows.every((r) => !r.selected),
+    "Changed stock clears approval",
+  );
+  results.push(
+    "D4: offline pending, online recheck, changed stock 18, renewed approval required",
+  );
+  await page.evaluate(() => {
+    window.prototypeDemo.go("settings");
+    window.prototypeDemo.state.sharing = {
+      quality: false,
+      aggregates: false,
+      raw: false,
+    };
+    window.prototypeDemo.render();
+  });
+  await page.locator('[data-sharing="quality"]').click();
+  assert(
+    await page.locator("#detail-dialog").isVisible(),
+    "Consent must be reviewed",
+  );
+  await page.locator('[data-action="consent-yes"]').click();
+  state = await page.evaluate(() => window.prototypeDemo.state);
+  assert(
+    state.sharing.quality && !state.sharing.aggregates && !state.sharing.raw,
+    "Consent tiers independent",
+  );
+  await page.locator('[data-sharing="quality"]').uncheck();
+  assert(
+    !(await page.evaluate(() => window.prototypeDemo.state.sharing.quality)),
+    "Revocation works",
+  );
+  results.push(
+    "Consent: explicit tier confirmation, independent tiers and revocation",
+  );
+  await page.evaluate(() => window.prototypeDemo.go("memory"));
+  const count = await page.evaluate(
+    () => window.prototypeDemo.state.learned.length,
+  );
+  await page.locator('[data-action="edit-memory"]').first().click();
+  await page.locator("#memory-value").fill("1 carton = 48 sachets");
+  await page.locator('[data-action="save-memory"]').click();
+  assert(
+    (await page.evaluate(() => window.prototypeDemo.state.learned[0].value)) ===
+      "1 carton = 48 sachets",
+    "Memory edit persists",
+  );
+  await page.locator('[data-action="delete-memory"]').first().click();
+  await page.locator('[data-action="confirm-delete-memory"]').click();
+  assert(
+    (await page.evaluate(() => window.prototypeDemo.state.learned.length)) ===
+      count - 1,
+    "Memory delete persists",
+  );
+  results.push("Memory: edit and confirmed delete");
+  for (const role of ["Admin", "Cashier", "Platform Owner"]) {
+    await page.evaluate((role) => {
+      window.prototypeDemo.state.role = role;
+      window.prototypeDemo.go("review");
+      window.prototypeDemo.render();
+    }, role);
+    assert(
+      (await page.locator("[data-select-row]").count()) === 0,
+      "Denied role must not see approval rows",
+    );
+  }
+  results.push("Admin, Cashier and Platform Owner see no AI rows/approvals");
+  await page.evaluate(() => {
+    Object.assign(window.prototypeDemo.state, {
+      role: "Owner",
+      plan: "Starter",
+    });
+    window.prototypeDemo.go("upload");
+    window.prototypeDemo.render();
+  });
+  assert(
+    (await page.locator("h1").innerText()).includes("not available"),
+    "Starter denied",
+  );
+  results.push("Starter plan denied");
+  await page.evaluate(() => {
+    Object.assign(window.prototypeDemo.state, { plan: "Business" });
+    window.prototypeDemo.go("home");
+    window.prototypeDemo.render();
+  });
+  await page.locator('.app-header [data-action="assumptions"]').click();
+  assert(
+    (await page.locator(".assumption-entry").count()) === 13,
+    "All open questions visible",
+  );
+  await page.keyboard.press("Escape");
+  assert(
+    !(await page.locator("#detail-dialog").isVisible()),
+    "Escape closes dialog",
+  );
+  results.push(
+    "All 13 tagged assumptions available; keyboard Escape dismisses dialog",
+  );
+  return JSON.stringify({ passed: results.length, results });
+}
+)(page);
+```
+### Page
+- Page URL: file:///C:/dev/TradeTrack/docs/ai/prototype/index.html#home
+- Page Title: Track Kasuwa · AI assistant design preview

@@ -1,0 +1,17 @@
+{
+  "passed": 12,
+  "results": [
+    "6.5 oil: unit resolution, unchanged existing selling price, explicit approval, three rows applied",
+    "Response-lost lookup does not duplicate an already applied action",
+    "6.6 WhatsApp: price clarified; zero cost retains unknown flag and profit exclusion",
+    "6.7 spreadsheet: correct grouping, 240 selected, resume after reload",
+    "6.8 PO: received 4/5; held Kings Oil is not received",
+    "Partial failure: successful rows preserved; repair requires approval and does not replay them",
+    "D4: offline pending, online recheck, changed stock 18, renewed approval required",
+    "Consent: explicit tier confirmation, independent tiers and revocation",
+    "Memory: edit and confirmed delete",
+    "Admin, Cashier and Platform Owner see no AI rows/approvals",
+    "Starter plan denied",
+    "All 13 tagged assumptions available; keyboard Escape dismisses dialog"
+  ]
+}
