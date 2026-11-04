@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { recommendPlan, type RecommendationPlan, type TrialUsage } from '@/lib/subscriptions/recommend-plan';
+import { countsAsCompletedSale } from '@/lib/sales/effective-sale';
 
 export async function GET(){
  const db=await createClient();
@@ -19,11 +20,24 @@ export async function GET(){
  const start=new Date(organization.trial_started_at || organization.created_at);
  if(!Number.isFinite(start.getTime())||start.getTime()>Date.now())return NextResponse.json({error:'Trial history is unavailable.'},{status:503});
  const end=new Date(Math.min(Date.now(),start.getTime()+30*86400000)).toISOString();
+ const salesCount = async () => {
+  let count = 0;
+  for (let offset = 0; ; offset += 1000) {
+   const {data,error}=await db.from('sales').select('id,status,financial_reversals(kind)')
+    .eq('organization_id',org).eq('status','completed')
+    .gte('created_at',start.toISOString()).lt('created_at',end).range(offset,offset+999);
+   if(error) throw error;
+   const rows=(data || []) as unknown as Array<{status:string;financial_reversals?:{kind:string}[]}>;
+   count+=rows.filter(countsAsCompletedSale).length;
+   if(rows.length<1000) break;
+  }
+  return count;
+ };
  const results=await Promise.all([
   db.from('products').select('id',{count:'exact',head:true}).eq('organization_id',org),
   db.from('users').select('id',{count:'exact',head:true}).eq('organization_id',org).eq('role','cashier').eq('status','active'),
   db.from('warehouses').select('id',{count:'exact',head:true}).eq('organization_id',org),
-  db.from('sales').select('id',{count:'exact',head:true}).eq('organization_id',org).eq('status','completed').gte('created_at',start.toISOString()).lt('created_at',end),
+  salesCount().then(count => ({count,error:null})).catch(() => ({count:null,error:{message:'Unable to count sales.'}})),
   db.from('purchase_orders').select('id',{count:'exact',head:true}).eq('organization_id',org).gte('created_at',start.toISOString()).lt('created_at',end),
   db.from('vendor_transactions').select('id',{count:'exact',head:true}).eq('organization_id',org).gte('created_at',start.toISOString()).lt('created_at',end),
   db.from('warehouse_transfers').select('id',{count:'exact',head:true}).eq('organization_id',org).gte('created_at',start.toISOString()).lt('created_at',end),
