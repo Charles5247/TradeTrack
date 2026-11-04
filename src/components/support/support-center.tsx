@@ -35,12 +35,15 @@ export function SupportCenter({ platform = false }: { platform?: boolean }) {
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [filter, setFilter] = useState('open');
-  const { data: cases = [], error, isLoading, refetch } = useQuery({
-    queryKey: ['support-cases', user?.id], enabled: !!user,
+  const [page, setPage] = useState(0);
+  const { data: casePage, error, isLoading, refetch } = useQuery({
+    queryKey: ['support-cases', user?.id, platform ? filter : 'all', page], enabled: !!user,
     queryFn: async () => {
-      const response = await fetch('/api/support/cases', { cache: 'no-store' });
+      const params = new URLSearchParams({ page: String(page) });
+      if (platform && filter !== 'all') params.set('status', filter);
+      const response = await fetch(`/api/support/cases?${params}`, { cache: 'no-store' });
       if (!response.ok) throw new Error('Could not load support cases.');
-      return (await response.json()).cases as SupportCase[];
+      return (await response.json()) as { cases: SupportCase[]; count: number };
     }, refetchInterval: 30000,
   });
   const { data: merchants = [] } = useQuery({
@@ -62,7 +65,7 @@ export function SupportCenter({ platform = false }: { platform?: boolean }) {
     catch (err) { toast.error(err instanceof Error ? err.message : 'Request failed.'); }
     finally { setBusy(false); }
   };
-  const visible = platform && filter !== 'all' ? cases.filter(item => item.status === filter) : cases;
+  const visible = casePage?.cases || [];
 
   return <div className="space-y-6">
     <div><h1 className="tt-page-title">{platform ? 'Platform support queue' : 'Report an issue'}</h1>
@@ -89,8 +92,8 @@ export function SupportCenter({ platform = false }: { platform?: boolean }) {
     </CardContent></Card>}
 
     <section className="space-y-3"><div className="flex flex-wrap items-center justify-between gap-3">
-      <h2 className="tt-section-title">{platform ? 'Cases' : 'Your business reports'} ({visible.length})</h2>
-      {platform && <select aria-label="Case status" className="tt-input" value={filter} onChange={event => setFilter(event.target.value)}>
+      <h2 className="tt-section-title">{platform ? 'Cases' : 'Your business reports'} ({casePage?.count ?? 0})</h2>
+      {platform && <select aria-label="Case status" className="tt-input" value={filter} onChange={event => { setFilter(event.target.value); setPage(0); }}>
         <option value="open">Open</option><option value="in_progress">In progress</option><option value="resolved">Resolved</option><option value="all">All</option>
       </select>}
     </div>
@@ -99,7 +102,7 @@ export function SupportCenter({ platform = false }: { platform?: boolean }) {
       {!isLoading && !error && visible.length === 0 && <p className="tt-muted">No cases in this view.</p>}
       {visible.map(item => <Card key={item.id}><CardContent className="space-y-3 p-5">
         <div className="flex flex-wrap items-start justify-between gap-2"><div><h3 className="font-semibold">{item.title}</h3>
-          <p className="text-xs tt-muted">{new Date(item.created_at).toLocaleString('en-NG', { timeZone: 'Africa/Lagos' })} · {item.source === 'sync' ? 'Automatic sync alert' : 'Reported by staff'}{platform ? ` · Merchant ${item.organization_id.slice(0, 8)}` : ''}</p></div>
+          <p className="text-xs tt-muted">{new Date(item.created_at).toLocaleString('en-NG', { timeZone: 'Africa/Lagos' })} · {item.source === 'sync' ? 'Automatic sync alert' : 'Reported by staff'}{platform ? ` · ${merchants.find(merchant => merchant.organization_id === item.organization_id)?.business_name || item.organization_id.slice(0, 8)}` : ''}</p></div>
           <Badge variant="outline">{item.status.replace('_', ' ')}</Badge></div>
         <p className="whitespace-pre-wrap break-words text-sm">{item.detail}</p>
         {item.owner_note && <div className="rounded-md border border-border p-3 text-sm"><strong>Platform response</strong><p className="mt-1 whitespace-pre-wrap">{item.owner_note}</p></div>}
@@ -108,9 +111,11 @@ export function SupportCenter({ platform = false }: { platform?: boolean }) {
           <div className="flex flex-wrap gap-2">{(['open', 'in_progress', 'resolved'] as const).map(status => <Button key={status} variant={status === item.status ? 'default' : 'outline'} size="sm" disabled={busy} onClick={() => run(async () => {
             await sendJson('/api/support/cases', 'PATCH', { id: item.id, status, ownerNote: notes[item.id]?.trim() || undefined });
             setNotes(previous => ({ ...previous, [item.id]: '' }));
-          }, 'Case updated and merchant notified.')}>{status.replace('_', ' ')}</Button>)}</div>
+          }, 'Case updated.')}>{status.replace('_', ' ')}</Button>)}</div>
         </div>}
       </CardContent></Card>)}
+      <div className="flex items-center justify-end gap-3"><Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(previous => previous - 1)}>Previous</Button>
+        <span className="text-sm tt-muted">Page {page + 1}</span><Button variant="outline" size="sm" disabled={(page + 1) * 25 >= (casePage?.count ?? 0)} onClick={() => setPage(previous => previous + 1)}>Next</Button></div>
     </section>
   </div>;
 }

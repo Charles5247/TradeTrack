@@ -10,7 +10,7 @@ export function NotificationSync() {
   const setUnreadCount = useNotificationStore(state => state.setUnreadCount);
 
   useEffect(() => {
-    if (!user?.id || !user.organization_id) return;
+    if (!user?.id) return;
     const supabase = createClient();
     let disposed = false;
     let hasVisibilityColumn = true;
@@ -37,7 +37,7 @@ export function NotificationSync() {
     void refresh();
     const channel = supabase.channel(`notifications:${user.id}`).on(
       'postgres_changes',
-      { event: '*', schema: 'public', table: 'notifications', filter: `organization_id=eq.${user.organization_id}` },
+      { event: '*', schema: 'public', table: 'notifications', filter: user.role === 'platform_owner' ? `user_id=eq.${user.id}` : `organization_id=eq.${user.organization_id}` },
       () => void refresh(),
     ).subscribe();
     const timer = window.setInterval(() => { if (navigator.onLine) void refresh(); }, 30_000);
@@ -49,7 +49,7 @@ export function NotificationSync() {
       window.removeEventListener('online', reconnect);
       void supabase.removeChannel(channel);
     };
-  }, [setUnreadCount, user?.id, user?.organization_id]);
+  }, [setUnreadCount, user?.id, user?.organization_id, user?.role]);
 
   return null;
 }

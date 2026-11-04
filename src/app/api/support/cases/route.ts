@@ -23,14 +23,28 @@ async function context() {
   return { db, profile };
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const ctx = await context();
   if (!ctx) return Response.json({ error: 'Sign in required.' }, { status: 401 });
-  let query = ctx.db.from('support_cases' as never).select('*').order('created_at', { ascending: false }).limit(100);
+  const params = new URL(request.url).searchParams;
+  const page = Math.max(0, Math.min(1000, Number.parseInt(params.get('page') || '0', 10) || 0));
+  const status = params.get('status');
+  const organizationId = params.get('organizationId');
+  let query = ctx.db.from('support_cases' as never).select('*', { count: 'exact' })
+    .order('created_at', { ascending: false }).range(page * 25, page * 25 + 24);
   if (ctx.profile.role !== 'platform_owner') query = query.eq('organization_id', ctx.profile.organization_id!);
-  const { data, error } = await query;
+  else if (organizationId && z.uuid().safeParse(organizationId).success) query = query.eq('organization_id', organizationId);
+  if (status && ['open', 'in_progress', 'resolved'].includes(status)) query = query.eq('status', status);
+  const { data, error, count } = await query;
   if (error) return Response.json({ error: 'Support cases are unavailable.' }, { status: 503 });
-  return Response.json({ cases: data || [] }, { headers: { 'Cache-Control': 'private, no-store' } });
+  let openCount: number | undefined;
+  if (ctx.profile.role === 'platform_owner') {
+    let countQuery = ctx.db.from('support_cases' as never).select('id', { count: 'exact', head: true }).neq('status', 'resolved');
+    if (organizationId && z.uuid().safeParse(organizationId).success) countQuery = countQuery.eq('organization_id', organizationId);
+    const countResult = await countQuery;
+    if (!countResult.error) openCount = countResult.count ?? 0;
+  }
+  return Response.json({ cases: data || [], count: count ?? 0, openCount }, { headers: { 'Cache-Control': 'private, no-store' } });
 }
 
 export async function POST(request: Request) {
@@ -66,16 +80,25 @@ export async function PATCH(request: Request) {
   const { id, status, ownerNote } = parsed.data;
   const admin = platformDb();
   const { data: current, error: readError } = await admin.from('support_cases' as never)
-    .select('id,organization_id,owner_note,status').eq('id', id).single();
+    .select('id,organization_id,reporter_id,owner_note,status').eq('id', id).single();
   if (readError || !current) return Response.json({ error: 'Case not found.' }, { status: 404 });
-  const before = current as { organization_id: string; owner_note: string | null; status: string };
+  const before = current as { organization_id: string; reporter_id: string; owner_note: string | null; status: string };
   const note = ownerNote ?? before.owner_note;
   const { error } = await admin.from('support_cases' as never).update({
     status, owner_note: note || null, responded_at: ownerNote ? new Date().toISOString() : undefined,
   } as never).eq('id', id);
   if (error) return Response.json({ error: 'Could not update the case.' }, { status: 503 });
   if (ownerNote || status !== before.status) {
-    try { await notifyMerchantOwners(before.organization_id, `Support case ${status.replace('_', ' ')}`, ownerNote || `Your support case is now ${status.replace('_', ' ')}.`, id); }
+    const message = ownerNote || `Your support case is now ${status.replace('_', ' ')}.`;
+    try {
+      await notifyMerchantOwners(before.organization_id, `Support case ${status.replace('_', ' ')}`, message, id);
+      const { data: reporter } = await admin.from('users').select('role,status').eq('id', before.reporter_id).single();
+      if (reporter?.status === 'active' && !['business_owner', 'admin'].includes(reporter.role)) {
+        await admin.from('notifications').insert({ organization_id: before.organization_id, user_id: before.reporter_id,
+          type: 'support_reply', title: `Support case ${status.replace('_', ' ')}`, message, body: message,
+          severity: 'info', entity_type: 'support_case', entity_id: id, data: { href: '/support' } });
+      }
+    }
     catch (notifyError) { console.error('[support] merchant notification failed', notifyError); }
   }
   return Response.json({ saved: true });

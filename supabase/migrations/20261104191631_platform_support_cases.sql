@@ -24,7 +24,9 @@ GRANT SELECT, INSERT, UPDATE ON public.support_cases TO authenticated;
 GRANT ALL ON public.support_cases TO service_role;
 
 CREATE POLICY support_cases_read ON public.support_cases FOR SELECT TO authenticated
-  USING (public.get_user_role() = 'platform_owner' OR organization_id = public.get_user_org_id());
+  USING (public.get_user_role() = 'platform_owner' OR
+    (organization_id = public.get_user_org_id() AND
+      (public.get_user_role() IN ('business_owner', 'admin') OR reporter_id = (SELECT auth.uid()))));
 CREATE POLICY support_cases_report ON public.support_cases FOR INSERT TO authenticated
   WITH CHECK (organization_id = public.get_user_org_id() AND reporter_id = (SELECT auth.uid())
     AND source = 'merchant' AND status = 'open' AND owner_note IS NULL AND responded_at IS NULL AND dedupe_key IS NULL);
@@ -41,3 +43,9 @@ END;
 $$;
 CREATE TRIGGER support_case_touch BEFORE UPDATE ON public.support_cases
   FOR EACH ROW EXECUTE FUNCTION public.support_case_touch();
+
+-- Platform owners have no merchant organization. Their personal alert bell
+-- still needs to mark their own notifications as read.
+CREATE POLICY notifications_platform_owner_update ON public.notifications FOR UPDATE TO authenticated
+  USING (user_id = (SELECT auth.uid()) AND public.get_user_role() = 'platform_owner')
+  WITH CHECK (user_id = (SELECT auth.uid()) AND public.get_user_role() = 'platform_owner');

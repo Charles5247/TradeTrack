@@ -150,21 +150,20 @@ export default function AdminPage() {
   const { data: revenueData, isLoading: revenueLoading, error: revenueError } = useQuery({
     queryKey: ["admin-revenue", refreshKey],
     queryFn: async (): Promise<RevenuePoint[]> => {
-      const { data, error } = await supabase
-        .from("invoices")
-        .select("amount, status, created_at")
-        .eq("status", "paid")
-        .order("created_at", { ascending: true })
-        .limit(200);
-      if (error) throw new Error(error.message);
+      const invoices: Array<{ created_at: string; paid_at: string | null; amount: number }> = [];
+      for (let offset = 0; ; offset += 1000) {
+        const { data, error } = await supabase.from("invoices")
+          .select("amount,created_at,paid_at").eq("status", "paid")
+          .order("created_at", { ascending: true }).range(offset, offset + 999);
+        if (error) throw new Error(error.message);
+        invoices.push(...(data || []));
+        if (!data || data.length < 1000) break;
+      }
       // Group by month
       const monthMap = new Map<string, { revenue: number; invoices: number }>();
-      ((data as any[]) ?? []).forEach(
-        (inv: { created_at: string; amount: number }) => {
-          const month = new Date(inv.created_at).toLocaleString("en", {
-            month: "short",
-            year: "2-digit",
-          });
+      invoices.forEach(
+        (inv) => {
+          const month = new Date(inv.paid_at || inv.created_at).toISOString().slice(0, 7);
           const existing = monthMap.get(month) ?? { revenue: 0, invoices: 0 };
           monthMap.set(month, {
             revenue: existing.revenue + inv.amount,
@@ -172,8 +171,8 @@ export default function AdminPage() {
           });
         },
       );
-      return Array.from(monthMap.entries()).map(([month, v]) => ({
-        month,
+      return Array.from(monthMap.entries()).sort(([a], [b]) => a.localeCompare(b)).map(([month, v]) => ({
+        month: new Date(`${month}-01T00:00:00Z`).toLocaleString("en", { month: "short", year: "2-digit", timeZone: "UTC" }),
         ...v,
       }));
     },
@@ -184,14 +183,16 @@ export default function AdminPage() {
   const { data: acquisitionData, isLoading: acquisitionLoading, error: acquisitionError } = useQuery({
     queryKey: ["admin-acquisition", refreshKey],
     queryFn: async (): Promise<AcquisitionPoint[]> => {
-      const { data, error } = await supabase
-        .from("merchants")
-        .select("created_at, status")
-        .order("created_at", { ascending: true })
-        .limit(200);
-      if (error) throw new Error(error.message);
+      const merchants: Array<{ created_at: string; status: string }> = [];
+      for (let offset = 0; ; offset += 1000) {
+        const { data, error } = await supabase.from("merchants")
+          .select("created_at,status").order("created_at", { ascending: true }).range(offset, offset + 999);
+        if (error) throw new Error(error.message);
+        merchants.push(...(data || []));
+        if (!data || data.length < 1000) break;
+      }
       const monthMap = new Map<string, { merchants: number; active: number }>();
-      ((data as any[]) ?? []).forEach(
+      merchants.forEach(
         (m: { created_at: string; status: string }) => {
           const month = new Date(m.created_at).toLocaleString("en", {
             month: "short",
@@ -253,15 +254,57 @@ export default function AdminPage() {
       const response = await fetch('/api/support/cases', { cache: 'no-store' });
       if (!response.ok) throw new Error('Support queue unavailable');
       const result = await response.json();
-      return (result.cases as { status: string }[]).filter(item => item.status !== 'resolved').length;
+      return result.openCount as number;
     }, refetchInterval: 30000,
+  });
+  const { data: attention, error: attentionError } = useQuery({
+    queryKey: ['platform-attention', refreshKey], enabled: isOwnerOrAdmin,
+    queryFn: async () => {
+      const now = new Date();
+      const inSevenDays = new Date(now.getTime() + 7 * 86400000).toISOString();
+      const lastSevenDays = new Date(now.getTime() - 7 * 86400000).toISOString();
+      const [verification, expiring, failedPayments] = await Promise.all([
+        supabase.from('merchants').select('id', { count: 'exact', head: true }).eq('verification_status', 'pending'),
+        supabase.from('subscriptions').select('id', { count: 'exact', head: true })
+          .in('status', ['active', 'trial']).gte('expires_at', now.toISOString()).lte('expires_at', inSevenDays),
+        supabase.from('payment_transactions').select('id', { count: 'exact', head: true })
+          .eq('status', 'failed').gte('created_at', lastSevenDays),
+      ]);
+      const error = [verification, expiring, failedPayments].find(result => result.error)?.error;
+      if (error) throw error;
+      return { verification: verification.count ?? 0, expiring: expiring.count ?? 0, failedPayments: failedPayments.count ?? 0 };
+    }, refetchInterval: 60000,
+  });
+  const { data: estimatedMRR = 0, error: mrrError } = useQuery({
+    queryKey: ['platform-estimated-mrr', refreshKey], enabled: isOwnerOrAdmin,
+    queryFn: async () => {
+      const allSubscriptions: Array<{ organization_id: string; plan_id: string; billing_cycle: string | null; created_at: string }> = [];
+      for (let offset = 0; ; offset += 1000) {
+        const { data, error } = await supabase.from('subscriptions')
+          .select('organization_id,plan_id,billing_cycle,created_at').eq('status', 'active')
+          .gt('expires_at', new Date().toISOString()).order('created_at', { ascending: false }).range(offset, offset + 999);
+        if (error) throw error;
+        allSubscriptions.push(...(data || []));
+        if (!data || data.length < 1000) break;
+      }
+      const { data: plans, error } = await supabase.from('subscription_plans').select('id,price');
+      if (error) throw error;
+      const planPrice = new Map((plans || []).map(plan => [plan.id, plan.price]));
+      const counted = new Set<string>();
+      return allSubscriptions.reduce((total, subscription) => {
+        if (counted.has(subscription.organization_id)) return total;
+        counted.add(subscription.organization_id);
+        const price = planPrice.get(subscription.plan_id) || 0;
+        return total + (subscription.billing_cycle === 'yearly' ? price * 0.8 : price);
+      }, 0);
+    },
   });
   const totalMerchants = merchantCounts?.total ?? 0;
   const activeMerchants = merchantCounts?.active ?? 0;
   const pendingMerchants = merchantCounts?.pending ?? 0;
   const suspendedMerchants = merchantCounts?.suspended ?? 0;
-  const mrr = revenueData?.slice(-1)[0]?.revenue ?? 0;
-  const arr = mrr * 12;
+  const latestCollections = revenueData?.slice(-1)[0]?.revenue ?? 0;
+  const estimatedARR = estimatedMRR * 12;
   const totalRevenue = revenueData?.reduce((s, r) => s + r.revenue, 0) ?? 0;
 
   // ── Access denied ─────────────────────────────────────────────────────────
@@ -289,7 +332,7 @@ export default function AdminPage() {
     );
   }
 
-  const loadError = merchantsError || countsError || revenueError || acquisitionError || auditError;
+  const loadError = merchantsError || countsError || revenueError || acquisitionError || auditError || attentionError || mrrError;
   if (loadError) return <div className="space-y-6"><h1 className="tt-page-title"><TranslatedText text={"Platform overview"} /></h1><ErrorState title={copy("Could not load platform data")} body={loadError.message} onRetry={() => setRefreshKey(k => k + 1)} /></div>;
 
   return (
@@ -319,7 +362,7 @@ export default function AdminPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label={copy("Total merchants")} value={totalMerchants} sub="Across the platform" icon={Building2} loading={countsLoading} />
         <StatCard label={copy("Active merchants")} value={activeMerchants} sub="Across the platform" icon={Users} loading={countsLoading} />
-        <StatCard label={copy("Latest month collected")} value={formatCurrency(mrr)} sub={revenueData?.slice(-1)[0]?.month ?? 'No paid invoices loaded'} icon={DollarSign} loading={revenueLoading} />
+        <StatCard label={copy("Latest month collected")} value={formatCurrency(latestCollections)} sub={revenueData?.slice(-1)[0]?.month ?? 'No paid invoices loaded'} icon={DollarSign} loading={revenueLoading} />
         <StatCard label={copy("Pending merchants")} value={pendingMerchants} sub="Awaiting review" icon={Clock} loading={countsLoading} />
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
@@ -336,7 +379,12 @@ export default function AdminPage() {
           <div><p className="font-semibold"><TranslatedText text={"Manage subscription plans"} /></p><p className="text-sm tt-muted"><TranslatedText text={"Platform pricing, features, and usage limits"} /></p></div>
         </Link>
       </div>
-      <p className="text-xs tt-muted"><TranslatedText text={"Charts use up to 200 loaded records. Collections are paid invoice amounts, not recurring revenue. Service health is not monitored on this page."} /></p>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Link href="/merchants" className="tt-card-flat rounded-[var(--radius-lg)] border border-border p-4"><p className="text-sm tt-muted">Awaiting verification</p><p className="text-2xl font-semibold">{attention?.verification ?? '—'}</p></Link>
+        <Link href="/merchants" className="tt-card-flat rounded-[var(--radius-lg)] border border-border p-4"><p className="text-sm tt-muted">Subscriptions expiring in 7 days</p><p className="text-2xl font-semibold">{attention?.expiring ?? '—'}</p></Link>
+        <Link href="/merchants" className="tt-card-flat rounded-[var(--radius-lg)] border border-border p-4"><p className="text-sm tt-muted">Failed payments in 7 days</p><p className="text-2xl font-semibold">{attention?.failedPayments ?? '—'}</p></Link>
+      </div>
+      <p className="text-xs tt-muted">Collections use paid invoices. Recurring revenue is estimated from current paid subscriptions and plan prices. Service health is monitored separately.</p>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex w-full overflow-x-auto [&>button]:min-h-11 [&>button]:shrink-0">
@@ -595,7 +643,7 @@ export default function AdminPage() {
 
         {/* ── REVENUE TAB ───────────────────────────────────────────────── */}
         <TabsContent value="revenue" className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
               <CardContent className="p-6 text-center">
                 <p className="text-sm tt-muted mb-1"><TranslatedText text={"Loaded invoice collections"} /></p>
@@ -614,18 +662,19 @@ export default function AdminPage() {
                   className="text-2xl font-bold tt-tabular"
                   style={{ color: "var(--c-primary)" }}
                 >
-                  {formatCurrency(mrr)}
+                  {formatCurrency(latestCollections)}
                 </p>
               </CardContent>
             </Card>
+            <Card><CardContent className="p-6 text-center"><p className="text-sm tt-muted mb-1">Estimated monthly recurring revenue</p><p className="text-2xl font-bold tt-tabular">{formatCurrency(estimatedMRR)}</p></CardContent></Card>
             <Card>
               <CardContent className="p-6 text-center">
-                <p className="text-sm tt-muted mb-1"><TranslatedText text={"Annualized collection estimate"} /></p>
+                <p className="text-sm tt-muted mb-1">Estimated annual recurring revenue</p>
                 <p
                   className="text-2xl font-bold tt-tabular"
                   style={{ color: "var(--c-info)" }}
                 >
-                  {formatCurrency(arr)}
+                  {formatCurrency(estimatedARR)}
                 </p>
               </CardContent>
             </Card>

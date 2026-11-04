@@ -54,6 +54,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
           reportedErrors.add(dedupeKey);
           fetch('/api/support/cases', { method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ source: 'sync', title: 'Offline data upload failed', detail, dedupeKey }) })
+            .then(response => { if (!response.ok) reportedErrors.delete(dedupeKey); })
             .catch(() => reportedErrors.delete(dedupeKey));
         }
       }

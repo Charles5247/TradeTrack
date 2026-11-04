@@ -3,6 +3,7 @@ import { TranslatedText, useCopy } from '@/i18n/text';
 
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Bell, CheckCheck, AlertTriangle, Package, DollarSign, ArrowLeftRight, CreditCard } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -206,6 +207,8 @@ export default function NotificationsPage() {
                           {notification.title}
                         </p>
                         <p className="text-sm tt-muted mt-0.5">{notification.message}</p>
+                        {typeof notification.data?.href === 'string' && /^\/(admin\/support|support|notifications)$/.test(notification.data.href) &&
+                          <Link href={notification.data.href} className="mt-2 inline-block text-sm font-medium text-primary underline" onClick={event => event.stopPropagation()}>Open related page</Link>}
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {!notification.is_read && (
