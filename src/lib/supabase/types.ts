@@ -13,6 +13,12 @@ type NoRel = { Relationships: [] };
 export type Database = {
   public: {
     Tables: {
+      financial_reversals: {
+        Row: { id: string; organization_id: string; sale_id: string; kind: 'void' | 'refund' | 'return' | 'vendor_payment_correction'; reason: string; amount: number; created_by: string; created_at: string };
+        Insert: { id?: string; organization_id: string; sale_id: string; kind: 'void' | 'refund' | 'return' | 'vendor_payment_correction'; reason: string; amount: number; created_by: string; created_at?: string };
+        Update: never;
+        Relationships: [];
+      };
       sale_reset_tombstones: {
         Row: { sale_id: string; organization_id: string; created_at: string };
         Insert: { sale_id: string; organization_id: string; created_at?: string };

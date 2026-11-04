@@ -17,6 +17,7 @@
 import { withTimeout, AUTH_CHECK_TIMEOUT_MS } from "@/lib/utils/timeout";
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import type { Database } from "@/lib/supabase/types";
 
@@ -89,6 +90,22 @@ async function lookupSale(
   if (error) throw error;
   if (!sale) return lookupHistoricalSale(supabase, invoiceNumber);
 
+  let reversalKind: string | undefined;
+  if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    // The sale was already authorized through the caller's RLS-scoped query.
+    // Cashiers cannot read reversal rows directly, but their receipts must
+    // still show the correct effective status.
+    const admin = createServiceClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY,
+      { auth: { autoRefreshToken: false, persistSession: false } },
+    );
+    const { data: reversal, error: reversalError } = await admin.from('financial_reversals')
+      .select('kind').eq('sale_id', sale.id).in('kind', ['void', 'refund', 'return'])
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
+    if (reversalError) throw reversalError;
+    reversalKind = reversal?.kind;
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const s = sale as any;
   return NextResponse.json({
@@ -99,7 +116,7 @@ async function lookupSale(
       cashierName: s.cashier?.full_name,
       customerName: s.customer_name,
       customerPhone: s.customer_phone,
-      status: s.status,
+      status: reversalKind === 'void' ? 'cancelled' : reversalKind ? 'refunded' : s.status,
       paymentStatus: s.payment_status,
       paymentMethod: s.payment_method,
       subtotal: s.subtotal,
