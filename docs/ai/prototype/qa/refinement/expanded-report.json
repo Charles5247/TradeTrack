@@ -1,0 +1,12 @@
+{
+  "views": 32,
+  "failures": [],
+  "previewWidth": 360,
+  "assumptionCount": 13,
+  "screenshots": [
+    "docs/ai/prototype/qa/desktop-oil-expanded.png",
+    "docs/ai/prototype/qa/desktop-po-expanded.png",
+    "docs/ai/prototype/qa/phone-oil-expanded.png",
+    "docs/ai/prototype/qa/phone-po-expanded.png"
+  ]
+}

@@ -1,0 +1,888 @@
+{
+  "axe": "4.14.0",
+  "scope": "88 controlled AI-1 views; automated accessibility only",
+  "results": [
+    {
+      "width": 360,
+      "language": "en",
+      "theme": "light",
+      "example": "oil",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 27
+    },
+    {
+      "width": 360,
+      "language": "en",
+      "theme": "light",
+      "example": "whatsapp",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 27
+    },
+    {
+      "width": 360,
+      "language": "en",
+      "theme": "light",
+      "example": "sheet",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 25
+    },
+    {
+      "width": 360,
+      "language": "en",
+      "theme": "light",
+      "example": "po",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 26
+    },
+    {
+      "width": 360,
+      "language": "en",
+      "theme": "light",
+      "example": "oil",
+      "route": "upload",
+      "violations": [],
+      "incomplete": [],
+      "passes": 25
+    },
+    {
+      "width": 360,
+      "language": "en",
+      "theme": "light",
+      "example": "oil",
+      "route": "confirm",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 360,
+      "language": "en",
+      "theme": "light",
+      "example": "oil",
+      "route": "pending",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 360,
+      "language": "en",
+      "theme": "light",
+      "example": "oil",
+      "route": "partial",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 360,
+      "language": "en",
+      "theme": "light",
+      "example": "oil",
+      "route": "repair",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 360,
+      "language": "en",
+      "theme": "light",
+      "example": "oil",
+      "route": "conflict",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 360,
+      "language": "en",
+      "theme": "light",
+      "example": "oil",
+      "route": "unreadable",
+      "violations": [],
+      "incomplete": [],
+      "passes": 19
+    },
+    {
+      "width": 360,
+      "language": "en",
+      "theme": "dark",
+      "example": "oil",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 27
+    },
+    {
+      "width": 360,
+      "language": "en",
+      "theme": "dark",
+      "example": "whatsapp",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 27
+    },
+    {
+      "width": 360,
+      "language": "en",
+      "theme": "dark",
+      "example": "sheet",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 25
+    },
+    {
+      "width": 360,
+      "language": "en",
+      "theme": "dark",
+      "example": "po",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 26
+    },
+    {
+      "width": 360,
+      "language": "en",
+      "theme": "dark",
+      "example": "oil",
+      "route": "upload",
+      "violations": [],
+      "incomplete": [],
+      "passes": 25
+    },
+    {
+      "width": 360,
+      "language": "en",
+      "theme": "dark",
+      "example": "oil",
+      "route": "confirm",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 360,
+      "language": "en",
+      "theme": "dark",
+      "example": "oil",
+      "route": "pending",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 360,
+      "language": "en",
+      "theme": "dark",
+      "example": "oil",
+      "route": "partial",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 360,
+      "language": "en",
+      "theme": "dark",
+      "example": "oil",
+      "route": "repair",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 360,
+      "language": "en",
+      "theme": "dark",
+      "example": "oil",
+      "route": "conflict",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 360,
+      "language": "en",
+      "theme": "dark",
+      "example": "oil",
+      "route": "unreadable",
+      "violations": [],
+      "incomplete": [],
+      "passes": 19
+    },
+    {
+      "width": 360,
+      "language": "ha",
+      "theme": "light",
+      "example": "oil",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 27
+    },
+    {
+      "width": 360,
+      "language": "ha",
+      "theme": "light",
+      "example": "whatsapp",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 27
+    },
+    {
+      "width": 360,
+      "language": "ha",
+      "theme": "light",
+      "example": "sheet",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 25
+    },
+    {
+      "width": 360,
+      "language": "ha",
+      "theme": "light",
+      "example": "po",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 26
+    },
+    {
+      "width": 360,
+      "language": "ha",
+      "theme": "light",
+      "example": "oil",
+      "route": "upload",
+      "violations": [],
+      "incomplete": [],
+      "passes": 25
+    },
+    {
+      "width": 360,
+      "language": "ha",
+      "theme": "light",
+      "example": "oil",
+      "route": "confirm",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 360,
+      "language": "ha",
+      "theme": "light",
+      "example": "oil",
+      "route": "pending",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 360,
+      "language": "ha",
+      "theme": "light",
+      "example": "oil",
+      "route": "partial",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 360,
+      "language": "ha",
+      "theme": "light",
+      "example": "oil",
+      "route": "repair",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 360,
+      "language": "ha",
+      "theme": "light",
+      "example": "oil",
+      "route": "conflict",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 360,
+      "language": "ha",
+      "theme": "light",
+      "example": "oil",
+      "route": "unreadable",
+      "violations": [],
+      "incomplete": [],
+      "passes": 19
+    },
+    {
+      "width": 360,
+      "language": "ha",
+      "theme": "dark",
+      "example": "oil",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 27
+    },
+    {
+      "width": 360,
+      "language": "ha",
+      "theme": "dark",
+      "example": "whatsapp",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 27
+    },
+    {
+      "width": 360,
+      "language": "ha",
+      "theme": "dark",
+      "example": "sheet",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 25
+    },
+    {
+      "width": 360,
+      "language": "ha",
+      "theme": "dark",
+      "example": "po",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 26
+    },
+    {
+      "width": 360,
+      "language": "ha",
+      "theme": "dark",
+      "example": "oil",
+      "route": "upload",
+      "violations": [],
+      "incomplete": [],
+      "passes": 25
+    },
+    {
+      "width": 360,
+      "language": "ha",
+      "theme": "dark",
+      "example": "oil",
+      "route": "confirm",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 360,
+      "language": "ha",
+      "theme": "dark",
+      "example": "oil",
+      "route": "pending",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 360,
+      "language": "ha",
+      "theme": "dark",
+      "example": "oil",
+      "route": "partial",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 360,
+      "language": "ha",
+      "theme": "dark",
+      "example": "oil",
+      "route": "repair",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 360,
+      "language": "ha",
+      "theme": "dark",
+      "example": "oil",
+      "route": "conflict",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 360,
+      "language": "ha",
+      "theme": "dark",
+      "example": "oil",
+      "route": "unreadable",
+      "violations": [],
+      "incomplete": [],
+      "passes": 19
+    },
+    {
+      "width": 1440,
+      "language": "en",
+      "theme": "light",
+      "example": "oil",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 27
+    },
+    {
+      "width": 1440,
+      "language": "en",
+      "theme": "light",
+      "example": "whatsapp",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 27
+    },
+    {
+      "width": 1440,
+      "language": "en",
+      "theme": "light",
+      "example": "sheet",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 25
+    },
+    {
+      "width": 1440,
+      "language": "en",
+      "theme": "light",
+      "example": "po",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 26
+    },
+    {
+      "width": 1440,
+      "language": "en",
+      "theme": "light",
+      "example": "oil",
+      "route": "upload",
+      "violations": [],
+      "incomplete": [],
+      "passes": 25
+    },
+    {
+      "width": 1440,
+      "language": "en",
+      "theme": "light",
+      "example": "oil",
+      "route": "confirm",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 1440,
+      "language": "en",
+      "theme": "light",
+      "example": "oil",
+      "route": "pending",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 1440,
+      "language": "en",
+      "theme": "light",
+      "example": "oil",
+      "route": "partial",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 1440,
+      "language": "en",
+      "theme": "light",
+      "example": "oil",
+      "route": "repair",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 1440,
+      "language": "en",
+      "theme": "light",
+      "example": "oil",
+      "route": "conflict",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 1440,
+      "language": "en",
+      "theme": "light",
+      "example": "oil",
+      "route": "unreadable",
+      "violations": [],
+      "incomplete": [],
+      "passes": 19
+    },
+    {
+      "width": 1440,
+      "language": "en",
+      "theme": "dark",
+      "example": "oil",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 27
+    },
+    {
+      "width": 1440,
+      "language": "en",
+      "theme": "dark",
+      "example": "whatsapp",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 27
+    },
+    {
+      "width": 1440,
+      "language": "en",
+      "theme": "dark",
+      "example": "sheet",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 25
+    },
+    {
+      "width": 1440,
+      "language": "en",
+      "theme": "dark",
+      "example": "po",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 26
+    },
+    {
+      "width": 1440,
+      "language": "en",
+      "theme": "dark",
+      "example": "oil",
+      "route": "upload",
+      "violations": [],
+      "incomplete": [],
+      "passes": 25
+    },
+    {
+      "width": 1440,
+      "language": "en",
+      "theme": "dark",
+      "example": "oil",
+      "route": "confirm",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 1440,
+      "language": "en",
+      "theme": "dark",
+      "example": "oil",
+      "route": "pending",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 1440,
+      "language": "en",
+      "theme": "dark",
+      "example": "oil",
+      "route": "partial",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 1440,
+      "language": "en",
+      "theme": "dark",
+      "example": "oil",
+      "route": "repair",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 1440,
+      "language": "en",
+      "theme": "dark",
+      "example": "oil",
+      "route": "conflict",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 1440,
+      "language": "en",
+      "theme": "dark",
+      "example": "oil",
+      "route": "unreadable",
+      "violations": [],
+      "incomplete": [],
+      "passes": 19
+    },
+    {
+      "width": 1440,
+      "language": "ha",
+      "theme": "light",
+      "example": "oil",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 27
+    },
+    {
+      "width": 1440,
+      "language": "ha",
+      "theme": "light",
+      "example": "whatsapp",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 27
+    },
+    {
+      "width": 1440,
+      "language": "ha",
+      "theme": "light",
+      "example": "sheet",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 25
+    },
+    {
+      "width": 1440,
+      "language": "ha",
+      "theme": "light",
+      "example": "po",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 26
+    },
+    {
+      "width": 1440,
+      "language": "ha",
+      "theme": "light",
+      "example": "oil",
+      "route": "upload",
+      "violations": [],
+      "incomplete": [],
+      "passes": 25
+    },
+    {
+      "width": 1440,
+      "language": "ha",
+      "theme": "light",
+      "example": "oil",
+      "route": "confirm",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 1440,
+      "language": "ha",
+      "theme": "light",
+      "example": "oil",
+      "route": "pending",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 1440,
+      "language": "ha",
+      "theme": "light",
+      "example": "oil",
+      "route": "partial",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 1440,
+      "language": "ha",
+      "theme": "light",
+      "example": "oil",
+      "route": "repair",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 1440,
+      "language": "ha",
+      "theme": "light",
+      "example": "oil",
+      "route": "conflict",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 1440,
+      "language": "ha",
+      "theme": "light",
+      "example": "oil",
+      "route": "unreadable",
+      "violations": [],
+      "incomplete": [],
+      "passes": 19
+    },
+    {
+      "width": 1440,
+      "language": "ha",
+      "theme": "dark",
+      "example": "oil",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 27
+    },
+    {
+      "width": 1440,
+      "language": "ha",
+      "theme": "dark",
+      "example": "whatsapp",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 27
+    },
+    {
+      "width": 1440,
+      "language": "ha",
+      "theme": "dark",
+      "example": "sheet",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 25
+    },
+    {
+      "width": 1440,
+      "language": "ha",
+      "theme": "dark",
+      "example": "po",
+      "route": "review",
+      "violations": [],
+      "incomplete": [],
+      "passes": 26
+    },
+    {
+      "width": 1440,
+      "language": "ha",
+      "theme": "dark",
+      "example": "oil",
+      "route": "upload",
+      "violations": [],
+      "incomplete": [],
+      "passes": 25
+    },
+    {
+      "width": 1440,
+      "language": "ha",
+      "theme": "dark",
+      "example": "oil",
+      "route": "confirm",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 1440,
+      "language": "ha",
+      "theme": "dark",
+      "example": "oil",
+      "route": "pending",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 1440,
+      "language": "ha",
+      "theme": "dark",
+      "example": "oil",
+      "route": "partial",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 1440,
+      "language": "ha",
+      "theme": "dark",
+      "example": "oil",
+      "route": "repair",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 1440,
+      "language": "ha",
+      "theme": "dark",
+      "example": "oil",
+      "route": "conflict",
+      "violations": [],
+      "incomplete": [],
+      "passes": 22
+    },
+    {
+      "width": 1440,
+      "language": "ha",
+      "theme": "dark",
+      "example": "oil",
+      "route": "unreadable",
+      "violations": [],
+      "incomplete": [],
+      "passes": 19
+    }
+  ],
+  "violations": [],
+  "errors": []
+}

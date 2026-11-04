@@ -1,0 +1,89 @@
+### Result
+"{\"kind\":\"controlled browser checks, not participant results\",\"passed\":24,\"results\":[\"Unresolved Gino precedes new and matched rows\",\"Selection is labelled as unapplied\",\"Selection has no effect\",\"Fractional stock cannot be selected\",\"Negative cost cannot be selected\",\"Original source survives proposal edits\",\"One explicit Apply authorization, no redundant checkbox\",\"Exact effect keeps existing selling price\",\"oil: planted output can be corrected through UI\",\"oil: evidence remains unchanged after correction\",\"oil: correction clears selection\",\"whatsapp: planted output can be corrected through UI\",\"whatsapp: evidence remains unchanged after correction\",\"whatsapp: correction clears selection\",\"sheet: planted output can be corrected through UI\",\"sheet: evidence remains unchanged after correction\",\"sheet: correction clears selection\",\"po: planted output can be corrected through UI\",\"po: evidence remains unchanged after correction\",\"po: correction clears selection\",\"Spreadsheet column meaning must be resolved before bulk selection\",\"Exactly 240 resolved spreadsheet rows selected\",\"Empty result lookup never invents a selection or write\",\"16 keyboard steps remain visible at 360 × 420 proxy viewport\"],\"failures\":[\"Editing preserves focus\"],\"errors\":[\"Failed to set the 'innerHTML' property on 'Element': The node to be removed is no longer a child of this node. Perhaps it was moved in a 'blur' event handler?\",\"Failed to set the 'innerHTML' property on 'Element': The node to be removed is no longer a child of this node. Perhaps it was moved in a 'blur' event handler?\",\"Failed to set the 'innerHTML' property on 'Element': The node to be removed is no longer a child of this node. Perhaps it was moved in a 'blur' event handler?\",\"Failed to set the 'innerHTML' property on 'Element': The node to be removed is no longer a child of this node. Perhaps it was moved in a 'blur' event handler?\",\"Failed to set the 'innerHTML' property on 'Element': The node to be removed is no longer a child of this node. Perhaps it was moved in a 'blur' event handler?\",\"Failed to set the 'innerHTML' property on 'Element': The node to be removed is no longer a child of this node. Perhaps it was moved in a 'blur' event handler?\"],\"obscured\":[]}"
+### Ran Playwright code
+```js
+await (async (page) => {
+  const results = [], failures = [], errors = [];
+  page.on('pageerror', e => errors.push(e.message));
+  const check = (ok, message) => { (ok ? results : failures).push(message); };
+  await page.goto('file:///C:/dev/TradeTrack/docs/ai/prototype/index.html');
+  await page.emulateMedia({reducedMotion:'reduce'});
+  const arrange = async (example, planted = false) => {
+    await page.evaluate(({example,planted}) => {
+      const d=window.prototypeDemo;
+      Object.assign(d.state,{role:'Owner',plan:'Business',scenario:'normal',outcome:'normal',rehearsal:planted?'planted':'correct',language:'en',theme:'light',width:'desktop'});
+      d.start(example,'review'); d.state.expandedConfident=true; d.render();
+    },{example,planted});
+    await page.waitForTimeout(50);
+  };
+  const edit = async (id,field,value,select=false) => {
+    if (!await page.locator(`[data-field="${field}"][data-id="${id}"]`).count()) await page.locator(`[data-action="row-details"][data-id="${id}"]`).click();
+    const el=page.locator(`[data-field="${field}"][data-id="${id}"]`);
+    if(select) await el.selectOption(value); else { await el.fill(value); await el.dispatchEvent('change'); }
+  };
+  await page.setViewportSize({width:360,height:800});
+  await arrange('oil');
+  check(await page.locator('[data-row-id]').first().getAttribute('data-row-id')==='3','Unresolved Gino precedes new and matched rows');
+  await page.locator('[data-select-row="1"]').check();
+  check((await page.locator('#main').innerText()).includes('rows selected · not applied'),'Selection is labelled as unapplied');
+  check((await page.evaluate(()=>window.prototypeDemo.state.appliedKeys.length))===0,'Selection has no effect');
+  await edit(1,'qty','0.5');
+  check(await page.locator('[data-select-row="1"]').isDisabled(),'Fractional stock cannot be selected');
+  check(await page.evaluate(()=>document.activeElement?.dataset.field==='qty'),'Editing preserves focus');
+  await edit(1,'qty','12'); await edit(1,'cost','-1');
+  check(await page.locator('[data-select-row="1"]').isDisabled(),'Negative cost cannot be selected');
+  await edit(1,'cost','9800');
+  check((await page.locator('[data-row-id="1"] .source-evidence').innerText()).includes('×12'),'Original source survives proposal edits');
+  await page.locator('[data-select-row="1"]').check();
+  await page.locator('[data-action="confirm"]').click();
+  check(await page.locator('#apply-button').isEnabled() && await page.locator('#approval-check').count()===0,'One explicit Apply authorization, no redundant checkbox');
+  check((await page.locator('#main').innerText()).includes('Selling price stays ₦11,500'),'Exact effect keeps existing selling price');
+  // Wrong outputs are intentionally plausible; this is a scripted operator, not an Owner detection study.
+  for(const [example,id,field,value,isSelect] of [
+    ['oil',1,'match','same',true],['whatsapp',2,'cost','31000',false],
+    ['sheet',1,'warehouse','Main warehouse',true],['po',2,'qty','4',false]
+  ]) {
+    await arrange(example,true);
+    if(example==='sheet') { await page.locator('[data-review-group="clean"] > summary').click(); }
+    const sourceBefore=await page.locator(`[data-row-id="${id}"] .source-evidence`).innerText();
+    await edit(id,field,value,isSelect);
+    const row=await page.evaluate(id=>window.prototypeDemo.state.rows.find(r=>r.id===id),id);
+    check(field==='match' ? row.name==='Power Oil 5L' && row.sku==='SKU-001' : String(row[field])===value,`${example}: planted output can be corrected through UI`);
+    check(sourceBefore===await page.locator(`[data-row-id="${id}"] .source-evidence`).innerText(),`${example}: evidence remains unchanged after correction`);
+    check(!row.selected,`${example}: correction clears selection`);
+  }
+  await arrange('sheet');
+  check(await page.locator('[data-action="approve-confident"]').isDisabled(),'Spreadsheet column meaning must be resolved before bulk selection');
+  await page.locator('#column-confirm').check(); await page.locator('[data-action="approve-confident"]').click();
+  check((await page.evaluate(()=>window.prototypeDemo.state.rows.filter(r=>r.selected).length))===240,'Exactly 240 resolved spreadsheet rows selected');
+  await arrange('oil');
+  await page.evaluate(()=>window.prototypeDemo.go('pending'));
+  await page.locator('[data-action="lookup"]').click();
+  check((await page.evaluate(()=>window.prototypeDemo.state.appliedKeys.length))===0,'Empty result lookup never invents a selection or write');
+  // Keyboard walk, including a reduced-height viewport proxy (not an actual mobile keyboard).
+  await arrange('oil'); await page.setViewportSize({width:360,height:420});
+  await page.locator('[data-action="row-details"][data-id="3"]').click();
+  await page.locator('[data-field="name"][data-id="3"]').focus();
+  const obscured=[];
+  for(let i=0;i<16;i++) {
+    await page.keyboard.press('Tab');
+    const focus=await page.evaluate(()=>{const e=document.activeElement,b=e.getBoundingClientRect();return {tag:e.tagName,field:e.dataset.field,visible:b.bottom>0&&b.top<innerHeight&&document.elementFromPoint(Math.min(innerWidth-1,Math.max(1,b.left+b.width/2)),Math.min(innerHeight-1,Math.max(1,b.top+b.height/2)))?.closest('label,button,a,summary,input,select')!==null};});
+    if(!focus.visible)obscured.push(focus);
+  }
+  check(obscured.length===0,'16 keyboard steps remain visible at 360 × 420 proxy viewport');
+  await page.setViewportSize({width:360,height:900});
+  await arrange('oil'); await page.screenshot({path:'docs/ai/prototype/qa/refinement/after-phone.png',fullPage:true});
+  await page.evaluate(()=>{const d=window.prototypeDemo;d.state.language='ha';d.state.theme='dark';d.render();});
+  await page.screenshot({path:'docs/ai/prototype/qa/refinement/after-ha-dark.png',fullPage:true});
+  await page.setViewportSize({width:1440,height:1000}); await arrange('po');
+  await page.screenshot({path:'docs/ai/prototype/qa/refinement/after-po-desktop.png',fullPage:true});
+  return JSON.stringify({kind:'controlled browser checks, not participant results',passed:results.length,results,failures,errors,obscured});
+}
+)(page);
+```
+### Page
+- Page URL: file:///C:/dev/TradeTrack/docs/ai/prototype/index.html#review
+- Page Title: Track Kasuwa · AI assistant design preview
+- Console: 6 errors, 0 warnings
+### Events
+- New console entries: .playwright-cli\console-2026-11-04T10-23-12-025Z.log#L1-L59
