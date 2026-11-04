@@ -21,6 +21,9 @@ import { createClient } from '@/lib/supabase/client';
 import { formatCurrency, formatDate } from '@/lib/utils/format';
 import { downloadTablePDF } from '@/lib/pdf/table-pdf';
 import { AccessGuard } from '@/components/shared/access-guard';
+import { countsAsCompletedSale } from '@/lib/sales/effective-sale';
+import { useRealtimeSync } from '@/hooks/use-realtime-sync';
+import { useAuthStore } from '@/store';
 
 type ReportPeriod = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
 
@@ -37,29 +40,24 @@ async function fetchReport(period: ReportPeriod) {
     case 'yearly': startDate = new Date(now.getFullYear(), 0, 1); break;
   }
 
-  const [salesData, topProductsData, paymentMethods] = await Promise.all([
+  const [salesData, topProductsData] = await Promise.all([
     supabase
       .from('sales')
-      .select('id,total,subtotal,discount,tax,payment_method,status,created_at')
+      .select('id,total,subtotal,discount,tax,payment_method,status,created_at,financial_reversals(kind)')
       .gte('created_at', startDate.toISOString())
       .eq('status', 'completed'),
     supabase
       .from('sale_items')
-      .select('product_id,quantity,total,unit_price,cost_price,product:products(name,sku)')
+      .select('sale_id,product_id,quantity,total,unit_price,cost_price,product:products(name,sku)')
       .gte('created_at', startDate.toISOString())
       .limit(200),
-    supabase
-      .from('sales')
-      .select('payment_method, total')
-      .gte('created_at', startDate.toISOString())
-      .eq('status', 'completed'),
   ]);
 
-  const queryError = [salesData, topProductsData, paymentMethods].find(result => result.error)?.error;
+  const queryError = [salesData, topProductsData].find(result => result.error)?.error;
   if (queryError) throw new Error(queryError.message);
-  const sales = salesData.data || [];
-  const items = topProductsData.data || [];
-  const pmData = paymentMethods.data || [];
+  const sales = ((salesData.data || []) as unknown as Array<{ id: string; total: number; status: string; created_at: string; payment_method: string; financial_reversals?: { kind: string }[] }>).filter(countsAsCompletedSale);
+  const completedSaleIds = new Set(sales.map(sale => sale.id));
+  const items = (topProductsData.data || []).filter(item => completedSaleIds.has(item.sale_id));
 
   const totalRevenue = sales.reduce((s, r) => s + r.total, 0);
   const totalCost = items.reduce((s, i) => s + (i.cost_price || 0) * i.quantity, 0);
@@ -86,7 +84,7 @@ async function fetchReport(period: ReportPeriod) {
 
   // Payment method breakdown
   const pmMap: Record<string, number> = {};
-  pmData.forEach((p) => {
+  sales.forEach((p) => {
     pmMap[p.payment_method] = (pmMap[p.payment_method] || 0) + p.total;
   });
   const pmChartData = Object.entries(pmMap).map(([method, total]) => ({ method, total }));
@@ -126,6 +124,8 @@ export default function ReportsPage() {
 
 function ReportsPageInner() {
   const copy = useCopy();
+  const { user } = useAuthStore();
+  useRealtimeSync(['sales', 'financial_reversals'], user?.organization_id, ['reports']);
   const [period, setPeriod] = useState<ReportPeriod>('monthly');
 
   const { data, isLoading, error, refetch } = useQuery({

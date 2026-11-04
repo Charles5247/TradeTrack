@@ -25,6 +25,7 @@ import type { Sale, SaleItem } from '@/types';
 import { useI18n } from '@/i18n';
 import { AccessGuard } from '@/components/shared/access-guard';
 import { useAuthStore } from '@/store';
+import { effectiveSaleStatus } from '@/lib/sales/effective-sale';
 
 async function fetchSales(filters: {
   search: string;
@@ -67,8 +68,7 @@ async function fetchSales(filters: {
 
   const liveSales = (error ? [] : ((data || []) as unknown as (Sale & { financial_reversals?: { kind: string }[] })[]))
     .map((sale) => {
-      const reversal = sale.financial_reversals?.find((entry) => ['void', 'refund', 'return'].includes(entry.kind));
-      return reversal ? { ...sale, status: reversal.kind === 'void' ? 'cancelled' : 'refunded' } as Sale : sale;
+      return { ...sale, status: effectiveSaleStatus(sale) } as Sale;
     })
     .filter((sale) => !filters.status || filters.status === 'all' || sale.status === filters.status);
   const historicalSales = (historicalResult.data || []) as unknown as Array<{
