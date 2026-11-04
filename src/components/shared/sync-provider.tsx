@@ -36,6 +36,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     // otherwise widened back to `SyncEngine | null` in those scopes).
     const engine = syncEngine;
     let disposed = false;
+    const reportedErrors = new Set<string>();
 
     engine.startAutoSync(30000);
     engine.sync();
@@ -46,6 +47,16 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       setSyncStatus(mapEngineStatus(state.status));
       if (state.lastSync) setLastSync(state.lastSync);
       setPendingCount(state.pendingCount);
+      if (state.status === 'error' && state.error && !state.error.includes('sign in again') && navigator.onLine) {
+        const detail = state.error.slice(0, 2000);
+        const dedupeKey = `sync:${detail.slice(0, 140)}`;
+        if (!reportedErrors.has(dedupeKey)) {
+          reportedErrors.add(dedupeKey);
+          fetch('/api/support/cases', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ source: 'sync', title: 'Offline data upload failed', detail, dedupeKey }) })
+            .catch(() => reportedErrors.delete(dedupeKey));
+        }
+      }
     });
 
     const refreshPending = async () => {

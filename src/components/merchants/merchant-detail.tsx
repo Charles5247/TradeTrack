@@ -25,6 +25,12 @@ function MerchantRecord({ id }: { id: string }) {
     if (error) throw error;
     return data;
   } });
+  const supportQuery = useQuery({ queryKey: ['merchant-support', id, query.data?.organization_id], enabled: !!query.data?.organization_id, queryFn: async () => {
+    const response = await fetch('/api/support/cases', { cache: 'no-store' });
+    if (!response.ok) throw new Error('Support cases unavailable');
+    const result = await response.json();
+    return (result.cases as Array<{ organization_id: string; status: string; title: string; created_at: string }>).filter(item => item.organization_id === query.data?.organization_id);
+  } });
   if (query.isPending) return <LoadingState />;
   if (query.isError || !query.data) return <ErrorState title={copy("Merchant unavailable")} body={copy("The merchant could not be loaded. Check your connection and platform access.")} onRetry={() => void query.refetch()} />;
   const merchant = query.data;
@@ -34,5 +40,5 @@ function MerchantRecord({ id }: { id: string }) {
     secondary={<Button asChild variant="outline"><Link href="/merchants"><TranslatedText text={"Merchant directory"} /></Link></Button>}
     meta={[{ label: 'Verification', value: merchant.verification_status }, { label: 'Business type', value: merchant.business_type || 'Not provided' }]}
     mainContent={<Card><CardHeader><CardTitle><TranslatedText text={"Business profile"} /></CardTitle></CardHeader><CardContent>{information([['Registration number', merchant.registration_number], ['Tax ID', merchant.tax_id], ['Address', merchant.address], ['City / State', [merchant.city, merchant.state].filter(Boolean).join(', ')], ['Country', merchant.country]])}</CardContent></Card>}
-    sideContent={<><Card><CardHeader><CardTitle><TranslatedText text={"Primary contact"} /></CardTitle></CardHeader><CardContent>{information([['Name', merchant.contact_name], ['Email', merchant.contact_email], ['Phone', merchant.contact_phone]])}</CardContent></Card><Card><CardHeader><CardTitle><TranslatedText text={"Platform notes"} /></CardTitle></CardHeader><CardContent className="whitespace-pre-wrap break-words text-muted-foreground">{merchant.notes || 'No notes recorded.'}</CardContent></Card></>} />;
+    sideContent={<><Card><CardHeader><CardTitle>Support health</CardTitle></CardHeader><CardContent className="space-y-2 text-sm"><p>{supportQuery.data ? `${supportQuery.data.filter(item => item.status !== 'resolved').length} unresolved cases` : 'Loading support cases…'}</p>{supportQuery.data?.slice(0, 3).map(item => <p key={item.created_at} className="truncate">{item.status.replace('_', ' ')} · {item.title}</p>)}<Button asChild variant="outline" size="sm"><Link href="/admin/support">Open support queue</Link></Button></CardContent></Card><Card><CardHeader><CardTitle><TranslatedText text={"Primary contact"} /></CardTitle></CardHeader><CardContent>{information([['Name', merchant.contact_name], ['Email', merchant.contact_email], ['Phone', merchant.contact_phone]])}</CardContent></Card><Card><CardHeader><CardTitle><TranslatedText text={"Platform notes"} /></CardTitle></CardHeader><CardContent className="whitespace-pre-wrap break-words text-muted-foreground">{merchant.notes || 'No notes recorded.'}</CardContent></Card></>} />;
 }

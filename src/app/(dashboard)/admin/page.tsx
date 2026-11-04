@@ -247,6 +247,15 @@ export default function AdminPage() {
     },
     enabled: isOwnerOrAdmin,
   });
+  const { data: openSupportCount = 0 } = useQuery({
+    queryKey: ['platform-open-support', refreshKey], enabled: isOwnerOrAdmin,
+    queryFn: async () => {
+      const response = await fetch('/api/support/cases', { cache: 'no-store' });
+      if (!response.ok) throw new Error('Support queue unavailable');
+      const result = await response.json();
+      return (result.cases as { status: string }[]).filter(item => item.status !== 'resolved').length;
+    }, refetchInterval: 30000,
+  });
   const totalMerchants = merchantCounts?.total ?? 0;
   const activeMerchants = merchantCounts?.active ?? 0;
   const pendingMerchants = merchantCounts?.pending ?? 0;
@@ -314,6 +323,10 @@ export default function AdminPage() {
         <StatCard label={copy("Pending merchants")} value={pendingMerchants} sub="Awaiting review" icon={Clock} loading={countsLoading} />
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
+        <Link href="/admin/support" className="tt-card-flat flex min-h-20 items-center gap-4 rounded-[var(--radius-lg)] border border-border p-4 transition-colors hover:bg-accent">
+          <AlertTriangle className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.75} />
+          <div><p className="font-semibold">Support queue · {openSupportCount} open</p><p className="text-sm tt-muted">Merchant reports and cashier sync failures</p></div>
+        </Link>
         <Link href="/merchants" className="tt-card-flat flex min-h-20 items-center gap-4 rounded-[var(--radius-lg)] border border-border p-4 transition-colors hover:bg-accent">
           <Building2 className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.75} />
           <div><p className="font-semibold"><TranslatedText text={"Manage merchants"} /></p><p className="text-sm tt-muted"><TranslatedText text={"Onboarding, verification, and account access"} /></p></div>
