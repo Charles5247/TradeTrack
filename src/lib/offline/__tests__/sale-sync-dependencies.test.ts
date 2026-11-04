@@ -87,3 +87,35 @@ it('removes reset sale work while preserving unrelated queued changes', async ()
   for (const id of ['q-sale', 'q-line', 'q-stock']) expect(await db.get('sync_queue', id)).toBeUndefined();
   expect(await db.get('sync_queue', 'q-other')).toBeDefined();
 });
+
+it('reconciles a rejected stock update when its synced sale was removed on the server', async () => {
+  const db = await getDB();
+  const timestamp = '2026-11-02T21:07:58.178Z';
+  await db.put('sales', { id: 'deleted-sale', organization_id: 'org-1', created_at: timestamp });
+  await db.put('sync_queue', {
+    id: 'synced-sale', table_name: 'sales', operation: 'INSERT', record_id: 'deleted-sale',
+    payload: { created_at: timestamp }, status: 'synced', retry_count: 0, created_at: timestamp,
+  });
+  await db.put('sync_queue', {
+    id: 'rejected-stock', table_name: 'inventory', operation: 'UPDATE', record_id: 'stock-1',
+    payload: { updated_at: timestamp }, status: 'failed', retry_count: 4, created_at: timestamp,
+    error: 'Stock change must match an unreconciled cashier sale',
+  });
+  const tombstones = { select: vi.fn(), eq: vi.fn(), order: vi.fn(), range: vi.fn() };
+  tombstones.select.mockReturnValue(tombstones);
+  tombstones.eq.mockReturnValue(tombstones);
+  tombstones.order.mockReturnValue(tombstones);
+  tombstones.range.mockResolvedValue({ data: null, error: { code: 'PGRST205' } });
+  const salesQuery = { select: vi.fn(), eq: vi.fn(), maybeSingle: vi.fn() };
+  salesQuery.select.mockReturnValue(salesQuery);
+  salesQuery.eq.mockReturnValue(salesQuery);
+  salesQuery.maybeSingle.mockResolvedValue({ data: null, error: null });
+  from.mockImplementation((table: string) => table === 'sales' ? salesQuery : tombstones);
+
+  const changed = await (syncEngine as unknown as {
+    discardResetSales(orgId: string, client: unknown): Promise<boolean>
+  }).discardResetSales('org-1', { from });
+  expect(changed).toBe(true);
+  expect(await db.get('sales', 'deleted-sale')).toBeUndefined();
+  expect(await db.get('sync_queue', 'rejected-stock')).toBeUndefined();
+});

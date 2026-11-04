@@ -13,6 +13,12 @@ type NoRel = { Relationships: [] };
 export type Database = {
   public: {
     Tables: {
+      sale_reset_tombstones: {
+        Row: { sale_id: string; organization_id: string; created_at: string };
+        Insert: { sale_id: string; organization_id: string; created_at?: string };
+        Update: never;
+        Relationships: [];
+      };
       supplier_products: {
         Row: { id: string; organization_id: string; supplier_id: string; product_id: string; created_at: string };
         Insert: { id?: string; organization_id: string; supplier_id: string; product_id: string; created_at?: string };
@@ -1022,6 +1028,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      reverse_financial_sale: { Args: { target: string; reversal_kind: string; reversal_reason: string }; Returns: string };
       apply_sale_stock: { Args: { p_sale_id: string }; Returns: number };
       get_marketing_traction: { Args: Record<string, never>; Returns: Record<string, unknown> };
       request_discount_approval: { Args: { p_cart_snapshot: Record<string, unknown>; p_cart_hash: string; p_cart_subtotal: number; p_discount_amount: number; p_reason: string }; Returns: string };

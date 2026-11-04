@@ -4,8 +4,9 @@ import { TranslatedText, useCopy } from '@/i18n/text';
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
-import { Search, Download, Eye, Receipt } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Search, Download, Eye, Receipt, XCircle, Loader2, AlertTriangle } from 'lucide-react';
+import { toast } from 'sonner';
 import { ErrorState } from '@/components/ui/error-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +14,9 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency, formatDateTime } from '@/lib/utils/format';
@@ -21,6 +24,7 @@ import { downloadTablePDF } from '@/lib/pdf/table-pdf';
 import type { Sale, SaleItem } from '@/types';
 import { useI18n } from '@/i18n';
 import { AccessGuard } from '@/components/shared/access-guard';
+import { useAuthStore } from '@/store';
 
 async function fetchSales(filters: {
   search: string;
@@ -34,7 +38,7 @@ async function fetchSales(filters: {
   const supabase = createClient();
   let query = supabase
     .from('sales')
-    .select('*')
+    .select('*, financial_reversals(kind)')
     .order('created_at', { ascending: false })
     .limit(100);
 
@@ -43,7 +47,6 @@ async function fetchSales(filters: {
       `invoice_number.ilike.%${filters.search}%,customer_name.ilike.%${filters.search}%`
     );
   }
-  if (filters.status && filters.status !== 'all') query = query.eq('status', filters.status as 'completed' | 'pending' | 'cancelled' | 'refunded');
   if (filters.payment_method && filters.payment_method !== 'all') query = query.eq('payment_method', filters.payment_method as import('@/lib/supabase/types').PaymentMethod);
   if (filters.sale_type && filters.sale_type !== 'all') query = query.eq('sale_type', filters.sale_type);
   if (filters.credit_status && filters.credit_status !== 'all') query = query.eq('payment_status', filters.credit_status);
@@ -62,7 +65,12 @@ async function fetchSales(filters: {
     console.warn('Unable to load live sales; showing imported sales when available.', error);
   }
 
-  const liveSales = (error ? [] : ((data || []) as unknown as Sale[]));
+  const liveSales = (error ? [] : ((data || []) as unknown as (Sale & { financial_reversals?: { kind: string }[] })[]))
+    .map((sale) => {
+      const reversal = sale.financial_reversals?.find((entry) => ['void', 'refund', 'return'].includes(entry.kind));
+      return reversal ? { ...sale, status: reversal.kind === 'void' ? 'cancelled' : 'refunded' } as Sale : sale;
+    })
+    .filter((sale) => !filters.status || filters.status === 'all' || sale.status === filters.status);
   const historicalSales = (historicalResult.data || []) as unknown as Array<{
     id: string;
     invoice_number: string;
@@ -190,6 +198,32 @@ function SalesPageInner() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [viewSale, setViewSale] = useState<Sale | null>(null);
+  const [cancelingSale, setCancelingSale] = useState<Sale | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
+
+  const user = useAuthStore((s) => s.user);
+  const canCancel = user?.role === 'business_owner' || user?.role === 'admin';
+  const queryClient = useQueryClient();
+
+  const cancelMutation = useMutation({
+    mutationFn: async ({ saleId, reason }: { saleId: string; reason: string }) => {
+      const res = await fetch(`/api/sales/${saleId}/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: reason.trim() || undefined }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? 'Failed to cancel sale');
+      return json;
+    },
+    onSuccess: () => {
+      toast.success('Sale reversed; deducted stock restored');
+      setCancelingSale(null);
+      setCancelReason('');
+      void queryClient.invalidateQueries({ queryKey: ['sales'] });
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
 
   const { data: sales = [], isLoading, error: pageError, refetch: retryPage } = useQuery({
     queryKey: ['sales', search, status, paymentMethod, saleType, creditStatus, startDate, endDate],
@@ -363,9 +397,22 @@ function SalesPageInner() {
                       {formatDateTime(sale.created_at)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon-sm" onClick={() => router.push(`/sales/${sale.id}`)}>
-                        <Eye className="h-4 w-4" strokeWidth={1.75} />
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="icon-sm" onClick={() => router.push(`/sales/${sale.id}`)}>
+                          <Eye className="h-4 w-4" strokeWidth={1.75} />
+                        </Button>
+                        {canCancel && sale.status === 'completed' && (
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            className="text-destructive hover:text-destructive"
+                            title="Cancel this sale"
+                            onClick={() => { setCancelingSale(sale); setCancelReason(''); }}
+                          >
+                            <XCircle className="h-4 w-4" strokeWidth={1.75} />
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -441,6 +488,54 @@ function SalesPageInner() {
           </DialogContent>
         </Dialog>
       )}
+      {/* ── Cancel Confirmation Dialog ─────────────────────────── */}
+      <Dialog
+        open={!!cancelingSale}
+        onOpenChange={(v) => { if (!cancelMutation.isPending) { if (!v) setCancelingSale(null); } }}
+      >
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5 shrink-0" />
+              Cancel this sale?
+            </DialogTitle>
+            <DialogDescription className="pt-1">
+              This will mark <strong>{cancelingSale?.invoice_number}</strong> as cancelled
+              and restore stock for all items sold. This action is recorded in the audit
+              log and cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="sales-cancel-reason">
+              Reason
+            </Label>
+            <Textarea
+              id="sales-cancel-reason"
+              rows={3}
+              placeholder="e.g. Duplicate sale entered by mistake"
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              disabled={cancelMutation.isPending}
+            />
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="ghost" onClick={() => setCancelingSale(null)} disabled={cancelMutation.isPending}>
+              Keep sale
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={cancelMutation.isPending || cancelReason.trim().length < 3}
+              onClick={() => cancelingSale && cancelMutation.mutate({ saleId: cancelingSale.id, reason: cancelReason })}
+            >
+              {cancelMutation.isPending ? (
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Cancelling…</>
+              ) : (
+                <><XCircle className="h-4 w-4 mr-1.5" />Confirm cancellation</>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

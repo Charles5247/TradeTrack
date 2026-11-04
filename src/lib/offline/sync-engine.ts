@@ -254,15 +254,16 @@ class SyncEngine {
   private async discardResetSales(orgId: string, supabase: ReturnType<typeof createClient>): Promise<boolean> {
     const ids: string[] = [];
     for (let offset = 0; ; offset += 500) {
-      const { data, error } = await (supabase as any).from("sale_reset_tombstones")
+      const { data, error } = await supabase.from("sale_reset_tombstones")
         .select("sale_id").eq("organization_id", orgId).order("sale_id").range(offset, offset + 499);
       // During rollout the app may deploy before the migration reaches a
       // project. Keep ordinary sync working until reset markers are present.
-      if (error?.code === "PGRST205" || error?.code === "42P01") return false;
+      if (error?.code === "PGRST205" || error?.code === "42P01") break;
       if (error) throw error;
       ids.push(...(data ?? []).map((row: { sale_id: string }) => row.sale_id));
       if (!data || data.length < 500) break;
     }
+    ids.push(...await this.findOrphanedSaleIds(orgId, supabase));
     if (!ids.length) return false;
     const reset = new Set(ids);
     const db = await getDB();
@@ -305,6 +306,30 @@ class SyncEngine {
     }
     await tx.done;
     return changed || sales.some((sale: { id: string; organization_id: string }) => reset.has(sale.id) && sale.organization_id === orgId);
+  }
+
+  private async findOrphanedSaleIds(orgId: string, supabase: ReturnType<typeof createClient>): Promise<string[]> {
+    const db = await getDB();
+    const failedStock = (await db.getAll("sync_queue") as SyncQueueRecord[])
+      .filter((item) => item.table_name === "inventory" && item.operation === "UPDATE" && !item.stock_sync
+        && (item.status === "failed" || item.status === "pending")
+        && /Stock change must match an unreconciled cashier sale/.test(item.error ?? ""));
+    if (!failedStock.length) return [];
+    const sales = await db.getAll("sales");
+    const queue = await db.getAllFromIndex("sync_queue", "by-table", "sales") as SyncQueueRecord[];
+    const reset: string[] = [];
+    const timestamps = new Set(failedStock.map((item) => String(item.payload.original_device_timestamp ?? item.payload.updated_at ?? "")));
+    for (const sale of sales) {
+      if (sale.organization_id !== orgId) continue;
+      if (!timestamps.has(String(sale.created_at))) continue;
+      const parent = queue.find((item) => item.record_id === sale.id && item.operation === "INSERT");
+      if (parent && parent.status !== "synced") continue;
+      const { data, error } = await supabase.from("sales").select("id")
+        .eq("id", sale.id).eq("organization_id", orgId).maybeSingle();
+      if (error) throw error;
+      if (!data) reset.push(sale.id);
+    }
+    return reset;
   }
 
   private async pushChanges() {
