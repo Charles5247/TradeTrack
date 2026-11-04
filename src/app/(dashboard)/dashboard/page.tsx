@@ -35,10 +35,10 @@ import type { Sale } from "@/types";
 import AdminPage from "../admin/page";
 import { IndustryWorkspace } from '@/components/shared/industry-workspace';
 import { PlanRecommendation } from '@/components/subscriptions/plan-recommendation';
-import { countsAsCompletedSale, effectiveSaleStatus } from '@/lib/sales/effective-sale';
+import { countsAsCompletedSale, effectiveSaleStatus, loadVisibleReversals, withReversalStatus } from '@/lib/sales/effective-sale';
 
 type RangeKey = "today" | "week" | "month";
-type DashboardSale = { total: number; status: string; financial_reversals?: { kind: string }[] };
+type DashboardSale = { id: string; total: number; status: string; financial_reversals?: { kind: string }[] };
 type DatedDashboardSale = DashboardSale & { created_at: string };
 
 async function fetchDashboardData() {
@@ -95,23 +95,23 @@ async function fetchDashboardData() {
   ] = await Promise.all([
     supabase
       .from("sales")
-      .select("total,status,financial_reversals(kind)")
+      .select("id,total,status,financial_reversals(kind)")
       .gte("created_at", todayStart)
       .eq("status", "completed"),
     supabase
       .from("sales")
-      .select("total,status,financial_reversals(kind)")
+      .select("id,total,status,financial_reversals(kind)")
       .gte("created_at", weekStart)
       .eq("status", "completed"),
     supabase
       .from("sales")
-      .select("total,status,financial_reversals(kind)")
+      .select("id,total,status,financial_reversals(kind)")
       .gte("created_at", prevWeekStart)
       .lt("created_at", weekStart)
       .eq("status", "completed"),
     supabase
       .from("sales")
-      .select("total,status,financial_reversals(kind)")
+      .select("id,total,status,financial_reversals(kind)")
       .gte("created_at", monthStart)
       .eq("status", "completed"),
     supabase
@@ -132,13 +132,13 @@ async function fetchDashboardData() {
       .limit(6),
     supabase
       .from("sales")
-      .select("created_at,total,status,financial_reversals(kind)")
+      .select("id,created_at,total,status,financial_reversals(kind)")
       .gte("created_at", weekStart)
       .eq("status", "completed")
       .order("created_at", { ascending: true }),
     supabase
       .from("sales")
-      .select("created_at,total,status,financial_reversals(kind)")
+      .select("id,created_at,total,status,financial_reversals(kind)")
       .gte("created_at", prevWeekStart)
       .lt("created_at", weekStart)
       .eq("status", "completed")
@@ -162,8 +162,12 @@ async function fetchDashboardData() {
   ].map((r) => r && typeof r === "object" && "error" in r ? r.error : null).find((error) => error)?.message;
   if (firstError) throw new Error(firstError);
 
+  const saleResults = [todaySales, weeklySales, prevWeeklySales, monthlySales, recentSales, revenueData, prevRevenueData];
+  const reversalKinds = await loadVisibleReversals(saleResults.flatMap(result => (result.data || []).map(sale => sale.id)));
+
   // The generated database types predate the sales → financial_reversals relation.
-  const activeRows = (rows: unknown) => ((rows || []) as DashboardSale[]).filter(countsAsCompletedSale);
+  const activeRows = (rows: unknown) => ((rows || []) as DashboardSale[])
+    .map(sale => withReversalStatus(sale, reversalKinds)).filter(countsAsCompletedSale);
 
   const sum = (rows: { total: number }[] | null) =>
     activeRows(rows).reduce((s, r) => s + (r.total || 0), 0);
@@ -226,7 +230,7 @@ async function fetchDashboardData() {
       pending_transfers: pendingTransfers.data?.length || 0,
     },
     recentSales: ((recentSales.data || []) as unknown as (Sale & { financial_reversals?: { kind: string }[] })[]).map((sale) => {
-      return { ...sale, status: effectiveSaleStatus(sale) } as Sale;
+      return { ...sale, status: effectiveSaleStatus(withReversalStatus(sale, reversalKinds)) } as Sale;
     }),
     chartData,
   };

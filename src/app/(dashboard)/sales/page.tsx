@@ -25,7 +25,7 @@ import type { Sale, SaleItem } from '@/types';
 import { useI18n } from '@/i18n';
 import { AccessGuard } from '@/components/shared/access-guard';
 import { useAuthStore } from '@/store';
-import { effectiveSaleStatus } from '@/lib/sales/effective-sale';
+import { effectiveSaleStatus, loadVisibleReversals, withReversalStatus } from '@/lib/sales/effective-sale';
 
 async function fetchSales(filters: {
   search: string;
@@ -66,9 +66,10 @@ async function fetchSales(filters: {
     console.warn('Unable to load live sales; showing imported sales when available.', error);
   }
 
+  const reversalKinds = error ? {} : await loadVisibleReversals((data || []).map(sale => sale.id));
   const liveSales = (error ? [] : ((data || []) as unknown as (Sale & { financial_reversals?: { kind: string }[] })[]))
     .map((sale) => {
-      return { ...sale, status: effectiveSaleStatus(sale) } as Sale;
+      return { ...sale, status: effectiveSaleStatus(withReversalStatus(sale, reversalKinds)) } as Sale;
     })
     .filter((sale) => !filters.status || filters.status === 'all' || sale.status === filters.status);
   const historicalSales = (historicalResult.data || []) as unknown as Array<{

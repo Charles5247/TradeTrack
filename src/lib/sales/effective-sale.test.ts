@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { countsAsCompletedSale, effectiveSaleStatus } from './effective-sale';
+import { countsAsCompletedSale, effectiveSaleStatus, withReversalStatus } from './effective-sale';
 
 describe('effective sale status', () => {
   it('excludes a duplicate sale void from transaction and revenue counts', () => {
@@ -18,5 +18,12 @@ describe('effective sale status', () => {
     expect(countsAsCompletedSale({ status: 'completed', financial_reversals: [{ kind: 'refund' }] })).toBe(false);
     expect(countsAsCompletedSale({ status: 'completed', financial_reversals: [{ kind: 'return' }] })).toBe(false);
     expect(countsAsCompletedSale({ status: 'completed', financial_reversals: [{ kind: 'vendor_payment_correction' }] })).toBe(true);
+  });
+
+  it('applies a cashier-visible reversal when row-level security hides reversal rows', () => {
+    const sale = { id: 'duplicate', status: 'completed', total: 5300, financial_reversals: [] };
+    const corrected = withReversalStatus(sale, { duplicate: 'void' });
+    expect(effectiveSaleStatus(corrected)).toBe('cancelled');
+    expect(countsAsCompletedSale(corrected)).toBe(false);
   });
 });
