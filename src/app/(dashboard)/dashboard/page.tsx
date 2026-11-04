@@ -37,6 +37,10 @@ import { IndustryWorkspace } from '@/components/shared/industry-workspace';
 import { PlanRecommendation } from '@/components/subscriptions/plan-recommendation';
 
 type RangeKey = "today" | "week" | "month";
+type DashboardSale = { total: number; financial_reversals?: { kind: string }[] };
+type DatedDashboardSale = DashboardSale & { created_at: string };
+const countsAsSale = (sale: DashboardSale) =>
+  !sale.financial_reversals?.some((reversal) => ["void", "refund", "return"].includes(reversal.kind));
 
 async function fetchDashboardData() {
   const supabase = createClient();
@@ -92,23 +96,23 @@ async function fetchDashboardData() {
   ] = await Promise.all([
     supabase
       .from("sales")
-      .select("total")
+      .select("total,financial_reversals(kind)")
       .gte("created_at", todayStart)
       .eq("status", "completed"),
     supabase
       .from("sales")
-      .select("total")
+      .select("total,financial_reversals(kind)")
       .gte("created_at", weekStart)
       .eq("status", "completed"),
     supabase
       .from("sales")
-      .select("total")
+      .select("total,financial_reversals(kind)")
       .gte("created_at", prevWeekStart)
       .lt("created_at", weekStart)
       .eq("status", "completed"),
     supabase
       .from("sales")
-      .select("total")
+      .select("total,financial_reversals(kind)")
       .gte("created_at", monthStart)
       .eq("status", "completed"),
     supabase
@@ -123,19 +127,19 @@ async function fetchDashboardData() {
     supabase
       .from("sales")
       .select(
-        "id,invoice_number,total,payment_method,status,created_at,cashier_id",
+        "id,invoice_number,total,payment_method,status,created_at,cashier_id,financial_reversals(kind)",
       )
       .order("created_at", { ascending: false })
       .limit(6),
     supabase
       .from("sales")
-      .select("created_at,total")
+      .select("created_at,total,financial_reversals(kind)")
       .gte("created_at", weekStart)
       .eq("status", "completed")
       .order("created_at", { ascending: true }),
     supabase
       .from("sales")
-      .select("created_at,total")
+      .select("created_at,total,financial_reversals(kind)")
       .gte("created_at", prevWeekStart)
       .lt("created_at", weekStart)
       .eq("status", "completed")
@@ -159,8 +163,11 @@ async function fetchDashboardData() {
   ].map((r) => r && typeof r === "object" && "error" in r ? r.error : null).find((error) => error)?.message;
   if (firstError) throw new Error(firstError);
 
+  // The generated database types predate the sales → financial_reversals relation.
+  const activeRows = (rows: unknown) => ((rows || []) as DashboardSale[]).filter(countsAsSale);
+
   const sum = (rows: { total: number }[] | null) =>
-    (rows || []).reduce((s, r) => s + (r.total || 0), 0);
+    activeRows(rows).reduce((s, r) => s + (r.total || 0), 0);
 
   const todayRevenue = sum(todaySales.data);
   const weeklyRevenue = sum(weeklySales.data);
@@ -183,12 +190,12 @@ async function fetchDashboardData() {
     new Date(d).toLocaleDateString("en-NG", { weekday: "short" });
 
   const currentMap: Record<string, number> = {};
-  (revenueData.data || []).forEach((sale) => {
+  (activeRows(revenueData.data) as DatedDashboardSale[]).forEach((sale) => {
     const day = dayLabel(sale.created_at);
     currentMap[day] = (currentMap[day] || 0) + sale.total;
   });
   const prevMap: Record<string, number> = {};
-  (prevRevenueData.data || []).forEach((sale) => {
+  (activeRows(prevRevenueData.data) as DatedDashboardSale[]).forEach((sale) => {
     const day = dayLabel(sale.created_at);
     prevMap[day] = (prevMap[day] || 0) + sale.total;
   });
@@ -208,7 +215,7 @@ async function fetchDashboardData() {
 
   return {
     stats: {
-      today_sales: todaySales.data?.length || 0,
+      today_sales: activeRows(todaySales.data).length,
       today_revenue: todayRevenue,
       weekly_revenue: weeklyRevenue,
       weekly_delta: weeklyDelta,
@@ -219,7 +226,10 @@ async function fetchDashboardData() {
       pending_vendor_debts: pendingDebt,
       pending_transfers: pendingTransfers.data?.length || 0,
     },
-    recentSales: recentSales.data || [],
+    recentSales: ((recentSales.data || []) as unknown as (Sale & { financial_reversals?: { kind: string }[] })[]).map((sale) => {
+      const reversal = sale.financial_reversals?.find((entry) => ["void", "refund", "return"].includes(entry.kind));
+      return reversal ? { ...sale, status: reversal.kind === "void" ? "cancelled" : "refunded" } as Sale : sale;
+    }),
     chartData,
   };
 }
@@ -244,7 +254,7 @@ function MerchantDashboard() {
 
   // Auto-refresh the moment a cashier's device syncs its offline queue to
   // Supabase — the owner doesn't need to do anything for this to happen.
-  useRealtimeSync(["sales", "inventory"], user?.organization_id, ["dashboard"]);
+  useRealtimeSync(["sales", "inventory", "financial_reversals"], user?.organization_id, ["dashboard"]);
 
   const stats = data?.stats;
   const recentSales = data?.recentSales || [];
