@@ -111,6 +111,7 @@ export const NAV_GROUPS_BO: NavGroup[] = [
         icon: Warehouse,
         roles: ["business_owner", "admin"],
       },
+      { navKey: 'warehouseMemos', label: 'Warehouse memos', href: '/warehouse-memos', icon: ClipboardList, roles: ['business_owner', 'admin', 'cashier'] },
       { navKey: "suppliers", label: "Suppliers", href: "/suppliers", icon: Building2, roles: ["business_owner", "admin"] },
       { navKey: "warehouses", href: "/warehouses", icon: Warehouse, roles: ["business_owner", "admin"] },
       { navKey: "imports", label: "Imports", href: "/imports", icon: FileInput, roles: ["business_owner", "admin"] },

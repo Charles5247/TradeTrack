@@ -13,6 +13,18 @@ type NoRel = { Relationships: [] };
 export type Database = {
   public: {
     Tables: {
+      warehouse_memos: {
+        Row: { id: string; organization_id: string; warehouse_id: string; direction: 'in' | 'out'; reference: string; status: 'draft' | 'sent' | 'submitted' | 'approved'; expected_items: Array<{ product_id: string; quantity: number }>; actual_items: Array<{ product_id: string; quantity: number }> | null; approved_items: Array<{ product_id: string; quantity: number }> | null; created_by: string; submitted_by: string | null; reviewed_by: string | null; review_reason: string | null; created_at: string; sent_at: string | null; submitted_at: string | null; reviewed_at: string | null };
+        Insert: { organization_id: string; warehouse_id: string; direction: 'in' | 'out'; reference: string; expected_items: Array<{ product_id: string; quantity: number }>; created_by: string };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      warehouse_memo_effects: {
+        Row: { id: string; organization_id: string; memo_id: string; warehouse_id: string; product_id: string; stage: 'submission' | 'correction'; quantity_delta: number; actor_id: string; reason: string; created_at: string };
+        Insert: Record<string, never>;
+        Update: Record<string, never>;
+        Relationships: [];
+      };
       financial_reversals: {
         Row: { id: string; organization_id: string; sale_id: string; kind: 'void' | 'refund' | 'return' | 'vendor_payment_correction'; reason: string; amount: number; created_by: string; created_at: string };
         Insert: { id?: string; organization_id: string; sale_id: string; kind: 'void' | 'refund' | 'return' | 'vendor_payment_correction'; reason: string; amount: number; created_by: string; created_at?: string };
@@ -1034,6 +1046,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      create_warehouse_memo: { Args: { p_warehouse: string; p_direction: string; p_reference: string; p_items: Array<{ product_id: string; quantity: number }>; p_send?: boolean }; Returns: string };
+      send_warehouse_memo: { Args: { p_memo: string }; Returns: void };
+      submit_warehouse_memo: { Args: { p_memo: string; p_items: Array<{ product_id: string; quantity: number }> }; Returns: void };
+      review_warehouse_memo: { Args: { p_memo: string; p_items: Array<{ product_id: string; quantity: number }>; p_reason: string }; Returns: void };
       reverse_financial_sale: { Args: { target: string; reversal_kind: string; reversal_reason: string }; Returns: string };
       apply_sale_stock: { Args: { p_sale_id: string }; Returns: number };
       get_marketing_traction: { Args: Record<string, never>; Returns: Record<string, unknown> };

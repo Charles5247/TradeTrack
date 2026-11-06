@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore, useNotificationStore } from '@/store';
 
@@ -13,6 +14,7 @@ export function NotificationSync() {
     if (!user?.id) return;
     const supabase = createClient();
     let disposed = false;
+    let announced = false;
     let hasVisibilityColumn = true;
     const storageKey = `trackasuwa:notifications:unread:${user.id}`;
     const refresh = async () => {
@@ -30,6 +32,12 @@ export function NotificationSync() {
         const next = result.count || 0;
         setUnreadCount(next);
         localStorage.setItem(storageKey, String(next));
+        if (!announced) {
+          announced = true;
+          if (next > 0) toast.info(`You have ${next} unread notification${next === 1 ? '' : 's'}.`, {
+            action: { label: 'View', onClick: () => { window.location.href = '/notifications'; } },
+          });
+        }
       } else if (!disposed) {
         setUnreadCount(Number(localStorage.getItem(storageKey) || 0));
       }
