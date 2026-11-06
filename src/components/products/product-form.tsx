@@ -284,7 +284,7 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
   return (
     <form onSubmit={handleSubmit(onSubmit as Parameters<typeof handleSubmit>[0])} className="space-y-4">
       {/* Image Upload */}
-      <div className={showMore ? 'space-y-2' : 'hidden'}>
+      <div className="space-y-2">
         <Label><TranslatedText text={"Product Image"} /></Label>
         <ImageUpload
           currentImageUrl={imageUrl}

@@ -4,6 +4,9 @@ import { formatCurrency } from "@/lib/utils/format";
 import { renderQRCodeDataUrl } from "@/lib/qr/render-qr";
 import { wrapReceiptText } from "@/lib/receipt/receipt-layout";
 
+// jsPDF's built-in Helvetica cannot render the naira glyph reliably.
+const receiptAmount = (value: number) => formatCurrency(value).replace(/₦\s*/g, "");
+
 /**
  * Fetches an image URL and converts it to a base64 data: URL so jsPDF's
  * `addImage` (which needs a data URL or HTMLImageElement it can read
@@ -43,7 +46,7 @@ export async function downloadReceiptPDF(receipt: ReceiptData) {
   const widthPt = 80 * 2.8346;
   const marginX = 10;
   const width = widthPt - marginX * 2;
-  const lineHeight = 9.5;
+  const lineHeight = 10;
   const hasPaymentDetails = Boolean(receipt.cardMasked || receipt.approvalCode);
   const estimatedHeight =
     175 +
@@ -52,10 +55,7 @@ export async function downloadReceiptPDF(receipt: ReceiptData) {
         total +
         Math.max(
           1,
-          wrapReceiptText(
-            `${item.name} @ ${formatCurrency(item.unitPrice)}`,
-            24,
-          ).length,
+          wrapReceiptText(`${item.name} @ ${receiptAmount(item.unitPrice)}`, 18).length,
         ) *
           lineHeight,
       0,
@@ -88,22 +88,21 @@ export async function downloadReceiptPDF(receipt: ReceiptData) {
   const center = (text: string, size = 9, bold = false, upper = false) => {
     doc.setFontSize(size);
     doc.setFont("helvetica", bold ? "bold" : "normal");
-    doc.text(upper ? text.toUpperCase() : text, widthPt / 2, y, {
-      align: "center",
-    });
-    y += lineHeight + 0.5;
+    const lines = doc.splitTextToSize(upper ? text.toUpperCase() : text, width);
+    doc.text(lines, widthPt / 2, y, { align: "center" });
+    y += lines.length * lineHeight + 0.5;
   };
   const divider = () => {
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
-    doc.text("*".repeat(Math.max(20, Math.floor(width / 4.2))), marginX, y);
+    doc.text("*".repeat(Math.floor(width / doc.getTextWidth("*"))), marginX, y);
     y += lineHeight * 0.7;
   };
   const row = (left: string, right: string, size = 8.5, bold = false) => {
     doc.setFontSize(size);
     doc.setFont("helvetica", bold ? "bold" : "normal");
-    const leftLines = doc.splitTextToSize(left, width * 0.54);
-    const rightLines = doc.splitTextToSize(right, width * 0.4);
+    const leftLines = doc.splitTextToSize(left, width * 0.4);
+    const rightLines = doc.splitTextToSize(right, width * 0.57);
     doc.text(leftLines, marginX, y);
     doc.text(rightLines, widthPt - marginX, y, { align: "right" });
     y += Math.max(leftLines.length, rightLines.length) * lineHeight;
@@ -115,6 +114,7 @@ export async function downloadReceiptPDF(receipt: ReceiptData) {
   divider();
   center("Invoice", 10.5, true, true);
   center("Current Bill", 9);
+  center("Amounts in NGN", 7);
   divider();
   row("Invoice:", receipt.invoiceNumber, 8.5, true);
   row("Date:", new Date(receipt.dateISO).toLocaleString(), 8.5);
@@ -130,31 +130,31 @@ export async function downloadReceiptPDF(receipt: ReceiptData) {
   doc.text("AMOUNT", widthPt - marginX, y, { align: "right" });
   y += lineHeight * 0.9;
   receipt.items.forEach((item) => {
-    const description = wrapReceiptText(
-      `${item.name} @ ${formatCurrency(item.unitPrice)}`,
-      24,
+    const description = doc.splitTextToSize(
+      `${item.name} @ ${receiptAmount(item.unitPrice)}`,
+      width * 0.47,
     );
     doc.setFont("helvetica", "normal");
     doc.text(String(item.quantity), marginX, y);
-    doc.text(description, marginX + 22, y, { maxWidth: width * 0.52 });
-    doc.text(formatCurrency(item.total), widthPt - marginX, y, {
+    doc.text(description, marginX + 22, y);
+    doc.text(receiptAmount(item.total), widthPt - marginX, y, {
       align: "right",
     });
     y += Math.max(1, description.length) * lineHeight * 0.9;
   });
 
   divider();
-  row("Subtotal:", formatCurrency(receipt.subtotal));
+  row("Subtotal:", receiptAmount(receipt.subtotal));
   if (receipt.discount > 0)
-    row("Discount:", `-${formatCurrency(receipt.discount)}`);
-  if (receipt.tax > 0) row("Tax:", formatCurrency(receipt.tax));
-  row("TOTAL:", formatCurrency(receipt.total), 10, true);
+    row("Discount:", `-${receiptAmount(receipt.discount)}`);
+  if (receipt.tax > 0) row("Tax:", receiptAmount(receipt.tax));
+  row("TOTAL:", receiptAmount(receipt.total), 10, true);
   row(
     receipt.paymentMethod === "cash" ? "Cash:" : "Paid:",
-    formatCurrency(receipt.amountPaid),
+    receiptAmount(receipt.amountPaid),
   );
   if (receipt.changeAmount > 0)
-    row("Change:", formatCurrency(receipt.changeAmount));
+    row("Change:", receiptAmount(receipt.changeAmount));
   if (!hasPaymentDetails) row("Payment:", receipt.paymentMethod);
   if (hasPaymentDetails) {
     divider();

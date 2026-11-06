@@ -94,27 +94,6 @@ export function Receipt({ data }: { data: ReceiptData }) {
 
           <div className="receipt-divider" />
 
-          {/* Item table */}
-          <div className="receipt-table-head">
-            <span><TranslatedText text={"Description"} /></span>
-            <span><TranslatedText text={"Amount"} /></span>
-          </div>
-          {data.items.map((item, i) => (
-            <div key={i} className="receipt-item-block">
-              <div className="receipt-item-meta">
-                <span>
-                  {item.quantity} x {formatCurrency(item.unitPrice)}
-                </span>
-                <span>{formatCurrency(item.total)}</span>
-              </div>
-              <div className="receipt-item">
-                <span>{item.name}</span>
-              </div>
-            </div>
-          ))}
-
-          <div className="receipt-divider" />
-
           {/* Totals */}
           <div className="receipt-row">
             <span><TranslatedText text={"Subtotal:"} /></span>

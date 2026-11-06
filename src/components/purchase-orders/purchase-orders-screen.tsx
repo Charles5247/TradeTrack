@@ -75,6 +75,7 @@ import { syncEngine } from '@/lib/offline/sync-engine';
 import { isOffline } from '@/lib/utils/network';
 import { useOnlineStatus } from '@/hooks/use-online-status';
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/utils/format';
+import { downloadTablePDF } from '@/lib/pdf/table-pdf';
 import { useAuthStore } from '@/store';
 import type { PurchaseOrder, Supplier, Product, Warehouse } from '@/types';
 import { useI18n } from '@/i18n';
@@ -275,6 +276,7 @@ function PurchaseOrdersPageInner({ createMode }: { createMode: boolean }) {
     else setFormOpen(open);
   };
   const [viewPO, setViewPO] = useState<PurchaseOrder | null>(null);
+  const [editPO, setEditPO] = useState<{ notes: string; expected_date: string; items: { id: string; quantity: string; unit_cost: string }[] } | null>(null);
   const [formData, setFormData] = useState({
     supplier_id: '',
     expected_date: '',
@@ -347,6 +349,20 @@ function PurchaseOrdersPageInner({ createMode }: { createMode: boolean }) {
       toast.success(t.purchaseOrders.sent_success);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : t.purchaseOrders.update_failed),
+  });
+  const editMutation = useMutation({
+    mutationFn: async () => {
+      if (!viewPO || !editPO) throw new Error('No draft selected');
+      const { error } = await createClient().rpc('merchant_edit_purchase_order' as never, {
+        p_id: viewPO.id,
+        p_items: editPO.items.map(item => ({ id: item.id, quantity: Number(item.quantity), unit_cost: Number(item.unit_cost) })),
+        p_notes: editPO.notes,
+        p_expected: editPO.expected_date || null,
+      } as never);
+      if (error) throw error;
+    },
+    onSuccess: () => { setEditPO(null); setViewPO(null); void queryClient.invalidateQueries({ queryKey: ['purchase-orders'] }); toast.success('Purchase order updated'); },
+    onError: error => toast.error(error.message),
   });
 
   const cancelMutation = useMutation({
@@ -523,7 +539,7 @@ function PurchaseOrdersPageInner({ createMode }: { createMode: boolean }) {
                         </p>
                       )}
                       <div className="flex flex-wrap items-center justify-end gap-2">
-                        {po.status === 'draft' && (
+                        {po.status === 'draft' && user?.role === 'business_owner' && (
                           <>
                             <Button
                               size="sm"
@@ -746,8 +762,8 @@ function PurchaseOrdersPageInner({ createMode }: { createMode: boolean }) {
                       <TableCell className="text-sm">
                         {(item.product as { name?: string } | undefined)?.name}
                       </TableCell>
-                      <TableCell className="text-sm">{item.quantity_ordered}</TableCell>
-                      <TableCell className="text-sm">{formatCurrency(item.unit_cost)}</TableCell>
+                      <TableCell className="text-sm">{editPO ? <Input aria-label={`Quantity for ${(item.product as { name?: string } | undefined)?.name || 'product'}`} type="number" min="1" step="1" value={editPO.items.find(line => line.id === item.id)?.quantity || ''} onChange={event => setEditPO(current => current && ({ ...current, items: current.items.map(line => line.id === item.id ? { ...line, quantity: event.target.value } : line) }))} /> : item.quantity_ordered}</TableCell>
+                      <TableCell className="text-sm">{editPO ? <Input aria-label={`Cost for ${(item.product as { name?: string } | undefined)?.name || 'product'}`} type="number" min="0" step="0.01" value={editPO.items.find(line => line.id === item.id)?.unit_cost || ''} onChange={event => setEditPO(current => current && ({ ...current, items: current.items.map(line => line.id === item.id ? { ...line, unit_cost: event.target.value } : line) }))} /> : formatCurrency(item.unit_cost)}</TableCell>
                       <TableCell className="text-right text-sm">
                         {formatCurrency(item.unit_cost * item.quantity_ordered)}
                       </TableCell>
@@ -761,9 +777,15 @@ function PurchaseOrdersPageInner({ createMode }: { createMode: boolean }) {
                 <span>{formatCurrency(viewPO.total_value)}</span>
               </div>
 
-              {viewPO.notes && (
+              {editPO && <div className="grid gap-3"><div><Label htmlFor="edit-po-notes">Merchant notes</Label><Textarea id="edit-po-notes" value={editPO.notes} onChange={event => setEditPO({ ...editPO, notes: event.target.value })} /></div><div><Label htmlFor="edit-po-expected">Expected date</Label><Input id="edit-po-expected" type="date" value={editPO.expected_date} onChange={event => setEditPO({ ...editPO, expected_date: event.target.value })} /></div><div className="flex gap-2"><Button disabled={editMutation.isPending || editPO.items.some(line => !Number.isInteger(Number(line.quantity)) || Number(line.quantity)<=0 || Number(line.unit_cost)<0)} onClick={() => editMutation.mutate()}>Save changes</Button><Button variant="outline" onClick={() => setEditPO(null)}>Cancel edit</Button></div></div>}
+              {!editPO && viewPO.notes && (
                 <p className="text-sm text-muted-foreground">{viewPO.notes}</p>
               )}
+
+              {!editPO && <div className="flex flex-wrap gap-2">
+                {viewPO.status === 'draft' && user?.role === 'business_owner' && <Button variant="outline" onClick={() => setEditPO({ notes: viewPO.notes || '', expected_date: viewPO.expected_date || '', items: (viewPO.items || []).map(item => ({ id: item.id, quantity: String(item.quantity_ordered), unit_cost: String(item.unit_cost) })) })}>Edit draft</Button>}
+                <Button variant="outline" onClick={() => downloadTablePDF({ title: 'Purchase order', subtitle: `${(viewPO.supplier as { name?: string } | undefined)?.name || 'Supplier'} · ${viewPO.status}`, headers: ['Product','Quantity','Unit cost','Total'], rows: (viewPO.items || []).map(item => [(item.product as { name?: string } | undefined)?.name || '', item.quantity_ordered, formatCurrency(item.unit_cost), formatCurrency(item.unit_cost * item.quantity_ordered)]), filename: `purchase-order-${viewPO.id}.pdf` })}>Download PDF</Button>
+              </div>}
 
               {viewPO.status === 'received' && (
                 <p className="text-xs text-[var(--c-success)] flex items-center gap-1">

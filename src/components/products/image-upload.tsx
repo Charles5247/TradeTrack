@@ -67,7 +67,12 @@ async function compressImage(file: File, maxPx = 800): Promise<Blob> {
       );
     };
     img.onerror = reject;
-    img.src = URL.createObjectURL(file);
+    const sourceUrl = URL.createObjectURL(file);
+    const onLoad = img.onload;
+    const onError = img.onerror;
+    img.onload = event => { URL.revokeObjectURL(sourceUrl); onLoad?.call(img, event); };
+    img.onerror = event => { URL.revokeObjectURL(sourceUrl); onError?.call(img, event); };
+    img.src = sourceUrl;
   });
 }
 
@@ -133,7 +138,7 @@ export function ImageUpload({
           .from(BUCKET)
           .upload(path, blob, {
             contentType: 'image/webp',
-            upsert: true,
+            upsert: false,
           });
 
         if (uploadErr) throw uploadErr;
@@ -162,6 +167,7 @@ export function ImageUpload({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    setMenuOpen(false);
     if (file) handleUpload(file);
     // Reset input so same file can be re-selected
     e.target.value = '';
@@ -278,18 +284,18 @@ export function ImageUpload({
         type="file"
         accept={ALLOWED_TYPES.join(',')}
         onChange={handleFileChange}
-        className="hidden"
+        className="sr-only"
         aria-label={copy("Upload product photo")}
       />
-      <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={handleFileChange} className="hidden" aria-label={copy("Take product photo")} />
+      <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={handleFileChange} className="sr-only" aria-label={copy("Take product photo")} />
       {preview && <Button type="button" variant="outline" className="min-h-11 w-full sm:w-auto" disabled={isUploading} onClick={openMenu}><TranslatedText text={"Photo, scan or import"} /></Button>}
       <Dialog open={menuOpen} onOpenChange={setMenuOpen}>
         <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[90dvh] overflow-y-auto">
           <DialogHeader><DialogTitle><TranslatedText text={scanning ? 'Find a product by code' : 'Add a photo or product data'} /></DialogTitle><DialogDescription><TranslatedText text={scanning ? 'Look up an existing product before filling the form.' : 'Choose one option. Camera access depends on your device; desktop may open the file picker.'} /></DialogDescription></DialogHeader>
           {scanning ? <><ProductCodeLookup onMatch={(match, cached) => { onProductMatched(match, cached); setMenuOpen(false); }} onCode={code => { onCodeSelected(code); setMenuOpen(false); }} /><Button type="button" variant="ghost" onClick={() => setScanning(false)}><TranslatedText text={"Back to options"} /></Button></> : <div className="grid gap-2">
-            <Button type="button" variant="outline" className="h-auto min-h-14 justify-start whitespace-normal px-4 py-3 text-left" onClick={() => { cameraRef.current?.click(); setMenuOpen(false); }}><Camera className="h-5 w-5 shrink-0" strokeWidth={1.75} /><span><TranslatedText text={"Take a photo"} /><span className="block text-xs font-normal tt-muted"><TranslatedText text={"Open your camera · up to 10 MB"} /></span></span></Button>
+            <Button type="button" variant="outline" className="h-auto min-h-14 justify-start whitespace-normal px-4 py-3 text-left" onClick={() => cameraRef.current?.click()}><Camera className="h-5 w-5 shrink-0" strokeWidth={1.75} /><span><TranslatedText text={"Take a photo"} /><span className="block text-xs font-normal tt-muted"><TranslatedText text={"Open your camera · up to 10 MB"} /></span></span></Button>
             <Button type="button" variant="outline" className="h-auto min-h-14 justify-start whitespace-normal px-4 py-3 text-left" onClick={() => setScanning(true)}><ScanLine className="h-5 w-5 shrink-0" strokeWidth={1.75} /><span><TranslatedText text={"Scan barcode / QR"} /><span className="block text-xs font-normal tt-muted"><TranslatedText text={"Find and prefill a product · manual entry available"} /></span></span></Button>
-            <Button type="button" variant="outline" className="h-auto min-h-14 justify-start whitespace-normal px-4 py-3 text-left" onClick={() => { inputRef.current?.click(); setMenuOpen(false); }}><Upload className="h-5 w-5 shrink-0" strokeWidth={1.75} /><span><TranslatedText text={"Upload a photo"} /><span className="block text-xs font-normal tt-muted"><TranslatedText text={"Choose an existing image from your device"} /></span></span></Button>
+            <Button type="button" variant="outline" className="h-auto min-h-14 justify-start whitespace-normal px-4 py-3 text-left" onClick={() => inputRef.current?.click()}><Upload className="h-5 w-5 shrink-0" strokeWidth={1.75} /><span><TranslatedText text={"Upload a photo"} /><span className="block text-xs font-normal tt-muted"><TranslatedText text={"Choose an existing image from your device"} /></span></span></Button>
             <Button asChild variant="outline" className="h-auto min-h-14 justify-start whitespace-normal px-4 py-3 text-left"><Link href="/imports" target="_blank" rel="noopener noreferrer" prefetch={false}><FileSpreadsheet className="h-5 w-5 shrink-0" strokeWidth={1.75} /><span><TranslatedText text={"Upload an inventory list"} /><span className="block text-xs font-normal tt-muted"><TranslatedText text={"CSV / Excel · opens bulk import in a new tab"} /></span></span></Link></Button>
           </div>}
         </DialogContent>

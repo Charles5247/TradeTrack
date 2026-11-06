@@ -56,91 +56,37 @@ async function fetchWarehousesAndProducts() {
 }
 
 async function createTransfer(payload: {
-  organization_id: string;
   from_warehouse_id: string;
   to_warehouse_id: string;
   product_id: string;
   quantity: number;
   notes?: string;
-  sent_by: string;
-  initiated_by?: string;
-  approved_by?: string;
-  coordinated_by?: string;
 }) {
   const supabase = createClient();
-  const { data, error } = await supabase.from('warehouse_transfers').insert(payload).select().single();
+  const { data, error } = await supabase.rpc('request_warehouse_transfer' as never, {
+    p_from: payload.from_warehouse_id, p_to: payload.to_warehouse_id,
+    p_product: payload.product_id, p_quantity: payload.quantity, p_notes: payload.notes || null,
+  } as never);
   if (error) throw error;
   return data;
 }
 
-async function updateTransferStatus(id: string, status: 'received' | 'cancelled', userId: string) {
+async function decideTransfer(id: string, approve: boolean) {
   const supabase = createClient();
-  const updates: Record<string, unknown> = {
-    status,
-    updated_at: new Date().toISOString(),
-  };
-  if (status === 'received') {
-    updates.received_by = userId;
-    updates.date_received = new Date().toISOString();
+  const { error } = await supabase.rpc('decide_warehouse_transfer' as never,
+    { p_id: id, p_approve: approve, p_reason: approve ? null : 'Declined by merchant' } as never);
+  if (error) throw error;
+}
 
-    // Move inventory
-    const { data: transfer } = await supabase
-      .from('warehouse_transfers')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (transfer) {
-      // Deduct from source
-      const { data: srcInv } = await supabase
-        .from('inventory')
-        .select('quantity')
-        .eq('product_id', transfer.product_id)
-        .eq('warehouse_id', transfer.from_warehouse_id)
-        .single();
-
-      if (srcInv) {
-        await supabase
-          .from('inventory')
-          .update({ quantity: Math.max(0, srcInv.quantity - transfer.quantity) })
-          .eq('product_id', transfer.product_id)
-          .eq('warehouse_id', transfer.from_warehouse_id);
-      }
-
-      // Add to destination
-      const { data: dstInv } = await supabase
-        .from('inventory')
-        .select('quantity')
-        .eq('product_id', transfer.product_id)
-        .eq('warehouse_id', transfer.to_warehouse_id)
-        .single();
-
-      if (dstInv) {
-        await supabase
-          .from('inventory')
-          .update({ quantity: dstInv.quantity + transfer.quantity })
-          .eq('product_id', transfer.product_id)
-          .eq('warehouse_id', transfer.to_warehouse_id);
-      } else {
-        await supabase.from('inventory').insert({
-          organization_id: transfer.organization_id,
-          product_id: transfer.product_id,
-          warehouse_id: transfer.to_warehouse_id,
-          quantity: transfer.quantity,
-          min_stock_level: 5,
-        });
-      }
-    }
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await supabase.from('warehouse_transfers').update(updates as any).eq('id', id);
+async function receiveTransfer(id: string, quantity: number, note: string) {
+  const { error } = await createClient().rpc('receive_warehouse_transfer' as never,
+    { p_id: id, p_quantity: quantity, p_note: note || null } as never);
   if (error) throw error;
 }
 
 export default function TransfersPage() {
   return (
-    <AccessGuard allow={['business_owner', 'admin']}>
+    <AccessGuard allow={['business_owner', 'admin', 'cashier']}>
       <TransfersPageInner />
     </AccessGuard>
   );
@@ -160,11 +106,11 @@ function TransfersPageInner() {
     product_id: '',
     quantity: '',
     notes: '',
-    initiated_by: '',
-    approved_by: '',
-    coordinated_by: '',
   });
   const [receiptTransfer, setReceiptTransfer] = useState<WarehouseTransfer | null>(null);
+  const [receivingTransfer, setReceivingTransfer] = useState<WarehouseTransfer | null>(null);
+  const [receivedCount, setReceivedCount] = useState('');
+  const [receivingNote, setReceivingNote] = useState('');
 
   const { data: transfers = [], isLoading, error: pageError, refetch: retryPage } = useQuery({
     queryKey: ['transfers'],
@@ -174,6 +120,14 @@ function TransfersPageInner() {
   const { data: { warehouses = [], products = [] } = {} } = useQuery({
     queryKey: ['warehouses-products'],
     queryFn: fetchWarehousesAndProducts,
+  });
+  const { data: assignedWarehouses = [] } = useQuery({
+    queryKey: ['transfer-assigned-warehouses', user?.id], enabled: !!user?.id,
+    queryFn: async () => {
+      const { data, error } = await createClient().from('warehouse_staff').select('warehouse_id').eq('user_id', user!.id);
+      if (error) throw error;
+      return (data || []).map(row => row.warehouse_id);
+    },
   });
 
   const createMutation = useMutation({
@@ -187,23 +141,24 @@ function TransfersPageInner() {
         product_id: '',
         quantity: '',
         notes: '',
-        initiated_by: '',
-        approved_by: '',
-        coordinated_by: '',
       });
       toast.success(t.transfers.created_success);
     },
-    onError: () => toast.error(t.transfers.create_failed),
+    onError: error => toast.error(error.message),
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: 'received' | 'cancelled' }) =>
-      updateTransferStatus(id, status, user?.id || ''),
+    mutationFn: ({ id, approve }: { id: string; approve: boolean }) => decideTransfer(id, approve),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transfers'] });
       toast.success(t.transfers.updated_success);
     },
-    onError: () => toast.error(t.transfers.update_failed),
+    onError: error => toast.error(error.message),
+  });
+  const receiveMutation = useMutation({
+    mutationFn: () => receiveTransfer(receivingTransfer!.id, Number(receivedCount), receivingNote),
+    onSuccess: () => { void queryClient.invalidateQueries({ queryKey: ['transfers'] }); setReceivingTransfer(null); toast.success('Receiving count recorded'); },
+    onError: error => toast.error(error.message),
   });
 
   const handleCreate = () => {
@@ -222,16 +177,11 @@ function TransfersPageInner() {
       return;
     }
     createMutation.mutate({
-      organization_id: (user as unknown as { organization_id: string }).organization_id,
       from_warehouse_id: formData.from_warehouse_id,
       to_warehouse_id: formData.to_warehouse_id,
       product_id: formData.product_id,
       quantity: qty,
       notes: formData.notes,
-      sent_by: user.id,
-      initiated_by: formData.initiated_by.trim() || undefined,
-      approved_by: formData.approved_by.trim() || undefined,
-      coordinated_by: formData.coordinated_by.trim() || undefined,
     });
   };
 
@@ -282,7 +232,9 @@ function TransfersPageInner() {
   const statusBadge = (status: string) => {
     const map: Record<string, { icon: React.ElementType; variant: string }> = {
       pending: { icon: Clock, variant: 'warning' },
+      authorized: { icon: Clock, variant: 'info' },
       received: { icon: CheckCircle, variant: 'success' },
+      rejected: { icon: XCircle, variant: 'destructive' },
       cancelled: { icon: XCircle, variant: 'destructive' },
     };
     const { icon: Icon, variant } = map[status] || map.pending;
@@ -359,7 +311,7 @@ function TransfersPageInner() {
                         {(tr.to_warehouse as { name?: string } | null)?.name}
                       </span>
                     </TableCell>
-                    <TableCell className="font-semibold">{tr.quantity}</TableCell>
+                    <TableCell className="font-semibold">{tr.received_quantity == null ? tr.quantity : `${tr.received_quantity} / ${tr.quantity}`}</TableCell>
                     <TableCell className="text-sm">{(tr.sender as { full_name?: string } | null)?.full_name}</TableCell>
                     <TableCell className="text-sm">{(tr.receiver as { full_name?: string } | null)?.full_name || '—'}</TableCell>
                     <TableCell className="text-xs tt-muted">{formatDateTime(tr.date_sent)}</TableCell>
@@ -375,26 +327,29 @@ function TransfersPageInner() {
                         >
                           <ReceiptIcon className="h-3 w-3 mr-1" /> {t.transfers.view_receipt}
                         </Button>
-                        {tr.status === 'pending' && (
+                        {tr.status === 'pending' && user?.role === 'business_owner' && (
                           <>
                             <Button
                               size="sm"
                               variant="outline"
                               className="min-h-11 sm:min-h-8 text-xs text-[var(--c-success)] border-[var(--c-success)]"
-                              onClick={() => updateMutation.mutate({ id: tr.id, status: 'received' })}
+                              disabled={updateMutation.isPending}
+                              onClick={() => updateMutation.mutate({ id: tr.id, approve: true })}
                             >
-                              <CheckCircle className="h-3 w-3 mr-1" /> {t.transfers.receive}
+                              <CheckCircle className="h-3 w-3 mr-1" /> Approve
                             </Button>
                             <Button
                               size="sm"
                               variant="outline"
                               className="min-h-11 sm:min-h-8 text-xs text-[var(--c-danger)] border-[var(--c-danger)]"
-                              onClick={() => updateMutation.mutate({ id: tr.id, status: 'cancelled' })}
+                              disabled={updateMutation.isPending}
+                              onClick={() => updateMutation.mutate({ id: tr.id, approve: false })}
                             >
-                              {t.transfers.cancel_action}
+                              Decline
                             </Button>
                           </>
                         )}
+                        {tr.status === 'authorized' && (user?.role === 'business_owner' || assignedWarehouses.includes(tr.to_warehouse_id)) && <Button size="sm" variant="outline" onClick={() => { setReceivingTransfer(tr); setReceivedCount(String(tr.quantity)); setReceivingNote(''); }}>Confirm receipt</Button>}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -420,7 +375,7 @@ function TransfersPageInner() {
                     <SelectValue placeholder={t.transfers.select_placeholder} />
                   </SelectTrigger>
                   <SelectContent>
-                    {warehouses.map((w: Warehouse) => (
+                    {warehouses.filter((w: Warehouse) => user?.role === 'business_owner' || assignedWarehouses.includes(w.id)).map((w: Warehouse) => (
                       <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
                     ))}
                   </SelectContent>
@@ -463,32 +418,6 @@ function TransfersPageInner() {
                 placeholder={t.transfers.enter_quantity}
               />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label>{t.transfers.initiated_by}</Label>
-                <Input
-                  value={formData.initiated_by}
-                  onChange={(e) => setFormData({ ...formData, initiated_by: e.target.value })}
-                  placeholder={t.transfers.initiated_by_placeholder}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>{t.transfers.approved_by}</Label>
-                <Input
-                  value={formData.approved_by}
-                  onChange={(e) => setFormData({ ...formData, approved_by: e.target.value })}
-                  placeholder={t.transfers.approved_by_placeholder}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>{t.transfers.coordinated_by}</Label>
-                <Input
-                  value={formData.coordinated_by}
-                  onChange={(e) => setFormData({ ...formData, coordinated_by: e.target.value })}
-                  placeholder={t.transfers.coordinated_by_placeholder}
-                />
-              </div>
-            </div>
             <div className="space-y-2">
               <Label>{t.transfers.notes}</Label>
               <Textarea
@@ -503,10 +432,20 @@ function TransfersPageInner() {
                 {t.transfers.cancel}
               </Button>
               <Button className="flex-1" onClick={handleCreate} disabled={createMutation.isPending}>
-                {t.transfers.create_transfer}
+                Request merchant approval
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!receivingTransfer} onOpenChange={open => !open && setReceivingTransfer(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Confirm receiving warehouse count</DialogTitle></DialogHeader>
+          <p className="text-sm tt-muted">Expected: {receivingTransfer?.quantity} unit(s). Enter the number physically received. This can be submitted once.</p>
+          <div className="space-y-2"><Label htmlFor="received-count">Quantity received</Label><Input id="received-count" type="number" min="0" max={receivingTransfer?.quantity} step="1" value={receivedCount} onChange={event => setReceivedCount(event.target.value)} /></div>
+          <div className="space-y-2"><Label htmlFor="receiving-note">Note for any difference</Label><Textarea id="receiving-note" value={receivingNote} onChange={event => setReceivingNote(event.target.value)} /></div>
+          <Button disabled={receiveMutation.isPending || receivedCount.trim()==='' || !Number.isInteger(Number(receivedCount))} onClick={() => receiveMutation.mutate()}>Confirm and add received stock</Button>
         </DialogContent>
       </Dialog>
 

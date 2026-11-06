@@ -158,7 +158,7 @@ export interface InventoryMovement {
 }
 
 // ── Warehouse Transfers ──────────────────────────────────────
-export type TransferStatus = "pending" | "received" | "cancelled";
+export type TransferStatus = "pending" | "authorized" | "received" | "rejected" | "cancelled";
 
 export interface WarehouseTransfer {
   id: string;
@@ -171,6 +171,10 @@ export interface WarehouseTransfer {
   notes?: string;
   sent_by: string;
   received_by?: string;
+    authorized_by?: string;
+    authorized_at?: string;
+    received_quantity?: number;
+    receiving_note?: string;
   initiated_by?: string;
   approved_by?: string;
   coordinated_by?: string;

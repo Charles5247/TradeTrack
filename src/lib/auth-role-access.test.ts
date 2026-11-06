@@ -6,8 +6,8 @@ describe('canManageBusinessSettings', () => {
     expect(canManageBusinessSettings('business_owner', 'org-1')).toBe(true);
   });
 
-  it('allows admins to manage organization settings', () => {
-    expect(canManageBusinessSettings('admin', 'org-1')).toBe(true);
+  it('reserves organization settings for the merchant', () => {
+    expect(canManageBusinessSettings('admin', 'org-1')).toBe(false);
   });
 
   it('does not allow cashiers to manage organization settings', () => {

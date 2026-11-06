@@ -19,6 +19,8 @@ import type { Notification } from '@/types';
 import { useI18n } from '@/i18n';
 import { useNotificationStore } from '@/store';
 import { NativeSelect } from '@/components/ui/native-select';
+import { useAuthStore } from '@/store';
+import { toast } from 'sonner';
 
 async function fetchNotifications(page: number, filter: string, eventType: string, staffId: string) {
   const supabase = createClient();
@@ -87,6 +89,7 @@ const colorTokenMap: Record<string, string> = {
 };
 
 export default function NotificationsPage() {
+  const user = useAuthStore(state => state.user);
   const copy = useCopy();
   const { t } = useI18n();
   const queryClient = useQueryClient();
@@ -107,6 +110,33 @@ export default function NotificationsPage() {
     return data || [];
   }});
   const staffRows = Array.isArray(staff) ? staff : [];
+  const { data: discountRequests = [] } = useQuery({
+    queryKey: ['pending-discount-requests', user?.organization_id],
+    enabled: user?.role === 'business_owner',
+    refetchInterval: 15_000,
+    queryFn: async () => {
+      const { data, error } = await createClient().from('discount_requests')
+        .select('id,discount_amount,discount_percent,reason,expires_at,created_at')
+        .eq('status', 'pending').gt('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+  const decideDiscount = useMutation({
+    mutationFn: async ({ id, approve }: { id: string; approve: boolean }) => {
+      const { error } = await createClient().rpc('decide_discount_request', {
+        p_request_id: id, p_approve: approve, p_reason: approve ? 'Approved by merchant' : 'Declined by merchant',
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Discount decision sent to cashier');
+      void queryClient.invalidateQueries({ queryKey: ['pending-discount-requests'] });
+      void queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+    onError: error => toast.error(error.message),
+  });
 
   const markAllReadMutation = useMutation({
     mutationFn: markAllRead,
@@ -145,6 +175,14 @@ export default function NotificationsPage() {
           </Button>
         )}
       </div>
+
+      {user?.role === 'business_owner' && discountRequests.length > 0 && <section className="space-y-3" aria-label="Discount approvals">
+        <h2 className="font-semibold">Discounts awaiting your decision</h2>
+        {discountRequests.map(request => <Card key={request.id}><CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
+          <div><p className="font-medium">{request.discount_percent}% discount · {request.discount_amount}</p><p className="text-sm tt-muted">{request.reason}</p></div>
+          <div className="flex gap-2"><Button disabled={decideDiscount.isPending} onClick={() => decideDiscount.mutate({ id: request.id, approve: true })}>Approve</Button><Button variant="outline" disabled={decideDiscount.isPending} onClick={() => decideDiscount.mutate({ id: request.id, approve: false })}>Decline</Button></div>
+        </CardContent></Card>)}
+      </section>}
 
       <Tabs value={filter} onValueChange={value => { setFilter(value); setPage(0); }}><TabsList aria-label={copy("Notification filters")}><TabsTrigger value="all"><TranslatedText text={"All"} /></TabsTrigger><TabsTrigger value="unread"><TranslatedText text={"Unread"} /></TabsTrigger><TabsTrigger value="inventory"><TranslatedText text={"Inventory"} /></TabsTrigger><TabsTrigger value="payments"><TranslatedText text={"Payments"} /></TabsTrigger></TabsList></Tabs>
       <div className="grid gap-3 sm:grid-cols-2"><label className="text-sm">{copy('Event type')}<NativeSelect value={eventType} onChange={event => { setEventType(event.target.value); setPage(0); }}><option value="all">{copy('All event types')}</option>{Array.from(new Set(notifications.map(item => item.type))).map(type => <option key={type} value={type}>{type.replaceAll('_',' ')}</option>)}</NativeSelect></label><label className="text-sm">{copy('Staff member')}<NativeSelect value={staffId} onChange={event => { setStaffId(event.target.value); setPage(0); }}><option value="all">{copy('All staff')}</option>{staffRows.map(member => <option key={member.id} value={member.id}>{member.full_name}</option>)}</NativeSelect></label></div>
@@ -207,7 +245,7 @@ export default function NotificationsPage() {
                           {notification.title}
                         </p>
                         <p className="text-sm tt-muted mt-0.5">{notification.message}</p>
-                        {typeof notification.data?.href === 'string' && /^\/(admin\/support|support|notifications|warehouse-memos)$/.test(notification.data.href) &&
+                        {typeof notification.data?.href === 'string' && /^\/(admin\/support|support|notifications|warehouse-memos|transfers|purchase-orders)$/.test(notification.data.href) &&
                           <Link href={notification.data.href} className="mt-2 inline-block text-sm font-medium text-primary underline" onClick={event => event.stopPropagation()}>Open related page</Link>}
                       </div>
                       <div className="flex items-center gap-2 shrink-0">

@@ -983,9 +983,13 @@
 
 .receipt-item > span:nth-child(2) {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.receipt-item > span:last-child {
+  max-width: 25mm;
+  overflow-wrap: anywhere;
 }
 
 .receipt-table-head > span:last-child,

@@ -35,7 +35,7 @@ export function BusinessSettings({ localizationOnly = false }: { localizationOnl
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [retry, setRetry] = useState(0);
-  const editable = user?.role === 'business_owner' || user?.role === 'admin';
+  const editable = user?.role === 'business_owner';
   useEffect(() => {
     let disposed = false;
     setLoading(true);

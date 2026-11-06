@@ -85,6 +85,7 @@ export const NAV_GROUPS_BO: NavGroup[] = [
         icon: History,
         roles: ["business_owner", "admin"],
       },
+      { navKey: 'customerCredit', label: 'Customer credit', href: '/credit', icon: CreditCard, roles: ['business_owner', 'admin'] },
       { navKey: "receipts", label: "Receipts", href: "/receipts", icon: History, roles: ["business_owner", "admin", "cashier"] },
       { navKey: "reviews", label: "Reviews", href: "/reviews", icon: ClipboardCheck, roles: ["business_owner"] },
       { navKey: "support", label: "Report an issue", href: "/support", icon: Bell, roles: ["business_owner", "admin", "cashier"] },

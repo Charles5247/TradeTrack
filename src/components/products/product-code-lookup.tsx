@@ -28,7 +28,7 @@ export function ProductCodeLookup({ onMatch, onCode }: { onMatch: (product: Code
   return <div className="min-w-0 space-y-4">
     <p className="tt-muted text-sm"><TranslatedText text={supported ? 'Photograph one barcode or QR code, or enter its value below. We search your business catalog; no photo is attached.' : 'Barcode scanning is not supported by this browser. Enter the barcode, QR value or SKU manually below.'} /></p>
     {supported && <Button type="button" variant="outline" className="min-h-11 w-full" disabled={busy} onClick={() => input.current?.click()}><ScanLine className="h-4 w-4" strokeWidth={1.75} />{" "}<TranslatedText text={"Scan with a photo"} /></Button>}
-    <input ref={input} aria-label={copy("Barcode photo")} type="file" accept="image/*" capture="environment" className="hidden" onChange={async e => {
+    <input ref={input} aria-label={copy("Barcode photo")} type="file" accept="image/*" capture="environment" className="sr-only" onChange={async e => {
       const file = e.target.files?.[0]; e.target.value = ''; if (!file) return;
       setBusy(true); setError(''); setResult(null);
       try { const value = await detectProductCode(file); setCode(value); await lookup(value); }
