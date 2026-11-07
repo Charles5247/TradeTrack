@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuthStore } from '@/store';
 import { lookupProductCode, type CodeMatch } from '@/lib/products/lookup-code';
-import { detectProductCode, supportsBarcodeDetection } from '@/lib/products/detect-code';
+import { detectProductCode } from '@/lib/products/detect-code';
 
 export function ProductCodeLookup({ onMatch, onCode }: { onMatch: (product: CodeMatch, cached: boolean) => void; onCode: (code: string) => void }) {
   const copy = useCopy();
@@ -18,7 +18,6 @@ export function ProductCodeLookup({ onMatch, onCode }: { onMatch: (product: Code
   const [error, setError] = useState('');
   const [result, setResult] = useState<Awaited<ReturnType<typeof lookupProductCode>> | null>(null);
   const input = useRef<HTMLInputElement>(null);
-  const supported = supportsBarcodeDetection();
   async function lookup(value: string) {
     setBusy(true); setError(''); setResult(null);
     try { setResult(await lookupProductCode(value, user?.organization_id || '')); }
@@ -26,8 +25,8 @@ export function ProductCodeLookup({ onMatch, onCode }: { onMatch: (product: Code
     finally { setBusy(false); }
   }
   return <div className="min-w-0 space-y-4">
-    <p className="tt-muted text-sm"><TranslatedText text={supported ? 'Photograph one barcode or QR code, or enter its value below. We search your business catalog; no photo is attached.' : 'Barcode scanning is not supported by this browser. Enter the barcode, QR value or SKU manually below.'} /></p>
-    {supported && <Button type="button" variant="outline" className="min-h-11 w-full" disabled={busy} onClick={() => input.current?.click()}><ScanLine className="h-4 w-4" strokeWidth={1.75} />{" "}<TranslatedText text={"Scan with a photo"} /></Button>}
+    <p className="tt-muted text-sm"><TranslatedText text="Photograph one barcode or QR code, or enter its value below. We search your business catalog; no photo is attached." /></p>
+    <Button type="button" variant="outline" className="min-h-11 w-full" disabled={busy} onClick={() => input.current?.click()}><ScanLine className="h-4 w-4" strokeWidth={1.75} />{" "}<TranslatedText text={"Scan with a photo"} /></Button>
     <input ref={input} aria-label={copy("Barcode photo")} type="file" accept="image/*" capture="environment" className="sr-only" onChange={async e => {
       const file = e.target.files?.[0]; e.target.value = ''; if (!file) return;
       setBusy(true); setError(''); setResult(null);

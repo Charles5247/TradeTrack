@@ -2,7 +2,6 @@
 import { TranslatedText, useCopy } from '@/i18n/text';
 
 
-import { withTimeout, AUTH_CHECK_TIMEOUT_MS } from "@/lib/utils/timeout";
 import React, { useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -11,6 +10,7 @@ import { toast } from 'sonner';
 import { generateId } from '@/lib/utils/id';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/lib/supabase/client';
+import { useAuthStore } from '@/store';
 import { cn } from '@/lib/utils/cn';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ProductCodeLookup } from './product-code-lookup';
@@ -117,8 +117,8 @@ export function ImageUpload({
 
       try {
         const supabase = createClient();
-        const { data: { user } } = await withTimeout(supabase.auth.getUser(), AUTH_CHECK_TIMEOUT_MS);
-        if (!user) throw new Error('Not authenticated');
+        const userId = useAuthStore.getState().user?.id;
+        if (!userId) throw new Error('Sign in again to upload a product photo');
 
         // Compress
         let blob: Blob;
@@ -129,15 +129,16 @@ export function ImageUpload({
         }
 
         // Build path: products/{userId}/{uuid}.webp
-        const ext = 'webp';
+        const mimeType = blob.type || file.type;
+        const ext = mimeType === 'image/webp' ? 'webp' : mimeType === 'image/png' ? 'png' : mimeType === 'image/avif' ? 'avif' : 'jpg';
         const fileName = `${productId ?? generateId()}-${Date.now()}.${ext}`;
-        const path = `${user.id}/${fileName}`;
+        const path = `${userId}/${fileName}`;
 
         // Upload to Supabase Storage
         const { error: uploadErr } = await supabase.storage
           .from(BUCKET)
           .upload(path, blob, {
-            contentType: 'image/webp',
+            contentType: mimeType,
             upsert: false,
           });
 

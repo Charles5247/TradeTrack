@@ -27,7 +27,7 @@ it('opens through the keyboard and exposes manual scanning fallback',async()=>{
   await act(()=>root.render(<ImageUpload onImageUploaded={vi.fn()} onImageRemoved={vi.fn()} onProductMatched={vi.fn()} onCodeSelected={vi.fn()} />));
   await act(()=>host.querySelector('[role="button"]')!.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true})));
   await act(()=>Array.from(document.querySelectorAll('button')).find(b=>b.textContent?.includes('Scan barcode'))!.click());
-  expect(document.body.textContent).toContain('not supported');
+  expect(document.body.textContent).toContain('Scan with a photo');
   expect(document.querySelector('#product-code')).not.toBeNull();
 });
 it('keeps gallery selection separate from capture and makes removal available without hovering',async()=>{
