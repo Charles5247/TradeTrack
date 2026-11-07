@@ -25,6 +25,8 @@ export interface OfflineSalePayload {
   amount_paid: number;
   change_amount: number;
   payment_method: string;
+  customer_name?: string;
+  customer_phone?: string;
   sale_type?: 'retail' | 'b2b' | 'b2c';
   credit_authorized_by?: string;
   notes?: string;
@@ -54,6 +56,8 @@ export async function persistOfflineSale(payload: OfflineSalePayload) {
     amount_paid: payload.amount_paid,
     change_amount: payload.change_amount,
     payment_method: payload.payment_method,
+    customer_name: payload.customer_name ?? null,
+    customer_phone: payload.customer_phone ?? null,
     payment_status: payload.amount_paid >= payload.total
       ? 'paid'
       : payload.amount_paid > 0

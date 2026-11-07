@@ -919,12 +919,13 @@ function POSPageInner() {
                       const path = `${authUser.id}/pos-${generateId()}-${Date.now()}.${file.name.split(".").pop() || "jpg"}`;
                       const { error: uploadErr } = await supabase.storage
                         .from("receipts")
-                        .upload(path, file, { upsert: true });
+                        .upload(path, file, { upsert: false });
                       if (uploadErr) throw uploadErr;
-                      const { data: signed } = await supabase.storage
+                      const { data: signed, error: signErr } = await supabase.storage
                         .from("receipts")
                         .createSignedUrl(path, 60 * 60 * 24 * 365);
-                      setPaymentReceiptUrl(signed?.signedUrl || path);
+                      if (signErr) throw signErr;
+                      setPaymentReceiptUrl(signed.signedUrl);
                       toast.success(t.pos.receipt_uploaded);
                     } catch (err) {
                       toast.error(

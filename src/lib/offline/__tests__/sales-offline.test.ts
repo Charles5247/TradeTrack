@@ -35,9 +35,11 @@ describe("persistOfflineSale", () => {
       discount: 0,
       tax: 0,
       total: 100,
-      amount_paid: 100,
+      amount_paid: 40,
       change_amount: 0,
-      payment_method: "cash",
+      payment_method: "partial",
+      customer_name: "Ada Customer",
+      customer_phone: "08000000000",
       notes: "offline test",
     });
 
@@ -47,6 +49,8 @@ describe("persistOfflineSale", () => {
     const queueItems = await db.getAll("sync_queue");
 
     expect(sales).toHaveLength(1);
+    expect(sales[0]).toMatchObject({ amount_paid: 40, payment_status: "partial", customer_name: "Ada Customer", customer_phone: "08000000000" });
+    expect(queueItems.find((item) => item.table_name === "sales")?.payload).toMatchObject({ customer_name: "Ada Customer", customer_phone: "08000000000" });
     expect(saleItems).toHaveLength(1);
     expect(queueItems.some((item) => item.table_name === "sales")).toBe(true);
   });
