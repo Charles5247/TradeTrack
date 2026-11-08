@@ -20,6 +20,11 @@ it('enforces server entitlement on reads and every action', async () => {
   }
   expect(mock.from).not.toHaveBeenCalled(); expect(mock.provider).not.toHaveBeenCalled();
 });
+it('requires a business owner for every assistant request', async () => {
+  await GET();
+  await POST(request({ action: 'preferences', confirm: true }));
+  expect(mock.context).toHaveBeenCalledWith(['business_owner']);
+});
 it('requires explicit confirmation before approvals, preferences or deliveries', async () => {
   for (const action of ['approve','preferences','deliver']) {
     const response = await POST(request({ action })); expect(response.status).toBe(400);

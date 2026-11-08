@@ -5,7 +5,7 @@ import { deliveryAdapter } from '@/lib/ai/delivery';
 import { recentAnalysis } from '@/lib/ai/analysis';
 
 async function context() {
-  const ctx = await apiContext();
+  const ctx = await apiContext(['business_owner']);
   const db = ctx.db as any;
   const { data, error } = await db.rpc('verify_business_subscription');
   if (error || !data || !hasAIEntitlement(data)) throw new Error('AI requires an active introductory period or Growth plan and above.');

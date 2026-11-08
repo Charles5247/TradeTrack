@@ -7,6 +7,7 @@ import { isPosRoute, isDenseRoute } from '@/lib/utils/route-mode';
 import { useAuthStore } from '@/store';
 import { ResponsiveTableScope } from '@/components/ui/responsive-table-scope';
 import { NotificationSync } from '@/components/notifications/notification-sync';
+import { AssistantLauncher } from '@/components/ai/assistant-launcher';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -39,6 +40,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     <AppScreen pos={pos} dense={dense} noPadding={pos}>
       <NotificationSync />
       <ResponsiveTableScope>{children}</ResponsiveTableScope>
+      <AssistantLauncher />
     </AppScreen>
   );
 }

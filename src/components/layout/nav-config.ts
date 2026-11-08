@@ -20,7 +20,6 @@ import {
   Search,
   FileInput,
   Calculator,
-  Sparkles,
 } from "lucide-react";
 import type { UserRole } from "@/types";
 import { isMedicalIndustry } from '@/lib/industries';
@@ -147,7 +146,6 @@ export const NAV_GROUPS_BO: NavGroup[] = [
         roles: ["business_owner", "admin"],
       },
       { navKey: "accounting", label: "Accounting", href: "/accounting", icon: Calculator, roles: ["business_owner", "admin"] },
-      { navKey: "assistant", label: "Assistant", href: "/assistant", icon: Sparkles, roles: ["business_owner", "admin"] },
       {
         navKey: "audit",
         href: "/audit",

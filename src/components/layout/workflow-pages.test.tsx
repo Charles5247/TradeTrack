@@ -40,7 +40,8 @@ it('lets keyboard users mark a notification read',async()=>{
   }finally{await act(()=>root.unmount());host.remove();}
 });
 it('exposes existing business tools only to permitted roles',()=>{
-  for(const role of ['business_owner','admin'] as const)expect(getFlatNavItems(role).map(i=>i.href)).toEqual(expect.arrayContaining(['/warehouses','/imports','/accounting','/assistant']));
+  for(const role of ['business_owner','admin'] as const)expect(getFlatNavItems(role).map(i=>i.href)).toEqual(expect.arrayContaining(['/warehouses','/imports','/accounting']));
+  for(const role of ['business_owner','admin'] as const)expect(getFlatNavItems(role).map(i=>i.href)).not.toContain('/assistant');
   for(const role of ['cashier','platform_owner'] as const)expect(getFlatNavItems(role).map(i=>i.href)).not.toEqual(expect.arrayContaining(['/imports','/accounting']));
 });
 it('renders report empty states and propagates read failures instead of zero metrics',async()=>{
