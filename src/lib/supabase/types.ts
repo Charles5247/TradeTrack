@@ -13,6 +13,12 @@ type NoRel = { Relationships: [] };
 export type Database = {
   public: {
     Tables: {
+      product_cost_history: {
+        Row: { id: string; organization_id: string; product_id: string; warehouse_id: string; source_type: 'purchase_order' | 'stock_receipt'; source_id: string; purchase_order_id: string | null; purchase_order_item_id: string | null; previous_stock: number; received_quantity: number; unit_cost: number; previous_average_cost: number; new_average_cost: number; recorded_by: string; notes: string | null; created_at: string };
+        Insert: Record<string, never>;
+        Update: Record<string, never>;
+        Relationships: [];
+      };
       warehouse_memos: {
         Row: { id: string; organization_id: string; warehouse_id: string; direction: 'in' | 'out'; reference: string; status: 'draft' | 'sent' | 'submitted' | 'approved'; expected_items: Array<{ product_id: string; quantity: number }>; actual_items: Array<{ product_id: string; quantity: number }> | null; approved_items: Array<{ product_id: string; quantity: number }> | null; created_by: string; submitted_by: string | null; reviewed_by: string | null; review_reason: string | null; created_at: string; sent_at: string | null; submitted_at: string | null; reviewed_at: string | null };
         Insert: { organization_id: string; warehouse_id: string; direction: 'in' | 'out'; reference: string; expected_items: Array<{ product_id: string; quantity: number }>; created_by: string };
@@ -1046,6 +1052,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      receive_stock_at_cost: { Args: { p_receipt_id: string; p_product_id: string; p_warehouse_id: string; p_quantity: number; p_unit_cost: number; p_notes?: string | null }; Returns: number };
       create_warehouse_memo: { Args: { p_warehouse: string; p_direction: string; p_reference: string; p_items: Array<{ product_id: string; quantity: number }>; p_send?: boolean }; Returns: string };
       send_warehouse_memo: { Args: { p_memo: string }; Returns: void };
       submit_warehouse_memo: { Args: { p_memo: string; p_items: Array<{ product_id: string; quantity: number }> }; Returns: void };

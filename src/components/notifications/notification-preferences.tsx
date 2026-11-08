@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { alertSoundKey, desktopAlertsKey } from '@/lib/notifications/desktop';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertTriangle, Bell, Mail, MessageSquare } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
@@ -27,6 +28,25 @@ export function NotificationPreferences() {
   const [mobile, setMobile] = useState(user?.phone || '');
   const [checkoutError, setCheckoutError] = useState('');
   const [checkoutBusy, setCheckoutBusy] = useState(false);
+  const [desktopEnabled, setDesktopEnabled] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [desktopError, setDesktopError] = useState('');
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDesktopEnabled(localStorage.getItem(desktopAlertsKey) === 'on' && 'Notification' in window && Notification.permission === 'granted');
+      setSoundEnabled(localStorage.getItem(alertSoundKey) !== 'off');
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+  const enableDesktop = async () => {
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+      setDesktopError('This browser does not support desktop notifications.'); return;
+    }
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') { setDesktopError('Allow notifications in your browser settings to see alerts outside the app.'); return; }
+    localStorage.setItem(desktopAlertsKey, 'on');
+    setDesktopEnabled(true); setDesktopError('');
+  };
   const query = useQuery({ queryKey: ['notification-preferences', user?.id], enabled: Boolean(user?.id && orgId), queryFn: async () => {
     const db = createClient();
     const [preferences, settings, credits] = await Promise.all([
@@ -58,6 +78,13 @@ export function NotificationPreferences() {
   };
 
   return <Card><CardHeader><CardTitle className="flex items-center gap-2"><Bell className="h-5 w-5" />{copy('Notification preferences')}</CardTitle><CardDescription>{copy('In-app alerts are on by default. Choose email or SMS separately for each event.')}</CardDescription></CardHeader><CardContent className="space-y-4">
+    <div className="space-y-3 rounded-lg border p-4">
+      <p className="font-medium">{copy('Screen and sound alerts')}</p>
+      <p className="text-sm text-muted-foreground">{copy('Allow screen alerts to see new notifications when Trackasuwa is minimized. Keep the app open in a browser tab. Your device controls notification volume and Do Not Disturb.')}</p>
+      <Button type="button" variant="outline" onClick={() => { if (desktopEnabled) { localStorage.setItem(desktopAlertsKey, 'off'); setDesktopEnabled(false); } else void enableDesktop(); }}>{desktopEnabled ? copy('Turn off screen alerts') : copy('Allow screen alerts')}</Button>
+      <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={soundEnabled} onChange={event => { setSoundEnabled(event.target.checked); localStorage.setItem(alertSoundKey, event.target.checked ? 'on' : 'off'); }} />{copy('Play a sound for new alerts')}</label>
+      {desktopError && <p role="alert" className="text-sm text-destructive">{copy(desktopError)}</p>}
+    </div>
     <div className="flex gap-2 rounded-lg border border-warning/40 bg-warning/5 p-3 text-sm"><AlertTriangle className="h-5 w-5 shrink-0 text-warning" /><p>{copy('Every-sale email and SMS alerts are off by default because they can create high message volume and SMS cost.')}</p></div>
     {query.error && <p role="alert" className="text-sm text-destructive">{copy('Notification preferences need the notification database update before they can be saved.')}</p>}
     <div className="grid grid-cols-[minmax(0,1fr)_52px_52px_52px] items-center gap-2 text-center text-xs font-semibold text-muted-foreground"><span className="text-left">{copy('Event')}</span><Bell className="mx-auto h-4 w-4" /><Mail className="mx-auto h-4 w-4" /><MessageSquare className="mx-auto h-4 w-4" /></div>

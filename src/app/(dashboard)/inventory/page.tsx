@@ -29,6 +29,7 @@ import { saveToOfflineDB, addToSyncQueue, getAllFromOfflineDB } from '@/lib/offl
 import { requireTransactionSubscription } from '@/lib/subscriptions/verification';
 import type { InventoryRecord } from '@/lib/offline/db';
 import { compareListRows, useListPreference, type ListSort, type ProductGroup } from '@/lib/lists/preferences';
+import { receiveStockAtCost } from '@/lib/inventory/receive-stock';
 
 async function fetchInventory(warehouseId: string, filter: string, search: string, sort: ListSort) {
   const cached = async () => {
@@ -261,6 +262,7 @@ function InventoryPageInner() {
   const [adjustDialog, setAdjustDialog] = useState<Record<string, unknown> | null>(null);
   const [adjustType, setAdjustType] = useState<'in' | 'out' | 'adjustment'>('in');
   const [adjustQty, setAdjustQty] = useState('');
+  const [buyingCost, setBuyingCost] = useState('');
   const [adjustNotes, setAdjustNotes] = useState('');
   const [adjustReason, setAdjustReason] = useState('');
 
@@ -295,11 +297,20 @@ function InventoryPageInner() {
 
   const adjustMutation = useMutation({
     networkMode: 'always',
-    mutationFn: adjustStock,
+    mutationFn: async (payload: Parameters<typeof adjustStock>[0] & { unit_cost?: number }) =>
+      payload.movement_type === 'in'
+        ? receiveStockAtCost({ organization_id: payload.organization_id, product_id: payload.product_id,
+            warehouse_id: payload.warehouse_id, quantity: payload.quantity_change,
+            unit_cost: payload.unit_cost!, notes: payload.notes })
+        : adjustStock(payload),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['pos-products'] });
+      queryClient.invalidateQueries({ queryKey: ['product-cost-history'] });
       setAdjustDialog(null);
       setAdjustQty('');
+      setBuyingCost('');
       setAdjustNotes('');
       if (result?.offline) {
         toast.success(t.inventory.adjusted_success, {
@@ -320,6 +331,10 @@ function InventoryPageInner() {
       return;
     }
     const change = adjustType === 'out' ? -qty : qty;
+    if (adjustType === 'in' && (!buyingCost.trim() || !Number.isFinite(Number(buyingCost)) || Number(buyingCost) < 0)) {
+      toast.error('Enter the actual buying cost per unit.');
+      return;
+    }
     const product = adjustDialog.product as { id: string } | null;
     adjustMutation.mutate({
       organization_id: (user as unknown as { organization_id: string }).organization_id,
@@ -333,6 +348,7 @@ function InventoryPageInner() {
       movement_type: adjustType,
       notes: adjustNotes,
       reason: adjustReason,
+      unit_cost: adjustType === 'in' ? Number(buyingCost) : undefined,
     });
   };
 
@@ -566,6 +582,11 @@ function InventoryPageInner() {
                   placeholder={t.inventory.enter_quantity}
                 />
               </div>
+              {adjustType === 'in' && <div className="space-y-2">
+                <Label htmlFor="stock-buying-cost">{copy('Buying cost per unit for this stock')}</Label>
+                <Input id="stock-buying-cost" type="number" min="0" step="0.01" value={buyingCost} onChange={event => setBuyingCost(event.target.value)} placeholder="0.00" />
+                <p className="text-xs text-muted-foreground">{copy('Trackasuwa will update the average buying cost and keep this receipt in product history.')}</p>
+              </div>}
               <div className="space-y-2">
                 <Label>{t.inventory.reason_required}</Label>
                 <Input

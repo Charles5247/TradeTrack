@@ -57,6 +57,21 @@ self.addEventListener("message", (event) => {
   }
 });
 
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const requested = event.notification.data && event.notification.data.href;
+  const allowed = /^\/(admin\/support|support|notifications|warehouse-memos|transfers|purchase-orders)$/.test(requested || "")
+    ? requested : "/notifications";
+  event.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(async (clients) => {
+    const existing = clients.find(client => new URL(client.url).origin === self.location.origin);
+    if (existing) {
+      await existing.navigate(allowed);
+      return existing.focus();
+    }
+    return self.clients.openWindow(allowed);
+  }));
+});
+
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches

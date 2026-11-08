@@ -96,9 +96,13 @@ export async function persistOfflineSale(payload: OfflineSalePayload) {
   const done = transaction.done;
   void done.catch(() => {});
   try {
-  for (const item of payload.items) {
+  for (const [index, item] of payload.items.entries()) {
     const product = await transaction.objectStore('products').get(item.product_id);
     if (product?.medical_stock_managed) throw new Error('Use the medical batch workflow for this product');
+    // A cart may have been opened before a new purchase changed the average.
+    // Snapshot the freshest cost known on this device when the sale is saved.
+    if (product && Number.isFinite(Number(product.cost_price)))
+      saleItems[index].cost_price = Number(product.cost_price);
   }
   await transaction.objectStore('sales').put(saleRecord);
 

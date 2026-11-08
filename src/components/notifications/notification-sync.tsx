@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore, useNotificationStore } from '@/store';
+import { playAlertSound, showDesktopAlert } from '@/lib/notifications/desktop';
 
 /** Keeps the global bell accurate with Realtime and a polling fallback. */
 export function NotificationSync() {
@@ -16,6 +17,7 @@ export function NotificationSync() {
     let disposed = false;
     let announced = false;
     let hasVisibilityColumn = true;
+    let knownIds: Set<string> | null = null;
     const storageKey = `trackasuwa:notifications:unread:${user.id}`;
     const refresh = async () => {
       let result = hasVisibilityColumn
@@ -37,6 +39,26 @@ export function NotificationSync() {
           if (next > 0) toast.info(`You have ${next} unread notification${next === 1 ? '' : 's'}.`, {
             action: { label: 'View', onClick: () => { window.location.href = '/notifications'; } },
           });
+        }
+        const latest = hasVisibilityColumn
+          ? await supabase.from('notifications').select('id,title,message,body,data').eq('is_read', false).eq('in_app_visible', true).order('created_at', { ascending: false }).limit(20)
+          : await supabase.from('notifications').select('id,title,message,body,data').eq('is_read', false).order('created_at', { ascending: false }).limit(20);
+        if (!disposed && !latest.error) {
+          const rows = latest.data || [];
+          if (knownIds) {
+            for (const item of rows.slice().reverse()) {
+              if (knownIds.has(item.id)) continue;
+              toast.info(item.title || 'New notification', {
+                description: item.message || item.body || undefined,
+                action: { label: 'View', onClick: () => { window.location.href = '/notifications'; } },
+              });
+              playAlertSound();
+              const href = typeof item.data?.href === 'string' && /^\/(admin\/support|support|notifications|warehouse-memos|transfers|purchase-orders)$/.test(item.data.href)
+                ? item.data.href : '/notifications';
+              void showDesktopAlert(item.id, item.title || 'Trackasuwa notification', item.message || item.body || '', href).catch(() => {});
+            }
+          }
+          knownIds = new Set(rows.map(item => item.id));
         }
       } else if (!disposed) {
         setUnreadCount(Number(localStorage.getItem(storageKey) || 0));

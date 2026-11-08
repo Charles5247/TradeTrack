@@ -6,11 +6,8 @@ import { TranslatedText } from '@/i18n/text';
  * Purchase Orders — minimal Business-tier feature.
  *
  * Workflow: Create (draft) -> Send (sent) -> Receive (received) or
- * Cancel (cancelled). Receiving updates inventory using the SAME
- * read-qty -> upsert `inventory` -> insert `inventory_movements`
- * pattern already used inline in inventory/page.tsx's adjustStock(),
- * transfers/page.tsx's updateTransferStatus() and vendors/page.tsx's
- * createMutation — no new inventory-mutation mechanism is introduced.
+ * Cancel (cancelled). Receiving commits stock, cost and history together
+ * in a database trigger.
  *
  * Explicitly out of scope for this version (see docs/ROADMAP.md):
  * partial receiving, PO approval workflows, PDF export, purchasing
@@ -172,78 +169,30 @@ async function cancelPurchaseOrder(id: string) {
   if (error) throw error;
 }
 
-/**
- * Receive a PO in full (no partial receiving in this version). Updates
- * inventory via the SAME read-qty -> upsert `inventory` -> insert
- * `inventory_movements` pattern used elsewhere in the app (see
- * inventory/page.tsx's adjustStock()) — deliberately replicated inline
- * rather than extracted into a new shared helper, since no such shared
- * helper exists anywhere else in the codebase either.
- */
-async function receivePurchaseOrder(payload: {
-  poId: string;
-  organizationId: string;
-  warehouseId: string;
-  userId: string;
-}) {
+/** Receive a full order in one database transaction. */
+async function receivePurchaseOrder(poId: string, userId: string) {
+  // The receipt trigger commits stock, moving average cost, and history together.
   const supabase = createClient();
-
-  const { data: items, error: itemsError } = await supabase
-    .from('purchase_order_items')
-    .select('id, product_id, quantity_ordered')
-    .eq('purchase_order_id', payload.poId);
-  if (itemsError) throw itemsError;
-
-  for (const item of items || []) {
-    const { data: inv } = await supabase
-      .from('inventory')
-      .select('id, quantity')
-      .eq('product_id', item.product_id)
-      .eq('warehouse_id', payload.warehouseId)
-      .maybeSingle();
-
-    const oldQty = inv?.quantity || 0;
-    const newQty = oldQty + item.quantity_ordered;
-
-    if (inv) {
-      await supabase.from('inventory').update({ quantity: newQty }).eq('id', inv.id);
-    } else {
-      await supabase.from('inventory').insert({
-        organization_id: payload.organizationId,
-        product_id: item.product_id,
-        warehouse_id: payload.warehouseId,
-        quantity: item.quantity_ordered,
-        min_stock_level: 5,
-      });
-    }
-
-    await supabase.from('inventory_movements').insert({
-      organization_id: payload.organizationId,
-      product_id: item.product_id,
-      warehouse_id: payload.warehouseId,
-      movement_type: 'in',
-      quantity: item.quantity_ordered,
-      reference_id: payload.poId,
-      reference_type: 'purchase_order',
-      notes: 'Received from purchase order',
-      created_by: payload.userId,
-    });
-
-    await supabase
-      .from('purchase_order_items')
-      .update({ quantity_received: item.quantity_ordered })
-      .eq('id', item.id);
-  }
-
   const { error } = await supabase
     .from('purchase_orders')
     .update({
       status: 'received',
-      received_by: payload.userId,
+      received_by: userId,
       received_at: new Date().toISOString(),
     })
-    .eq('id', payload.poId);
+    .eq('id', poId)
+    .eq('status', 'sent')
+    .select('id')
+    .single();
   if (error) throw error;
+  try {
+    const { data: lines } = await supabase.from('purchase_order_items').select('product_id').eq('purchase_order_id', poId);
+    const ids = [...new Set((lines || []).map(line => line.product_id))];
+    if (ids.length) {
+      const { data: products } = await supabase.from('products').select('*').in('id', ids);
+      if (products?.length) await saveToOfflineDB('products', products);
+    }
+  } catch { /* The committed receipt remains valid; normal sync will refresh the cache. */ }
 }
 
 // ── Page ─────────────────────────────────────────────────────
@@ -382,18 +331,14 @@ function PurchaseOrdersPageInner({ createMode }: { createMode: boolean }) {
     networkMode: 'always',
     mutationFn: async (poId: string) => {
       await requireSyncedPurchaseOrder(poId, orgId!);
-      const destination = warehouses.find((w) => w.is_main) || warehouses[0];
-      if (!destination) throw new Error(t.purchaseOrders.no_warehouse);
-      return receivePurchaseOrder({
-        poId,
-        organizationId: orgId as string,
-        warehouseId: destination.id,
-        userId: user!.id,
-      });
+      return receivePurchaseOrder(poId, user!.id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['pos-products'] });
+      queryClient.invalidateQueries({ queryKey: ['product-cost-history'] });
       toast.success(t.purchaseOrders.received_success);
     },
     onError: (e) =>

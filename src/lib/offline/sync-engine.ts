@@ -360,7 +360,7 @@ class SyncEngine {
         Number(b.table_name === "vendor_transactions") -
         Number(a.table_name === "vendor_transactions"),
     );
-    const dependencyOrder: Record<string, number> = { import_batches: -2, import_commands: -1, warehouses: 0, products: 1, purchase_orders: 2, vendor_transactions: 3, sales: 4, sale_items: 5, sale_stock: 6, inventory: 7, inventory_movements: 8, product_images: 9 };
+    const dependencyOrder: Record<string, number> = { import_batches: -2, import_commands: -1, warehouses: 0, products: 1, purchase_orders: 2, stock_receipts: 3, vendor_transactions: 4, sales: 5, sale_items: 6, sale_stock: 7, inventory: 8, inventory_movements: 9, product_images: 10 };
     pendingItems.sort((a, b) => (dependencyOrder[a.table_name] ?? 4) - (dependencyOrder[b.table_name] ?? 4));
     if (pendingItems.length === 0) return;
 
@@ -371,9 +371,9 @@ class SyncEngine {
     const failedDependencies = await db.getAllFromIndex("sync_queue", "by-status", "failed") as SyncQueueRecord[];
 
     for (const queuedItem of pendingItems) {
-      if (queuedItem.table_name === "inventory" || queuedItem.table_name === "inventory_movements") {
-        const productId = String(queuedItem.payload.product_id || "");
-        const warehouseId = String(queuedItem.payload.warehouse_id || "");
+      if (["inventory", "inventory_movements", "stock_receipts"].includes(queuedItem.table_name)) {
+        const productId = String(queuedItem.payload.product_id || queuedItem.payload.p_product_id || "");
+        const warehouseId = String(queuedItem.payload.warehouse_id || queuedItem.payload.p_warehouse_id || "");
         const parents = [
           ...(await db.getAllFromIndex("sync_queue", "by-queue-key", ["products", productId, "INSERT"]) as SyncQueueRecord[]),
           ...(await db.getAllFromIndex("sync_queue", "by-queue-key", ["warehouses", warehouseId, "INSERT"]) as SyncQueueRecord[]),
@@ -594,6 +594,18 @@ class SyncEngine {
     // Use type assertion to allow dynamic table name
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const client = supabase as any;
+    if (item.table_name === "stock_receipts") {
+      const result = await supabase.rpc("receive_stock_at_cost", item.payload as unknown as {
+        p_receipt_id: string; p_product_id: string; p_warehouse_id: string;
+        p_quantity: number; p_unit_cost: number; p_notes?: string | null;
+      });
+      if (!result.error) {
+        const db = await getDB();
+        const product = await db.get("products", String(item.payload.p_product_id));
+        if (product) await db.put("products", { ...product, cost_price: Number(result.data) });
+      }
+      return result;
+    }
     if (item.table_name === "product_images") {
       const db = await getDB();
       const image = await db.get("pending_product_images", item.record_id) as { blob: Blob; path: string; content_type: string } | undefined;

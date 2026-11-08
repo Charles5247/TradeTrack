@@ -10,7 +10,11 @@ vi.mock('@/store', () => ({
   useNotificationStore: (selector: (state: { setUnreadCount: typeof setUnreadCount }) => unknown) => selector({ setUnreadCount }),
 }));
 vi.mock('@/lib/supabase/client', () => ({ createClient: () => ({
-  from: () => ({ select: () => ({ eq: () => ({ eq: async () => ({ count: 2, error: null }) }) }) }),
+  from: () => ({ select: (_columns: string, options?: { head?: boolean }) => {
+    const result = options?.head ? { count: 2, error: null } : { data: [{ id: 'n1', title: 'Stock low', message: 'Restock soon', body: null, data: null }], error: null };
+    const builder = { eq: () => builder, order: () => builder, limit: () => Promise.resolve(result), then: (resolve: (value: typeof result) => void) => Promise.resolve(result).then(resolve) };
+    return builder;
+  } }),
   channel: () => ({ on() { return this; }, subscribe() { return this; } }),
   removeChannel: async () => undefined,
 }) }));

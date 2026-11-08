@@ -28,7 +28,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { LoadingState } from '@/components/ui/loading-state';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { createClient } from '@/lib/supabase/client';
-import { formatCurrency, formatDate } from '@/lib/utils/format';
+import { formatCurrency, formatDate, getAppCurrency } from '@/lib/utils/format';
 import type { Product } from '@/types';
 import { ProductForm } from '@/components/products/product-form';
 import { OfflineProductImage } from '@/components/products/offline-product-image';
@@ -37,6 +37,7 @@ import { useAuthStore } from '@/store';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { adjustProductStock } from '@/lib/inventory/adjust-stock';
+import { receiveStockAtCost } from '@/lib/inventory/receive-stock';
 import type { Warehouse } from '@/types';
 import { compareListRows, useListPreference, type ListSort, type ProductGroup } from '@/lib/lists/preferences';
 import { getAllFromOfflineDB, saveToOfflineDB } from '@/lib/offline/db';
@@ -44,6 +45,7 @@ import { isOffline } from '@/lib/utils/network';
 
 type ProductStockRow = { id: string; warehouse_id: string; quantity: number; min_stock_level: number | null; warehouse: { name?: string } | null };
 type ProductWithStock = Product & { inventory?: ProductStockRow[]; category?: { name?: string } | null; supplier?: { name?: string } | null };
+const formatUnitCost = (value: number) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: getAppCurrency(), minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
 
 async function fetchProducts(search?: string, categoryId?: string, sort: ListSort = 'az') {
   const cached = async () => {
@@ -129,6 +131,7 @@ function ProductsPageInner() {
   const [adjustProduct, setAdjustProduct] = useState<ProductWithStock | null>(null);
   const [adjustWarehouse, setAdjustWarehouse] = useState('');
   const [adjustQuantity, setAdjustQuantity] = useState('');
+  const [adjustBuyingCost, setAdjustBuyingCost] = useState('');
   const [adjustReason, setAdjustReason] = useState('');
 
   const { data: products = [], isLoading, error: pageError, refetch: retryPage } = useQuery({
@@ -152,6 +155,17 @@ function ProductsPageInner() {
       return (data || []) as Warehouse[];
     },
   });
+  const { data: costHistory = [], isLoading: historyLoading, error: historyError } = useQuery({
+    queryKey: ['product-cost-history', viewProduct?.id],
+    enabled: Boolean(viewProduct?.id) && !isOffline(),
+    queryFn: async () => {
+      const { data, error } = await createClient().from('product_cost_history')
+        .select('id,created_at,received_quantity,unit_cost,previous_stock,previous_average_cost,new_average_cost,source_type,notes')
+        .eq('product_id', viewProduct!.id).order('created_at', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
 
   const stockRows = (product: ProductWithStock) => product.inventory || [];
   const totalStock = (product: ProductWithStock) => stockRows(product).reduce((sum, row) => sum + Number(row.quantity), 0);
@@ -168,13 +182,21 @@ function ProductsPageInner() {
     setAdjustProduct(product);
     setAdjustWarehouse(stockRows(product)[0]?.warehouse_id || warehouses[0]?.id || '');
     setAdjustQuantity(String(stockRows(product)[0]?.quantity ?? 0)); setAdjustReason('Quantity updated from product page');
+    setAdjustBuyingCost('');
   };
   const adjustMutation = useMutation({
     networkMode: 'always',
-    mutationFn: adjustProductStock,
+    mutationFn: async (payload: Parameters<typeof adjustProductStock>[0] & { unit_cost?: number }) =>
+      payload.quantity_change > 0
+        ? receiveStockAtCost({ organization_id: payload.organization_id, product_id: payload.product_id,
+            warehouse_id: payload.warehouse_id, quantity: payload.quantity_change,
+            unit_cost: payload.unit_cost!, notes: payload.reason })
+        : adjustProductStock(payload),
     onSuccess: result => {
       void queryClient.invalidateQueries({ queryKey: ['products'] });
       void queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      void queryClient.invalidateQueries({ queryKey: ['pos-products'] });
+      void queryClient.invalidateQueries({ queryKey: ['product-cost-history'] });
       setAdjustProduct(null);
       toast.success(result.offline ? copy('Stock adjustment saved offline and will sync automatically.') : copy('Stock adjusted successfully'));
     },
@@ -187,11 +209,14 @@ function ProductsPageInner() {
     const row = stockRows(adjustProduct).find(item => item.warehouse_id === adjustWarehouse);
     const change = quantity - (row?.quantity ?? 0);
     if (change === 0) return setAdjustProduct(null);
+    if (change > 0 && (!adjustBuyingCost.trim() || !Number.isFinite(Number(adjustBuyingCost)) || Number(adjustBuyingCost) < 0))
+      return toast.error(copy('Enter the buying cost per unit for the added stock.'));
     adjustMutation.mutate({
       organization_id: String(user.organization_id), user_id: user.id, product_id: adjustProduct.id,
       warehouse_id: adjustWarehouse, inventory_id: row?.id, current_quantity: row?.quantity ?? 0,
       min_stock_level: row?.min_stock_level ?? 5, quantity_change: change,
       reason: adjustReason.trim().length >= 3 ? adjustReason : 'Quantity updated from product page',
+      unit_cost: change > 0 ? Number(adjustBuyingCost) : undefined,
     });
   };
 
@@ -423,6 +448,9 @@ function ProductsPageInner() {
               setIsFormOpen(false);
               setEditProduct(null);
               queryClient.invalidateQueries({ queryKey: ['products'] });
+              queryClient.invalidateQueries({ queryKey: ['inventory'] });
+              queryClient.invalidateQueries({ queryKey: ['pos-products'] });
+              queryClient.invalidateQueries({ queryKey: ['product-cost-history'] });
             }}
             onCancel={() => {
               setIsFormOpen(false);
@@ -462,7 +490,7 @@ function ProductsPageInner() {
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div><span className="tt-muted">{t.products.sku}:</span> <span className="font-medium tt-mono">{viewProduct.sku}</span></div>
                 <div><span className="tt-muted">{t.products.barcode}:</span> <span className="font-medium tt-mono">{viewProduct.barcode || '—'}</span></div>
-                <div><span className="tt-muted">{t.products.cost_price}:</span> <span className="font-medium tt-tabular">{formatCurrency(viewProduct.cost_price)}</span></div>
+                <div><span className="tt-muted">{copy('Average buying cost')}:</span> <span className="font-medium tt-tabular">{formatUnitCost(viewProduct.cost_price)}</span></div>
                 <div><span className="tt-muted">{t.products.selling_price}:</span> <span className="font-semibold tt-tabular" style={{ color: 'var(--c-success)' }}>{formatCurrency(viewProduct.selling_price)}</span></div>
                 <div><span className="tt-muted">{t.products.margin}:</span> <span className="font-medium tt-tabular">
                   {viewProduct.selling_price > 0 ? Math.round(((viewProduct.selling_price - viewProduct.cost_price) / viewProduct.selling_price) * 100) : 0}%
@@ -478,6 +506,20 @@ function ProductsPageInner() {
                   </div>
                 )) : <p className="text-sm text-muted-foreground">{copy('No stock recorded at any location.')}</p>}
                 {canManageStock && <Button type="button" variant="outline" className="min-h-11 w-full" onClick={() => { setViewProduct(null); openAdjustment(viewProduct); }}><SlidersHorizontal className="h-4 w-4" />{t.inventory.adjust_stock}</Button>}
+              </div>
+              <div className="space-y-2 rounded-lg border border-border p-3">
+                <p className="font-medium">{copy('Buying cost history')}</p>
+                <p className="text-xs text-muted-foreground">{copy('Each receipt updates the average buying cost. Earlier sales keep the cost recorded when they happened.')}</p>
+                {isOffline() ? <p className="text-sm text-muted-foreground">{copy('Reconnect to view purchase cost history.')}</p>
+                  : historyLoading ? <p className="text-sm text-muted-foreground">{copy('Loading history...')}</p>
+                  : historyError ? <p className="text-sm text-destructive">{copy('Could not load purchase cost history.')}</p>
+                  : costHistory.length === 0 ? <p className="text-sm text-muted-foreground">{copy('No stock purchases recorded yet.')}</p>
+                  : <div className="max-h-64 space-y-2 overflow-y-auto">{costHistory.map(entry => (
+                    <div key={entry.id} className="border-t border-border pt-2 text-sm">
+                      <div className="flex justify-between gap-2"><span>{formatDate(entry.created_at)} · {entry.source_type === 'purchase_order' ? copy('Purchase order') : copy('Stock purchase')}</span><span>{entry.received_quantity} {copy(viewProduct.stock_unit || 'piece')} × {formatUnitCost(entry.unit_cost)}</span></div>
+                      <p className="text-xs text-muted-foreground">{copy('Average cost')}: {formatUnitCost(entry.previous_average_cost)} → {formatUnitCost(entry.new_average_cost)} · {copy('Previous stock')}: {entry.previous_stock}</p>
+                    </div>
+                  ))}</div>}
               </div>
               {viewProduct.description && (
                 <div>
@@ -497,6 +539,8 @@ function ProductsPageInner() {
             <p className="font-medium">{productVariantLabel(adjustProduct)}</p>
             <div className="space-y-2"><Label>{copy('Location')}</Label><Select value={adjustWarehouse} onValueChange={value => { setAdjustWarehouse(value); setAdjustQuantity(String(stockRows(adjustProduct).find(row => row.warehouse_id === value)?.quantity ?? 0)); }}><SelectTrigger><SelectValue placeholder={copy('Choose a location')} /></SelectTrigger><SelectContent>{warehouses.map(warehouse => <SelectItem key={warehouse.id} value={warehouse.id}>{warehouse.name}</SelectItem>)}</SelectContent></Select></div>
             <div className="space-y-2"><Label>New quantity (individual units)</Label><Input type="number" min="0" step="1" value={adjustQuantity} onChange={event => setAdjustQuantity(event.target.value)} /></div>
+            {Number(adjustQuantity) > Number(stockRows(adjustProduct).find(row => row.warehouse_id === adjustWarehouse)?.quantity ?? 0) &&
+              <div className="space-y-2"><Label>{copy('Buying cost per unit for added stock')}</Label><Input type="number" min="0" step="0.01" value={adjustBuyingCost} onChange={event => setAdjustBuyingCost(event.target.value)} placeholder="0.00" /></div>}
             <div className="space-y-2"><Label>Reason (optional)</Label><Textarea value={adjustReason} onChange={event => setAdjustReason(event.target.value)} /></div>
             <p className="text-sm text-muted-foreground">{copy('Current stock at this location: {count}', { count: stockRows(adjustProduct).find(row => row.warehouse_id === adjustWarehouse)?.quantity ?? 0 })}</p>
             <Button className="min-h-11 w-full" disabled={!adjustWarehouse || adjustQuantity === '' || adjustMutation.isPending} onClick={submitAdjustment}>Save quantity</Button>

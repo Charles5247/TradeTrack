@@ -25,6 +25,7 @@ import { useOrganization } from '@/components/shared/organization-provider';
 import { industryProfile, type StockUnit } from '@/lib/industries';
 import { generateId } from '@/lib/utils/id';
 import { adjustProductStock } from '@/lib/inventory/adjust-stock';
+import { receiveStockAtCost } from '@/lib/inventory/receive-stock';
 import { addToSyncQueue, getAllFromOfflineDB, saveToOfflineDB } from '@/lib/offline/db';
 import { isOffline } from '@/lib/utils/network';
 import { useAuthStore } from '@/store';
@@ -147,6 +148,9 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
       const openingQuantity = Number(quantity);
       if (!Number.isSafeInteger(openingQuantity) || openingQuantity < 0) throw new Error('Enter a valid whole-number quantity.');
       if ((openingQuantity > 0 || product?.id) && !warehouseId) throw new Error('Choose a stock location first.');
+      const stockRow = stockRows.find(row => row.warehouse_id === warehouseId);
+      const stockChange = openingQuantity - (stockRow?.quantity ?? 0);
+      const receivingExistingStock = Boolean(product?.id && stockChange > 0);
       let offline = isOffline() || Boolean(imageUrl?.startsWith('offline-image:'));
       const supabase = createClient();
       let user = useAuthStore.getState().user;
@@ -222,7 +226,7 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
         units_per_pack: data.units_per_pack,
         barcode: data.barcode || null,
         selling_price: data.selling_price,
-        cost_price: data.cost_price,
+        cost_price: receivingExistingStock ? product!.cost_price : data.cost_price,
         category_id: data.category_id || null,
         supplier_id: product?.supplier_id || null,
         status: data.status,
@@ -239,11 +243,14 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
         await saveToOfflineDB('products', [{ ...serverPayload, image_url: imageUrl || null }]);
         await addToSyncQueue('products', product ? 'UPDATE' : 'INSERT', id, serverPayload);
         if (imageId) await addToSyncQueue('product_images', 'INSERT', imageId, { product_id: id });
-        const stockRow = stockRows.find(row => row.warehouse_id === warehouseId);
-        const change = openingQuantity - (stockRow?.quantity ?? 0);
-        if (change && warehouseId) await adjustProductStock({ organization_id: orgId, user_id: user.id, product_id: id,
-          warehouse_id: warehouseId, inventory_id: stockRow?.id, current_quantity: stockRow?.quantity ?? 0,
-          quantity_change: change, reason: product ? 'Quantity updated from product form' : 'Opening stock' });
+        if (stockChange && warehouseId) {
+          if (receivingExistingStock) await receiveStockAtCost({ organization_id: orgId, product_id: id,
+            warehouse_id: warehouseId, quantity: stockChange, unit_cost: data.cost_price,
+            notes: 'Stock received from product form' }, { forceOffline: true });
+          else await adjustProductStock({ organization_id: orgId, user_id: user.id, product_id: id,
+            warehouse_id: warehouseId, inventory_id: stockRow?.id, current_quantity: stockRow?.quantity ?? 0,
+            quantity_change: stockChange, reason: product ? 'Quantity updated from product form' : 'Opening stock' });
+        }
         toast.success('Saved on this device. Product, photo and stock will upload when you reconnect.');
         onSuccess();
       };
@@ -260,11 +267,12 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
         if (error && /fetch failed|failed to fetch/i.test(error.message)) return await saveOffline();
         if (error) throw error;
 
-        const stockRow = stockRows.find(row => row.warehouse_id === warehouseId);
-        const change = openingQuantity - (stockRow?.quantity ?? 0);
-        if (change) await adjustProductStock({ organization_id: orgId, user_id: user.id, product_id: product.id,
+        if (stockChange > 0) await receiveStockAtCost({ organization_id: orgId, product_id: product.id,
+          warehouse_id: warehouseId, quantity: stockChange, unit_cost: data.cost_price,
+          notes: 'Stock received from product form' });
+        else if (stockChange < 0) await adjustProductStock({ organization_id: orgId, user_id: user.id, product_id: product.id,
           warehouse_id: warehouseId, inventory_id: stockRow?.id, current_quantity: stockRow?.quantity ?? 0,
-          quantity_change: change, reason: 'Quantity updated from product form' });
+          quantity_change: stockChange, reason: 'Quantity updated from product form' });
 
         await createAuditEntry({
           organization_id: orgId,
@@ -403,7 +411,8 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="cost_price"><TranslatedText text={"Cost Price (₦) *"} /></Label>
+          <Label htmlFor="cost_price">{copy(product?.id && Number(quantity) > Number(stockRows.find(row => row.warehouse_id === warehouseId)?.quantity ?? 0)
+            ? 'Buying cost per unit for the new stock *' : 'Cost price per unit *')}</Label>
           <Input
             id="cost_price"
             type="number"
@@ -412,6 +421,8 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
             {...register('cost_price')}
             error={errors.cost_price?.message}
           />
+          {product?.id && Number(quantity) > Number(stockRows.find(row => row.warehouse_id === warehouseId)?.quantity ?? 0) &&
+            <p className="text-xs text-muted-foreground">{copy('Enter what you paid for the added units. Trackasuwa will calculate the new average and record it in this product’s history.')}</p>}
         </div>
         <div className="space-y-2">
           <Label htmlFor="selling_price"><TranslatedText text={"Selling Price (₦) *"} /></Label>
