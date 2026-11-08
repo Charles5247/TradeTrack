@@ -42,7 +42,7 @@ export async function adjustProductStock(payload: StockAdjustment) {
     const movementId = generateId();
     const auditId = generateId();
     await Promise.all([
-      addToSyncQueue('inventory', 'UPDATE', inventoryId, inventory as unknown as Record<string, unknown>),
+      addToSyncQueue('inventory', cached || payload.inventory_id ? 'UPDATE' : 'INSERT', inventoryId, inventory as unknown as Record<string, unknown>),
       addToSyncQueue('inventory_movements', 'INSERT', movementId, {
         id: movementId, organization_id: payload.organization_id, product_id: payload.product_id,
         warehouse_id: payload.warehouse_id, movement_type: 'adjustment', quantity: payload.quantity_change,

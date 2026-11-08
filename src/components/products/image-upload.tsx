@@ -15,6 +15,9 @@ import { cn } from '@/lib/utils/cn';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ProductCodeLookup } from './product-code-lookup';
 import type { CodeMatch } from '@/lib/products/lookup-code';
+import { getDB } from '@/lib/offline/db';
+import { isOffline } from '@/lib/utils/network';
+import { withTimeout } from '@/lib/utils/timeout';
 
 interface ImageUploadProps {
   currentImageUrl?: string | null;
@@ -115,6 +118,7 @@ export function ImageUpload({
       const localUrl = URL.createObjectURL(file);
       setPreview(localUrl);
 
+      let retainPreview = false;
       try {
         const supabase = createClient();
         const userId = useAuthStore.getState().user?.id;
@@ -133,14 +137,31 @@ export function ImageUpload({
         const ext = mimeType === 'image/webp' ? 'webp' : mimeType === 'image/png' ? 'png' : mimeType === 'image/avif' ? 'avif' : 'jpg';
         const fileName = `${productId ?? generateId()}-${Date.now()}.${ext}`;
         const path = `${userId}/${fileName}`;
+        const saveOffline = async () => {
+          const id = generateId();
+          await (await getDB()).put('pending_product_images', { id, blob, path, content_type: mimeType });
+          retainPreview = true;
+          const marker = `offline-image:${id}`;
+          setPreviewOverride({ source: marker, url: localUrl });
+          onImageUploaded(marker);
+          toast.success('Photo saved on this device. It will upload after the product syncs.');
+        };
+        if (isOffline()) return await saveOffline();
 
         // Upload to Supabase Storage
-        const { error: uploadErr } = await supabase.storage
+        let upload;
+        try { upload = await withTimeout(supabase.storage
           .from(BUCKET)
           .upload(path, blob, {
             contentType: mimeType,
             upsert: false,
-          });
+          }), 5000); }
+        catch (error) {
+          if (error instanceof TypeError || (error instanceof Error && /timed out|fetch failed|failed to fetch/i.test(error.message))) return await saveOffline();
+          throw error;
+        }
+        const { error: uploadErr } = upload;
+        if (uploadErr && /fetch failed|failed to fetch/i.test(uploadErr.message)) return await saveOffline();
 
         if (uploadErr) throw uploadErr;
 
@@ -160,7 +181,7 @@ export function ImageUpload({
       } finally {
         setIsUploading(false);
         // Clean up object URL
-        URL.revokeObjectURL(localUrl);
+        if (!retainPreview) URL.revokeObjectURL(localUrl);
       }
     },
     [currentImageUrl, onImageUploaded, productId, setPreview]

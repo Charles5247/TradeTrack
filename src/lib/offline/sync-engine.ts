@@ -360,7 +360,7 @@ class SyncEngine {
         Number(b.table_name === "vendor_transactions") -
         Number(a.table_name === "vendor_transactions"),
     );
-    const dependencyOrder: Record<string, number> = { import_batches: -2, import_commands: -1, purchase_orders: 0, vendor_transactions: 1, sales: 2, sale_items: 3, sale_stock: 4, inventory: 5 };
+    const dependencyOrder: Record<string, number> = { import_batches: -2, import_commands: -1, warehouses: 0, products: 1, purchase_orders: 2, vendor_transactions: 3, sales: 4, sale_items: 5, sale_stock: 6, inventory: 7, inventory_movements: 8, product_images: 9 };
     pendingItems.sort((a, b) => (dependencyOrder[a.table_name] ?? 4) - (dependencyOrder[b.table_name] ?? 4));
     if (pendingItems.length === 0) return;
 
@@ -371,6 +371,19 @@ class SyncEngine {
     const failedDependencies = await db.getAllFromIndex("sync_queue", "by-status", "failed") as SyncQueueRecord[];
 
     for (const queuedItem of pendingItems) {
+      if (queuedItem.table_name === "inventory" || queuedItem.table_name === "inventory_movements") {
+        const productId = String(queuedItem.payload.product_id || "");
+        const warehouseId = String(queuedItem.payload.warehouse_id || "");
+        const parents = [
+          ...(await db.getAllFromIndex("sync_queue", "by-queue-key", ["products", productId, "INSERT"]) as SyncQueueRecord[]),
+          ...(await db.getAllFromIndex("sync_queue", "by-queue-key", ["warehouses", warehouseId, "INSERT"]) as SyncQueueRecord[]),
+        ];
+        if (parents.some(parent => parent.status !== "synced")) continue;
+      }
+      if (queuedItem.table_name === "product_images") {
+        const parents = await db.getAllFromIndex("sync_queue", "by-queue-key", ["products", String(queuedItem.payload.product_id), "INSERT"]) as SyncQueueRecord[];
+        if (parents.some(parent => parent.status !== "synced")) continue;
+      }
       // A sale's lines and stock change must wait until the parent exists on
       // the server. Keep them pending when a schema or policy error rejects it.
       if (queuedItem.table_name === "sale_items") {
@@ -456,6 +469,7 @@ class SyncEngine {
           status: "synced",
           synced_at: new Date().toISOString(),
         });
+        if (item.table_name === "product_images") await db.delete("pending_product_images", item.record_id);
         if (item.table_name === "sales") thisSaleSynced.add(item.record_id);
         if (item.table_name === "sale_items") thisLineSynced.add(item.record_id);
       } catch (err) {
@@ -580,6 +594,20 @@ class SyncEngine {
     // Use type assertion to allow dynamic table name
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const client = supabase as any;
+    if (item.table_name === "product_images") {
+      const db = await getDB();
+      const image = await db.get("pending_product_images", item.record_id) as { blob: Blob; path: string; content_type: string } | undefined;
+      if (!image) return { error: new Error("Offline product photo is missing from this device") };
+      const upload = await supabase.storage.from("product-images").upload(image.path, image.blob, { contentType: image.content_type, upsert: false });
+      if (upload.error && String(upload.error.statusCode) !== "409") return upload;
+      const url = supabase.storage.from("product-images").getPublicUrl(image.path).data.publicUrl;
+      const updated = await supabase.from("products").update({ image_url: url }).eq("id", String(item.payload.product_id)).select("id").single();
+      if (!updated.error) {
+        const product = await db.get("products", String(item.payload.product_id));
+        if (product) await db.put("products", { ...product, image_url: url });
+      }
+      return updated;
+    }
     if (item.table_name === "sale_stock") {
       return client.rpc("apply_sale_stock", { p_sale_id: item.payload.sale_id });
     }
@@ -725,7 +753,15 @@ class SyncEngine {
     const products = await this.pullRows(supabase, "products", orgId, since);
 
     if (products?.length) {
-      await saveToOfflineDB("products", products);
+      const db = await getDB();
+      for (const row of products) {
+        const pending = [
+          ...(await db.getAllFromIndex("sync_queue", "by-queue-key", ["products", row.id, "INSERT"]) as SyncQueueRecord[]),
+          ...(await db.getAllFromIndex("sync_queue", "by-queue-key", ["products", row.id, "UPDATE"]) as SyncQueueRecord[]),
+        ];
+        if (pending.some(entry => entry.status !== "synced")) continue;
+        await db.put("products", row);
+      }
     }
 
     const inventory = await this.pullRows(supabase, "inventory", orgId, since);
@@ -734,9 +770,11 @@ class SyncEngine {
       const db = await getDB();
       const tx = db.transaction(["inventory", "sync_queue"], "readwrite");
       for (const row of inventory) {
-        const entries = await tx.objectStore("sync_queue").index("by-queue-key")
-          .getAll(["inventory", row.id, "UPDATE"]) as SyncQueueRecord[];
-        if (entries.some((entry) => entry.stock_sync && entry.status !== "synced")) continue;
+        const entries = [
+          ...(await tx.objectStore("sync_queue").index("by-queue-key").getAll(["inventory", row.id, "UPDATE"]) as SyncQueueRecord[]),
+          ...(await tx.objectStore("sync_queue").index("by-queue-key").getAll(["inventory", row.id, "INSERT"]) as SyncQueueRecord[]),
+        ];
+        if (entries.some((entry) => entry.status !== "synced")) continue;
         await tx.objectStore("inventory").put(row);
       }
       await tx.done;
@@ -745,8 +783,15 @@ class SyncEngine {
     const warehouses = await this.pullRows(supabase, "warehouses", orgId);
 
     if (warehouses?.length) {
-      await clearOfflineStore("warehouses");
-      await saveToOfflineDB("warehouses", warehouses);
+      const db = await getDB();
+      for (const row of warehouses) {
+        const pending = [
+          ...(await db.getAllFromIndex("sync_queue", "by-queue-key", ["warehouses", row.id, "INSERT"]) as SyncQueueRecord[]),
+          ...(await db.getAllFromIndex("sync_queue", "by-queue-key", ["warehouses", row.id, "UPDATE"]) as SyncQueueRecord[]),
+        ];
+        if (pending.some(entry => entry.status !== "synced")) continue;
+        await db.put("warehouses", row);
+      }
     }
 
     const categories = await this.pullRows(supabase, "categories", orgId);

@@ -31,6 +31,7 @@ import { createClient } from '@/lib/supabase/client';
 import { formatCurrency, formatDate } from '@/lib/utils/format';
 import type { Product } from '@/types';
 import { ProductForm } from '@/components/products/product-form';
+import { OfflineProductImage } from '@/components/products/offline-product-image';
 import { useI18n } from '@/i18n';
 import { useAuthStore } from '@/store';
 import { Label } from '@/components/ui/label';
@@ -38,14 +39,29 @@ import { Textarea } from '@/components/ui/textarea';
 import { adjustProductStock } from '@/lib/inventory/adjust-stock';
 import type { Warehouse } from '@/types';
 import { compareListRows, useListPreference, type ListSort, type ProductGroup } from '@/lib/lists/preferences';
+import { getAllFromOfflineDB, saveToOfflineDB } from '@/lib/offline/db';
+import { isOffline } from '@/lib/utils/network';
 
 type ProductStockRow = { id: string; warehouse_id: string; quantity: number; min_stock_level: number | null; warehouse: { name?: string } | null };
 type ProductWithStock = Product & { inventory?: ProductStockRow[]; category?: { name?: string } | null; supplier?: { name?: string } | null };
 
 async function fetchProducts(search?: string, categoryId?: string, sort: ListSort = 'az') {
+  const cached = async () => {
+    const [products, inventory, warehouses] = await Promise.all([
+      getAllFromOfflineDB<ProductWithStock>('products'),
+      getAllFromOfflineDB<ProductStockRow & { product_id: string }>('inventory'),
+      getAllFromOfflineDB<Warehouse>('warehouses'),
+    ]);
+    const term = search?.toLowerCase();
+    return products.filter(p => (!term || [p.name, p.sku, p.barcode].some(value => value?.toLowerCase().includes(term))) && (!categoryId || categoryId === 'all' || p.category_id === categoryId))
+      .map(p => ({ ...p, inventory: inventory.filter(row => row.product_id === p.id).map(row => ({ ...row, warehouse: { name: warehouses.find(w => w.id === row.warehouse_id)?.name || '' } })) }))
+      .sort((a, b) => sort === 'newest' ? String(b.created_at).localeCompare(String(a.created_at)) : sort === 'oldest' ? String(a.created_at).localeCompare(String(b.created_at)) : (sort === 'za' ? -1 : 1) * a.name.localeCompare(b.name));
+  };
+  if (isOffline()) return cached();
   const supabase = createClient();
   const products: Product[] = [];
   const pageSize = 500;
+  try {
   for (let start = 0; ; start += pageSize) {
     let query = supabase
       .from('products')
@@ -64,9 +80,15 @@ async function fetchProducts(search?: string, categoryId?: string, sort: ListSor
     const { data, error } = await query;
     if (error) throw error;
     products.push(...((data || []) as unknown as ProductWithStock[]));
+    const local = await getAllFromOfflineDB<ProductWithStock>('products');
+    await saveToOfflineDB('products', (data || []).map(row => {
+      const cached = local.find(item => item.id === row.id);
+      return cached?.image_url?.startsWith('offline-image:') ? { ...row, image_url: cached.image_url } : row;
+    }));
     if (!data || data.length < pageSize) break;
   }
   return products as ProductWithStock[];
+  } catch { return cached(); }
 }
 
 async function fetchCategories() {
@@ -111,6 +133,7 @@ function ProductsPageInner() {
 
   const { data: products = [], isLoading, error: pageError, refetch: retryPage } = useQuery({
     queryKey: ['products', search, categoryFilter, sort],
+    networkMode: 'always',
     queryFn: () => fetchProducts(search || undefined, categoryFilter, sort),
   });
 
@@ -120,9 +143,12 @@ function ProductsPageInner() {
   });
   const { data: warehouses = [] } = useQuery({
     queryKey: ['warehouses'],
+    networkMode: 'always',
     queryFn: async () => {
+      if (isOffline()) return getAllFromOfflineDB<Warehouse>('warehouses');
       const { data, error } = await createClient().from('warehouses').select('*').order('name');
       if (error) throw error;
+      await saveToOfflineDB('warehouses', data || []);
       return (data || []) as Warehouse[];
     },
   });
@@ -302,7 +328,9 @@ function ProductsPageInner() {
                         className="tt-placeholder w-10 h-10 rounded-md flex items-center justify-center overflow-hidden"
                         style={{ background: 'var(--c-surfaceAlt)' }}
                       >
-                        {product.image_url ? (
+                        {product.image_url?.startsWith('offline-image:') ? (
+                          <OfflineProductImage id={product.image_url.slice('offline-image:'.length)} alt={product.name} className="object-cover w-full h-full" />
+                        ) : product.image_url ? (
                           <Image
                             src={product.image_url}
                             alt={product.name}
@@ -417,7 +445,9 @@ function ProductsPageInner() {
                   className="tt-placeholder w-20 h-20 rounded-lg flex items-center justify-center overflow-hidden"
                   style={{ background: 'var(--c-surfaceAlt)' }}
                 >
-                  {viewProduct.image_url ? (
+                  {viewProduct.image_url?.startsWith('offline-image:') ? (
+                    <OfflineProductImage id={viewProduct.image_url.slice('offline-image:'.length)} alt={viewProduct.name} className="object-cover w-full h-full" />
+                  ) : viewProduct.image_url ? (
                     <Image src={viewProduct.image_url} alt={viewProduct.name} width={80} height={80} className="object-cover" />
                   ) : (
                     <Package className="h-8 w-8 tt-muted" strokeWidth={1.75} />

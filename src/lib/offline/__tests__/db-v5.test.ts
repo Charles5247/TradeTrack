@@ -44,7 +44,8 @@ it("upgrades v4 while preserving PO, POS and queued records", async () => {
   });
   old.close();
   const db = await getDB();
-  expect(db.version).toBe(6);
+  expect(db.version).toBe(7);
+  expect(db.objectStoreNames.contains('pending_product_images')).toBe(true);
   expect(await db.get("purchase_orders", "po")).toEqual({
     id: "po",
     total_value: 200,

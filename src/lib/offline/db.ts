@@ -133,7 +133,8 @@ type StoreNames =
   | "purchase_order_items"
   | "vendor_transactions"
   | "vendor_transaction_items"
-  | "user_sessions";
+  | "user_sessions"
+  | "pending_product_images";
 
 // Use any for the generic DB to avoid complex type gymnastics with idb
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -175,13 +176,14 @@ function openOfflineDatabase(dbName: string): Promise<TracKasuwaIDB> {
   const invalidate = () => {
     if (connections.get(dbName) === opening) connections.delete(dbName);
   };
-  const opening = openDB(dbName, 6, {
+  const opening = openDB(dbName, 7, {
     blocking(_currentVersion, _blockedVersion, event) {
       (event.target as IDBDatabase).close();
       invalidate();
     },
     terminated: invalidate,
     upgrade(db, oldVersion, _newVersion, transaction) {
+      if (!db.objectStoreNames.contains("pending_product_images")) db.createObjectStore("pending_product_images", { keyPath: "id" });
       if (!db.objectStoreNames.contains("app_meta")) db.createObjectStore("app_meta", { keyPath: "id" });
       if (!db.objectStoreNames.contains("vendor_transactions")) {
         const store = db.createObjectStore("vendor_transactions", {

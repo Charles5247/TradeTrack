@@ -1,6 +1,6 @@
 # TracKasuwa — Enterprise Offline-First POS & Inventory Management
 
-> Production-ready cloud-based POS and inventory management platform for Nigerian market traders.
+> Sales and inventory software for Nigerian product-based merchants, with offline support for core shop workflows.
 
 TracKasuwa is a Next.js + Supabase SaaS application: multi-role POS,
 multi-warehouse inventory, offline-first sync, Zainpay subscription
@@ -21,7 +21,7 @@ This README is a concise entry point. Deeper documentation lives in
 - **Audit Trail**: Immutable history of every change
 - **Reports**: Daily/weekly/monthly/quarterly/yearly with PDF/Excel/CSV export
 - **Zainpay Subscription Billing**: dedicated virtual account (NUBAN) per merchant, webhook-based auto-reconciliation
-- **Offline-First**: IndexedDB + Service Worker — works without internet, with an explicit, documented conflict-resolution rule
+- **Offline Core Workflows**: IndexedDB + Service Worker support cached navigation, sales, product and warehouse creation, stock changes, and queued product photos. Reconnect to upload pending changes; other workflows may still require internet.
 - **Multilingual**: English, Hausa (fully translated); Yoruba, Igbo, Pidgin English (scaffolded)
 - **PWA + Native Shells**: Installable on mobile/desktop, plus a Windows `.exe` and an Android `.apk` — see [Download & Distribution](./docs/DOWNLOAD_FLOW.md)
 - **Dark/Light Mode**
@@ -44,8 +44,8 @@ This README is a concise entry point. Deeper documentation lives in
 
 ```bash
 # 1. Clone and install
-git clone https://github.com/Charles5247/TracKasuwa.git
-cd TracKasuwa
+git clone https://github.com/Charles5247/TradeTrack.git
+cd TradeTrack
 npm install
 
 # 2. Configure environment

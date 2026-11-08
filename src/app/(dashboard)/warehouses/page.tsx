@@ -23,17 +23,27 @@ import { useAuthStore } from '@/store';
 import type { Warehouse as WarehouseType } from '@/types';
 import { useI18n } from '@/i18n';
 import { AccessGuard } from '@/components/shared/access-guard';
+import { addToSyncQueue, getAllFromOfflineDB, saveToOfflineDB } from '@/lib/offline/db';
+import { isOffline } from '@/lib/utils/network';
+import { generateId } from '@/lib/utils/id';
+import { withTimeout } from '@/lib/utils/timeout';
 
 async function fetchWarehouses(organizationId: string) {
+  const cached = () => getAllFromOfflineDB<WarehouseType & { inventory: { quantity: number }[] }>('warehouses')
+    .then(rows => rows.filter(row => row.organization_id === organizationId));
+  if (isOffline()) return cached();
   const supabase = createClient();
+  try {
   const { data, error } = await supabase
     .from('warehouses')
     .select(`*, inventory(quantity)`)
     .eq('organization_id', organizationId)
     .order('is_main', { ascending: false });
   if (error) throw error;
+  await saveToOfflineDB('warehouses', data || []);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (data as any) as (WarehouseType & { inventory: { quantity: number; product?: {cost_price:number} }[] })[];
+  } catch { return cached(); }
 }
 
 export default function WarehousesPage() {
@@ -56,29 +66,47 @@ function WarehousesPageInner() {
   const { data: warehouses = [], isLoading, error, refetch } = useQuery({
     queryKey: ['warehouses-full', user?.organization_id],
     enabled: Boolean(user?.organization_id),
+    networkMode: 'always',
     queryFn: () => fetchWarehouses(user!.organization_id),
   });
 
   const saveMutation = useMutation({
+    networkMode: 'always',
     mutationFn: async (data: typeof formData) => {
-      const supabase = createClient();
       const orgId = (user as unknown as { organization_id: string })?.organization_id;
       if (!orgId) throw new Error('No business is selected.');
       if (!data.name.trim()) throw new Error('Enter a location name.');
       data = { ...data, name: data.name.trim() };
+      const id = editWarehouse?.id || generateId();
+      const saveOffline = async () => {
+        const row = { ...editWarehouse, ...data, id, organization_id: orgId, inventory: [], updated_at: new Date().toISOString() };
+        await saveToOfflineDB('warehouses', [row]);
+        const { inventory: _inventory, ...payload } = row;
+        await addToSyncQueue('warehouses', editWarehouse ? 'UPDATE' : 'INSERT', id, payload);
+        return true;
+      };
+      if (isOffline()) return saveOffline();
+      const supabase = createClient();
+      try {
       if (editWarehouse) {
-        const { error } = await supabase.from('warehouses').update(data).eq('id', editWarehouse.id).eq('organization_id', orgId);
+        const { error } = await withTimeout(Promise.resolve(supabase.from('warehouses').update(data).eq('id', editWarehouse.id).eq('organization_id', orgId)), 5000);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('warehouses').insert({ ...data, organization_id: orgId });
+        const { error } = await withTimeout(Promise.resolve(supabase.from('warehouses').insert({ ...data, id, organization_id: orgId })), 5000);
         if (error) throw error;
       }
+      } catch (error) {
+        if (error instanceof TypeError || (error instanceof Error && /timed out|fetch failed|failed to fetch/i.test(error.message))) return saveOffline();
+        throw error;
+      }
+      return false;
     },
-    onSuccess: () => {
+    onSuccess: (offline) => {
       queryClient.invalidateQueries({ queryKey: ['warehouses-full'] });
+      queryClient.invalidateQueries({ queryKey: ['warehouses'] });
       setIsFormOpen(false);
       setEditWarehouse(null);
-      toast.success(editWarehouse ? t.warehouse.updated_success : t.warehouse.created_success);
+      toast.success(offline ? 'Saved offline. This location will upload when you reconnect.' : editWarehouse ? t.warehouse.updated_success : t.warehouse.created_success);
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : t.warehouse.save_failed),
   });

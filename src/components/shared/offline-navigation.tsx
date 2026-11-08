@@ -11,13 +11,15 @@ export function OfflineNavigation() {
     if (!user || !('serviceWorker' in navigator) || !('caches' in window)) return;
     let cancelled = false;
     let preparing = false;
+    const readyRoutes = new Set<string>();
     const navigate = (event: MouseEvent) => {
-      if (navigator.onLine || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       const anchor = (event.target as Element)?.closest?.('a[href]') as HTMLAnchorElement | null;
       if (!anchor || anchor.download || (anchor.target && anchor.target !== '_self')) return;
       const url = new URL(anchor.href, location.href);
       if (url.origin !== location.origin || /^\/(api|auth|login)(\/|$)/.test(url.pathname)) return;
       if (url.pathname === location.pathname && url.search === location.search) return;
+      if (navigator.onLine && !readyRoutes.has(url.pathname)) return;
       event.preventDefault();
       event.stopPropagation();
       location.assign(url.href);
@@ -36,6 +38,7 @@ export function OfflineNavigation() {
           localStorage.setItem('TracKasuwa-page-account', account);
         }
         const pages = await caches.open(`TracKasuwa-pages-${version}`);
+        for (const request of await pages.keys()) readyRoutes.add(new URL(request.url).pathname);
         const assets = await caches.open(`TracKasuwa-static-${version}`);
         const routes = [...new Set([location.pathname, ...getNavGroupsForRole(user.role).flatMap(group => group.items.map(item => item.href))])];
         let completed = 0;
@@ -55,6 +58,7 @@ export function OfflineNavigation() {
             }));
             if (cancelled) return;
             await pages.put(new Request(new URL(route, location.origin)), response);
+            readyRoutes.add(route);
             completed++;
           } catch { /* Keep good cached pages; retry on reconnect. */ }
         }

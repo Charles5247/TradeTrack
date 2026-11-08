@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 
-const PRELOADER_STORAGE_KEY = 'tradetrack-app-preloader-seen';
+const PRELOADER_STORAGE_KEY = 'trackasuwa-app-preloader-seen';
+const LEGACY_PRELOADER_STORAGE_KEY = 'tradetrack-app-preloader-seen';
 const MIN_VISIBLE_MS = 600; // avoid a flash on fast loads
 const MAX_VISIBLE_MS = 4000; // never trap the user if load stalls (offline, slow network)
 const FADE_MS = 250;
@@ -18,7 +19,7 @@ export function AppPreloader() {
 
   useEffect(() => {
     try {
-      if (sessionStorage.getItem(PRELOADER_STORAGE_KEY) === '1') return;
+      if (sessionStorage.getItem(PRELOADER_STORAGE_KEY) === '1' || sessionStorage.getItem(LEGACY_PRELOADER_STORAGE_KEY) === '1') return;
     } catch {
       // Storage unavailable: still show, still auto-dismiss.
     }

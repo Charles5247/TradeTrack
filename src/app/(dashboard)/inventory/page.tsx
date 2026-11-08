@@ -31,9 +31,25 @@ import type { InventoryRecord } from '@/lib/offline/db';
 import { compareListRows, useListPreference, type ListSort, type ProductGroup } from '@/lib/lists/preferences';
 
 async function fetchInventory(warehouseId: string, filter: string, search: string, sort: ListSort) {
+  const cached = async () => {
+    const [rows, products, warehouses] = await Promise.all([
+      getAllFromOfflineDB<InventoryRecord>('inventory'),
+      getAllFromOfflineDB<{ id: string; name: string; sku: string; created_at?: string }>('products'),
+      getAllFromOfflineDB<Warehouse>('warehouses'),
+    ]);
+    return rows.filter(row => (!warehouseId || warehouseId === 'all' || row.warehouse_id === warehouseId)
+      && (filter !== 'low' || (row.quantity > 0 && row.quantity < 10))
+      && (filter !== 'out' || row.quantity === 0))
+      .map(row => ({ ...row, product: products.find(product => product.id === row.product_id) || null,
+        warehouse: { name: warehouses.find(warehouse => warehouse.id === row.warehouse_id)?.name || '' } }))
+      .filter(row => !search || [row.product?.name, row.product?.sku].some(value => value?.toLowerCase().includes(search.toLowerCase())))
+      .sort((a, b) => sort === 'newest' ? String(b.product?.created_at).localeCompare(String(a.product?.created_at)) : sort === 'oldest' ? String(a.product?.created_at).localeCompare(String(b.product?.created_at)) : (sort === 'za' ? -1 : 1) * String(a.product?.name).localeCompare(String(b.product?.name)));
+  };
+  if (isOffline()) return cached();
   const supabase = createClient();
   const items: Record<string, unknown>[] = [];
   const pageSize = 500;
+  try {
   for (let start = 0; ; start += pageSize) {
     let query = supabase.from('inventory').select(`*,product:products(id,name,sku,barcode,selling_price,cost_price,image_url,status,created_at,category:categories(name),supplier:suppliers(name)),warehouse:warehouses(name)`)
       .order(sort === 'newest' || sort === 'oldest' ? 'created_at' : 'name', { ascending: sort === 'az' || sort === 'oldest', referencedTable: 'products' })
@@ -44,6 +60,11 @@ async function fetchInventory(warehouseId: string, filter: string, search: strin
     const { data, error } = await query;
     if (error) throw error;
     items.push(...((data || []) as Record<string, unknown>[]));
+    await saveToOfflineDB('inventory', (data || []).map(row => {
+      const { product: _product, warehouse: _warehouse, ...record } = row;
+      return record;
+    }));
+    await saveToOfflineDB('products', (data || []).map(row => row.product).filter(Boolean));
     if (!data || data.length < pageSize) break;
   }
   if (search) {
@@ -54,6 +75,7 @@ async function fetchInventory(warehouseId: string, filter: string, search: strin
     });
   }
   return items;
+  } catch { return cached(); }
 }
 
 /**
@@ -121,7 +143,7 @@ async function adjustStock(payload: {
     const auditId = generateId();
 
     await Promise.all([
-      addToSyncQueue('inventory', 'UPDATE', inventoryId, updatedRecord as unknown as Record<string, unknown>),
+      addToSyncQueue('inventory', cached || payload.inventory_id ? 'UPDATE' : 'INSERT', inventoryId, updatedRecord as unknown as Record<string, unknown>),
       addToSyncQueue('inventory_movements', 'INSERT', movementId, {
         id: movementId,
         organization_id: payload.organization_id,
@@ -244,15 +266,19 @@ function InventoryPageInner() {
 
   const { data: warehouses = [] } = useQuery({
     queryKey: ['warehouses'],
+    networkMode: 'always',
     queryFn: async () => {
+      if (isOffline()) return getAllFromOfflineDB<Warehouse>('warehouses');
       const supabase = createClient();
       const { data } = await supabase.from('warehouses').select('*').order('name');
+      if (data) await saveToOfflineDB('warehouses', data);
       return data as Warehouse[] || [];
     },
   });
 
   const { data: inventory = [], isLoading } = useQuery({
     queryKey: ['inventory', warehouseFilter, statusFilter, search, sort],
+    networkMode: 'always',
     queryFn: () => fetchInventory(warehouseFilter, statusFilter, search, sort),
   });
 

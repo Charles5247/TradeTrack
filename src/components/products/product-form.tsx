@@ -25,6 +25,9 @@ import { useOrganization } from '@/components/shared/organization-provider';
 import { industryProfile, type StockUnit } from '@/lib/industries';
 import { generateId } from '@/lib/utils/id';
 import { adjustProductStock } from '@/lib/inventory/adjust-stock';
+import { addToSyncQueue, getAllFromOfflineDB, saveToOfflineDB } from '@/lib/offline/db';
+import { isOffline } from '@/lib/utils/network';
+import { useAuthStore } from '@/store';
 
 type ProductFormData = z.infer<typeof productSchema>;
 
@@ -50,6 +53,20 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
   const [showMore, setShowMore] = useState(false);
   React.useEffect(() => {
     let active = true;
+    if (isOffline()) {
+      void getAllFromOfflineDB<{ id: string; name: string }>('warehouses').then(async rows => {
+        if (!active) return;
+        setWarehouses(rows);
+        setWarehouseId(current => current || rows[0]?.id || '');
+        if (product?.id) {
+          const balances = (await getAllFromOfflineDB<{ id: string; product_id: string; warehouse_id: string; quantity: number }>('inventory')).filter(row => row.product_id === product.id);
+          if (!active) return;
+          setStockRows(balances);
+          setQuantity(String(balances.find(row => row.warehouse_id === rows[0]?.id)?.quantity ?? 0));
+        }
+      });
+      return () => { active = false; };
+    }
     void createClient().from('warehouses').select('id,name').order('name').then(async ({ data }) => {
       if (!active) return;
       const rows = data || [];
@@ -130,23 +147,29 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
       const openingQuantity = Number(quantity);
       if (!Number.isSafeInteger(openingQuantity) || openingQuantity < 0) throw new Error('Enter a valid whole-number quantity.');
       if ((openingQuantity > 0 || product?.id) && !warehouseId) throw new Error('Choose a stock location first.');
+      let offline = isOffline() || Boolean(imageUrl?.startsWith('offline-image:'));
       const supabase = createClient();
-      const { data: { user } } = await withTimeout(supabase.auth.getUser(), AUTH_CHECK_TIMEOUT_MS);
+      let user = useAuthStore.getState().user;
+      if (!offline) {
+        try { user = (await withTimeout(supabase.auth.getUser(), AUTH_CHECK_TIMEOUT_MS)).data.user as typeof user; }
+        catch { offline = true; }
+      }
       if (!user) throw new Error('Not authenticated');
 
-      const { data: profile } = await supabase
+      const { data: profile } = offline ? { data: null } : await withTimeout(Promise.resolve(supabase
         .from('users')
         .select('organization_id')
         .eq('id', user.id)
-        .single();
+        .single()), 5000).catch(() => ({ data: null }));
 
-      const orgId = profile?.organization_id ?? '';
+      const orgId = profile?.organization_id ?? organization?.id ?? '';
+      if (!orgId) throw new Error('No business is selected.');
 
       // Enforce the legacy no-cost plan's max_products ceiling (and any other
       // tier's cap) before creating a NEW product. Updates to existing
       // products are never blocked. Fails open if subscription data is
       // unavailable (offline-first: never block on a transient fetch).
-      if (!product?.id && orgId) {
+      if (!offline && !product?.id && orgId) {
         try {
           const [{ data: subscription }, { data: allPlans }, { count: productCount }] =
             await Promise.all([
@@ -208,11 +231,33 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
         image_url: imageUrl || null,
       };
 
+      const id = product?.id || generateId();
+      const saveOffline = async () => {
+        const now = new Date().toISOString();
+        const imageId = imageUrl?.startsWith('offline-image:') ? imageUrl.slice('offline-image:'.length) : null;
+        const serverPayload = { ...payload, id, image_url: imageId ? null : payload.image_url, updated_at: now, ...(!product ? { created_at: now } : {}) };
+        await saveToOfflineDB('products', [{ ...serverPayload, image_url: imageUrl || null }]);
+        await addToSyncQueue('products', product ? 'UPDATE' : 'INSERT', id, serverPayload);
+        if (imageId) await addToSyncQueue('product_images', 'INSERT', imageId, { product_id: id });
+        const stockRow = stockRows.find(row => row.warehouse_id === warehouseId);
+        const change = openingQuantity - (stockRow?.quantity ?? 0);
+        if (change && warehouseId) await adjustProductStock({ organization_id: orgId, user_id: user.id, product_id: id,
+          warehouse_id: warehouseId, inventory_id: stockRow?.id, current_quantity: stockRow?.quantity ?? 0,
+          quantity_change: change, reason: product ? 'Quantity updated from product form' : 'Opening stock' });
+        toast.success('Saved on this device. Product, photo and stock will upload when you reconnect.');
+        onSuccess();
+      };
+      if (offline) return await saveOffline();
+
       if (product?.id) {
-        const { error } = await supabase
+        let result;
+        try { result = await withTimeout(Promise.resolve(supabase
           .from('products')
           .update({ ...payload, updated_at: new Date().toISOString() })
-          .eq('id', product.id);
+          .eq('id', product.id)), 5000); }
+        catch (error) { if (error instanceof TypeError || (error instanceof Error && /timed out|fetch failed|failed to fetch/i.test(error.message))) return await saveOffline(); throw error; }
+        const { error } = result;
+        if (error && /fetch failed|failed to fetch/i.test(error.message)) return await saveOffline();
         if (error) throw error;
 
         const stockRow = stockRows.find(row => row.warehouse_id === warehouseId);
@@ -243,11 +288,15 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
 
         toast.success('Product updated successfully');
       } else {
-        const { data: newProduct, error } = await supabase
+        let result;
+        try { result = await withTimeout(Promise.resolve(supabase
           .from('products')
-          .insert(payload)
+          .insert({ ...payload, id })
           .select()
-          .single();
+          .single()), 5000); }
+        catch (error) { if (error instanceof TypeError || (error instanceof Error && /timed out|fetch failed|failed to fetch/i.test(error.message))) return await saveOffline(); throw error; }
+        const { data: newProduct, error } = result;
+        if (error && /fetch failed|failed to fetch/i.test(error.message)) return await saveOffline();
         if (error) throw error;
         if (openingQuantity > 0 && warehouseId) {
           try {
