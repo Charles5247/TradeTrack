@@ -5,7 +5,7 @@ import { TranslatedText, useCopy } from '@/i18n/text';
 import { BankAccountPanel, UsagePanel } from "@/components/subscriptions/account-panels";
 import { requireOrganization } from "@/lib/auth/organization";
 import { withTimeout, AUTH_CHECK_TIMEOUT_MS } from "@/lib/utils/timeout";
-import { billingPrice, type BillingCycle } from "@/lib/subscriptions/billing-cycle";
+import { billingPrice, privateAgreementPrice, type BillingCycle } from "@/lib/subscriptions/billing-cycle";
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PlanRecommendation } from '@/components/subscriptions/plan-recommendation';
@@ -105,6 +105,7 @@ interface PaymentRecord {
   created_at: string;
   plan_name?: string;
 }
+interface PrivateOffer { plan_id: string; monthly_price: number; plan: Pick<Plan, 'id' | 'name' | 'max_cashiers' | 'max_products' | 'max_warehouses' | 'features'> }
 
 // ── Data fetchers ─────────────────────────────────────────────
 // Plans query: the Plans tab has two different intents depending on
@@ -124,7 +125,7 @@ async function fetchSubscriptionData() {
       data: { user },
     } = await withTimeout(supabase.auth.getUser(), AUTH_CHECK_TIMEOUT_MS);
     if (!user) {
-      return { subscription: null, plans: FALLBACK_PLANS, payments: [] };
+      return { subscription: null, plans: FALLBACK_PLANS, payments: [], privateOffer: null as PrivateOffer | null };
     }
 
     const { data: profile, error: profileError } = await supabase
@@ -137,7 +138,7 @@ async function fetchSubscriptionData() {
     const orgId = profile?.organization_id;
     const role = (profile as { role?: string } | null)?.role;
     if (!orgId?.trim()) {
-      if (role === "platform_owner") return { subscription: null, plans: await getAllSubscriptionPlansForCatalogManagement(supabase), payments: [] };
+      if (role === "platform_owner") return { subscription: null, plans: await getAllSubscriptionPlansForCatalogManagement(supabase), payments: [], privateOffer: null as PrivateOffer | null };
       throw new Error("Your account is not linked to a business. Please contact your business owner.");
     }
 
@@ -163,11 +164,20 @@ async function fetchSubscriptionData() {
       .limit(20);
 
     if (paymentsError) throw paymentsError;
+    let privateOffer: PrivateOffer | null = null;
+    if (role === 'business_owner') {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const response = await fetch('/api/subscriptions/private-offer', { headers: { Authorization: `Bearer ${session.access_token}` } });
+        if (response.ok) privateOffer = (await response.json()).offer as PrivateOffer | null;
+      }
+    }
     return {
       subscription: subscription as any as Subscription | null,
       plans: plans || FALLBACK_PLANS,
       payments: (payments as any as PaymentRecord[]) || [],
       orgId: orgId,
+      privateOffer,
     };
   } catch (error) {
     throw error;
@@ -543,6 +553,10 @@ export default function SubscriptionsPage() {
 
   const subscription = data?.subscription;
   const plans = data?.plans || FALLBACK_PLANS;
+  const privateOffer = data?.privateOffer;
+  const privatePlan: Plan | null = privateOffer?.plan ? {
+    ...privateOffer.plan, price: Number(privateOffer.monthly_price), currency: 'NGN', billing_cycle: 'monthly', is_active: true,
+  } : null;
   const payments = data?.payments || [];
   const daysRemaining = subscription?.expires_at
     ? Math.ceil(
@@ -557,7 +571,7 @@ export default function SubscriptionsPage() {
       <Dialog open={Boolean(checkoutPlan)} onOpenChange={(open) => { if (!open && !upgradeMutation.isPending) setCheckoutPlan(null); }}>
         <DialogContent>
           <DialogHeader><DialogTitle>{copy('Confirm subscription payment')}</DialogTitle>
-            <DialogDescription>{checkoutPlan?.name} · {billingCycle} · {formatCurrency(billingPrice(checkoutPlan?.price || 0, billingCycle), 'NGN')}</DialogDescription>
+            <DialogDescription>{checkoutPlan?.name} · {billingCycle} · {formatCurrency(privateOffer && checkoutPlan?.id === privateOffer.plan_id ? privateAgreementPrice(Number(privateOffer?.monthly_price), billingCycle) : billingPrice(checkoutPlan?.price || 0, billingCycle), 'NGN')}</DialogDescription>
           </DialogHeader>
           <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); if (checkoutPlan) upgradeMutation.mutate({planId: checkoutPlan.id, cycle: billingCycle}); }}>
             <p className="text-sm text-muted-foreground">{copy('Renewing the same plan keeps your remaining paid time. A different plan replaces your current plan immediately after payment.')}</p>
@@ -594,7 +608,7 @@ export default function SubscriptionsPage() {
             <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-[var(--c-accent)] opacity-20 blur-3xl" />
             {isLoading ? <Skeleton className="h-64" /> : <div className="relative space-y-6">
               <div><span className="rounded-full bg-primary-foreground/10 px-3 py-1 text-xs"><TranslatedText text={"Current plan"} /></span><h2 className="mt-4 font-[family-name:var(--font-head)] text-4xl font-bold tracking-tight sm:text-5xl">{subscription?.plan?.name || 'Choose your plan'}</h2><p className="mt-2 text-sm opacity-80">{subscription ? 'Status: ' + subscription.status : 'Find the right fit for your business.'}</p></div>
-              <dl className="flex flex-wrap items-end gap-x-8 gap-y-4"><div><dt className="sr-only"><TranslatedText text={"Plan price"} /></dt><dd className="text-3xl font-bold">{formatCurrency(subscription?.status === 'trial' ? 0 : billingPrice(subscription?.plan?.price || 0, (['monthly','quarterly','biannual','yearly'].includes(subscription?.billing_cycle || '') ? subscription?.billing_cycle : 'monthly') as BillingCycle), 'NGN')}</dd><p className="text-xs opacity-75"><TranslatedText text={"per"} />{" "}<TranslatedText text={subscription?.billing_cycle === 'yearly' ? 'year' : subscription?.billing_cycle === 'quarterly' ? '3 months' : subscription?.billing_cycle === 'biannual' ? '6 months' : 'month'} /></p></div><div><dt className="text-xs opacity-75"><TranslatedText text={"Valid until"} /></dt><dd className="mt-1 font-semibold">{subscription?.expires_at ? formatDate(subscription.expires_at) : 'No active period'}</dd></div><div><dt className="text-xs opacity-75"><TranslatedText text={"Renewal"} /></dt><dd className="mt-1 font-semibold"><TranslatedText text={"Manual payment"} /></dd></div></dl>
+              <dl className="flex flex-wrap items-end gap-x-8 gap-y-4"><div><dt className="sr-only"><TranslatedText text={"Plan price"} /></dt><dd className="text-3xl font-bold">{formatCurrency(subscription?.status === 'trial' ? 0 : (privateOffer && subscription?.plan_id === privateOffer.plan_id ? privateAgreementPrice(Number(privateOffer?.monthly_price ?? 0), (['monthly','quarterly','biannual','yearly'].includes(subscription?.billing_cycle || '') ? subscription?.billing_cycle : 'monthly') as BillingCycle) : billingPrice(subscription?.plan?.price || 0, (['monthly','quarterly','biannual','yearly'].includes(subscription?.billing_cycle || '') ? subscription?.billing_cycle : 'monthly') as BillingCycle)), 'NGN')}</dd><p className="text-xs opacity-75"><TranslatedText text={"per"} />{" "}<TranslatedText text={subscription?.billing_cycle === 'yearly' ? 'year' : subscription?.billing_cycle === 'quarterly' ? '3 months' : subscription?.billing_cycle === 'biannual' ? '6 months' : 'month'} /></p></div><div><dt className="text-xs opacity-75"><TranslatedText text={"Valid until"} /></dt><dd className="mt-1 font-semibold">{subscription?.expires_at ? formatDate(subscription.expires_at) : 'No active period'}</dd></div><div><dt className="text-xs opacity-75"><TranslatedText text={"Renewal"} /></dt><dd className="mt-1 font-semibold"><TranslatedText text={"Manual payment"} /></dd></div></dl>
               <div className="flex flex-wrap gap-3"><Button className="bg-primary-foreground text-primary hover:bg-primary-foreground/90" onClick={() => { setActiveTab('plans'); }}><TranslatedText text={"Change plan"} /></Button>{subscription && ['active','trial'].includes(subscription.status) && <Button variant="outline" className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10" onClick={() => setCancelOpen(true)}><TranslatedText text={"Cancel subscription"} /></Button>}</div>
             </div>}
           </Card>
@@ -612,13 +626,14 @@ export default function SubscriptionsPage() {
       {/* Plans Tab */}
       {(isPlatformOwner || activeTab === "plans") && (
         <div className="space-y-6">
+          {!isPlatformOwner && privatePlan && <Card className="border-primary"><CardContent className="flex flex-wrap items-center justify-between gap-4 py-5"><div><p className="font-semibold">Your private agreement</p><p className="text-sm text-muted-foreground">{privatePlan.name} · {formatCurrency(privatePlan.price, 'NGN')} per month. Select a billing period below.</p></div><Button onClick={() => { setCheckoutPlan(privatePlan); setCheckoutPhone(user?.phone || ''); }}>Pay or renew agreement</Button></CardContent></Card>}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-lg font-semibold">
-                {isPlatformOwner ? "Plan catalog" : t.subscriptions.choose_a_plan}
+                {isPlatformOwner ? "Plan catalog" : privatePlan ? "Your agreement" : t.subscriptions.choose_a_plan}
               </h2>
               <p className="text-sm tt-muted">
-                {isPlatformOwner ? "Active plans appear on merchant subscription and public pricing pages." : t.subscriptions.select_plan_desc}
+                {isPlatformOwner ? "Active plans appear on merchant subscription and public pricing pages." : privatePlan ? "This agreement is available only to your business." : t.subscriptions.select_plan_desc}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -653,7 +668,7 @@ export default function SubscriptionsPage() {
                 <Skeleton key={i} className="h-96" />
               ))}
             </div>
-          ) : (
+          ) : !isPlatformOwner && privatePlan ? null : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 mt-8">
               {plans.map((plan) => (
                 <PlanCard

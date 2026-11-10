@@ -13,6 +13,12 @@ type NoRel = { Relationships: [] };
 export type Database = {
   public: {
     Tables: {
+      private_subscription_offers: {
+        Row: { organization_id: string; plan_id: string; monthly_price: number; is_active: boolean; created_at: string };
+        Insert: { organization_id: string; plan_id: string; monthly_price: number; is_active?: boolean; created_at?: string };
+        Update: { plan_id?: string; monthly_price?: number; is_active?: boolean };
+        Relationships: [];
+      };
       product_cost_history: {
         Row: { id: string; organization_id: string; product_id: string; warehouse_id: string; source_type: 'purchase_order' | 'stock_receipt'; source_id: string; purchase_order_id: string | null; purchase_order_item_id: string | null; previous_stock: number; received_quantity: number; unit_cost: number; previous_average_cost: number; new_average_cost: number; recorded_by: string; notes: string | null; created_at: string };
         Insert: Record<string, never>;

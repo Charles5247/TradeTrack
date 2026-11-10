@@ -25,6 +25,7 @@ it('shows platform catalog management without merchant billing or checkout and p
     const plans=Array.from(host.querySelectorAll<HTMLButtonElement>('[role=tab]')).find(b=>b.textContent==='tab_plans')!;
     await act(()=>{plans.focus();plans.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,button:0}));});
     const select=Array.from(host.querySelectorAll('button')).find(b=>b.textContent==='select_plan')!;
-    expect(select).toBeDefined();await act(()=>select.click());expect(state.mutate).toHaveBeenCalledWith({planId:'growth',cycle:'monthly'});
+    expect(select).toBeDefined();await act(()=>select.click());
+    expect(state.mutate).not.toHaveBeenCalled();
   }finally{await act(()=>root.unmount());host.remove();}
 });

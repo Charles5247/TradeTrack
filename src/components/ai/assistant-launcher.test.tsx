@@ -22,5 +22,9 @@ it('opens a contextual floating assistant for the owner only', async () => {
     await act(() => host.querySelector('button')!.click());
     expect(host.querySelector('[role="dialog"]')?.textContent).toContain('Prepare stock from this area');
     expect(host.querySelector('a[href="/assistant#inventory"]')).not.toBeNull();
+    expect(host.querySelector('button[aria-expanded]')?.className).toContain('size-12');
+    state.pathname = '/pos';
+    await act(() => root.render(<AssistantLauncher />));
+    expect(host.querySelector('div')?.className).toContain('hidden lg:flex');
   } finally { await act(() => root.unmount()); }
 });

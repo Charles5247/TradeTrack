@@ -1,6 +1,6 @@
 ﻿import { beforeEach, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
-const mocks=vi.hoisted(()=>({getUser:vi.fn(),from:vi.fn(),insert:vi.fn(),fetch:vi.fn(),role:'business_owner',saveError:null as null|{message:string}}));
+const mocks=vi.hoisted(()=>({getUser:vi.fn(),from:vi.fn(),insert:vi.fn(),fetch:vi.fn(),role:'business_owner',saveError:null as null|{message:string},privateOffer:null as null|{plan_id:string;monthly_price:number}}));
 vi.mock('@/lib/subscriptions/zainpay-checkout',async importOriginal=>({
  ...await importOriginal<typeof import('@/lib/subscriptions/zainpay-checkout')>(),
  paymentAdmin:()=>({auth:{getUser:mocks.getUser},from:mocks.from}),
@@ -8,13 +8,16 @@ vi.mock('@/lib/subscriptions/zainpay-checkout',async importOriginal=>({
 vi.mock('@/lib/zainpay-config',()=>({getZainpayConfig:()=>({mode:'live',publicKey:'server-key',baseUrl:'https://api.zainpay.ng',defaultZainbox:'server-box'})}));
 import { POST } from './route';
 beforeEach(()=>{
- vi.clearAllMocks();mocks.role='business_owner';mocks.saveError=null;
+ vi.clearAllMocks();mocks.role='business_owner';mocks.saveError=null;mocks.privateOffer=null;
  vi.stubEnv('NEXT_PUBLIC_APP_URL','https://trackasuwa.vercel.app');
  mocks.getUser.mockResolvedValue({data:{user:{id:'owner',email:'owner@example.com'}},error:null});
  mocks.insert.mockImplementation(async()=>({error:mocks.saveError}));
  mocks.from.mockImplementation(table=>({
   insert:mocks.insert,
-  select:()=>({eq:()=>({single:async()=>({error:null,data:table==='users'?{organization_id:'org-from-auth',role:mocks.role,phone:'08012345678'}:{id:'plan-from-db',name:'Business',price:20000,currency:'NGN',billing_cycle:'monthly',is_active:true}})})}),
+  select:()=>({eq:()=>({
+    single:async()=>({error:null,data:table==='users'?{organization_id:'org-from-auth',role:mocks.role,phone:'08012345678'}:{id:'plan-from-db',name:'Business',price:20000,currency:'NGN',billing_cycle:'monthly',is_active:true}}),
+    eq:()=>({eq:()=>({maybeSingle:async()=>({error:null,data:mocks.privateOffer})})}),
+  })}),
  }));
  mocks.fetch.mockResolvedValue(new Response(JSON.stringify({code:'00',data:'https://pay.zainpay.ng/checkout'})));
  vi.stubGlobal('fetch',mocks.fetch);
@@ -25,10 +28,22 @@ it('derives price, identity and destination on the server, ignoring tampering',a
  expect(response.status).toBe(200);
  expect(mocks.insert).toHaveBeenCalledWith(expect.objectContaining({amount_kobo:6000000,organization_id:'org-from-auth',user_id:'owner',plan_id:'plan-from-db',zainbox_code:'server-box',billing_cycle:'quarterly'}));
  const body=JSON.parse(mocks.fetch.mock.calls[0][1].body);
- expect(body).toMatchObject({amount:'6000000',emailAddress:'owner@example.com',zainboxCode:'server-box'});
+ expect(body).toMatchObject({amount:'60000',emailAddress:'owner@example.com',zainboxCode:'server-box'});
  expect(body.callBackUrl).toContain('/api/payments/verify?txnRef=TT-');
  expect(body).not.toHaveProperty('callbackUrl');
  expect(body.txnRef).not.toBe('chosen');
+});
+it('uses only the authenticated organization private offer price',async()=>{
+ mocks.privateOffer={plan_id:'plan-from-db',monthly_price:45000};
+ const response=await POST(request({planId:'plan-from-db',billingCycle:'quarterly',organization_id:'other-org',amount:1}));
+ expect(response.status).toBe(200);
+ expect(mocks.insert).toHaveBeenCalledWith(expect.objectContaining({organization_id:'org-from-auth',amount_kobo:13500000}));
+});
+it('does not apply a public-plan annual discount to a private agreement',async()=>{
+ mocks.privateOffer={plan_id:'plan-from-db',monthly_price:45000};
+ const response=await POST(request({planId:'plan-from-db',billingCycle:'yearly'}));
+ expect(response.status).toBe(200);
+ expect(mocks.insert).toHaveBeenCalledWith(expect.objectContaining({amount_kobo:54000000}));
 });
 it('does not contact the provider if the durable checkout cannot be saved',async()=>{
  mocks.saveError={message:'database unavailable'};

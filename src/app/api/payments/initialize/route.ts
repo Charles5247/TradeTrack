@@ -1,7 +1,7 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
 import { getZainpayConfig } from '@/lib/zainpay-config';
-import { BILLING_MONTHS, billingPrice, type BillingCycle } from '@/lib/subscriptions/billing-cycle';
+import { BILLING_MONTHS, billingPrice, privateAgreementPrice, type BillingCycle } from '@/lib/subscriptions/billing-cycle';
 import { paymentAdmin, checkoutUrl } from '@/lib/subscriptions/zainpay-checkout';
 
 export async function POST(request: NextRequest) {
@@ -19,12 +19,21 @@ export async function POST(request: NextRequest) {
     const mobile = (typeof body.mobile === 'string' ? body.mobile : profile.phone || '').replace(/[\s()-]/g, '');
     if (!/^\+?\d{10,15}$/.test(mobile)) return NextResponse.json({ error: 'Enter a valid phone number for payment' }, { status: 400 });
     const { data: plan, error: planError } = await admin.from('subscription_plans').select('id,name,price,currency,billing_cycle,is_active').eq('id', body.planId).single();
-    if (planError || !plan?.is_active || plan.billing_cycle !== 'monthly' || plan.currency !== 'NGN' || Number(plan.price) <= 0 || /trial|enterprise|free/i.test(plan.name)) return NextResponse.json({ error: 'This plan is not available for checkout' }, { status: 400 });
+    const { data: privateOffer, error: offerError } = await admin.from('private_subscription_offers')
+      .select('plan_id,monthly_price').eq('organization_id', profile.organization_id).eq('plan_id', body.planId).eq('is_active', true).maybeSingle();
+    if (offerError && !['PGRST205', '42P01'].includes(offerError.code))
+      return NextResponse.json({ error: 'Unable to verify subscription offer' }, { status: 503 });
+    const privatePrice = privateOffer ? Number(privateOffer.monthly_price) : null;
+    if (planError || !plan || plan.billing_cycle !== 'monthly' || plan.currency !== 'NGN'
+      || (privateOffer ? !Number.isFinite(privatePrice) || privatePrice! <= 0 : !plan.is_active || Number(plan.price) <= 0 || /trial|enterprise|free/i.test(plan.name)))
+      return NextResponse.json({ error: 'This plan is not available for checkout' }, { status: 400 });
     const config = getZainpayConfig();
     const zainbox = config.defaultZainbox || config.zainboxCode;
     if (!config.publicKey || !zainbox || !process.env.NEXT_PUBLIC_APP_URL) return NextResponse.json({ error: 'Payment gateway is not configured' }, { status: 503 });
     if (process.env.VERCEL_ENV === 'production' && config.mode !== 'live') return NextResponse.json({ error: 'Live subscription payments are not enabled yet' }, { status: 503 });
-    const amount = Math.round(billingPrice(Number(plan.price), body.billingCycle as BillingCycle) * 100);
+    const amount = Math.round((privatePrice !== null
+      ? privateAgreementPrice(privatePrice, body.billingCycle as BillingCycle)
+      : billingPrice(Number(plan.price), body.billingCycle as BillingCycle)) * 100);
     if (!Number.isSafeInteger(amount) || amount <= 0 || !user.email) return NextResponse.json({ error: 'Invalid checkout details' }, { status: 400 });
     const reference = `TT-${randomUUID()}`;
     const { error: saveError } = await admin.from('subscription_checkouts').insert({

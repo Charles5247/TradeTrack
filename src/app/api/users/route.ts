@@ -83,6 +83,43 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    if (body.action === "invite_co_owner") {
+      if (!isBusinessOwner || currentUser.status !== "active" || !currentUser.organization_id)
+        return NextResponse.json({ error: "Only an active business owner can invite a co-owner" }, { status: 403 });
+      const email = String(body.email || "").trim().toLowerCase();
+      const fullName = String(body.full_name || "").trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !fullName || fullName.length > 120)
+        return NextResponse.json({ error: "Enter the co-owner's name and valid email" }, { status: 400 });
+      const serviceSupabase = getServiceClient();
+      const { data: offer } = await serviceSupabase.from("private_subscription_offers")
+        .select("organization_id").eq("organization_id", currentUser.organization_id).eq("is_active", true).maybeSingle();
+      if (!offer) return NextResponse.json({ error: "Co-owner invitations are not enabled for this organization" }, { status: 403 });
+      const { count, error: countError } = await serviceSupabase.from("users")
+        .select("id", { count: "exact", head: true }).eq("organization_id", currentUser.organization_id).eq("role", "business_owner");
+      if (countError) throw countError;
+      if ((count ?? 0) >= 2) return NextResponse.json({ error: "This agreement already has two business owners" }, { status: 409 });
+      const { data: existing } = await serviceSupabase.from("users").select("id").eq("email", email).maybeSingle();
+      if (existing) return NextResponse.json({ error: "This email already has an account" }, { status: 409 });
+      const { data: invite, error: inviteError } = await serviceSupabase.auth.admin.inviteUserByEmail(email, {
+        data: { full_name: fullName },
+        redirectTo: new URL("/change-password", process.env.NEXT_PUBLIC_APP_URL!).href,
+      });
+      if (inviteError || !invite.user) return NextResponse.json({ error: inviteError?.message || "Could not send invitation" }, { status: 503 });
+      const { data: profile, error: insertError } = await serviceSupabase.from("users").insert({
+        id: invite.user.id, email, full_name: fullName, role: "business_owner",
+        organization_id: currentUser.organization_id, status: "active", settings: {}, must_change_password: true,
+      }).select("*").single();
+      if (insertError) {
+        await serviceSupabase.auth.admin.deleteUser(invite.user.id);
+        return NextResponse.json({ error: "Invitation could not be completed. Please retry." }, { status: 503 });
+      }
+      await serviceSupabase.from("audit_logs").insert({
+        organization_id: currentUser.organization_id, user_id: currentUser.id,
+        action: "INVITE_CO_OWNER", resource_type: "user", resource_id: invite.user.id,
+        new_values: { email, full_name: fullName, role: "business_owner" },
+      });
+      return NextResponse.json({ user: profile }, { status: 201 });
+    }
     if (body.action === "import_invites") {
       if (!isBusinessOwner || currentUser.status !== "active" || body.confirm !== true || !currentUser.organization_id) return NextResponse.json({ error: "Owner confirmation required" }, { status: 403 });
       const requestDb = await createRequestClient();

@@ -7,6 +7,12 @@ export function billingPrice(monthlyPrice: number, cycle: BillingCycle): number 
   return Math.round(monthlyPrice * BILLING_MONTHS[cycle] * (cycle === 'yearly' ? 0.8 : 1) * 100) / 100;
 }
 
+/** A private monthly quote has no catalog discount unless separately agreed. */
+export function privateAgreementPrice(monthlyPrice: number, cycle: BillingCycle): number {
+  if (!Number.isFinite(monthlyPrice) || monthlyPrice <= 0) throw new Error('Invalid monthly price');
+  return Math.round(monthlyPrice * BILLING_MONTHS[cycle] * 100) / 100;
+}
+
 /** Calendar-month expiry, clamped at month end (Jan 31 -> Apr 30). */
 export function billingExpiry(start: Date, cycle: BillingCycle): Date {
   const result = new Date(start);

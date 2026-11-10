@@ -87,6 +87,13 @@ async function createUser(data: {
   return body.user;
 }
 
+async function inviteCoOwner(data: { email: string; full_name: string }): Promise<User> {
+  const res = await fetch('/api/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'invite_co_owner', ...data }) });
+  const body = await res.json();
+  if (!res.ok) throw new Error(body.error || 'Could not invite co-owner');
+  return body.user;
+}
+
 async function updateUser(
   id: string,
   data: Record<string, unknown>,
@@ -161,6 +168,8 @@ export default function UsersPage() {
 
   // Dialog states
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isOwnerInviteOpen, setIsOwnerInviteOpen] = useState(false);
+  const [ownerInvite, setOwnerInvite] = useState({ full_name: '', email: '' });
   const [editUser, setEditUser] = useState<User | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
   const [resetPwdUser, setResetPwdUser] = useState<User | null>(null);
@@ -182,6 +191,20 @@ export default function UsersPage() {
     // (the endpoint's org-scoped query fails for a cross-org user with no
     // organization_id).
     enabled: currentUser?.role === "business_owner",
+  });
+  const { data: hasPrivateOffer = false } = useQuery({
+    queryKey: ['private-offer-access', currentUser?.id], enabled: currentUser?.role === 'business_owner',
+    queryFn: async () => {
+      const { data: { session } } = await (await import('@/lib/supabase/client')).createClient().auth.getSession();
+      if (!session) return false;
+      const response = await fetch('/api/subscriptions/private-offer', { headers: { Authorization: `Bearer ${session.access_token}` } });
+      return response.ok && Boolean((await response.json()).offer);
+    },
+  });
+  const inviteOwnerMutation = useMutation({
+    mutationFn: inviteCoOwner,
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['users'] }); setIsOwnerInviteOpen(false); setOwnerInvite({ full_name: '', email: '' }); toast.success('Co-owner invitation sent'); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : 'Could not invite co-owner'),
   });
 
   const createMutation = useMutation({
@@ -278,13 +301,14 @@ export default function UsersPage() {
             {t.users.subtitle.replace("{count}", String(users.length))}
           </p>
         </div>
-        <Button onClick={() => setIsCreateOpen(true)}>
+        <div className="flex flex-wrap gap-2">{hasPrivateOffer && users.filter(u => u.role === 'business_owner').length < 2 && <Button variant="outline" onClick={() => setIsOwnerInviteOpen(true)}>Invite co-owner</Button>}<Button onClick={() => setIsCreateOpen(true)}>
           <Plus className="h-4 w-4 mr-2" strokeWidth={1.75} />
           {t.users.add_user}
-        </Button>
+        </Button></div>
       </div>
 
       <DiscountPolicySettings />
+      <Dialog open={isOwnerInviteOpen} onOpenChange={setIsOwnerInviteOpen}><DialogContent><DialogHeader><DialogTitle>Invite a second business owner</DialogTitle><DialogDescription>The co-owner will have access to all branches and will choose their own password through an email invitation.</DialogDescription></DialogHeader><div className="space-y-3"><div><Label htmlFor="co-owner-name">Full name</Label><Input id="co-owner-name" value={ownerInvite.full_name} onChange={e => setOwnerInvite({ ...ownerInvite, full_name: e.target.value })} /></div><div><Label htmlFor="co-owner-email">Email</Label><Input id="co-owner-email" type="email" value={ownerInvite.email} onChange={e => setOwnerInvite({ ...ownerInvite, email: e.target.value })} /></div><Button disabled={inviteOwnerMutation.isPending || !ownerInvite.full_name.trim() || !ownerInvite.email.trim()} onClick={() => inviteOwnerMutation.mutate(ownerInvite)}>Send invitation</Button></div></DialogContent></Dialog>
 
       {/* Table */}
       <Card>
