@@ -6,6 +6,7 @@ import { withTimeout } from '@/lib/utils/timeout';
 import { requireTransactionSubscription } from '@/lib/subscriptions/verification';
 
 export interface StockReceipt {
+  receipt_id?: string;
   organization_id: string;
   product_id: string;
   warehouse_id: string;
@@ -19,7 +20,7 @@ export async function receiveStockAtCost(receipt: StockReceipt, options?: { forc
     throw new Error('Enter a whole-number quantity greater than zero.');
   if (!Number.isFinite(receipt.unit_cost) || receipt.unit_cost < 0 || receipt.unit_cost > 9999999999.99)
     throw new Error('Enter a valid buying cost per unit.');
-  const id = generateId();
+  const id = receipt.receipt_id || generateId();
   const args = {
     p_receipt_id: id,
     p_product_id: receipt.product_id,
@@ -36,6 +37,12 @@ export async function receiveStockAtCost(receipt: StockReceipt, options?: { forc
       const product = await tx.objectStore('products').get(receipt.product_id);
       if (!product || product.organization_id !== receipt.organization_id)
         throw new Error('Open this product online once before receiving it offline.');
+      const existing = await tx.objectStore('sync_queue').index('by-queue-key').getAll(['stock_receipts', id, 'INSERT']);
+      if (existing.length) {
+        if (JSON.stringify(existing[0].payload) !== JSON.stringify(args)) throw new Error('This receipt ID was already used for different stock. Review the receipt again.');
+        await tx.done;
+        return { offline: existing[0].status !== 'synced', averageCost: Number(product.cost_price) };
+      }
       const rows = await tx.objectStore('inventory').getAll() as InventoryRecord[];
       const stock = rows.filter(row => row.product_id === receipt.product_id && row.organization_id === receipt.organization_id);
       const previousStock = stock.reduce((sum, row) => sum + row.quantity, 0);

@@ -16,6 +16,15 @@ import { createClient } from '@/lib/supabase/server';
  */
 type Traction = { businesses?: number; products?: number; transactions?: number; business_names?: string[] };
 
+// Names supplied by the founder as approved public display names on 10 Nov 2026.
+const approvedBusinessNames = [
+  'Marvellous San General Enterprise',
+  'Looking Good Textile',
+  'Henry computers home',
+  'Thrive-Well Pharmacy',
+  'Oma collections',
+];
+
 export async function StatsBand() {
   let traction: Traction = {};
   try {
@@ -32,11 +41,14 @@ export async function StatsBand() {
 
   const stats = [
     { n: typeof traction.products === "number" ? traction.products.toLocaleString() : "—", l: "Products tracked" },
-    { n: typeof traction.businesses === "number" ? traction.businesses.toLocaleString() : "—", l: "Businesses served" },
+    { n: typeof traction.businesses === "number" ? traction.businesses.toLocaleString() : "—", l: "Businesses with recorded sales" },
     { n: typeof traction.transactions === "number" ? traction.transactions.toLocaleString() : "—", l: "Completed transactions" },
     { n: "30", l: "Days to try your business tools" },
   ];
-  const names = Array.isArray(traction.business_names) ? traction.business_names.filter((name): name is string => typeof name === "string" && name.length > 0) : [];
+  const names = [...new Set([
+    ...approvedBusinessNames,
+    ...(Array.isArray(traction.business_names) ? traction.business_names.filter((name): name is string => typeof name === "string" && name.length > 0) : []),
+  ])];
 
   return (
     <>

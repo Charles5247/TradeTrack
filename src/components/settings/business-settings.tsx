@@ -25,6 +25,9 @@ export function BusinessSettings({ localizationOnly = false }: { localizationOnl
   const [language, setLanguage] = useState(locale);
   const [value, setValue] = useState(initial);
   const [settings, setSettings] = useState<Record<string, unknown>>({});
+  const [marketingPublic, setMarketingPublic] = useState(false);
+  const [marketingName, setMarketingName] = useState('');
+  const [savedMarketing, setSavedMarketing] = useState({ public: false, name: '' });
   const [merchantVerification, setMerchantVerification] = useState<{
     id: string;
     registrationNumber: string;
@@ -38,8 +41,6 @@ export function BusinessSettings({ localizationOnly = false }: { localizationOnl
   const editable = user?.role === 'business_owner';
   useEffect(() => {
     let disposed = false;
-    setLoading(true);
-    setError('');
     void (async () => {
       try {
         if (!user?.organization_id) throw new Error('No business is linked to this account.');
@@ -58,6 +59,9 @@ export function BusinessSettings({ localizationOnly = false }: { localizationOnl
           setValue(next);
           setSaved(next);
           setSettings(data.settings || {});
+          setMarketingPublic(data.marketing_public === true);
+          setMarketingName(data.marketing_public_name || '');
+          setSavedMarketing({ public: data.marketing_public === true, name: data.marketing_public_name || '' });
           setMerchantVerification(merchant ? {
             id: merchant.id,
             registrationNumber: String(merchant.registration_number || ''),
@@ -84,7 +88,7 @@ export function BusinessSettings({ localizationOnly = false }: { localizationOnl
       const profileSettings: Record<string, unknown> = { ...settings, date_format };
       delete profileSettings.registration_number;
       const client = createClient();
-      const { data, error } = await client.from('organizations').update({ ...profile, settings: profileSettings, name: value.name.trim(), updated_at: new Date().toISOString() }).eq('id', user.organization_id).select('id').single();
+      const { data, error } = await client.from('organizations').update({ ...profile, settings: profileSettings, name: value.name.trim(), marketing_public: marketingPublic, marketing_public_name: marketingName.trim() || null, updated_at: new Date().toISOString() }).eq('id', user.organization_id).select('id').single();
       if (error) throw error;
       if (!data) throw new Error('Your account cannot update this business.');
       let verificationRequested = false;
@@ -113,6 +117,7 @@ export function BusinessSettings({ localizationOnly = false }: { localizationOnl
       }
       org.setOrganizationName(value.name.trim()); org.setOrganizationPhone(value.phone); org.setOrganizationAddress(value.address); org.setCurrency(value.currency);
       setAppCurrency(value.currency); setAppDateFormat(value.date_format); setLocale(language); setSaved(value);
+      setSavedMarketing({ public: marketingPublic, name: marketingName });
       toast.success(copy(verificationRequested
         ? 'Business details submitted. Your trial will begin after platform verification.'
         : 'Business settings saved'));
@@ -133,12 +138,13 @@ export function BusinessSettings({ localizationOnly = false }: { localizationOnl
   }
   const field = (key: keyof typeof initial, label: string, type = 'text') => <div className="space-y-1.5"><Label htmlFor={`org_${key}`}><TranslatedLabel>{label}</TranslatedLabel></Label><Input id={`org_${key}`} type={type} value={value[key]} disabled={!editable || saving} onChange={e => setValue({ ...value, [key]: e.target.value })} /></div>;
   if (loading) return <div aria-label={copy("Loading business settings")} className="space-y-5"><Skeleton className="h-72" /><Skeleton className="h-44" /></div>;
-  if (error && !saved.name) return <div role="alert" className="rounded-lg border border-destructive/30 p-6"><p>{error}</p><Button className="mt-4" onClick={() => setRetry(v => v + 1)}><TranslatedText text={"Try again"} /></Button></div>;
+  if (error && !saved.name) return <div role="alert" className="rounded-lg border border-destructive/30 p-6"><p>{error}</p><Button className="mt-4" onClick={() => { setLoading(true); setError(''); setRetry(v => v + 1); }}><TranslatedText text={"Try again"} /></Button></div>;
   return <div className="space-y-4">
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-    <FormTemplate onCancel={() => { setValue(saved); setLanguage(locale); setError(''); }} onSave={editable ? save : undefined} isSaving={saving} sections={[
+    <FormTemplate onCancel={() => { setValue(saved); setMarketingPublic(savedMarketing.public); setMarketingName(savedMarketing.name); setLanguage(locale); setError(''); }} onSave={editable ? save : undefined} isSaving={saving} sections={[
       ...(!localizationOnly ? [{ title: 'Business profile', description: 'Shown on receipts, invoices, and your Zainpay account.', fields: <div className="grid gap-4 sm:grid-cols-2">{field('name', 'Business name')}{field('registration_number', 'Registered as (CAC)')}{field('phone', 'Phone', 'tel')}{field('email', 'Email', 'email')}<div className="sm:col-span-2">{field('address', 'Address')}</div></div> },
       { title: 'Brand', fields: <div className="flex flex-wrap items-center gap-4"><div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded border border-dashed bg-muted">{value.logo_url ? <img src={value.logo_url} alt={copy("Business logo")} className="h-full w-full object-contain" /> : <Building2 className="h-8 w-8 text-muted-foreground" />}</div><div className="space-y-2"><p className="font-semibold"><TranslatedText text={"Business logo"} /></p><p className="text-xs text-muted-foreground"><TranslatedText text={"PNG, JPEG or WebP · up to 256 KB · saved with your business profile"} /></p><label className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm"><Upload className="h-4 w-4" /><TranslatedText text={"Upload"} /><input aria-label={copy("Upload business logo")} className="sr-only" type="file" accept="image/png,image/jpeg,image/webp" disabled={!editable || saving} onChange={e => { void upload(e.target.files?.[0]); e.target.value = ''; }} /></label>{value.logo_url && <Button variant="ghost" disabled={!editable || saving} onClick={() => setValue({ ...value, logo_url: '' })}><TranslatedText text={"Remove"} /></Button>}</div></div> }] : []),
+      ...(!localizationOnly ? [{ title: 'Public business name', description: 'Only businesses that opt in appear on the public Trackasuwa marketing site.', fields: <div className="space-y-3"><label className="flex items-start gap-3 text-sm"><input type="checkbox" className="mt-1" checked={marketingPublic} disabled={!editable || saving} onChange={event => setMarketingPublic(event.target.checked)} /><span><TranslatedText text="Show my business name publicly on the Trackasuwa website" /></span></label>{marketingPublic && <div className="max-w-md space-y-1.5"><Label htmlFor="marketing-name"><TranslatedText text="Public display name (optional)" /></Label><Input id="marketing-name" maxLength={120} value={marketingName} disabled={!editable || saving} onChange={event => setMarketingName(event.target.value)} /><p className="text-xs text-muted-foreground"><TranslatedText text="Leave blank to use your business name. Turn this off later to remove it from the carousel." /></p></div>}</div> }] : []),
       { title: 'Language & currency', description: 'Language applies to this device. Currency and timezone belong to your business.', fields: <div className="grid gap-4 sm:grid-cols-2"><div className="space-y-1.5"><Label htmlFor="business_language"><TranslatedText text={"Language"} /></Label><select id="business_language" className="tt-input" value={language} onChange={e => setLanguage(e.target.value as Locale)}>{SUPPORTED_LOCALES.map(l => <option key={l.code} value={l.code}>{l.native}</option>)}</select></div><div className="space-y-1.5"><Label htmlFor="business_currency"><TranslatedText text={"Currency"} /></Label><select id="business_currency" className="tt-input" disabled={!editable} value={value.currency} onChange={e => setValue({ ...value, currency: e.target.value })}>{['NGN', 'USD', 'GBP', 'EUR', 'GHS'].map(c => <option key={c} value={c}>{c === 'NGN' ? 'Naira (₦)' : c}</option>)}</select></div><div className="space-y-1.5"><Label htmlFor="business_timezone"><TranslatedText text={"Timezone"} /></Label><select id="business_timezone" className="tt-input" disabled={!editable} value={value.timezone} onChange={e => setValue({ ...value, timezone: e.target.value })}>{['Africa/Lagos', 'Africa/Accra', 'Africa/Nairobi', 'UTC'].map(t => <option key={t}>{t}</option>)}</select></div><div className="space-y-1.5"><Label htmlFor="date-format"><TranslatedText text={"Date format"} /></Label><select id="date-format" className="tt-input" value={value.date_format} disabled={!editable} onChange={e => setValue({ ...value, date_format: e.target.value })}><option value="medium"><TranslatedText text={"24 Aug 2026"} /></option><option value="iso">2026-08-24</option><option value="numeric">24/08/2026</option></select></div></div> },
     ]} />
   </div>;

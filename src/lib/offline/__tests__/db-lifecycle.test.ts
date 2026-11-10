@@ -53,6 +53,18 @@ it('releases a connection when another tab needs a schema upgrade', async () => 
   expect(await upgraded.get('sales', 'sale-1')).toMatchObject({ total: 200 });
 });
 
+it('opens a newer database version without losing pending records', async () => {
+  const initial = await trackedDB();
+  await initial.put('sync_queue', { id: 'pending-newer', status: 'pending', table_name: 'sales', record_id: 'sale-newer', operation: 'INSERT' });
+  initial.close();
+  const newer = await openDB(initial.name, 8);
+  connections.push(newer);
+  newer.close();
+  const reopened = await trackedDB();
+  expect(reopened.version).toBe(8);
+  expect(await reopened.get('sync_queue', 'pending-newer')).toMatchObject({ status: 'pending' });
+});
+
 it('keeps a delayed account open from replacing another account connection', async () => {
   const nameA = account.namespace;
   const old = await openDB(`TracKasuwa-offline-${nameA}`, 5);

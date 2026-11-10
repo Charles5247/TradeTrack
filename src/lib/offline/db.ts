@@ -320,7 +320,15 @@ function openOfflineDatabase(dbName: string): Promise<TracKasuwaIDB> {
         }
       }
     },
-  }).catch((error) => {
+  }).catch(async (error) => {
+    // A newer deployment may already have upgraded this account's database.
+    // Open its compatible stores without requesting a downgrade. Never delete
+    // or recreate a database that contains queued merchant transactions.
+    if ((error as { name?: string })?.name === "VersionError") {
+      const newer = await openDB(dbName);
+      if (["app_meta", "sync_queue", "products", "inventory"].every(name => newer.objectStoreNames.contains(name))) return newer;
+      newer.close();
+    }
     invalidate();
     throw error;
   });

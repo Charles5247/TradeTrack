@@ -169,17 +169,8 @@ class SyncEngine {
         this.setState({ lastSync: null });
       }
 
-      // Authenticate before touching queued records; failures preserve all data.
-      const refreshed = await withTimeout(supabase.auth.refreshSession(), AUTH_CHECK_TIMEOUT_MS, SYNC_AUTH_TIMEOUT);
-      if (refreshed.error) {
-        if (isAuthRetryableFetchError(refreshed.error)) throw refreshed.error;
-        this.setState({ status: "error", error: "Please sign in again to resume sync. Your queued data is safe." });
-        return;
-      }
-      if (!refreshed.data.session) {
-        this.setState({ status: "error", error: "Please sign in again to resume sync. Your queued data is safe." });
-        return;
-      }
+      // getUser() already verifies and refreshes the session when needed.
+      // A second explicit refresh races other tabs and signOut mid-flight.
       const resetSales = await this.discardResetSales(orgId, supabase);
       if (resetSales) this.setState({ lastSync: null });
       if (force) {
@@ -188,6 +179,15 @@ class SyncEngine {
         for (const entry of failed) {
           if (entry.stock_sync?.review_reason) continue;
           await queue.put("sync_queue", { ...entry, status: "pending", retry_count: 0 });
+        }
+      } else {
+        // A server migration may arrive after an older client exhausted its
+        // retries. Retry only these schema-cache failures automatically.
+        const queue = await getDB();
+        const failed = await queue.getAllFromIndex("sync_queue", "by-status", "failed") as SyncQueueRecord[];
+        for (const entry of failed) {
+          if (/Could not find the function public\.receive_stock_at_cost|Server stock-receipt update is missing/i.test(entry.error || ""))
+            await queue.put("sync_queue", { ...entry, status: "pending", retry_count: 0 });
         }
       }
       await this.pushChanges();
@@ -216,7 +216,7 @@ class SyncEngine {
         pendingCount: remaining.length + failed.length,
         error: needsStockCheck
           ? "This stock update needs a quick check. Open Vendors for details."
-          : rejected ? `Queued data has not uploaded: ${rejected.error}` : null,
+          : rejected ? `Queued ${rejected.table_name} record ${rejected.record_id} has not uploaded: ${rejected.error}` : null,
       });
     } catch (err) {
       // A bare "Failed to fetch" TypeError means the request never even
@@ -474,6 +474,14 @@ class SyncEngine {
         if (item.table_name === "sale_items") thisLineSynced.add(item.record_id);
       } catch (err) {
         const errMessage = err && typeof err === 'object' && 'message' in err ? String(err.message) : "Unknown error";
+        if (/Could not find the function public\.receive_stock_at_cost/i.test(errMessage)) {
+          await db.put("sync_queue", { ...item, status: "pending", error: "Server stock-receipt update is missing; queued receipt is safe and will retry after deployment." });
+          break;
+        }
+        if (isAuthRetryableFetchError(err) || /failed to fetch|network request failed|load failed/i.test(errMessage)) {
+          await db.put("sync_queue", { ...item, status: "pending", error: undefined });
+          throw err;
+        }
         const subscriptionBlocked = /Trial ended|active subscription|read.only/i.test(errMessage);
         await db.put("sync_queue", {
           ...item,

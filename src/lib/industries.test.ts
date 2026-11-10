@@ -7,6 +7,7 @@ it('keeps sector units appropriate without enabling medicine tools for ordinary 
  expect(industryProfile('electronics').model).toBe(true);
  expect(industryProfile('electronics').units).not.toContain('tablet');
  expect(industryProfile('fashion').units).toContain('pair');
+ expect(industryProfile('fashion').units).toEqual(expect.arrayContaining(['yard','bale','bundle','roll','dozen','set']));
  expect(industryProfile('fashion').variant).toBe(true);
  expect(industryProfile('grocery').units).toEqual(expect.arrayContaining(['g','kg','mL','L']));
 });

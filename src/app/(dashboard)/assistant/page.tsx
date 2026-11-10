@@ -8,7 +8,7 @@ import { NativeSelect } from '@/components/ui/native-select';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { AccessGuard } from '@/components/shared/access-guard';
-import { ImportWorkbench } from '@/components/imports/import-workbench';
+import { StockReceivingReview } from '@/components/ai/stock-receiving-review';
 import { parseImportFile } from '@/lib/imports/parse';
 import type { ImportRow } from '@/lib/imports/preview';
 import type { Insight } from '@/lib/ai/types';
@@ -21,10 +21,10 @@ export default function AssistantPage() {
   const copy = useCopy();
   const [question, setQuestion] = useState('');
   const [text, setText] = useState(''); const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
-  const [status, setStatus] = useState<any>(null); const [preferences, setPreferences] = useState({ in_app: false, email: false, sms: false });
+  const [status, setStatus] = useState<{ stub: boolean; channels: Record<'in_app' | 'email' | 'sms', boolean> } | null>(null); const [preferences, setPreferences] = useState({ in_app: false, email: false, sms: false });
   const [proposal, setProposal] = useState<{ job: string; rows: ImportRow[] } | null>(null);
   const [report, setReport] = useState<{ job: string; insights: Insight[] } | null>(null);
-  const [channel, setChannel] = useState('in_app'); const [notice, setNotice] = useState('');
+  const [channel, setChannel] = useState<'in_app' | 'email' | 'sms'>('in_app'); const [notice, setNotice] = useState('');
   useEffect(() => { void fetch('/api/ai').then(async r => { const data = await r.json(); if (!r.ok) throw new Error(data.error); setStatus(data); setPreferences(data.preferences); }).catch(e => setError(e.message)); }, []);
   const run = async (action: () => Promise<void>) => { setBusy(true); setError(''); setNotice(''); try { await action(); } catch (e) { setError(e instanceof Error ? e.message : 'Assistant unavailable'); } finally { setBusy(false); } };
   return <AccessGuard allow={['business_owner']}><div className="min-w-0 space-y-6 [&_button]:max-w-full [&_button]:whitespace-normal [&_button]:h-auto [&_button]:min-h-11 [&_button]:py-2">
@@ -33,17 +33,17 @@ export default function AssistantPage() {
     <p><Link className="text-sm font-medium text-primary underline underline-offset-4" href="/imports"><TranslatedText text={"Business imports"} /></Link> · <Link className="text-sm font-medium text-primary underline underline-offset-4" href="/notifications"><TranslatedText text={"Notifications"} /></Link></p>
     {busy && <p role="status" className="tt-muted text-sm"><TranslatedText text={"Working on your request?"} /></p>}{!status && !error && <p role="status" className="tt-muted text-sm"><TranslatedText text={"Loading assistant preferences?"} /></p>}{error && <p role="alert" className="text-destructive">{error}</p>}{notice && <p role="status">{notice}</p>}
     <fieldset id="inventory" disabled={busy || !status} className="min-w-0 space-y-4 rounded-[var(--radius-lg)] border border-border bg-card p-4 sm:p-6">
-      <legend className="tt-section-title px-2"><TranslatedText text={"Bulk inventory draft"} /></legend><p><TranslatedText text={"Paste product data only, without customer or staff details. Use column headers or “product quantity price”."} /></p>
+      <legend className="tt-section-title px-2"><TranslatedText text={"Stock receiving draft"} /></legend><p><TranslatedText text={"Paste a stock list or upload a CSV or Excel file. Check every buying cost before receiving stock. Product photos and PDFs are not supported here yet."} /></p>
       <Input aria-label={copy("Product CSV or Excel file")} type="file" accept=".csv,.xlsx" onChange={e => { const file = e.target.files?.[0]; if (file) void run(async () => { const rows = await parseImportFile(file); const headers = Array.from(new Set(rows.flatMap(Object.keys))); setText([headers.join('\t'), ...rows.map(row => headers.map(h => String(row[h] ?? '').replace(/[\t\r\n]/g,' ')).join('\t'))].join('\n')); }); }} />
       <Textarea aria-label={copy("Messy product data")}  rows={7} value={text} onChange={e => setText(e.target.value)} />
       <Button  onClick={() => void run(async () => setProposal(await call({ action: 'inventory', text })))}><TranslatedText text={"Propose mapped rows"} /></Button>
     </fieldset>
-    {proposal && <section className="space-y-3"><h2 className="tt-section-title"><TranslatedText text={"Review inventory proposal"} /></h2><ImportWorkbench key={proposal.job} initialRows={proposal.rows} onApproved={async batch => { await call({ action: 'approve', job: proposal.job, batch, confirm: true }); }} /></section>}
+    {proposal && <StockReceivingReview key={proposal.job} job={proposal.job} rows={proposal.rows} />}
     <fieldset id="insights" disabled={busy || !status} className="min-w-0 space-y-4 rounded-[var(--radius-lg)] border border-border bg-card p-4 sm:p-6"><legend className="tt-section-title px-2"><TranslatedText text={"Business insights"} /></legend>
       <Textarea aria-label={copy("Ask about your business")} placeholder={copy("Ask about your sales or stock")} maxLength={2000} value={question} onChange={e => setQuestion(e.target.value)} />
       <Button onClick={() => void run(async () => setReport(await call({ action: 'insights', question })))}><TranslatedText text={"Generate organization-only insights"} /></Button>
       {report && <div className="space-y-3">{report.insights.map(i => <article key={i.title}><h3 className="font-semibold">{i.title}</h3><p>{i.message}</p></article>)}
-        <label className="block min-w-0 space-y-2 text-sm font-medium"><TranslatedText text={"Deliver this preview to your profile"} />{" "}<NativeSelect  value={channel} onChange={e => setChannel(e.target.value)}>{['in_app','email','sms'].map(c => <option key={c} value={c} disabled={!status?.channels[c]}>{c.replace('_',' ')}<TranslatedText text={!status?.channels[c] ? ' (disabled)' : ''} /></option>)}</NativeSelect></label>
+        <label className="block min-w-0 space-y-2 text-sm font-medium"><TranslatedText text={"Deliver this preview to your profile"} />{" "}<NativeSelect  value={channel} onChange={e => setChannel(e.target.value as typeof channel)}>{(['in_app','email','sms'] as const).map(c => <option key={c} value={c} disabled={!status?.channels[c]}>{c.replace('_',' ')}<TranslatedText text={!status?.channels[c] ? ' (disabled)' : ''} /></option>)}</NativeSelect></label>
         <Button  onClick={() => void run(async () => { await call({ action: 'deliver', job: report.job, channel, confirm: true }); setNotice('Insight delivered.'); })}><TranslatedText text={"Confirm and deliver displayed insights"} /></Button>
       </div>}
     </fieldset>

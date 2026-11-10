@@ -2,7 +2,7 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 import { getDB, type SyncQueueRecord } from '../db';
 
-const calls = vi.hoisted(() => ({ order: [] as string[], failProduct: false }));
+const calls = vi.hoisted(() => ({ order: [] as string[], failProduct: false, failStorage: false }));
 vi.mock('@/lib/supabase/client', () => ({
   createClient: () => ({
     from: (table: string) => ({
@@ -13,7 +13,7 @@ vi.mock('@/lib/supabase/client', () => ({
       update: () => ({ eq: () => ({ select: () => ({ single: async () => ({ data: { id: 'product' }, error: null }) }) }) }),
     }),
     storage: { from: () => ({
-      upload: async () => { calls.order.push('product_images'); return { error: null }; },
+      upload: async () => { calls.order.push('product_images'); return { error: calls.failStorage ? new Error('Failed to fetch Supabase: POST storage/v1/object') : null }; },
       getPublicUrl: () => ({ data: { publicUrl: 'https://example.com/photo.webp' } }),
     }) },
   }),
@@ -23,9 +23,18 @@ import { syncEngine } from '../sync-engine';
 beforeEach(async () => {
   calls.order.length = 0;
   calls.failProduct = false;
+  calls.failStorage = false;
   const db = await getDB();
   await db.clear('sync_queue');
   await db.clear('pending_product_images');
+});
+
+it('keeps a photo queued without consuming retries when Storage is temporarily unreachable', async () => {
+  const db = await queueSetup();
+  calls.failStorage = true;
+  await expect((syncEngine as unknown as { pushChanges(): Promise<void> }).pushChanges()).rejects.toThrow('Failed to fetch Supabase');
+  expect(await db.get('sync_queue', 'queue-product_images')).toMatchObject({ status: 'pending', retry_count: 0 });
+  expect(await db.get('pending_product_images', 'photo')).toBeDefined();
 });
 
 async function queueSetup() {
