@@ -147,7 +147,6 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
     try {
       const openingQuantity = Number(quantity);
       if (!Number.isSafeInteger(openingQuantity) || openingQuantity < 0) throw new Error('Enter a valid whole-number quantity.');
-      if ((openingQuantity > 0 || product?.id) && !warehouseId) throw new Error('Choose a stock location first.');
       const stockRow = stockRows.find(row => row.warehouse_id === warehouseId);
       const stockChange = openingQuantity - (stockRow?.quantity ?? 0);
       const receivingExistingStock = Boolean(product?.id && stockChange > 0);
@@ -159,6 +158,7 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
         catch { offline = true; }
       }
       if (!user) throw new Error('Not authenticated');
+      if ((openingQuantity > 0 || product?.id || user.role === 'admin') && !warehouseId) throw new Error('Choose a stock location first.');
 
       const { data: profile } = offline ? { data: null } : await withTimeout(Promise.resolve(supabase
         .from('users')
@@ -243,6 +243,12 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
         await saveToOfflineDB('products', [{ ...serverPayload, image_url: imageUrl || null }]);
         await addToSyncQueue('products', product ? 'UPDATE' : 'INSERT', id, serverPayload);
         if (imageId) await addToSyncQueue('product_images', 'INSERT', imageId, { product_id: id });
+        if (!product && warehouseId && openingQuantity === 0) {
+          const inventoryId = generateId();
+          const row = { id: inventoryId, organization_id: orgId, product_id: id, warehouse_id: warehouseId, quantity: 0, min_stock_level: 5, updated_at: now };
+          await saveToOfflineDB('inventory', [row]);
+          await addToSyncQueue('inventory', 'INSERT', inventoryId, row);
+        }
         if (stockChange && warehouseId) {
           if (receivingExistingStock) await receiveStockAtCost({ organization_id: orgId, product_id: id,
             warehouse_id: warehouseId, quantity: stockChange, unit_cost: data.cost_price,
@@ -299,16 +305,18 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
         let result;
         try { result = await withTimeout(Promise.resolve(supabase
           .from('products')
-          .insert({ ...payload, id })
-          .select()
-          .single()), 5000); }
+          .insert({ ...payload, id })), 5000); }
         catch (error) { if (error instanceof TypeError || (error instanceof Error && /timed out|fetch failed|failed to fetch/i.test(error.message))) return await saveOffline(); throw error; }
-        const { data: newProduct, error } = result;
+        const { error } = result;
         if (error && /fetch failed|failed to fetch/i.test(error.message)) return await saveOffline();
         if (error) throw error;
+        if (warehouseId && openingQuantity === 0) {
+          const { error: stockError } = await supabase.from('inventory').insert({ organization_id: orgId, product_id: id, warehouse_id: warehouseId, quantity: 0, min_stock_level: 5 });
+          if (stockError) throw stockError;
+        }
         if (openingQuantity > 0 && warehouseId) {
           try {
-            await adjustProductStock({ organization_id: orgId, user_id: user.id, product_id: newProduct.id,
+            await adjustProductStock({ organization_id: orgId, user_id: user.id, product_id: id,
               warehouse_id: warehouseId, quantity_change: openingQuantity, reason: 'Opening stock' });
           } catch (stockError) {
             toast.error(`Product created, but stock was not saved: ${stockError instanceof Error ? stockError.message : 'unknown error'}. Set its quantity on the product page.`);
@@ -322,7 +330,7 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
           user_id: user.id,
           action: 'CREATE_PRODUCT',
           resource_type: 'product',
-          resource_id: newProduct?.id ?? '',
+          resource_id: id,
           new_values: { ...data, image_url: imageUrl },
         });
 

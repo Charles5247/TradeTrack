@@ -30,15 +30,18 @@ import { requireTransactionSubscription } from '@/lib/subscriptions/verification
 import type { InventoryRecord } from '@/lib/offline/db';
 import { compareListRows, useListPreference, type ListSort, type ProductGroup } from '@/lib/lists/preferences';
 import { receiveStockAtCost } from '@/lib/inventory/receive-stock';
+import { visibleWarehouseIds } from '@/lib/warehouses/staff-visibility';
 
-async function fetchInventory(warehouseId: string, filter: string, search: string, sort: ListSort) {
+async function fetchInventory(user: { id: string; organization_id?: string | null; role: string } | null, warehouseId: string, filter: string, search: string, sort: ListSort) {
+  const visibleIds = await visibleWarehouseIds(user);
+  if (visibleIds?.size === 0) return [];
   const cached = async () => {
     const [rows, products, warehouses] = await Promise.all([
       getAllFromOfflineDB<InventoryRecord>('inventory'),
       getAllFromOfflineDB<{ id: string; name: string; sku: string; created_at?: string }>('products'),
       getAllFromOfflineDB<Warehouse>('warehouses'),
     ]);
-    return rows.filter(row => (!warehouseId || warehouseId === 'all' || row.warehouse_id === warehouseId)
+    return rows.filter(row => (!visibleIds || visibleIds.has(row.warehouse_id)) && (!warehouseId || warehouseId === 'all' || row.warehouse_id === warehouseId)
       && (filter !== 'low' || (row.quantity > 0 && row.quantity < 10))
       && (filter !== 'out' || row.quantity === 0))
       .map(row => ({ ...row, product: products.find(product => product.id === row.product_id) || null,
@@ -56,6 +59,7 @@ async function fetchInventory(warehouseId: string, filter: string, search: strin
       .order(sort === 'newest' || sort === 'oldest' ? 'created_at' : 'name', { ascending: sort === 'az' || sort === 'oldest', referencedTable: 'products' })
       .range(start, start + pageSize - 1);
     if (warehouseId && warehouseId !== 'all') query = query.eq('warehouse_id', warehouseId);
+    if (visibleIds) query = query.in('warehouse_id', [...visibleIds]);
     if (filter === 'low') query = query.filter('quantity', 'gt', 0).filter('quantity', 'lt', 10);
     else if (filter === 'out') query = query.eq('quantity', 0);
     const { data, error } = await query;
@@ -267,21 +271,25 @@ function InventoryPageInner() {
   const [adjustReason, setAdjustReason] = useState('');
 
   const { data: warehouses = [] } = useQuery({
-    queryKey: ['warehouses'],
+    queryKey: ['warehouses', user?.id],
     networkMode: 'always',
     queryFn: async () => {
-      if (isOffline()) return getAllFromOfflineDB<Warehouse>('warehouses');
+      const visibleIds = await visibleWarehouseIds(user);
+      if (visibleIds?.size === 0) return [];
+      if (isOffline()) return (await getAllFromOfflineDB<Warehouse>('warehouses')).filter(row => !visibleIds || visibleIds.has(row.id));
       const supabase = createClient();
-      const { data } = await supabase.from('warehouses').select('*').order('name');
+      let query = supabase.from('warehouses').select('*').order('name');
+      if (visibleIds) query = query.in('id', [...visibleIds]);
+      const { data } = await query;
       if (data) await saveToOfflineDB('warehouses', data);
       return data as Warehouse[] || [];
     },
   });
 
   const { data: inventory = [], isLoading } = useQuery({
-    queryKey: ['inventory', warehouseFilter, statusFilter, search, sort],
+    queryKey: ['inventory', user?.id, warehouseFilter, statusFilter, search, sort],
     networkMode: 'always',
-    queryFn: () => fetchInventory(warehouseFilter, statusFilter, search, sort),
+    queryFn: () => fetchInventory(user, warehouseFilter, statusFilter, search, sort),
   });
 
   const inventoryGroup = (item: Record<string, unknown>) => {

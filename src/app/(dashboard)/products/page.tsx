@@ -42,12 +42,15 @@ import type { Warehouse } from '@/types';
 import { compareListRows, useListPreference, type ListSort, type ProductGroup } from '@/lib/lists/preferences';
 import { getAllFromOfflineDB, saveToOfflineDB } from '@/lib/offline/db';
 import { isOffline } from '@/lib/utils/network';
+import { visibleWarehouseIds } from '@/lib/warehouses/staff-visibility';
 
 type ProductStockRow = { id: string; warehouse_id: string; quantity: number; min_stock_level: number | null; warehouse: { name?: string } | null };
 type ProductWithStock = Product & { inventory?: ProductStockRow[]; category?: { name?: string } | null; supplier?: { name?: string } | null };
 const formatUnitCost = (value: number) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: getAppCurrency(), minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
 
-async function fetchProducts(search?: string, categoryId?: string, sort: ListSort = 'az') {
+async function fetchProducts(user: { id: string; organization_id?: string | null; role: string } | null, search?: string, categoryId?: string, sort: ListSort = 'az') {
+  const visibleIds = await visibleWarehouseIds(user);
+  if (visibleIds?.size === 0) return [];
   const cached = async () => {
     const [products, inventory, warehouses] = await Promise.all([
       getAllFromOfflineDB<ProductWithStock>('products'),
@@ -56,7 +59,8 @@ async function fetchProducts(search?: string, categoryId?: string, sort: ListSor
     ]);
     const term = search?.toLowerCase();
     return products.filter(p => (!term || [p.name, p.sku, p.barcode].some(value => value?.toLowerCase().includes(term))) && (!categoryId || categoryId === 'all' || p.category_id === categoryId))
-      .map(p => ({ ...p, inventory: inventory.filter(row => row.product_id === p.id).map(row => ({ ...row, warehouse: { name: warehouses.find(w => w.id === row.warehouse_id)?.name || '' } })) }))
+      .map(p => ({ ...p, inventory: inventory.filter(row => row.product_id === p.id && (!visibleIds || visibleIds.has(row.warehouse_id))).map(row => ({ ...row, warehouse: { name: warehouses.find(w => w.id === row.warehouse_id)?.name || '' } })) }))
+      .filter(p => !visibleIds || p.inventory.length > 0)
       .sort((a, b) => sort === 'newest' ? String(b.created_at).localeCompare(String(a.created_at)) : sort === 'oldest' ? String(a.created_at).localeCompare(String(b.created_at)) : (sort === 'za' ? -1 : 1) * a.name.localeCompare(b.name));
   };
   if (isOffline()) return cached();
@@ -67,7 +71,7 @@ async function fetchProducts(search?: string, categoryId?: string, sort: ListSor
   for (let start = 0; ; start += pageSize) {
     let query = supabase
       .from('products')
-      .select('*, category:categories(name), supplier:suppliers(name), inventory(id,warehouse_id,quantity,min_stock_level,warehouse:warehouses(name))')
+      .select(`*, category:categories(name), supplier:suppliers(name), inventory${visibleIds ? '!inner' : ''}(id,warehouse_id,quantity,min_stock_level,warehouse:warehouses(name))`)
       .order(sort === 'newest' || sort === 'oldest' ? 'created_at' : 'name', { ascending: sort === 'az' || sort === 'oldest' })
       .order('id', { ascending: sort !== 'newest' })
       .range(start, start + pageSize - 1);
@@ -78,6 +82,7 @@ async function fetchProducts(search?: string, categoryId?: string, sort: ListSor
     if (categoryId && categoryId !== 'all') {
       query = query.eq('category_id', categoryId);
     }
+    if (visibleIds) query = query.in('inventory.warehouse_id', [...visibleIds]);
 
     const { data, error } = await query;
     if (error) throw error;
@@ -135,9 +140,9 @@ function ProductsPageInner() {
   const [adjustReason, setAdjustReason] = useState('');
 
   const { data: products = [], isLoading, error: pageError, refetch: retryPage } = useQuery({
-    queryKey: ['products', search, categoryFilter, sort],
+    queryKey: ['products', user?.id, search, categoryFilter, sort],
     networkMode: 'always',
-    queryFn: () => fetchProducts(search || undefined, categoryFilter, sort),
+    queryFn: () => fetchProducts(user, search || undefined, categoryFilter, sort),
   });
 
   const { data: categories = [] } = useQuery({
@@ -148,8 +153,12 @@ function ProductsPageInner() {
     queryKey: ['warehouses'],
     networkMode: 'always',
     queryFn: async () => {
-      if (isOffline()) return getAllFromOfflineDB<Warehouse>('warehouses');
-      const { data, error } = await createClient().from('warehouses').select('*').order('name');
+      const visibleIds = await visibleWarehouseIds(user);
+      if (visibleIds?.size === 0) return [];
+      if (isOffline()) return (await getAllFromOfflineDB<Warehouse>('warehouses')).filter(row => !visibleIds || visibleIds.has(row.id));
+      let query = createClient().from('warehouses').select('*').order('name');
+      if (visibleIds) query = query.in('id', [...visibleIds]);
+      const { data, error } = await query;
       if (error) throw error;
       await saveToOfflineDB('warehouses', data || []);
       return (data || []) as Warehouse[];

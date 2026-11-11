@@ -39,7 +39,7 @@ async function fetchSales(filters: {
   const supabase = createClient();
   let query = supabase
     .from('sales')
-    .select('*, financial_reversals(kind)')
+    .select('*, cashier:users!sales_cashier_id_fkey(full_name), warehouse:warehouses(name), items:sale_items(id,quantity,product:products(name)), financial_reversals(kind)')
     .order('created_at', { ascending: false })
     .limit(100);
 
@@ -136,19 +136,28 @@ async function fetchSales(filters: {
   return merged.slice(0, 100);
 }
 
+function soldProductNames(sale: Sale): string {
+  return (sale.items || []).map(item => item.product?.name).filter(Boolean).join(', ');
+}
+
 function exportToCSV(sales: Sale[]) {
-  const headers = ['Invoice', 'Customer', 'Cashier', 'Warehouse', 'Total', 'Payment', 'Status', 'Date'];
+  const headers = ['Invoice', 'Customer', 'Cashier', 'Products', 'Warehouse', 'Total', 'Payment', 'Status', 'Date'];
   const rows = sales.map((s) => [
     s.invoice_number,
     s.customer_name || '',
     (s.cashier as { full_name?: string } | null)?.full_name || '',
+    soldProductNames(s),
     (s.warehouse as { name?: string } | null)?.name || '',
     s.total,
     s.payment_method,
     s.status,
     new Date(s.created_at).toLocaleDateString(),
   ]);
-  const csv = [headers, ...rows].map((r) => r.join(',')).join('\n');
+  const csv = [headers, ...rows].map((r) => r.map(value => {
+    const cell = String(value ?? '');
+    const safe = /^[=+@-]/.test(cell) ? `'${cell}` : cell;
+    return `"${safe.replaceAll('"', '""')}"`;
+  }).join(',')).join('\r\n');
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -159,11 +168,12 @@ function exportToCSV(sales: Sale[]) {
 }
 
 function exportToPDF(sales: Sale[]) {
-  const headers = ['Invoice', 'Customer', 'Cashier', 'Warehouse', 'Total', 'Payment', 'Status', 'Date'];
+  const headers = ['Invoice', 'Customer', 'Cashier', 'Products', 'Warehouse', 'Total', 'Payment', 'Status', 'Date'];
   const rows = sales.map((s) => [
     s.invoice_number,
     s.customer_name || '',
     (s.cashier as { full_name?: string } | null)?.full_name || '',
+    soldProductNames(s),
     (s.warehouse as { name?: string } | null)?.name || '',
     formatCurrency(s.total),
     s.payment_method,
@@ -350,7 +360,8 @@ function SalesPageInner() {
                 <TableHead>{t.sales.invoice}</TableHead>
                 <TableHead>{t.sales.customer}</TableHead>
                 <TableHead>{t.sales.cashier}</TableHead>
-                <TableHead>{t.sales.items}</TableHead>
+                <TableHead>Products sold</TableHead>
+                <TableHead>Warehouse</TableHead>
                 <TableHead>{t.sales.total}</TableHead>
                 <TableHead>{t.sales.payment}</TableHead>
                 <TableHead>Customer</TableHead>
@@ -364,14 +375,14 @@ function SalesPageInner() {
               {isLoading ? (
                 [...Array(6)].map((_, i) => (
                   <TableRow key={i}>
-                    {[...Array(11)].map((_, j) => (
+                    {[...Array(12)].map((_, j) => (
                       <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
                     ))}
                   </TableRow>
                 ))
               ) : sales.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={11} className="h-32 text-center text-muted-foreground">
+                  <TableCell colSpan={12} className="h-32 text-center text-muted-foreground">
                     <div className="flex flex-col items-center gap-2">
                       <Receipt className="h-8 w-8 opacity-30" strokeWidth={1.75} />
                       <p>{t.sales.no_sales}</p>
@@ -388,7 +399,8 @@ function SalesPageInner() {
                     </TableCell>
                     <TableCell>{sale.customer_name || <span className="text-muted-foreground text-xs">{t.sales.walk_in}</span>}</TableCell>
                     <TableCell className="text-sm">{(sale.cashier as { full_name?: string } | null)?.full_name || '—'}</TableCell>
-                    <TableCell>{t.sales.items_count.replace('{count}', String((sale.items as SaleItem[] | undefined)?.length || 0))}</TableCell>
+                    <TableCell className="max-w-56 text-sm"><span className="line-clamp-2" title={soldProductNames(sale)}>{soldProductNames(sale) || ((sale as Sale & { imported?: boolean }).imported ? 'Historical import' : '—')}</span></TableCell>
+                    <TableCell className="text-sm">{sale.warehouse?.name || '—'}</TableCell>
                     <TableCell className="font-semibold">{formatCurrency(sale.total)}</TableCell>
                     <TableCell>{paymentBadge(sale.payment_method)}</TableCell>
                     <TableCell>{sale.sale_type === 'b2b' ? 'B2B' : sale.sale_type === 'b2c' ? 'B2C' : 'Retail'}</TableCell>

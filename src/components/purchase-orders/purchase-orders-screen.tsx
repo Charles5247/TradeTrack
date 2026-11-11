@@ -77,6 +77,7 @@ import { useAuthStore } from '@/store';
 import type { PurchaseOrder, Supplier, Product, Warehouse } from '@/types';
 import { useI18n } from '@/i18n';
 import { AccessGuard } from '@/components/shared/access-guard';
+import { visibleWarehouseIds } from '@/lib/warehouses/staff-visibility';
 import {
   hasFeature,
   resolveSubscriptionPlan,
@@ -95,7 +96,8 @@ async function fetchPurchaseOrders(organizationId: string) {
   return getOfflinePurchaseOrders(organizationId);
 }
 
-async function fetchSuppliersAndProducts(organizationId: string) {
+async function fetchSuppliersAndProducts(organizationId: string, user: { id: string; organization_id?: string | null; role: string } | null) {
+  const visibleIds = await visibleWarehouseIds(user);
   if (!isOffline()) {
     try {
       const supabase = createClient();
@@ -112,15 +114,17 @@ async function fetchSuppliersAndProducts(organizationId: string) {
       ]);
     } catch { /* Preserve cached choices when requests fail. */ }
   }
-  const [suppliers, products, warehouses] = await Promise.all([
+  const [suppliers, products, warehouses, inventory] = await Promise.all([
     getAllFromOfflineDB<Supplier>('suppliers'),
     getAllFromOfflineDB<Product>('products'),
     getAllFromOfflineDB<Warehouse>('warehouses'),
+    visibleIds ? getAllFromOfflineDB<{ product_id: string; warehouse_id: string }>('inventory') : Promise.resolve([]),
   ]);
+  const visibleProducts = new Set(inventory.filter(row => visibleIds?.has(row.warehouse_id)).map(row => row.product_id));
   return {
     suppliers: suppliers.filter((s) => s.organization_id === organizationId).sort((a, b) => a.name.localeCompare(b.name)),
-    products: products.filter((p) => p.organization_id === organizationId && p.status === 'active').sort((a, b) => a.name.localeCompare(b.name)),
-    warehouses: warehouses.filter((w) => w.organization_id === organizationId).sort((a, b) => Number(b.is_main) - Number(a.is_main)),
+    products: products.filter((p) => p.organization_id === organizationId && p.status === 'active' && (!visibleIds || visibleProducts.has(p.id))).sort((a, b) => a.name.localeCompare(b.name)),
+    warehouses: warehouses.filter((w) => w.organization_id === organizationId && (!visibleIds || visibleIds.has(w.id))).sort((a, b) => Number(b.is_main) - Number(a.is_main)),
   };
 }
 
@@ -252,8 +256,8 @@ function PurchaseOrdersPageInner({ createMode }: { createMode: boolean }) {
   });
 
   const { data: { suppliers = [], products = [], warehouses = [] } = {} } = useQuery({
-    queryKey: ['po-suppliers-products-warehouses', orgId],
-    queryFn: () => fetchSuppliersAndProducts(orgId!),
+    queryKey: ['po-suppliers-products-warehouses', orgId, user?.id],
+    queryFn: () => fetchSuppliersAndProducts(orgId!, user),
     networkMode: 'always',
     enabled: !featureLocked && !!orgId,
   });

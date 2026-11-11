@@ -67,6 +67,7 @@ import {
 import { syncEngine } from "@/lib/offline/sync-engine";
 import { isOffline } from "@/lib/utils/network";
 import { useOnlineStatus } from "@/hooks/use-online-status";
+import { visibleWarehouseIds } from '@/lib/warehouses/staff-visibility';
 
 async function fetchVendors(organizationId: string) {
   if (!isOffline()) {
@@ -79,7 +80,9 @@ async function fetchVendors(organizationId: string) {
   return getOfflineVendorTransactions(organizationId);
 }
 
-async function fetchVendorProducts(organizationId: string) {
+async function fetchVendorProducts(organizationId: string, user: { id: string; organization_id?: string | null; role: string } | null) {
+  const visibleIds = await visibleWarehouseIds(user);
+  if (visibleIds?.size === 0) return [];
   if (!isOffline()) {
     try {
       const { data, error } = await createClient()
@@ -92,11 +95,13 @@ async function fetchVendorProducts(organizationId: string) {
       /* Browser connectivity does not guarantee server reachability. */
     }
   }
+  const inventory = visibleIds ? await getAllFromOfflineDB<{ product_id: string; warehouse_id: string }>('inventory') : [];
+  const visibleProducts = new Set(inventory.filter(row => visibleIds?.has(row.warehouse_id)).map(row => row.product_id));
   return (await getAllFromOfflineDB<Product>("products"))
     .filter(
       (product) =>
         product.organization_id === organizationId &&
-        product.status === "active",
+        product.status === "active" && (!visibleIds || visibleProducts.has(product.id)),
     )
     .sort((a, b) => a.name.localeCompare(b.name));
 }
@@ -156,8 +161,8 @@ function VendorsPageInner() {
   });
 
   const { data: products = [] } = useQuery({
-    queryKey: ["vendor-products", orgId],
-    queryFn: () => fetchVendorProducts(orgId!),
+    queryKey: ["vendor-products", orgId, user?.id],
+    queryFn: () => fetchVendorProducts(orgId!, user),
     networkMode: "always",
     enabled: !!orgId,
   });

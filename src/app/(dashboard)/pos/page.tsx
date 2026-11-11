@@ -56,6 +56,7 @@ import { getAllFromOfflineDB } from "@/lib/offline/db";
 import { persistOfflineSale } from "@/lib/offline/sales";
 import { generateId } from "@/lib/utils/id";
 import { requireOnline } from "@/lib/utils/network";
+import { visibleWarehouseIds } from '@/lib/warehouses/staff-visibility';
 
 async function cartFingerprint(items: CartItem[], subtotal: number) {
   const canonical = JSON.stringify({ subtotal: Number(subtotal.toFixed(2)), items: items.map(item => ({ product_id: item.product.id, warehouse_id: item.warehouse_id, quantity: item.quantity, unit_price: item.unit_price, discount: item.discount })).sort((a, b) => `${a.product_id}:${a.warehouse_id}`.localeCompare(`${b.product_id}:${b.warehouse_id}`)) });
@@ -63,7 +64,9 @@ async function cartFingerprint(items: CartItem[], subtotal: number) {
   return Array.from(new Uint8Array(bytes), byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
-async function searchProducts(query: string, warehouseId: string) {
+async function searchProducts(query: string, warehouseId: string, user: { id: string; organization_id?: string | null; role: string } | null) {
+  const visibleIds = await visibleWarehouseIds(user);
+  if (!warehouseId || (visibleIds && !visibleIds.has(warehouseId))) return [];
   const supabase = createClient();
 
   if (typeof window !== "undefined" && !navigator.onLine) {
@@ -75,12 +78,12 @@ async function searchProducts(query: string, warehouseId: string) {
     const queryText = query.trim().toLowerCase();
     const inventoryByWarehouse = new Map(
       offlineInventory
-        .filter((entry: any) => entry.warehouse_id === warehouseId)
+        .filter((entry: any) => entry.warehouse_id === warehouseId && Number(entry.quantity) > 0)
         .map((entry: any) => [entry.product_id, entry.quantity]),
     );
 
     return offlineProducts
-      .filter((product: any) => product?.status === "active")
+      .filter((product: any) => product?.status === "active" && Number(inventoryByWarehouse.get(product.id)) > 0)
       .filter((product: any) => {
         if (!queryText) return true;
         return [product?.name, product?.sku, product?.barcode]
@@ -103,11 +106,12 @@ async function searchProducts(query: string, warehouseId: string) {
         `
         *,
         category:categories(name),
-        inventory(quantity, warehouse_id)
+        inventory!inner(quantity, warehouse_id)
       `,
       )
       .eq("status", "active")
-      .eq("inventory.warehouse_id", warehouseId);
+      .eq("inventory.warehouse_id", warehouseId)
+      .gt("inventory.quantity", 0);
 
     if (query) {
       q = q.or(
@@ -130,12 +134,12 @@ async function searchProducts(query: string, warehouseId: string) {
     const queryText = query.trim().toLowerCase();
     const inventoryByWarehouse = new Map(
       offlineInventory
-        .filter((entry: any) => entry.warehouse_id === warehouseId)
+        .filter((entry: any) => entry.warehouse_id === warehouseId && Number(entry.quantity) > 0)
         .map((entry: any) => [entry.product_id, entry.quantity]),
     );
 
     return offlineProducts
-      .filter((product: any) => product?.status === "active")
+      .filter((product: any) => product?.status === "active" && Number(inventoryByWarehouse.get(product.id)) > 0)
       .filter((product: any) => {
         if (!queryText) return true;
         return [product?.name, product?.sku, product?.barcode]
@@ -152,21 +156,25 @@ async function searchProducts(query: string, warehouseId: string) {
   }
 }
 
-async function fetchWarehouses() {
+async function fetchWarehouses(user: { id: string; organization_id?: string | null; role: string } | null) {
+  const visibleIds = await visibleWarehouseIds(user);
+  if (visibleIds?.size === 0) return [];
   const supabase = createClient();
 
   if (typeof window !== "undefined" && !navigator.onLine) {
-    return (await getAllFromOfflineDB<Warehouse>("warehouses")) || [];
+    return (await getAllFromOfflineDB<Warehouse>("warehouses")).filter(row => !visibleIds || visibleIds.has(row.id));
   }
 
   try {
-    const { data } = await supabase
+    let query = supabase
       .from("warehouses")
       .select("*")
       .order("name");
+    if (visibleIds) query = query.in('id', [...visibleIds]);
+    const { data } = await query;
     return (data as Warehouse[]) || [];
   } catch {
-    return (await getAllFromOfflineDB<Warehouse>("warehouses")) || [];
+    return (await getAllFromOfflineDB<Warehouse>("warehouses")).filter(row => !visibleIds || visibleIds.has(row.id));
   }
 }
 
@@ -274,8 +282,8 @@ function POSPageInner() {
   const [showPrinterMenu, setShowPrinterMenu] = useState(false);
 
   const { data: warehouses = [] } = useQuery({
-    queryKey: ["warehouses-pos"],
-    queryFn: fetchWarehouses,
+    queryKey: ["warehouses-pos", user?.id],
+    queryFn: () => fetchWarehouses(user),
   });
 
   const { data: creditApprovers = [] } = useQuery({
@@ -297,7 +305,7 @@ function POSPageInner() {
 
   // Set default warehouse
   React.useEffect(() => {
-    if (warehouses.length > 0 && !cart.warehouse_id) {
+    if (warehouses.length > 0 && !warehouses.some((warehouse: Warehouse) => warehouse.id === cart.warehouse_id)) {
       const main =
         warehouses.find((w: Warehouse) => w.is_main) || warehouses[0];
       cart.setWarehouse(main.id);
@@ -305,8 +313,8 @@ function POSPageInner() {
   }, [warehouses, cart]);
 
   const { data: products = [], isLoading: productsLoading } = useQuery({
-    queryKey: ["pos-products", searchQuery, cart.warehouse_id],
-    queryFn: () => searchProducts(searchQuery, cart.warehouse_id),
+    queryKey: ["pos-products", user?.id, searchQuery, cart.warehouse_id],
+    queryFn: () => searchProducts(searchQuery, cart.warehouse_id, user),
     enabled: !!cart.warehouse_id,
   });
 
@@ -411,6 +419,9 @@ function POSPageInner() {
   const handleCheckout = async () => {
     if (!user) return toast.error(t.pos.not_authenticated);
     if (cart.items.length === 0) return toast.error(t.pos.cart_is_empty_toast);
+    const allowedWarehouses = await visibleWarehouseIds(user);
+    if (allowedWarehouses && (!allowedWarehouses.has(cart.warehouse_id) || cart.items.some(item => !allowedWarehouses.has(item.warehouse_id))))
+      return toast.error(copy('This cart contains stock outside your assigned warehouse. Clear the cart and select your assigned location.'));
     if (!(await (await import("@/lib/subscriptions/verification")).allowCheckout(user.organization_id || "", toast.error))) return;
 
     let discountAuthorization: { discount_authorized_by?: string; discount_request_id?: string; discount_reason?: string; discount_cart_hash?: string; discount_permission_snapshot?: Record<string, unknown> } = {};
@@ -625,7 +636,9 @@ function POSPageInner() {
               body={
                 searchQuery
                   ? "Try a different search term or scan a barcode."
-                  : "Pick a warehouse above to load its available stock."
+                  : warehouses.length === 0 && user?.role !== 'business_owner'
+                    ? 'No warehouse is assigned to your account. Ask a business owner to assign one.'
+                    : "Pick a warehouse above to load its available stock."
               }
             />
           ) : (
