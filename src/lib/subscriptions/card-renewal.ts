@@ -25,24 +25,25 @@ export function decryptCardToken(value: string): string {
 }
 
 export function cardTokenFromVerifiedPayment(value: unknown): string | null {
-  if (!value || typeof value !== 'object') return null;
-  const result = value as Record<string, unknown>;
-  const data = result.data && typeof result.data === 'object' ? result.data as Record<string, unknown> : {};
-  const token = data.cardToken ?? data.card_token;
-  return typeof token === 'string' && token.length >= 8 && token.length <= 2048 ? token : null;
+  const visit = (node: unknown, depth: number): string | null => {
+    if (!node || typeof node !== 'object' || depth > 4) return null;
+    for (const [key, item] of Object.entries(node)) {
+      if (/^card_?token$/i.test(key) && typeof item === 'string' && item.length >= 8 && item.length <= 2048)
+        return item;
+    }
+    for (const item of Object.values(node)) {
+      const found = visit(item, depth + 1);
+      if (found) return found;
+    }
+    return null;
+  };
+  return visit(value, 0);
 }
 
 /** Keep the charge proof, never persist a reusable provider token in a payment log. */
 export function withoutCardToken(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(withoutCardToken);
   if (!value || typeof value !== 'object') return value;
-  const result = { ...(value as Record<string, unknown>) };
-  const data = result.data && typeof result.data === 'object' ? { ...(result.data as Record<string, unknown>) } : null;
-  delete result.cardToken;
-  delete result.card_token;
-  if (data) {
-    delete data.cardToken;
-    delete data.card_token;
-    result.data = data;
-  }
-  return result;
+  return Object.fromEntries(Object.entries(value).filter(([key]) => !/^card_?token$/i.test(key))
+    .map(([key, item]) => [key, withoutCardToken(item)]));
 }

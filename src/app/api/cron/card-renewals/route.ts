@@ -9,6 +9,16 @@ type RenewalClaim = {
   zainbox_code: string; mode: string;
 };
 
+async function clearSettledReference(admin: ReturnType<typeof paymentAdmin>, organizationId: string, reference: string) {
+  const { data: mandate } = await admin.from('subscription_card_mandates')
+    .select('status').eq('organization_id', organizationId).eq('pending_reference', reference).maybeSingle();
+  if (!mandate) return;
+  await admin.from('subscription_card_mandates').update({
+    pending_reference: null, charge_requested_at: null, last_error: null,
+    status: mandate.status === 'disabled' ? 'disabled' : 'active', updated_at: new Date().toISOString(),
+  }).eq('organization_id', organizationId).eq('pending_reference', reference).eq('status', mandate.status);
+}
+
 export async function GET(request: NextRequest) {
   if (!process.env.CRON_SECRET || request.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -25,9 +35,7 @@ export async function GET(request: NextRequest) {
     try {
       const outcome = await verifyCheckout(item.pending_reference!);
       if (outcome.subscriptionActivated) {
-        await admin.from('subscription_card_mandates').update({ pending_reference: null,
-          charge_requested_at: null, last_error: null, updated_at: new Date().toISOString() })
-          .eq('organization_id', item.organization_id).eq('pending_reference', item.pending_reference);
+        await clearSettledReference(admin, item.organization_id, item.pending_reference!);
         settled++;
       }
     } catch { /* A provider result can be delayed; never submit a second charge. */ }
@@ -65,9 +73,7 @@ export async function GET(request: NextRequest) {
       }
       const outcome = await verifyCheckout(claim.reference);
       if (outcome.subscriptionActivated) {
-        await admin.from('subscription_card_mandates').update({ pending_reference: null,
-          charge_requested_at: null, last_error: null, updated_at: new Date().toISOString() })
-          .eq('organization_id', claim.organization_id).eq('pending_reference', claim.reference);
+        await clearSettledReference(admin, claim.organization_id, claim.reference);
         settled++;
       }
     } catch (error) {

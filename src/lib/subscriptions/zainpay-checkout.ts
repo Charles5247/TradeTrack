@@ -10,7 +10,7 @@ export function paymentAdmin() {
 export interface CheckoutSnapshot {
   reference: string; amount_kobo: number; mode: string; zainbox_code: string; status: string;
   organization_id?: string; user_id?: string; plan_id?: string; billing_cycle?: string;
-  renewal_consent?: boolean; payer_mobile?: string | null; payer_email?: string | null;
+  renewal_consent?: boolean; is_automatic?: boolean; payer_mobile?: string | null; payer_email?: string | null;
 }
 /** v2 uses gross depositedAmount in kobo; never infer units or use the net amount. */
 export function matchesCheckout(response: unknown, checkout: CheckoutSnapshot): boolean {
@@ -56,7 +56,7 @@ export async function verifyCheckout(reference: string) {
   });
   if (saveError) throw new Error('Payment confirmed; activation pending. Retry verification, do not pay again.');
   let autoRenewEnabled = false;
-  if (checkout.renewal_consent) {
+  if (checkout.renewal_consent && !checkout.is_automatic) {
     const token = cardTokenFromVerifiedPayment(result);
     if (token && checkout.organization_id && checkout.user_id && checkout.plan_id && checkout.billing_cycle && checkout.payer_mobile && checkout.payer_email) {
       try {
@@ -76,5 +76,5 @@ export async function verifyCheckout(reference: string) {
       }
     }
   }
-  return { verified: true, subscriptionActivated: true, autoRenewEnabled, renewalRequested: Boolean(checkout.renewal_consent) };
+  return { verified: true, subscriptionActivated: true, autoRenewEnabled, renewalRequested: Boolean(checkout.renewal_consent && !checkout.is_automatic) };
 }

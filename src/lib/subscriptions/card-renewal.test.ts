@@ -21,5 +21,7 @@ describe('provider card renewal token', () => {
     expect(withoutCardToken(result)).toEqual({ code: '00', data: { txnRef: 'TT-id' } });
     expect(result.data.cardToken).toBe('provider-card-token');
     expect(cardTokenFromVerifiedPayment({ data: { maskedPan: '****1234' } })).toBeNull();
+    expect(withoutCardToken({ data: { payment: [{ card_token: 'nested-secret', amount: 100 }] } }))
+      .toEqual({ data: { payment: [{ amount: 100 }] } });
   });
 });

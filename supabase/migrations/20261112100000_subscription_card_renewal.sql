@@ -2,6 +2,7 @@ BEGIN;
 
 ALTER TABLE public.subscription_checkouts
   ADD COLUMN IF NOT EXISTS renewal_consent boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS is_automatic boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS payer_mobile text,
   ADD COLUMN IF NOT EXISTS payer_email text;
 
@@ -57,9 +58,9 @@ BEGIN
     ref := 'TT-' || gen_random_uuid()::text;
     INSERT INTO public.subscription_checkouts
       (reference, organization_id, user_id, plan_id, plan_name, billing_cycle,
-       amount_kobo, mode, zainbox_code, renewal_consent, payer_mobile, payer_email)
+       amount_kobo, mode, zainbox_code, renewal_consent, is_automatic, payer_mobile, payer_email)
     SELECT ref, m.organization_id, m.consented_by, m.plan_id, p.name,
-      m.billing_cycle, m.amount_kobo, m.mode, m.zainbox_code, true,
+      m.billing_cycle, m.amount_kobo, m.mode, m.zainbox_code, true, true,
       m.mobile_number, m.email_address
     FROM public.subscription_plans p WHERE p.id = m.plan_id;
     UPDATE public.subscription_card_mandates mandate

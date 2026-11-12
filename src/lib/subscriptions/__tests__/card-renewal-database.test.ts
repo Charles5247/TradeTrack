@@ -25,7 +25,8 @@ it('reserves one renewal per due organization and hides the mandate from browser
     expect(first.rows).toHaveLength(1);
     expect(first.rows[0].amount_kobo).toBe(13500000);
     expect((await db.query(`SELECT * FROM claim_due_card_renewals(20)`)).rows).toHaveLength(0);
-    expect((await db.query<{reference:string}>(`SELECT reference FROM subscription_checkouts`)).rows[0].reference).toBe(first.rows[0].reference);
+    expect((await db.query<{reference:string;is_automatic:boolean}>(`SELECT reference,is_automatic FROM subscription_checkouts`)).rows[0])
+      .toEqual({ reference: first.rows[0].reference, is_automatic: true });
     const access = await db.query<{readable:boolean;claimable:boolean}>(`SELECT has_table_privilege('authenticated','subscription_card_mandates','SELECT') readable,
       has_function_privilege('authenticated','public.claim_due_card_renewals(integer)','EXECUTE') claimable`);
     expect(access.rows[0]).toEqual({ readable: false, claimable: false });

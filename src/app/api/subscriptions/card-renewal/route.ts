@@ -26,11 +26,11 @@ export async function GET(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const context = await owner(request);
   if (!context) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  // Wipe the reusable token immediately. An already submitted charge may still
+  // settle, but a reserved charge that has not started can no longer be sent.
   const { error } = await context.admin.from('subscription_card_mandates')
-    .delete().eq('organization_id', context.organizationId).is('pending_reference', null);
+    .update({ status: 'disabled', encrypted_token: '', updated_at: new Date().toISOString() })
+    .eq('organization_id', context.organizationId);
   if (error) return NextResponse.json({ error: 'Could not stop automatic renewal' }, { status: 503 });
-  const { data: pending } = await context.admin.from('subscription_card_mandates')
-    .select('organization_id').eq('organization_id', context.organizationId).maybeSingle();
-  if (pending) return NextResponse.json({ error: 'A renewal is already being processed. Check its result before disabling.' }, { status: 409 });
-  return NextResponse.json({ renewal: null });
+  return NextResponse.json({ renewal: { status: 'disabled' } });
 }
