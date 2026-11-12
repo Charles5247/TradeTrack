@@ -273,6 +273,7 @@ export interface SaleItem {
   id: string;
   sale_id: string;
   product_id: string;
+  product_name_snapshot?: string | null;
   warehouse_id: string;
   quantity: number;
   unit_price: number;

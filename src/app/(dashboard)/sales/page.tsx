@@ -39,9 +39,8 @@ async function fetchSales(filters: {
   const supabase = createClient();
   let query = supabase
     .from('sales')
-    .select('*, cashier:users!sales_cashier_id_fkey(full_name), warehouse:warehouses(name), items:sale_items(id,quantity,product:products(name)), financial_reversals(kind)')
-    .order('created_at', { ascending: false })
-    .limit(100);
+    .select('*, cashier:users!sales_cashier_id_fkey(full_name), warehouse:warehouses(name), items:sale_items(id,quantity,product_name_snapshot), financial_reversals(kind)')
+    .order('created_at', { ascending: false });
 
   if (filters.search) {
     query = query.or(
@@ -50,29 +49,36 @@ async function fetchSales(filters: {
   }
   if (filters.payment_method && filters.payment_method !== 'all') query = query.eq('payment_method', filters.payment_method as import('@/lib/supabase/types').PaymentMethod);
   if (filters.sale_type && filters.sale_type !== 'all') query = query.eq('sale_type', filters.sale_type);
-  if (filters.credit_status && filters.credit_status !== 'all') query = query.eq('payment_status', filters.credit_status);
   if (filters.start_date) query = query.gte('created_at', filters.start_date);
   if (filters.end_date) query = query.lte('created_at', filters.end_date + 'T23:59:59');
 
-  const [{ data, error }, historicalResult] = await Promise.all([
-    query,
-    supabase
-      .from('historical_sales' as never)
-      .select('id,invoice_number,sold_at,total,amount_paid,payment_method,status,imported,created_at')
-      .order('sold_at', { ascending: false })
-      .limit(100),
+  const historicalQuery = supabase
+    .from('historical_sales' as never)
+    .select('id,invoice_number,sold_at,total,amount_paid,payment_method,status,imported,created_at')
+    .order('sold_at', { ascending: false });
+  const loadPages = async <T,>(builder: { range: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }> }): Promise<T[]> => {
+    const records: T[] = [];
+    for (let offset = 0; ; offset += 500) {
+      const { data, error } = await builder.range(offset, offset + 499);
+      if (error) throw new Error(error.message);
+      records.push(...(data || []));
+      if (!data || data.length < 500) break;
+    }
+    return records;
+  };
+  const [data, historicalData] = await Promise.all([
+    loadPages(query),
+    loadPages(historicalQuery),
   ]);
-  if (error) {
-    console.warn('Unable to load live sales; showing imported sales when available.', error);
-  }
 
-  const reversalKinds = error ? {} : await loadVisibleReversals((data || []).map(sale => sale.id));
-  const liveSales = (error ? [] : ((data || []) as unknown as (Sale & { financial_reversals?: { kind: string }[] })[]))
+  const reversalKinds = await loadVisibleReversals((data || []).map(sale => sale.id));
+  const liveSales = (data as unknown as (Sale & { financial_reversals?: { kind: string }[] })[])
     .map((sale) => {
       return { ...sale, status: effectiveSaleStatus(withReversalStatus(sale, reversalKinds)) } as Sale;
     })
-    .filter((sale) => !filters.status || filters.status === 'all' || sale.status === filters.status);
-  const historicalSales = (historicalResult.data || []) as unknown as Array<{
+    .filter((sale) => !filters.status || filters.status === 'all' || sale.status === filters.status)
+    .filter((sale) => filters.credit_status === 'all' || (Number(sale.amount_paid) <= 0 ? 'unpaid' : Number(sale.amount_paid) < Number(sale.total) ? 'partial' : 'paid') === filters.credit_status);
+  const historicalSales = historicalData as unknown as Array<{
     id: string;
     invoice_number: string;
     sold_at: string;
@@ -133,11 +139,11 @@ async function fetchSales(filters: {
   const merged = [...liveSales, ...normalizedHistorical].sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
   );
-  return merged.slice(0, 100);
+  return merged;
 }
 
 function soldProductNames(sale: Sale): string {
-  return (sale.items || []).map(item => item.product?.name).filter(Boolean).join(', ');
+  return (sale.items || []).map(item => item.product_name_snapshot || item.product?.name).filter(Boolean).join(', ');
 }
 
 function exportToCSV(sales: Sale[]) {
@@ -208,6 +214,7 @@ function SalesPageInner() {
   const [creditStatus, setCreditStatus] = useState<'all' | 'paid' | 'partial' | 'unpaid'>('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [page, setPage] = useState(0);
   const [viewSale, setViewSale] = useState<Sale | null>(null);
   const [cancelingSale, setCancelingSale] = useState<Sale | null>(null);
   const [cancelReason, setCancelReason] = useState('');
@@ -237,7 +244,8 @@ function SalesPageInner() {
   });
 
   const { data: sales = [], isLoading, error: pageError, refetch: retryPage } = useQuery({
-    queryKey: ['sales', search, status, paymentMethod, saleType, creditStatus, startDate, endDate],
+    queryKey: ['sales', user?.organization_id, search, status, paymentMethod, saleType, creditStatus, startDate, endDate],
+    enabled: Boolean(user?.organization_id),
     queryFn: () => fetchSales({ search, status, payment_method: paymentMethod, sale_type: saleType, credit_status: creditStatus, start_date: startDate, end_date: endDate }),
   });
 
@@ -263,6 +271,9 @@ function SalesPageInner() {
   };
 
   const totalRevenue = sales.filter(s => s.status === 'completed').reduce((sum, s) => sum + s.total, 0);
+  const lastPage = Math.max(0, Math.ceil(sales.length / 50) - 1);
+  const currentPage = Math.min(page, lastPage);
+  const displayedSales = sales.slice(currentPage * 50, (currentPage + 1) * 50);
 
   return (
     <div className="min-w-0 space-y-6">
@@ -390,7 +401,7 @@ function SalesPageInner() {
                   </TableCell>
                 </TableRow>
               ) : (
-                sales.map((sale) => (
+                displayedSales.map((sale) => (
                   <TableRow key={sale.id}>
                     <TableCell>
                       <code className="text-xs font-medium bg-muted px-1.5 py-0.5 rounded">
@@ -435,6 +446,14 @@ function SalesPageInner() {
         </CardContent>
       </Card>
 
+      {sales.length > 50 && (
+        <div className="flex items-center justify-end gap-3 text-sm">
+          <span>Page {currentPage + 1} of {lastPage + 1} · {sales.length} sales</span>
+          <Button variant="outline" disabled={currentPage === 0} onClick={() => setPage(currentPage - 1)}>Previous</Button>
+          <Button variant="outline" disabled={currentPage === lastPage} onClick={() => setPage(currentPage + 1)}>Next</Button>
+        </div>
+      )}
+
       {/* Sale Details Dialog */}
       {viewSale && (
         <Dialog open={!!viewSale} onOpenChange={() => setViewSale(null)}>
@@ -468,7 +487,7 @@ function SalesPageInner() {
                   <TableBody>
                     {(viewSale.items as SaleItem[] | undefined)?.map((item) => (
                       <TableRow key={item.id}>
-                        <TableCell className="text-sm">{(item.product as { name?: string } | null)?.name}</TableCell>
+                        <TableCell className="text-sm">{item.product_name_snapshot || item.product?.name || 'Product unavailable'}</TableCell>
                         <TableCell>{item.quantity}</TableCell>
                         <TableCell>{formatCurrency(item.unit_price)}</TableCell>
                         <TableCell>{formatCurrency(item.total)}</TableCell>

@@ -13,6 +13,7 @@ import { useAuthStore, useUIStore } from '@/store';
 import { getOfflineAuthSession } from '@/lib/offline/auth-cache';
 import { LoadingState } from '@/components/ui/loading-state';
 import { cn } from '@/lib/utils/cn';
+import { createClient } from '@/lib/supabase/client';
 
 interface AppScreenProps {
   children: React.ReactNode;
@@ -69,6 +70,23 @@ export function AppScreen({ children, pos, dense, noPadding }: AppScreenProps) {
       router.replace('/login');
     }
   }, [user, isLoading, router]);
+
+  useEffect(() => {
+    if (!user?.organization_id || user.role === 'platform_owner') return;
+    const recordOpen = () => {
+      if (!navigator.onLine || document.visibilityState !== 'visible') return;
+      void createClient().rpc('record_merchant_app_open' as never).then(() => {}, () => {});
+    };
+    recordOpen();
+    const interval = window.setInterval(recordOpen, 5 * 60_000);
+    document.addEventListener('visibilitychange', recordOpen);
+    window.addEventListener('online', recordOpen);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', recordOpen);
+      window.removeEventListener('online', recordOpen);
+    };
+  }, [user?.organization_id, user?.role]);
 
   if (isLoading) {
     return <div className="p-6" role="status" aria-label={copy("Loading workspace")}><LoadingState /></div>;

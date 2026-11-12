@@ -114,6 +114,7 @@ export type Database = {
           timezone: string;
           subscription_plan_id: string | null;
           subscription_status: string;
+          trial_ends_at: string | null;
           subscription_expires_at: string | null;
           settings: Record<string, unknown>;
           created_at: string;
@@ -135,6 +136,7 @@ export type Database = {
           timezone?: string;
           subscription_plan_id?: string | null;
           subscription_status?: string;
+          trial_ends_at?: string | null;
           subscription_expires_at?: string | null;
           settings?: Record<string, unknown>;
           created_at?: string;
@@ -568,6 +570,7 @@ export type Database = {
           id: string;
           sale_id: string;
           product_id: string;
+          product_name_snapshot: string | null;
           warehouse_id: string;
           quantity: number;
           unit_price: number;
@@ -580,6 +583,7 @@ export type Database = {
           id?: string;
           sale_id: string;
           product_id: string;
+          product_name_snapshot?: string | null;
           warehouse_id: string;
           quantity: number;
           unit_price: number;

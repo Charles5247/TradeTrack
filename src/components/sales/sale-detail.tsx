@@ -9,6 +9,7 @@ type SaleRecordData = Omit<Sale, 'cashier' | 'warehouse' | 'items'> & {
   warehouse: { name: string } | null;
   items: {
     id: string;
+    product_name_snapshot: string | null;
     quantity: number;
     unit_price: number;
     total: number;
@@ -82,7 +83,7 @@ function SaleRecord({ id }: { id: string }) {
       const { data, error } = await createClient()
         .from('sales')
         .select(
-          '*, cashier:users!sales_cashier_id_fkey(full_name), warehouse:warehouses(name), items:sale_items(id, quantity, unit_price, total, product:products(name, sku)), financial_reversals(kind)',
+          '*, cashier:users!sales_cashier_id_fkey(full_name), warehouse:warehouses(name), items:sale_items(id, quantity, unit_price, total, product_name_snapshot), financial_reversals(kind)',
         )
         .eq('organization_id', user!.organization_id!)
         .eq('id', id)
@@ -199,10 +200,7 @@ function SaleRecord({ id }: { id: string }) {
                   {sale.items.map((item) => (
                     <TableRow key={item.id}>
                       <TableCell>
-                        {item.product?.name || 'Product unavailable'}
-                        <div className="tt-mono text-xs text-muted-foreground">
-                          {item.product?.sku}
-                        </div>
+                        {item.product_name_snapshot || 'Product unavailable'}
                       </TableCell>
                       <TableCell>{item.quantity}</TableCell>
                       <TableCell>{formatCurrency(item.unit_price)}</TableCell>

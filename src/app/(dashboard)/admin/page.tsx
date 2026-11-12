@@ -86,6 +86,7 @@ function StatusBadge({ status }: { status: string }) {
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface MerchantRow {
   id: string;
+  organization_id: string;
   business_name: string;
   status: string;
   verification_status: string;
@@ -113,6 +114,15 @@ interface AcquisitionPoint {
   month: string;
   merchants: number;
   active: number;
+}
+
+interface MerchantHealth {
+  organizationId: string;
+  name: string;
+  contactEmail: string;
+  plan: 'Paid' | 'Trial' | 'Expired or unpaid';
+  trialDaysLeft: number | null;
+  lastOpenedAt: string | null;
 }
 
 // ─── Page Component ───────────────────────────────────────────────────────────
@@ -248,6 +258,45 @@ export default function AdminPage() {
     },
     enabled: isOwnerOrAdmin,
   });
+  const { data: merchantHealth = [], isLoading: healthLoading, error: healthError } = useQuery({
+    queryKey: ['platform-merchant-health', refreshKey], enabled: isOwnerOrAdmin,
+    refetchInterval: 60_000,
+    queryFn: async (): Promise<MerchantHealth[]> => {
+      const loadAll = async <T,>(builder: { range: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }> }): Promise<T[]> => {
+        const rows: T[] = [];
+        for (let offset = 0; ; offset += 500) {
+          const { data, error } = await builder.range(offset, offset + 499);
+          if (error) throw new Error(error.message);
+          rows.push(...(data || []));
+          if (!data || data.length < 500) break;
+        }
+        return rows;
+      };
+      const [merchantRows, organizations, subscriptions, activity] = await Promise.all([
+        loadAll(supabase.from('merchants').select('organization_id,business_name,contact_email').order('created_at')),
+        loadAll(supabase.from('organizations').select('id,subscription_status,trial_ends_at').order('created_at')),
+        loadAll(supabase.from('subscriptions').select('organization_id,status,expires_at').eq('status', 'active').order('expires_at', { ascending: false })),
+        loadAll(supabase.from('merchant_app_activity' as never).select('organization_id,last_opened_at').order('organization_id')),
+      ]);
+      const orgById = new Map((organizations as Array<{ id: string; subscription_status: string; trial_ends_at: string | null }>).map(org => [org.id, org]));
+      const paidOrgs = new Set((subscriptions as Array<{ organization_id: string; expires_at: string }>).filter(sub => new Date(sub.expires_at).getTime() > Date.now()).map(sub => sub.organization_id));
+      const openedByOrg = new Map((activity as Array<{ organization_id: string; last_opened_at: string }>).map(row => [row.organization_id, row.last_opened_at]));
+      return (merchantRows as Array<{ organization_id: string; business_name: string; contact_email: string }>).map(merchant => {
+        const org = orgById.get(merchant.organization_id);
+        const trialEnd = org?.trial_ends_at ? new Date(org.trial_ends_at).getTime() : 0;
+        const trialDaysLeft = org?.subscription_status === 'trial' && trialEnd > Date.now()
+          ? Math.ceil((trialEnd - Date.now()) / 86_400_000) : null;
+        return {
+          organizationId: merchant.organization_id,
+          name: merchant.business_name,
+          contactEmail: merchant.contact_email,
+          plan: paidOrgs.has(merchant.organization_id) ? 'Paid' : trialDaysLeft !== null ? 'Trial' : 'Expired or unpaid',
+          trialDaysLeft,
+          lastOpenedAt: openedByOrg.get(merchant.organization_id) ?? null,
+        };
+      });
+    },
+  });
   const { data: openSupportCount = 0 } = useQuery({
     queryKey: ['platform-open-support', refreshKey], enabled: isOwnerOrAdmin,
     queryFn: async () => {
@@ -306,6 +355,10 @@ export default function AdminPage() {
   const latestCollections = revenueData?.slice(-1)[0]?.revenue ?? 0;
   const estimatedARR = estimatedMRR * 12;
   const totalRevenue = revenueData?.reduce((s, r) => s + r.revenue, 0) ?? 0;
+  const paidMerchants = merchantHealth.filter(merchant => merchant.plan === 'Paid').length;
+  const trialMerchants = merchantHealth.filter(merchant => merchant.plan === 'Trial').length;
+  const liveMerchants = merchantHealth.filter(merchant => merchant.lastOpenedAt && Date.now() - new Date(merchant.lastOpenedAt).getTime() < 5 * 60_000).length;
+  const activeSevenDays = merchantHealth.filter(merchant => merchant.lastOpenedAt && Date.now() - new Date(merchant.lastOpenedAt).getTime() < 7 * 86_400_000).length;
 
   // ── Access denied ─────────────────────────────────────────────────────────
   if (!isOwnerOrAdmin) {
@@ -332,7 +385,7 @@ export default function AdminPage() {
     );
   }
 
-  const loadError = merchantsError || countsError || revenueError || acquisitionError || auditError || attentionError || mrrError;
+  const loadError = merchantsError || countsError || revenueError || acquisitionError || auditError || attentionError || mrrError || healthError;
   if (loadError) return <div className="space-y-6"><h1 className="tt-page-title"><TranslatedText text={"Platform overview"} /></h1><ErrorState title={copy("Could not load platform data")} body={loadError.message} onRetry={() => setRefreshKey(k => k + 1)} /></div>;
 
   return (
@@ -365,6 +418,33 @@ export default function AdminPage() {
         <StatCard label={copy("Latest month collected")} value={formatCurrency(latestCollections)} sub={revenueData?.slice(-1)[0]?.month ?? 'No paid invoices loaded'} icon={DollarSign} loading={revenueLoading} />
         <StatCard label={copy("Pending merchants")} value={pendingMerchants} sub="Awaiting review" icon={Clock} loading={countsLoading} />
       </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard label="Paid merchants" value={paidMerchants} sub="Current paid subscription" icon={DollarSign} loading={healthLoading} />
+        <StatCard label="Trial merchants" value={trialMerchants} sub="Trial still running" icon={Clock} loading={healthLoading} />
+        <StatCard label="Live now" value={liveMerchants} sub="Opened in the past 5 minutes" icon={Activity} loading={healthLoading} />
+        <StatCard label="Active in 7 days" value={activeSevenDays} sub="Opened in the past 7 days" icon={Users} loading={healthLoading} />
+      </div>
+      <Card>
+        <CardHeader><CardTitle>Merchant subscriptions and app activity</CardTitle><CardDescription>Activity tracking starts when merchants open the updated app online.</CardDescription></CardHeader>
+        <CardContent className="space-y-5">
+          <ResponsiveContainer width="100%" height={180}>
+            <BarChart data={[{ name: 'Paid', count: paidMerchants }, { name: 'Trial', count: trialMerchants }, { name: 'Live now', count: liveMerchants }, { name: 'Active 7 days', count: activeSevenDays }]}>
+              <CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="name" tick={{ fontSize: 11 }} /><YAxis allowDecimals={false} /><Tooltip /><Bar dataKey="count" fill="var(--c-primary)" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+          <div className="max-h-96 overflow-auto">
+            <Table><TableHeader><TableRow><TableHead>Merchant</TableHead><TableHead>Subscription</TableHead><TableHead>Trial left</TableHead><TableHead>Last opened</TableHead><TableHead>Notice</TableHead></TableRow></TableHeader>
+              <TableBody>{merchantHealth.map(merchant => <TableRow key={merchant.organizationId}>
+                <TableCell><div className="font-medium">{merchant.name}</div><div className="text-xs tt-muted">{merchant.contactEmail}</div></TableCell>
+                <TableCell>{merchant.plan}</TableCell><TableCell>{merchant.trialDaysLeft === null ? '—' : `${merchant.trialDaysLeft} day(s)`}</TableCell>
+                <TableCell>{merchant.lastOpenedAt ? new Date(merchant.lastOpenedAt).toLocaleString('en-NG', { timeZone: 'Africa/Lagos' }) : 'No activity recorded yet'}</TableCell>
+                <TableCell>{merchant.plan === 'Trial' && merchant.trialDaysLeft !== null && merchant.trialDaysLeft <= 7 && merchant.contactEmail
+                  ? <a className="text-primary underline" href={`mailto:${merchant.contactEmail}?subject=${encodeURIComponent('Your Trackasuwa trial is ending soon')}`}>Email notice</a> : '—'}</TableCell>
+              </TableRow>)}</TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
       <div className="grid gap-3 sm:grid-cols-2">
         <Link href="/admin/support" className="tt-card-flat flex min-h-20 items-center gap-4 rounded-[var(--radius-lg)] border border-border p-4 transition-colors hover:bg-accent">
           <AlertTriangle className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.75} />
