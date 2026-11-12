@@ -472,6 +472,7 @@ export default function SubscriptionsPage() {
   const [deletingPlan, setDeletingPlan] = useState<Plan | null>(null);
   const [checkoutPlan, setCheckoutPlan] = useState<Plan | null>(null);
   const [checkoutPhone, setCheckoutPhone] = useState('');
+  const [autoRenewConsent, setAutoRenewConsent] = useState(false);
   const [billingCycle, setBillingCycle] = useState<BillingCycle>(
     "monthly",
   );
@@ -480,6 +481,26 @@ export default function SubscriptionsPage() {
     queryKey: ["subscriptions", user?.id, user?.organization_id],
     enabled: user?.role === "business_owner" || user?.role === "platform_owner",
     queryFn: fetchSubscriptionData,
+  });
+  const { data: cardRenewal } = useQuery({
+    queryKey: ['card-renewal', user?.id], enabled: user?.role === 'business_owner',
+    queryFn: async () => {
+      const { data: { session } } = await createClient().auth.getSession();
+      if (!session) return null;
+      const response = await fetch('/api/subscriptions/card-renewal', { headers: { Authorization: `Bearer ${session.access_token}` } });
+      if (!response.ok) return null;
+      return (await response.json()).renewal as { status: string; billing_cycle: string; amount_kobo: number; last_error?: string | null } | null;
+    },
+  });
+  const stopCardRenewal = useMutation({
+    mutationFn: async () => {
+      const { data: { session } } = await createClient().auth.getSession();
+      if (!session) throw new Error('Sign in again to continue.');
+      const response = await fetch('/api/subscriptions/card-renewal', { method: 'DELETE', headers: { Authorization: `Bearer ${session.access_token}` } });
+      if (!response.ok) throw new Error((await response.json()).error || 'Could not stop automatic renewal');
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['card-renewal'] }); toast.success('Automatic card renewal stopped'); },
+    onError: (error) => toast.error(error.message),
   });
 
   const deletePlanMutation = useMutation({
@@ -507,6 +528,7 @@ export default function SubscriptionsPage() {
   const cancelMutation = useMutation({
     mutationFn: async () => {
       if (!data?.subscription?.id || !user?.organization_id) throw new Error('No subscription to cancel.');
+      if (cardRenewal?.status === 'active') await stopCardRenewal.mutateAsync();
       const { error } = await createClient().from('subscriptions').update({ status: 'cancelled' }).eq('id', data.subscription.id).eq('organization_id', user.organization_id).select('id').single();
       if (error) throw error;
     },
@@ -521,7 +543,7 @@ export default function SubscriptionsPage() {
       if (!session) throw new Error('Sign in again to continue.');
       const response = await fetch('/api/payments/initialize', {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
-        body: JSON.stringify({ planId, billingCycle: cycle, mobile: checkoutPhone }),
+        body: JSON.stringify({ planId, billingCycle: cycle, mobile: checkoutPhone, autoRenew: autoRenewConsent }),
       });
       const result = await response.json();
       if (!response.ok || !result.paymentUrl) throw new Error(result.error || 'Unable to start payment');
@@ -576,6 +598,9 @@ export default function SubscriptionsPage() {
           <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); if (checkoutPlan) upgradeMutation.mutate({planId: checkoutPlan.id, cycle: billingCycle}); }}>
             <p className="text-sm text-muted-foreground">{copy('Renewing the same plan keeps your remaining paid time. A different plan replaces your current plan immediately after payment.')}</p>
             <div className="space-y-2"><Label htmlFor="checkout-phone">{copy('Phone number')}</Label><Input id="checkout-phone" type="tel" inputMode="tel" autoComplete="tel" required value={checkoutPhone} onChange={event => setCheckoutPhone(event.target.value)} /></div>
+            <label className="flex items-start gap-3 text-sm"><input type="checkbox" checked={autoRenewConsent} onChange={event => setAutoRenewConsent(event.target.checked)} className="mt-1" />
+              <span>{copy('After I authorize this card payment, use a provider-issued card token to renew this plan at the same amount and billing period. I can stop future automatic charges at any time. Trackasuwa will not store my card number.')}</span>
+            </label>
             <Button className="w-full" type="submit" disabled={upgradeMutation.isPending}>{copy('Continue to secure payment')}</Button>
           </form>
         </DialogContent>
@@ -608,7 +633,9 @@ export default function SubscriptionsPage() {
             <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-[var(--c-accent)] opacity-20 blur-3xl" />
             {isLoading ? <Skeleton className="h-64" /> : <div className="relative space-y-6">
               <div><span className="rounded-full bg-primary-foreground/10 px-3 py-1 text-xs"><TranslatedText text={"Current plan"} /></span><h2 className="mt-4 font-[family-name:var(--font-head)] text-4xl font-bold tracking-tight sm:text-5xl">{subscription?.plan?.name || 'Choose your plan'}</h2><p className="mt-2 text-sm opacity-80">{subscription ? 'Status: ' + subscription.status : 'Find the right fit for your business.'}</p></div>
-              <dl className="flex flex-wrap items-end gap-x-8 gap-y-4"><div><dt className="sr-only"><TranslatedText text={"Plan price"} /></dt><dd className="text-3xl font-bold">{formatCurrency(subscription?.status === 'trial' ? 0 : (privateOffer && subscription?.plan_id === privateOffer.plan_id ? privateAgreementPrice(Number(privateOffer?.monthly_price ?? 0), (['monthly','quarterly','biannual','yearly'].includes(subscription?.billing_cycle || '') ? subscription?.billing_cycle : 'monthly') as BillingCycle) : billingPrice(subscription?.plan?.price || 0, (['monthly','quarterly','biannual','yearly'].includes(subscription?.billing_cycle || '') ? subscription?.billing_cycle : 'monthly') as BillingCycle)), 'NGN')}</dd><p className="text-xs opacity-75"><TranslatedText text={"per"} />{" "}<TranslatedText text={subscription?.billing_cycle === 'yearly' ? 'year' : subscription?.billing_cycle === 'quarterly' ? '3 months' : subscription?.billing_cycle === 'biannual' ? '6 months' : 'month'} /></p></div><div><dt className="text-xs opacity-75"><TranslatedText text={"Valid until"} /></dt><dd className="mt-1 font-semibold">{subscription?.expires_at ? formatDate(subscription.expires_at) : 'No active period'}</dd></div><div><dt className="text-xs opacity-75"><TranslatedText text={"Renewal"} /></dt><dd className="mt-1 font-semibold"><TranslatedText text={"Manual payment"} /></dd></div></dl>
+              <dl className="flex flex-wrap items-end gap-x-8 gap-y-4"><div><dt className="sr-only"><TranslatedText text={"Plan price"} /></dt><dd className="text-3xl font-bold">{formatCurrency(subscription?.status === 'trial' ? 0 : (privateOffer && subscription?.plan_id === privateOffer.plan_id ? privateAgreementPrice(Number(privateOffer?.monthly_price ?? 0), (['monthly','quarterly','biannual','yearly'].includes(subscription?.billing_cycle || '') ? subscription?.billing_cycle : 'monthly') as BillingCycle) : billingPrice(subscription?.plan?.price || 0, (['monthly','quarterly','biannual','yearly'].includes(subscription?.billing_cycle || '') ? subscription?.billing_cycle : 'monthly') as BillingCycle)), 'NGN')}</dd><p className="text-xs opacity-75"><TranslatedText text={"per"} />{" "}<TranslatedText text={subscription?.billing_cycle === 'yearly' ? 'year' : subscription?.billing_cycle === 'quarterly' ? '3 months' : subscription?.billing_cycle === 'biannual' ? '6 months' : 'month'} /></p></div><div><dt className="text-xs opacity-75"><TranslatedText text={"Valid until"} /></dt><dd className="mt-1 font-semibold">{subscription?.expires_at ? formatDate(subscription.expires_at) : 'No active period'}</dd></div><div><dt className="text-xs opacity-75"><TranslatedText text={"Renewal"} /></dt><dd className="mt-1 font-semibold"><TranslatedText text={cardRenewal?.status === 'active' ? 'Automatic card renewal' : 'Manual payment'} /></dd></div></dl>
+              {cardRenewal?.status === 'active' && <Button variant="outline" className="border-primary-foreground/30 bg-transparent text-primary-foreground" disabled={stopCardRenewal.isPending} onClick={() => stopCardRenewal.mutate()}>Stop automatic renewal</Button>}
+              {cardRenewal?.status === 'action_required' && <p role="alert" className="text-sm">Automatic card renewal needs attention. Please renew manually or authorize a card again.</p>}
               <div className="flex flex-wrap gap-3"><Button className="bg-primary-foreground text-primary hover:bg-primary-foreground/90" onClick={() => { setActiveTab('plans'); }}><TranslatedText text={"Change plan"} /></Button>{subscription && ['active','trial'].includes(subscription.status) && <Button variant="outline" className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10" onClick={() => setCancelOpen(true)}><TranslatedText text={"Cancel subscription"} /></Button>}</div>
             </div>}
           </Card>

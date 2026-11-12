@@ -9,6 +9,8 @@ export async function GET(request: NextRequest) {
       const destination = new URL('/subscriptions', process.env.NEXT_PUBLIC_APP_URL || request.url);
       destination.searchParams.set('payment', result.subscriptionActivated ? 'success' : result.verified ? 'sandbox' : 'pending');
       destination.searchParams.set('reference', reference);
+      if (result.subscriptionActivated && 'renewalRequested' in result && result.renewalRequested && !result.autoRenewEnabled)
+        destination.searchParams.set('renewal', 'unavailable');
       return NextResponse.redirect(destination, 303);
     }
     return NextResponse.json({ success: result.verified, ...result, txnRef: reference });

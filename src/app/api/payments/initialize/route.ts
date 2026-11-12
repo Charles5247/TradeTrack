@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const { data: profile, error: profileError } = await admin.from('users').select('organization_id,role,phone').eq('id', user.id).single();
     if (profileError || !profile?.organization_id || profile.role !== 'business_owner') return NextResponse.json({ error: 'Only the business owner can purchase a subscription' }, { status: 403 });
-    let body: { planId?: string; billingCycle?: string; mobile?: string };
+    let body: { planId?: string; billingCycle?: string; mobile?: string; autoRenew?: boolean };
     try { body = await request.json(); } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }); }
     if (!body || typeof body.planId !== 'string' || !Object.hasOwn(BILLING_MONTHS, body.billingCycle || '')) return NextResponse.json({ error: 'Choose a plan and billing period' }, { status: 400 });
     const mobile = (typeof body.mobile === 'string' ? body.mobile : profile.phone || '').replace(/[\s()-]/g, '');
@@ -35,17 +35,21 @@ export async function POST(request: NextRequest) {
       ? privateAgreementPrice(privatePrice, body.billingCycle as BillingCycle)
       : billingPrice(Number(plan.price), body.billingCycle as BillingCycle)) * 100);
     if (!Number.isSafeInteger(amount) || amount <= 0 || !user.email) return NextResponse.json({ error: 'Invalid checkout details' }, { status: 400 });
+    if (body.autoRenew && !/^[0-9a-f]{64}$/i.test(process.env.SUBSCRIPTION_CARD_TOKEN_KEY || ''))
+      return NextResponse.json({ error: 'Automatic card renewal is not configured yet' }, { status: 503 });
     const reference = `TT-${randomUUID()}`;
     const { error: saveError } = await admin.from('subscription_checkouts').insert({
       reference, organization_id: profile.organization_id, user_id: user.id, plan_id: plan.id,
       plan_name: plan.name, billing_cycle: body.billingCycle, amount_kobo: amount, mode: config.mode, zainbox_code: zainbox,
+      renewal_consent: body.autoRenew === true, payer_mobile: mobile, payer_email: user.email,
     });
     if (saveError) return NextResponse.json({ error: 'Unable to save checkout; no payment was started' }, { status: 503 });
     const callback = new URL('/api/payments/verify', process.env.NEXT_PUBLIC_APP_URL);
     callback.searchParams.set('txnRef', reference);
     callback.searchParams.set('redirect', '1');
     const providerPayload = JSON.stringify({ amount: String(amount / 100), currency: 'NGN', txnRef: reference, emailAddress: user.email,
-      mobileNumber: mobile, zainboxCode: zainbox, callBackUrl: callback.href });
+      mobileNumber: mobile, zainboxCode: zainbox, callBackUrl: callback.href,
+      ...(body.autoRenew === true ? { allowRecurringPayment: true } : {}) });
     let providerStatus = 503;
     let url: string | null = null;
     for (let attempt = 0; attempt < 3 && !url; attempt += 1) {

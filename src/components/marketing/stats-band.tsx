@@ -45,10 +45,7 @@ export async function StatsBand() {
     { n: typeof traction.transactions === "number" ? traction.transactions.toLocaleString() : "—", l: "Completed transactions" },
     { n: "30", l: "Days to try your business tools" },
   ];
-  const names = [...new Set([
-    ...approvedBusinessNames,
-    ...(Array.isArray(traction.business_names) ? traction.business_names.filter((name): name is string => typeof name === "string" && name.length > 0) : []),
-  ])];
+  const names = approvedBusinessNames;
 
   return (
     <>

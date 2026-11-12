@@ -1,5 +1,6 @@
 ﻿import { createClient } from '@supabase/supabase-js';
 import { getZainpayConfig } from '@/lib/zainpay-config';
+import { cardTokenFromVerifiedPayment, encryptCardToken, withoutCardToken } from './card-renewal';
 
 export function paymentAdmin() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
@@ -8,6 +9,8 @@ export function paymentAdmin() {
 }
 export interface CheckoutSnapshot {
   reference: string; amount_kobo: number; mode: string; zainbox_code: string; status: string;
+  organization_id?: string; user_id?: string; plan_id?: string; billing_cycle?: string;
+  renewal_consent?: boolean; payer_mobile?: string | null; payer_email?: string | null;
 }
 /** v2 uses gross depositedAmount in kobo; never infer units or use the net amount. */
 export function matchesCheckout(response: unknown, checkout: CheckoutSnapshot): boolean {
@@ -49,8 +52,29 @@ export async function verifyCheckout(reference: string) {
   if (!matchesCheckout(result, checkout)) return { verified: false, subscriptionActivated: false };
   if (config.mode === 'test') return { verified: true, subscriptionActivated: false, sandbox: true };
   const { error: saveError } = await admin.rpc('finalize_subscription_checkout', {
-    p_reference: reference, p_amount_kobo: checkout.amount_kobo, p_provider_response: result,
+    p_reference: reference, p_amount_kobo: checkout.amount_kobo, p_provider_response: withoutCardToken(result),
   });
   if (saveError) throw new Error('Payment confirmed; activation pending. Retry verification, do not pay again.');
-  return { verified: true, subscriptionActivated: true };
+  let autoRenewEnabled = false;
+  if (checkout.renewal_consent) {
+    const token = cardTokenFromVerifiedPayment(result);
+    if (token && checkout.organization_id && checkout.user_id && checkout.plan_id && checkout.billing_cycle && checkout.payer_mobile && checkout.payer_email) {
+      try {
+        const encrypted = encryptCardToken(token);
+        const { error: mandateError } = await admin.from('subscription_card_mandates').upsert({
+          organization_id: checkout.organization_id, plan_id: checkout.plan_id,
+          billing_cycle: checkout.billing_cycle, amount_kobo: checkout.amount_kobo,
+          encrypted_token: encrypted, token_hint: null, mobile_number: checkout.payer_mobile,
+          email_address: checkout.payer_email, zainbox_code: checkout.zainbox_code,
+          mode: checkout.mode, status: 'active', consented_by: checkout.user_id,
+          consented_at: new Date().toISOString(), pending_reference: null,
+          charge_requested_at: null, last_error: null, updated_at: new Date().toISOString(),
+        }, { onConflict: 'organization_id' });
+        autoRenewEnabled = !mandateError;
+      } catch (error) {
+        console.error('[billing] Card renewal setup failed', error instanceof Error ? error.message : 'Unknown error');
+      }
+    }
+  }
+  return { verified: true, subscriptionActivated: true, autoRenewEnabled, renewalRequested: Boolean(checkout.renewal_consent) };
 }
