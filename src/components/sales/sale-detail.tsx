@@ -84,7 +84,7 @@ function SaleRecord({ id }: { id: string }) {
       const fetchDetail = (items: string) => client.from('sales')
         .select(`*, cashier:users!sales_cashier_id_fkey(full_name), warehouse:warehouses(name), items:sale_items(${items}), financial_reversals(kind)`)
         .eq('organization_id', user!.organization_id!).eq('id', id).single();
-      let { data, error } = await fetchDetail('id, quantity, unit_price, total, product_name_snapshot');
+      let { data, error } = await fetchDetail('id, quantity, unit_price, total, product_name_snapshot, product:products(name, sku)');
       if (error?.code === '42703' && error.message.includes('product_name_snapshot')) {
         ({ data, error } = await fetchDetail('id, quantity, unit_price, total, product:products(name, sku)'));
       }

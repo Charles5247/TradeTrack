@@ -72,20 +72,22 @@ async function lookupSale(
   supabase: Awaited<ReturnType<typeof getSupabase>>,
   invoiceNumber: string,
 ) {
-  const { data: sale, error } = await supabase
-    .from("sales")
-    .select(
-      `
+  const { data: currentSale, error: currentError } = await supabase.from("sales").select(`
       *,
       cashier:users!sales_cashier_id_fkey(full_name),
-      items:sale_items(
-        id, quantity, unit_price, discount, total,
-        product:products(name, sku)
-      )
-    `,
-    )
-    .eq("invoice_number", invoiceNumber)
-    .maybeSingle();
+      items:sale_items(id, quantity, unit_price, discount, total, product_name_snapshot, product:products(name, sku))
+    `).eq("invoice_number", invoiceNumber).maybeSingle();
+  let sale: Record<string, unknown> | null = currentSale as Record<string, unknown> | null;
+  let error = currentError;
+  if (error?.code === "42703" && error.message.includes("product_name_snapshot")) {
+    const legacy = await supabase.from("sales").select(`
+      *,
+      cashier:users!sales_cashier_id_fkey(full_name),
+      items:sale_items(id, quantity, unit_price, discount, total, product:products(name, sku))
+    `).eq("invoice_number", invoiceNumber).maybeSingle();
+    sale = legacy.data as Record<string, unknown> | null;
+    error = legacy.error;
+  }
 
   if (error) throw error;
   if (!sale) return lookupHistoricalSale(supabase, invoiceNumber);
@@ -100,7 +102,7 @@ async function lookupSale(
       { auth: { autoRefreshToken: false, persistSession: false } },
     );
     const { data: reversal, error: reversalError } = await admin.from('financial_reversals')
-      .select('kind').eq('sale_id', sale.id).in('kind', ['void', 'refund', 'return'])
+      .select('kind').eq('sale_id', sale.id as string).in('kind', ['void', 'refund', 'return'])
       .order('created_at', { ascending: false }).limit(1).maybeSingle();
     if (reversalError) throw reversalError;
     reversalKind = reversal?.kind;
@@ -132,9 +134,10 @@ async function lookupSale(
           unit_price: number;
           discount: number;
           total: number;
+          product_name_snapshot?: string | null;
           product: { name?: string; sku?: string } | null;
         }) => ({
-          name: item.product?.name || "Item",
+          name: item.product_name_snapshot || item.product?.name || "Item",
           sku: item.product?.sku,
           quantity: item.quantity,
           unitPrice: item.unit_price,

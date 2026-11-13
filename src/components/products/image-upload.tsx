@@ -2,7 +2,7 @@
 import { TranslatedText, useCopy } from '@/i18n/text';
 
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Upload, X, ImageOff, Loader2, Camera, ScanLine, FileSpreadsheet } from 'lucide-react';
@@ -18,6 +18,7 @@ import type { CodeMatch } from '@/lib/products/lookup-code';
 import { getDB } from '@/lib/offline/db';
 import { isOffline } from '@/lib/utils/network';
 import { withTimeout } from '@/lib/utils/timeout';
+import { OfflineProductImage } from './offline-product-image';
 
 interface ImageUploadProps {
   currentImageUrl?: string | null;
@@ -98,7 +99,45 @@ export function ImageUpload({
   const cameraRef = useRef<HTMLInputElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraStarting, setCameraStarting] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const openMenu = () => { setScanning(false); setMenuOpen(true); };
+
+  useEffect(() => {
+    if (cameraOpen && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      void videoRef.current.play().catch(() => toast.error('Camera preview could not start. Check camera permission or upload an existing photo.'));
+    }
+  }, [cameraOpen]);
+  useEffect(() => () => streamRef.current?.getTracks().forEach(track => track.stop()), []);
+
+  const openCamera = async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      cameraRef.current?.click();
+      return;
+    }
+    setCameraStarting(true);
+    try {
+      streamRef.current = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+      setMenuOpen(false);
+      setCameraOpen(true);
+    } catch (error) {
+      const reason = error instanceof DOMException && error.name === 'NotAllowedError'
+        ? 'Camera permission was denied. Allow camera access in your device settings, or upload an existing photo.'
+        : 'Camera could not be opened. Check that it is connected, or upload an existing photo.';
+      toast.error(reason);
+    } finally {
+      setCameraStarting(false);
+    }
+  };
+
+  const closeCamera = () => {
+    setCameraOpen(false);
+    streamRef.current?.getTracks().forEach(track => track.stop());
+    streamRef.current = null;
+  };
 
   const handleUpload = useCallback(
     async (file: File) => {
@@ -195,6 +234,22 @@ export function ImageUpload({
     e.target.value = '';
   };
 
+  const capturePhoto = async () => {
+    const video = videoRef.current;
+    if (!video?.videoWidth || !video.videoHeight) {
+      toast.error('Camera is still starting. Try again in a moment.');
+      return;
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d')?.drawImage(video, 0, 0);
+    const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+    if (!blob) { toast.error('Could not capture photo. Try again.'); return; }
+    closeCamera();
+    await handleUpload(new File([blob], `product-${Date.now()}.jpg`, { type: 'image/jpeg' }));
+  };
+
   const handleRemove = async () => {
     if (preview && preview.includes('supabase')) {
       try {
@@ -226,14 +281,9 @@ export function ImageUpload({
       {preview ? (
         /* Image preview */
         <div className="relative group rounded-lg overflow-hidden border border-border bg-muted w-full aspect-square max-w-48">
-          <Image
-            src={preview}
-            alt={copy("Product image")}
-            fill
-            className="object-cover"
-            sizes="192px"
-            loading="lazy"
-          />
+          {preview.startsWith('offline-image:') ? <OfflineProductImage id={preview.slice('offline-image:'.length)} alt={copy('Product image')} className="absolute inset-0 h-full w-full object-cover" />
+            : preview.startsWith('blob:') ? <img src={preview} alt={copy('Product image')} className="absolute inset-0 h-full w-full object-cover" />
+              : <Image src={preview} alt={copy('Product image')} fill className="object-cover" sizes="192px" loading="lazy" />}
           {isUploading && (
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
               <Loader2 className="h-6 w-6 text-white animate-spin" />
@@ -315,11 +365,18 @@ export function ImageUpload({
         <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[90dvh] overflow-y-auto">
           <DialogHeader><DialogTitle><TranslatedText text={scanning ? 'Find a product by code' : 'Add a photo or product data'} /></DialogTitle><DialogDescription><TranslatedText text={scanning ? 'Look up an existing product before filling the form.' : 'Choose one option. Camera access depends on your device; desktop may open the file picker.'} /></DialogDescription></DialogHeader>
           {scanning ? <><ProductCodeLookup onMatch={(match, cached) => { onProductMatched(match, cached); setMenuOpen(false); }} onCode={code => { onCodeSelected(code); setMenuOpen(false); }} /><Button type="button" variant="ghost" onClick={() => setScanning(false)}><TranslatedText text={"Back to options"} /></Button></> : <div className="grid gap-2">
-            <Button type="button" variant="outline" className="h-auto min-h-14 justify-start whitespace-normal px-4 py-3 text-left" onClick={() => cameraRef.current?.click()}><Camera className="h-5 w-5 shrink-0" strokeWidth={1.75} /><span><TranslatedText text={"Take a photo"} /><span className="block text-xs font-normal tt-muted"><TranslatedText text={"Open your camera · up to 10 MB"} /></span></span></Button>
+            <Button type="button" variant="outline" className="h-auto min-h-14 justify-start whitespace-normal px-4 py-3 text-left" disabled={cameraStarting} onClick={() => void openCamera()}><Camera className="h-5 w-5 shrink-0" strokeWidth={1.75} /><span><TranslatedText text={cameraStarting ? 'Opening camera…' : 'Take a photo'} /><span className="block text-xs font-normal tt-muted"><TranslatedText text={"Open your camera · up to 10 MB"} /></span></span></Button>
             <Button type="button" variant="outline" className="h-auto min-h-14 justify-start whitespace-normal px-4 py-3 text-left" onClick={() => setScanning(true)}><ScanLine className="h-5 w-5 shrink-0" strokeWidth={1.75} /><span><TranslatedText text={"Scan barcode / QR"} /><span className="block text-xs font-normal tt-muted"><TranslatedText text={"Find and prefill a product · manual entry available"} /></span></span></Button>
             <Button type="button" variant="outline" className="h-auto min-h-14 justify-start whitespace-normal px-4 py-3 text-left" onClick={() => inputRef.current?.click()}><Upload className="h-5 w-5 shrink-0" strokeWidth={1.75} /><span><TranslatedText text={"Upload a photo"} /><span className="block text-xs font-normal tt-muted"><TranslatedText text={"Choose an existing image from your device"} /></span></span></Button>
             <Button asChild variant="outline" className="h-auto min-h-14 justify-start whitespace-normal px-4 py-3 text-left"><Link href="/imports" target="_blank" rel="noopener noreferrer" prefetch={false}><FileSpreadsheet className="h-5 w-5 shrink-0" strokeWidth={1.75} /><span><TranslatedText text={"Upload an inventory list"} /><span className="block text-xs font-normal tt-muted"><TranslatedText text={"CSV / Excel · opens bulk import in a new tab"} /></span></span></Link></Button>
           </div>}
+        </DialogContent>
+      </Dialog>
+      <Dialog open={cameraOpen} onOpenChange={open => { if (!open) closeCamera(); }}>
+        <DialogContent className="w-[calc(100%-2rem)] max-w-lg">
+          <DialogHeader><DialogTitle>Take product photo</DialogTitle><DialogDescription>Position the product in the frame, then capture it.</DialogDescription></DialogHeader>
+          <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-lg bg-black" aria-label="Camera preview" />
+          <div className="flex justify-end gap-2"><Button type="button" variant="outline" onClick={closeCamera}>Cancel</Button><Button type="button" onClick={() => void capturePhoto()}>Capture photo</Button></div>
         </DialogContent>
       </Dialog>
     </div>

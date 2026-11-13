@@ -48,3 +48,18 @@ it('updates the preview when the parent selects a different product image',async
   await act(()=>root.render(<ImageUpload currentImageUrl="/second.png" {...callbacks} />));
   expect(host.querySelector('img')?.getAttribute('src')).toBe('/second.png');
 });
+it('opens the device camera on desktop and releases it when cancelled', async () => {
+  const stop = vi.fn();
+  const getUserMedia = vi.fn().mockResolvedValue({ getTracks: () => [{ stop }] });
+  Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getUserMedia } });
+  const play = vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
+  await act(() => root.render(<ImageUpload onImageUploaded={vi.fn()} onImageRemoved={vi.fn()} onProductMatched={vi.fn()} onCodeSelected={vi.fn()} />));
+  await act(() => host.querySelector<HTMLElement>('[role="button"]')!.click());
+  await act(async () => { Array.from(document.querySelectorAll('button')).find(button => button.textContent?.includes('Take a photo'))!.click(); });
+  expect(getUserMedia).toHaveBeenCalledWith({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+  expect(document.querySelector('video[aria-label="Camera preview"]')).not.toBeNull();
+  await act(() => { Array.from(document.querySelectorAll('button')).find(button => button.textContent === 'Cancel')!.click(); });
+  expect(stop).toHaveBeenCalled();
+  play.mockRestore();
+  Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: undefined });
+});

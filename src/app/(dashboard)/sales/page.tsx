@@ -65,7 +65,7 @@ async function fetchSales(filters: {
     return records;
   };
   const [data, historicalData] = await Promise.all([
-    loadPages(makeLiveQuery('id,quantity,product_name_snapshot')).catch(error => {
+    loadPages(makeLiveQuery('id,quantity,product_name_snapshot,product:products(name)')).catch(error => {
       const failure = error as { code?: string; message?: string };
       if (failure.code !== '42703' || !failure.message?.includes('product_name_snapshot')) throw error;
       return loadPages(makeLiveQuery('id,quantity,product:products(name)'));
@@ -73,14 +73,34 @@ async function fetchSales(filters: {
     loadPages(historicalQuery),
   ]);
 
+  const creditSettlements = new Map<string, { paid: number; writtenOff: number }>();
+  try {
+    const rows = await loadPages(supabase.from('customer_credit_settlements' as never)
+      .select('sale_id,historical_sale_id,kind,amount').order('created_at', { ascending: false }));
+    for (const row of rows as Array<{ sale_id: string | null; historical_sale_id: string | null; kind: string; amount: number }>) {
+      const key = row.sale_id ? `s:${row.sale_id}` : `h:${row.historical_sale_id}`;
+      const previous = creditSettlements.get(key) || { paid: 0, writtenOff: 0 };
+      if (row.kind === 'payment') previous.paid += Number(row.amount);
+      else previous.writtenOff += Number(row.amount);
+      creditSettlements.set(key, previous);
+    }
+  } catch (error) {
+    const failure = error as { code?: string };
+    if (!['42P01', 'PGRST205'].includes(failure.code || '')) throw error;
+  }
+
   const liveRows = data as unknown as (Sale & { financial_reversals?: { kind: string }[] })[];
   const reversalKinds = await loadVisibleReversals(liveRows.map(sale => sale.id));
   const liveSales = liveRows
     .map((sale) => {
-      return { ...sale, status: effectiveSaleStatus(withReversalStatus(sale, reversalKinds)) } as Sale;
+      const settlement = creditSettlements.get(`s:${sale.id}`) || { paid: 0, writtenOff: 0 };
+      const paid = Number(sale.amount_paid) + settlement.paid;
+      return { ...sale, amount_paid: paid, credit_written_off: settlement.writtenOff,
+        payment_status: paid + settlement.writtenOff >= Number(sale.total) ? 'paid' : paid > 0 ? 'partial' : 'unpaid',
+        status: effectiveSaleStatus(withReversalStatus(sale, reversalKinds)) } as Sale;
     })
     .filter((sale) => !filters.status || filters.status === 'all' || sale.status === filters.status)
-    .filter((sale) => filters.credit_status === 'all' || (Number(sale.amount_paid) <= 0 ? 'unpaid' : Number(sale.amount_paid) < Number(sale.total) ? 'partial' : 'paid') === filters.credit_status);
+    .filter((sale) => filters.credit_status === 'all' || sale.payment_status === filters.credit_status);
   const historicalSales = historicalData as unknown as Array<{
     id: string;
     invoice_number: string;
@@ -96,8 +116,8 @@ async function fetchSales(filters: {
   const normalizedHistorical: Sale[] = historicalSales
     .filter((sale) => {
       const total = Number(sale.total);
-      const amountPaid = Number(sale.amount_paid);
-      const creditStatus = amountPaid <= 0 ? 'unpaid' : amountPaid < total ? 'partial' : 'paid';
+      const amountPaid = Number(sale.amount_paid) + (creditSettlements.get(`h:${sale.id}`)?.paid || 0);
+      const creditStatus = amountPaid + (creditSettlements.get(`h:${sale.id}`)?.writtenOff || 0) >= total ? 'paid' : amountPaid > 0 ? 'partial' : 'unpaid';
       if (filters.search) {
         const needle = filters.search.toLowerCase();
         if (!sale.invoice_number.toLowerCase().includes(needle)) return false;
@@ -116,7 +136,8 @@ async function fetchSales(filters: {
     })
     .map((sale) => {
       const total = Number(sale.total);
-      const amountPaid = Number(sale.amount_paid);
+      const settlement = creditSettlements.get(`h:${sale.id}`) || { paid: 0, writtenOff: 0 };
+      const amountPaid = Number(sale.amount_paid) + settlement.paid;
       return {
         ...sale,
         created_at: sale.sold_at,
@@ -131,9 +152,10 @@ async function fetchSales(filters: {
         tax: 0,
         total,
         amount_paid: amountPaid,
+        credit_written_off: settlement.writtenOff,
         change_amount: 0,
         sale_type: 'retail',
-        payment_status: amountPaid <= 0 ? 'unpaid' : amountPaid < total ? 'partial' : 'paid',
+        payment_status: amountPaid + settlement.writtenOff >= total ? 'paid' : amountPaid > 0 ? 'partial' : 'unpaid',
         status: sale.status === 'active' ? 'completed' : 'refunded',
         imported: true,
       } as unknown as Sale;
@@ -147,6 +169,13 @@ async function fetchSales(filters: {
 
 function soldProductNames(sale: Sale): string {
   return (sale.items || []).map(item => item.product_name_snapshot || item.product?.name).filter(Boolean).join(', ');
+}
+
+function soldProductLabel(sale: Sale): string {
+  const names = soldProductNames(sale);
+  if (names) return names;
+  if ((sale as Sale & { imported?: boolean }).imported) return 'Historical import: items not recorded';
+  return sale.items?.length ? 'Product unavailable' : 'Items not uploaded; sync the selling device';
 }
 
 function exportToCSV(sales: Sale[]) {
@@ -414,12 +443,12 @@ function SalesPageInner() {
                     </TableCell>
                     <TableCell>{sale.customer_name || <span className="text-muted-foreground text-xs">{t.sales.walk_in}</span>}</TableCell>
                     <TableCell className="text-sm">{(sale.cashier as { full_name?: string } | null)?.full_name || '—'}</TableCell>
-                    <TableCell className="max-w-56 text-sm"><span className="line-clamp-2" title={soldProductNames(sale)}>{soldProductNames(sale) || ((sale as Sale & { imported?: boolean }).imported ? 'Historical import' : '—')}</span></TableCell>
+                    <TableCell className="max-w-56 text-sm"><span className="line-clamp-2" title={soldProductLabel(sale)}>{soldProductLabel(sale)}</span></TableCell>
                     <TableCell className="text-sm">{sale.warehouse?.name || '—'}</TableCell>
                     <TableCell className="font-semibold">{formatCurrency(sale.total)}</TableCell>
                     <TableCell>{paymentBadge(sale.payment_method)}</TableCell>
                     <TableCell>{sale.sale_type === 'b2b' ? 'B2B' : sale.sale_type === 'b2c' ? 'B2C' : 'Retail'}</TableCell>
-                    <TableCell>{sale.payment_status === 'unpaid' ? '0 paid' : sale.payment_status === 'partial' ? 'Still paying' : 'Paid'}</TableCell>
+                    <TableCell>{(sale as Sale & { credit_written_off?: number }).credit_written_off ? 'Written off' : sale.payment_status === 'unpaid' ? '0 paid' : sale.payment_status === 'partial' ? 'Still paying' : 'Paid'}</TableCell>
                     <TableCell>{statusBadge(sale.status)}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {formatDateTime(sale.created_at)}
@@ -472,7 +501,7 @@ function SalesPageInner() {
                 <div><span className="text-muted-foreground">{t.sales.customer}:</span> <span className="font-medium">{viewSale.customer_name || t.sales.walk_in}</span></div>
                 <div><span className="text-muted-foreground">{t.sales.phone}:</span> <span className="font-medium">{viewSale.customer_phone || '—'}</span></div>
                 <div><span className="text-muted-foreground">Customer type:</span> <span className="font-medium">{viewSale.sale_type === 'b2b' ? 'B2B' : viewSale.sale_type === 'b2c' ? 'B2C' : 'Retail'}</span></div>
-                <div><span className="text-muted-foreground">Credit state:</span> <span className="font-medium">{viewSale.payment_status === 'unpaid' ? 'Not paid / 0 paid' : viewSale.payment_status === 'partial' ? 'Still paying' : 'Paid / completed'}</span></div>
+                <div><span className="text-muted-foreground">Credit state:</span> <span className="font-medium">{(viewSale as Sale & { credit_written_off?: number }).credit_written_off ? 'Written off' : viewSale.payment_status === 'unpaid' ? 'Not paid / 0 paid' : viewSale.payment_status === 'partial' ? 'Still paying' : 'Paid / completed'}</span></div>
                 <div><span className="text-muted-foreground">Authorized by:</span> <span className="font-medium">{(viewSale as Sale & { credit_authorizer?: { full_name?: string } }).credit_authorizer?.full_name || '—'}</span></div>
                 <div><span className="text-muted-foreground">{t.sales.payment}:</span> <span className="font-medium capitalize">{viewSale.payment_method.replace('_', ' ')}</span></div>
                 <div><span className="text-muted-foreground">{t.common.status}:</span> {statusBadge(viewSale.status)}</div>
