@@ -24,19 +24,19 @@ jobs:
           jq -e '.conclusion == "success" and .head_branch == "main" and .path == ".github/workflows/installers.yml"' run.json
           commit=$(jq -r .head_sha run.json)
           gh run download "$BUILD_RUN_ID" --name android-installer --dir assets
-          gh run download "$BUILD_RUN_ID" --name windows-installer --dir assets
-          test -f assets/TracKasuwa-1.0.1.apk
-          test -f assets/TracKasuwa-Setup-1.0.1.exe
-          (cd assets && sha256sum *.apk *.exe > SHA256SUMS.txt)
+          apk=(assets/TracKasuwa-*.apk)
+          test "${#apk[@]}" -eq 1 && test -f "${apk[0]}"
+          version=${apk[0]#assets/TracKasuwa-}
+          version=${version%.apk}
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          (cd assets && sha256sum *.apk > SHA256SUMS.txt)
           cat > notes.md <<'NOTES'
-          Android APK and Windows x64 installer for TracKasuwa 1.0.1.
+          Android APK update for TracKasuwa.
 
-          Android uses a new production signing identity. If an older demonstration APK cannot update in place, sync all pending sales before uninstalling it. Uninstalling removes local data.
+          This update repairs Android product camera and gallery selection. Install over the existing app using the same signing identity. Sync queued sales and photos before updating. Do not uninstall: uninstalling removes local data.
 
-          The Windows installer is not Authenticode-signed and may show an unknown-publisher warning.
+          The app opens https://trackasuwa.vercel.app/login. An internet connection is required for the first sign-in.
 
-          Both apps open https://trackasuwa.vercel.app/login. An internet connection is required for the first sign-in and to load the app.
-
-          SHA-256 checksums are attached. Never install assets from untrusted sources.
+          A SHA-256 checksum is attached. Never install assets from untrusted sources.
           NOTES
-          gh release create v1.0.1 --target "$commit" --title 'TracKasuwa 1.0.1' --notes-file notes.md assets/TracKasuwa-1.0.1.apk assets/TracKasuwa-Setup-1.0.1.exe assets/SHA256SUMS.txt
+          gh release create "v${version}" --target "$commit" --title "TracKasuwa Android ${version}" --notes-file notes.md "${apk[0]}" assets/SHA256SUMS.txt

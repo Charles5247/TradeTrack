@@ -1,3 +1,8 @@
+import { isNewerVersion } from './android-update';
+
+const PHOTO_FIX_VERSION = '1.0.2';
+const PHOTO_FIX_APK_URL = 'https://github.com/Charles5247/TradeTrack/releases/download/v1.0.2/TracKasuwa-1.0.2.apk';
+
 function safeHttpsUrl(value: string | undefined): string | null {
   if (!value?.trim()) return null;
   try {
@@ -41,9 +46,14 @@ async function verifyReleaseAsset(url: string | null, label: string): Promise<st
 }
 
 export async function getDownloadInfo() {
+  const configuredAndroidVersion = process.env.TracKasuwa_ANDROID_LATEST_VERSION || null;
+  const usePhotoFixRelease = !configuredAndroidVersion || isNewerVersion(PHOTO_FIX_VERSION, configuredAndroidVersion);
+  const androidVersion = usePhotoFixRelease ? PHOTO_FIX_VERSION : configuredAndroidVersion;
+  const configuredAndroidUrl = process.env.NEXT_PUBLIC_ANDROID_APK_URL ?? process.env.TracKasuwa_ANDROID_DOWNLOAD_URL;
+  const androidReleaseUrl = usePhotoFixRelease || !configuredAndroidUrl ? PHOTO_FIX_APK_URL : configuredAndroidUrl;
   const [androidUrl, windowsUrl] = await Promise.all([
     verifyReleaseAsset(
-      releaseUrl(process.env.NEXT_PUBLIC_ANDROID_APK_URL ?? process.env.TracKasuwa_ANDROID_DOWNLOAD_URL, '.apk'),
+      releaseUrl(androidReleaseUrl, '.apk'),
       'Android',
     ),
     verifyReleaseAsset(
@@ -55,7 +65,7 @@ export async function getDownloadInfo() {
     api_version: process.env.NEXT_PUBLIC_APP_VERSION || '0.1.0',
     latest: {
       android: {
-        version: process.env.TracKasuwa_ANDROID_LATEST_VERSION || null,
+        version: androidVersion,
         file_size: process.env.TracKasuwa_ANDROID_FILE_SIZE || null,
         download_url: androidUrl,
         unknown_sources_help_url: safeHttpsUrl(process.env.TracKasuwa_ANDROID_UNKNOWN_SOURCES_HELP_URL),

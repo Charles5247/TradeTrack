@@ -11,11 +11,13 @@ APK update with the same signing key; do not uninstall an older app that may
 still hold unsynced sales or photos in its local storage.
 
 The app navigation checks `/api/version` for a newer signed Android APK.
-After publishing release 1.0.2 as a public GitHub Release asset, set
-`TracKasuwa_ANDROID_LATEST_VERSION=1.0.2` and either
-`NEXT_PUBLIC_ANDROID_APK_URL` or `TracKasuwa_ANDROID_DOWNLOAD_URL` to its
-direct HTTPS `.apk` release URL. The API verifies the asset before showing
-an update notice. Do not advertise the version before the signed APK exists.
+Push the 1.0.2 source to `main`, run GitHub Actions **Build installers**, then
+run **Publish verified installers** using that successful build run ID. The
+publisher creates `v1.0.2` with `TracKasuwa-1.0.2.apk`. The API checks that
+exact asset before showing an update notice; it does not require a Vercel
+environment variable for this repair release. Future release URLs and versions
+can use `TracKasuwa_ANDROID_LATEST_VERSION` and
+`TracKasuwa_ANDROID_DOWNLOAD_URL` (or `NEXT_PUBLIC_ANDROID_APK_URL`).
 Older installed shells may need the merchant to copy the link from **App
 update** into Chrome for this first update. Version 1.0.2 opens later APK
 downloads in the browser directly.

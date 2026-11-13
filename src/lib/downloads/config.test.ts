@@ -41,6 +41,17 @@ describe('installer configuration', () => {
     );
   });
 
+  it('does not keep advertising the old Android APK after the camera fix is released', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 200 })));
+    vi.stubEnv('TracKasuwa_ANDROID_LATEST_VERSION', '1.0.1');
+    vi.stubEnv('NEXT_PUBLIC_ANDROID_APK_URL', 'https://github.com/Charles5247/TradeTrack/releases/download/v1.0.1/TracKasuwa-1.0.1.apk');
+    const info = await getDownloadInfo();
+    expect(info.latest.android).toMatchObject({
+      version: '1.0.2',
+      download_url: 'https://github.com/Charles5247/TradeTrack/releases/download/v1.0.2/TracKasuwa-1.0.2.apk',
+    });
+  });
+
   it('shows no Windows download when the configured release asset is missing', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 404 })));
     vi.stubEnv('TracKasuwa_WINDOWS_DOWNLOAD_URL', 'https://github.com/org/old/releases/download/v1/old.exe');
