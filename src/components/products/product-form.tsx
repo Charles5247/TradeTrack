@@ -120,12 +120,29 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
 
   const addCategory = async () => {
     const name = categoryName.trim();
-    if (!name || !organization?.id) return;
+    const orgId = organization?.id || useAuthStore.getState().user?.organization_id;
+    if (!name || !orgId) return;
     setIsSavingCategory(true);
     try {
-      const supabase = createClient();
-      const { data, error } = await supabase.from('categories').insert({ organization_id: organization.id, name }).select('id,name').single();
-      if (error) throw error;
+      let data!: { id: string; name: string };
+      const queueCategory = async () => {
+        data = { id: generateId(), name };
+        const record = { ...data, organization_id: orgId, description: null, color: null, created_at: new Date().toISOString() };
+        await saveToOfflineDB('categories', [record]);
+        await addToSyncQueue('categories', 'INSERT', data.id, record);
+      };
+      if (isOffline()) {
+        await queueCategory();
+      } else {
+        try {
+          const result = await withTimeout(Promise.resolve(createClient().from('categories').insert({ organization_id: orgId, name }).select('id,name').single()), 15000);
+          if (result.error) throw result.error;
+          data = result.data;
+        } catch (error) {
+          if (!(error instanceof TypeError) && !(error instanceof Error && /timed out|failed to fetch|fetch failed/i.test(error.message))) throw error;
+          await queueCategory();
+        }
+      }
       setCreatedCategories(current => [...current, data]);
       setValue('category_id', data.id, { shouldDirty: true });
       setCategoryName('');
@@ -445,40 +462,24 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
         </div>
       </div>
 
-      <div className={showMore ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'hidden'}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label><TranslatedText text={"Category"} /></Label>
-          <Select
-            value={watch('category_id') ?? ''}
-            onValueChange={(val) => setValue('category_id', val || null)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={copy("Select category")} />
-            </SelectTrigger>
-            <SelectContent>
-              {availableCategories.map((cat) => (
-                <SelectItem key={cat.id} value={cat.id}>
-                  {cat.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {availableCategories.length === 0 && !isAddingCategory && (
-            <div role="status" className="flex min-h-11 items-center justify-between gap-3 rounded-lg border border-dashed border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-              <span>{copy('No categories yet.')}</span>
-              <Button type="button" variant="outline" size="sm" className="min-h-11 shrink-0" onClick={() => setIsAddingCategory(true)}>{copy('Add category')}</Button>
-            </div>
-          )}
-          {availableCategories.length === 0 && isAddingCategory && (
+          <select aria-label={copy('Category')} className="min-h-11 w-full rounded-lg border border-input bg-background px-3" value={watch('category_id') ?? ''} onChange={event => setValue('category_id', event.target.value || null, { shouldDirty: true })}>
+            <option value="">No category</option>
+            {availableCategories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+          </select>
+          {!isAddingCategory && <Button type="button" variant="outline" size="sm" className="min-h-11" onClick={() => setIsAddingCategory(true)}>{copy('Add category')}</Button>}
+          {isAddingCategory && (
             <div className="flex flex-col gap-2 rounded-lg border border-border bg-muted/30 p-3 sm:flex-row">
               <Input aria-label={copy('Category name')} value={categoryName} onChange={event => setCategoryName(event.target.value)} maxLength={100} autoFocus />
-              <Button type="button" className="min-h-11 shrink-0" disabled={!categoryName.trim() || isSavingCategory || !organization?.id} onClick={() => void addCategory()}>
+              <Button type="button" className="min-h-11 shrink-0" disabled={!categoryName.trim() || isSavingCategory || !(organization?.id || useAuthStore.getState().user?.organization_id)} onClick={() => void addCategory()}>
                 {isSavingCategory && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{copy('Save category')}
               </Button>
             </div>
           )}
         </div>
-        <div className="space-y-2">
+        <div className={showMore ? 'space-y-2' : 'hidden'}>
           <Label><TranslatedText text={"Status"} /></Label>
           <Select
             value={watch('status')}

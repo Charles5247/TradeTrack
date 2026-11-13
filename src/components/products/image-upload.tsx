@@ -142,8 +142,8 @@ export function ImageUpload({
   const handleUpload = useCallback(
     async (file: File) => {
       // Validate type
-      if (!ALLOWED_TYPES.includes(file.type)) {
-        toast.error('Please upload a JPEG, PNG, WebP or AVIF image');
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please choose an image');
         return;
       }
       // Validate size
@@ -168,7 +168,8 @@ export function ImageUpload({
         try {
           blob = await compressImage(file);
         } catch {
-          blob = file; // Use original if compression fails
+          if (!ALLOWED_TYPES.includes(file.type)) throw new Error('This phone image format could not be converted. Change the camera format to JPEG or choose another photo.');
+          blob = file;
         }
 
         // Build path: products/{userId}/{uuid}.webp
@@ -194,7 +195,7 @@ export function ImageUpload({
           .upload(path, blob, {
             contentType: mimeType,
             upsert: false,
-          }), 5000); }
+          }), 20000); }
         catch (error) {
           if (error instanceof TypeError || (error instanceof Error && /timed out|fetch failed|failed to fetch/i.test(error.message))) return await saveOffline();
           throw error;
@@ -351,21 +352,22 @@ export function ImageUpload({
         </div>
       )}
 
-      <input
-        ref={inputRef}
-        type="file"
-        accept={ALLOWED_TYPES.join(',')}
-        onChange={handleFileChange}
-        className="sr-only"
-        aria-label={copy("Upload product photo")}
-      />
-      <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={handleFileChange} className="sr-only" aria-label={copy("Take product photo")} />
+      <div className="flex flex-wrap gap-2">
+        <label className="relative inline-flex min-h-11 cursor-pointer items-center gap-2 overflow-hidden rounded-lg border border-input bg-background px-3 py-2 text-sm font-medium">
+          <Camera className="h-4 w-4" />Take a photo
+          <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={handleFileChange} className="absolute inset-0 h-full w-full cursor-pointer opacity-0" aria-label={copy("Take product photo")} />
+        </label>
+        <label className="relative inline-flex min-h-11 cursor-pointer items-center gap-2 overflow-hidden rounded-lg border border-input bg-background px-3 py-2 text-sm font-medium">
+          <Upload className="h-4 w-4" />Choose from gallery
+          <input ref={inputRef} type="file" accept="image/*" onChange={handleFileChange} className="absolute inset-0 h-full w-full cursor-pointer opacity-0" aria-label={copy("Upload product photo")} />
+        </label>
+      </div>
       {preview && <Button type="button" variant="outline" className="min-h-11 w-full sm:w-auto" disabled={isUploading} onClick={openMenu}><TranslatedText text={"Photo, scan or import"} /></Button>}
       <Dialog open={menuOpen} onOpenChange={setMenuOpen}>
         <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[90dvh] overflow-y-auto">
           <DialogHeader><DialogTitle><TranslatedText text={scanning ? 'Find a product by code' : 'Add a photo or product data'} /></DialogTitle><DialogDescription><TranslatedText text={scanning ? 'Look up an existing product before filling the form.' : 'Choose one option. Camera access depends on your device; desktop may open the file picker.'} /></DialogDescription></DialogHeader>
           {scanning ? <><ProductCodeLookup onMatch={(match, cached) => { onProductMatched(match, cached); setMenuOpen(false); }} onCode={code => { onCodeSelected(code); setMenuOpen(false); }} /><Button type="button" variant="ghost" onClick={() => setScanning(false)}><TranslatedText text={"Back to options"} /></Button></> : <div className="grid gap-2">
-            <Button type="button" variant="outline" className="h-auto min-h-14 justify-start whitespace-normal px-4 py-3 text-left" disabled={cameraStarting} onClick={() => void openCamera()}><Camera className="h-5 w-5 shrink-0" strokeWidth={1.75} /><span><TranslatedText text={cameraStarting ? 'Opening camera…' : 'Take a photo'} /><span className="block text-xs font-normal tt-muted"><TranslatedText text={"Open your camera · up to 10 MB"} /></span></span></Button>
+            <Button type="button" variant="outline" className="h-auto min-h-14 justify-start whitespace-normal px-4 py-3 text-left" disabled={cameraStarting} onClick={() => void openCamera()}><Camera className="h-5 w-5 shrink-0" strokeWidth={1.75} /><span><TranslatedText text={cameraStarting ? 'Opening camera…' : 'Use live camera'} /><span className="block text-xs font-normal tt-muted"><TranslatedText text={"Desktop webcam preview"} /></span></span></Button>
             <Button type="button" variant="outline" className="h-auto min-h-14 justify-start whitespace-normal px-4 py-3 text-left" onClick={() => setScanning(true)}><ScanLine className="h-5 w-5 shrink-0" strokeWidth={1.75} /><span><TranslatedText text={"Scan barcode / QR"} /><span className="block text-xs font-normal tt-muted"><TranslatedText text={"Find and prefill a product · manual entry available"} /></span></span></Button>
             <Button type="button" variant="outline" className="h-auto min-h-14 justify-start whitespace-normal px-4 py-3 text-left" onClick={() => inputRef.current?.click()}><Upload className="h-5 w-5 shrink-0" strokeWidth={1.75} /><span><TranslatedText text={"Upload a photo"} /><span className="block text-xs font-normal tt-muted"><TranslatedText text={"Choose an existing image from your device"} /></span></span></Button>
             <Button asChild variant="outline" className="h-auto min-h-14 justify-start whitespace-normal px-4 py-3 text-left"><Link href="/imports" target="_blank" rel="noopener noreferrer" prefetch={false}><FileSpreadsheet className="h-5 w-5 shrink-0" strokeWidth={1.75} /><span><TranslatedText text={"Upload an inventory list"} /><span className="block text-xs font-normal tt-muted"><TranslatedText text={"CSV / Excel · opens bulk import in a new tab"} /></span></span></Link></Button>

@@ -360,7 +360,7 @@ class SyncEngine {
         Number(b.table_name === "vendor_transactions") -
         Number(a.table_name === "vendor_transactions"),
     );
-    const dependencyOrder: Record<string, number> = { import_batches: -2, import_commands: -1, warehouses: 0, products: 1, purchase_orders: 2, stock_receipts: 3, vendor_transactions: 4, sales: 5, sale_items: 6, sale_stock: 7, inventory: 8, inventory_movements: 9, product_images: 10 };
+    const dependencyOrder: Record<string, number> = { import_batches: -2, import_commands: -1, warehouses: 0, categories: 0, products: 1, purchase_orders: 2, stock_receipts: 3, vendor_transactions: 4, sales: 5, sale_items: 6, sale_stock: 7, inventory: 8, inventory_movements: 9, product_images: 10 };
     pendingItems.sort((a, b) => (dependencyOrder[a.table_name] ?? 4) - (dependencyOrder[b.table_name] ?? 4));
     if (pendingItems.length === 0) return;
 
@@ -371,6 +371,10 @@ class SyncEngine {
     const failedDependencies = await db.getAllFromIndex("sync_queue", "by-status", "failed") as SyncQueueRecord[];
 
     for (const queuedItem of pendingItems) {
+      if (queuedItem.table_name === "products" && queuedItem.payload.category_id) {
+        const category = await db.getAllFromIndex("sync_queue", "by-queue-key", ["categories", String(queuedItem.payload.category_id), "INSERT"]) as SyncQueueRecord[];
+        if (category.some(parent => parent.status !== "synced")) continue;
+      }
       if (["inventory", "inventory_movements", "stock_receipts"].includes(queuedItem.table_name)) {
         const productId = String(queuedItem.payload.product_id || queuedItem.payload.p_product_id || "");
         const warehouseId = String(queuedItem.payload.warehouse_id || queuedItem.payload.p_warehouse_id || "");
@@ -817,7 +821,6 @@ class SyncEngine {
     const categories = await this.pullRows(supabase, "categories", orgId);
 
     if (categories?.length) {
-      await clearOfflineStore("categories");
       await saveToOfflineDB("categories", categories);
     }
     await this.pullPurchaseOrders(orgId, supabase);

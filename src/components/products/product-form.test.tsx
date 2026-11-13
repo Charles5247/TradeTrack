@@ -12,7 +12,7 @@ it('prefills an existing match and updates its ID rather than inserting a duplic
  const host=document.createElement('div');document.body.append(host);const root=createRoot(host);const success=vi.fn();
  try{
   await act(()=>root.render(<ProductForm categories={[]} onSuccess={success} onCancel={vi.fn()} />));
-  expect(host.textContent).toContain('No categories yet.');
+  expect(host.querySelector('select[aria-label="Category"]')).not.toBeNull();
   expect(Array.from(host.querySelectorAll('button')).some(button=>button.textContent==='Add category')).toBe(true);
   await act(()=>Array.from(host.querySelectorAll('button')).find(b=>b.textContent==='Select online match')!.click());
   expect(host.querySelector<HTMLInputElement>('#name')!.value).toBe('Rice');expect(host.querySelector<HTMLInputElement>('#sku')!.value).toBe('RICE');

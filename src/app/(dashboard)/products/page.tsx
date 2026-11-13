@@ -99,9 +99,15 @@ async function fetchProducts(user: { id: string; organization_id?: string | null
 }
 
 async function fetchCategories() {
+  const cached = () => getAllFromOfflineDB<{ id: string; name: string }>('categories');
+  if (isOffline()) return cached();
   const supabase = createClient();
-  const { data } = await supabase.from('categories').select('*').order('name');
-  return data || [];
+  try {
+    const { data, error } = await supabase.from('categories').select('*').order('name');
+    if (error) throw error;
+    if (data?.length) await saveToOfflineDB('categories', data);
+    return data || [];
+  } catch { return cached(); }
 }
 
 async function deleteProduct(id: string) {

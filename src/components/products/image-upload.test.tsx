@@ -15,13 +15,11 @@ it.each([375,1280])('presents all four grouped choices at %ipx with camera/galle
   await act(()=>root.render(<ImageUpload onImageUploaded={vi.fn()} onImageRemoved={vi.fn()} onProductMatched={vi.fn()} onCodeSelected={vi.fn()} />));
   await act(()=>host.querySelector<HTMLElement>('[role="button"]')!.click());
   const dialog=document.querySelector('[role="dialog"]')!;
-  expect(dialog.textContent).toContain('Take a photo');expect(dialog.textContent).toContain('Scan barcode / QR');expect(dialog.textContent).toContain('Upload a photo');
+  expect(host.textContent).toContain('Take a photo');expect(host.textContent).toContain('Choose from gallery');expect(dialog.textContent).toContain('Scan barcode / QR');expect(dialog.textContent).toContain('Upload a photo');
   const link=dialog.querySelector('a')!;expect(link.getAttribute('href')).toBe('/imports');expect(link.getAttribute('target')).toBe('_blank');
   expect(host.querySelector('[aria-label="Take product photo"]')?.getAttribute('capture')).toBe('environment');
   expect(host.querySelector('[aria-label="Upload product photo"]')?.hasAttribute('capture')).toBe(false);
-  const camera=vi.spyOn(host.querySelector<HTMLInputElement>('[aria-label="Take product photo"]')!,'click').mockImplementation(()=>{});
-  await act(()=>Array.from(dialog.querySelectorAll('button')).find(b=>b.textContent?.includes('Take a photo'))!.click());
-  expect(camera).toHaveBeenCalledOnce();
+  expect(host.querySelector<HTMLInputElement>('[aria-label="Take product photo"]')?.getAttribute('accept')).toBe('image/*');
 });
 it('opens through the keyboard and exposes manual scanning fallback',async()=>{
   await act(()=>root.render(<ImageUpload onImageUploaded={vi.fn()} onImageRemoved={vi.fn()} onProductMatched={vi.fn()} onCodeSelected={vi.fn()} />));
@@ -55,7 +53,7 @@ it('opens the device camera on desktop and releases it when cancelled', async ()
   const play = vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
   await act(() => root.render(<ImageUpload onImageUploaded={vi.fn()} onImageRemoved={vi.fn()} onProductMatched={vi.fn()} onCodeSelected={vi.fn()} />));
   await act(() => host.querySelector<HTMLElement>('[role="button"]')!.click());
-  await act(async () => { Array.from(document.querySelectorAll('button')).find(button => button.textContent?.includes('Take a photo'))!.click(); });
+  await act(async () => { Array.from(document.querySelectorAll('button')).find(button => button.textContent?.includes('Use live camera'))!.click(); });
   expect(getUserMedia).toHaveBeenCalledWith({ video: { facingMode: { ideal: 'environment' } }, audio: false });
   expect(document.querySelector('video[aria-label="Camera preview"]')).not.toBeNull();
   await act(() => { Array.from(document.querySelectorAll('button')).find(button => button.textContent === 'Cancel')!.click(); });
