@@ -5,16 +5,21 @@ on:
       build_run_id:
         description: Successful Build installers run on main
         required: true
+  workflow_run:
+    workflows: ['Build installers']
+    types: [completed]
+    branches: [main]
 permissions:
   actions: read
   contents: write
 jobs:
   release:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
-      BUILD_RUN_ID: ${{ inputs.build_run_id }}
+      BUILD_RUN_ID: ${{ github.event.workflow_run.id || inputs.build_run_id }}
     steps:
       - name: Verify build and publish release assets
         run: |
@@ -40,3 +45,4 @@ jobs:
           A SHA-256 checksum is attached. Never install assets from untrusted sources.
           NOTES
           gh release create "v${version}" --target "$commit" --title "TracKasuwa Android ${version}" --notes-file notes.md "${apk[0]}" assets/SHA256SUMS.txt
+

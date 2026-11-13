@@ -11,9 +11,10 @@ APK update with the same signing key; do not uninstall an older app that may
 still hold unsynced sales or photos in its local storage.
 
 The app navigation checks `/api/version` for a newer signed Android APK.
-Push the 1.0.2 source to `main`, run GitHub Actions **Build installers**, then
-run **Publish verified installers** using that successful build run ID. The
-publisher creates `v1.0.2` with `TracKasuwa-1.0.2.apk`. The API checks that
+Push the 1.0.2 source to `main`. GitHub Actions **Build installers** then
+builds and signs the Android APK, and **Publish verified installers** runs
+after a successful build. The publisher creates `v1.0.2` with
+`TracKasuwa-1.0.2.apk`. The API checks that
 exact asset before showing an update notice; it does not require a Vercel
 environment variable for this repair release. Future release URLs and versions
 can use `TracKasuwa_ANDROID_LATEST_VERSION` and
@@ -162,3 +163,4 @@ the `buildConfigField` line in `android-app/app/build.gradle`'s
   mechanism described above (see "Rebuilding with a different domain")
   rather than being changeable at runtime inside an already-installed
   APK; changing domains always requires a new build.
+
