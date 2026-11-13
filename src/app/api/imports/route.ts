@@ -23,6 +23,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     if (body.confirm !== true) throw new Error('Review and confirm the import first');
     if (body.action === 'reverse') {
+      if (profile.role !== 'business_owner') return Response.json({ error: 'Business owner permission required' }, { status: 403 });
       const { data, error } = await (db as any).rpc('reverse_import',{ batch: body.batch_id, reversal_reason: body.reason });
       if (error) throw error; return Response.json({ id: data });
     }

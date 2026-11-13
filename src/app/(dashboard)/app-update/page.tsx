@@ -35,15 +35,8 @@ export default function AppUpdatePage() {
             <>
               <p className="font-medium">Version {release?.version} is ready.</p>
               <p>Before updating, connect to the internet and let queued sales and photos finish syncing. Install the new APK over your existing Trackasuwa app. Do not uninstall the app; uninstalling can remove unsynced data.</p>
-              {needsPhotoFix ? (
-                <div className="space-y-2">
-                  <p className="text-sm">Your installed app may not open APK links. Copy the link and paste it into Chrome for this update. Later app versions open the browser directly.</p>
-                  <button type="button" className="rounded-lg bg-primary px-4 py-2 font-semibold text-primary-foreground" onClick={() => void copyLink()}>{copied ? 'Link copied' : 'Copy update link'}</button>
-                  <p className="break-all select-text text-xs text-muted-foreground">{release?.download_url}</p>
-                </div>
-              ) : (
-                <a href={release?.download_url ?? '#'} className="inline-flex rounded-lg bg-primary px-4 py-2 font-semibold text-primary-foreground">Download update</a>
-              )}
+              <a href={release?.download_url ?? '#'} className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 py-2 font-semibold text-primary-foreground">Update app</a>
+              {needsPhotoFix && <details className="text-sm text-muted-foreground"><summary>If the button does not work on an older app</summary><p>Your older Android shell may not open APK links. Copy the link and paste it into Chrome once.</p><button type="button" className="rounded-lg border border-border px-3 py-2" onClick={() => void copyLink()}>{copied ? 'Link copied' : 'Copy link'}</button><p className="break-all select-text text-xs">{release?.download_url}</p></details>}
               <p className="text-sm text-muted-foreground">Android may open your browser to download the APK and ask you to allow installation from that source. Confirm the installation on your device.</p>
             </>
           )}

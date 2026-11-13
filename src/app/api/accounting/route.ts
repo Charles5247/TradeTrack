@@ -25,8 +25,8 @@ export async function GET(request: Request) {
 }
 export async function POST(request: Request) {
   try {
-    const { db } = await apiContext();
     const body = await request.json();
+    const { db } = await apiContext(body.action === 'close' ? ['business_owner', 'admin'] : ['business_owner']);
     if (body.confirm !== true) throw new Error('Explicit confirmation required');
     const name = body.action === 'close' ? 'close_cash_up' : 'reverse_financial_sale';
     const args = body.action === 'close'

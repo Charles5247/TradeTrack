@@ -9,7 +9,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return Response.json({ error: 'Enter a reason of at least 3 characters.' }, { status: 400 });
     }
 
-    const { db, org } = await apiContext();
+    const { db, org } = await apiContext(['business_owner']);
     const { data: sale, error: saleError } = await db.from('sales')
       .select('id,status').eq('id', id).eq('organization_id', org).maybeSingle();
     if (saleError) throw saleError;

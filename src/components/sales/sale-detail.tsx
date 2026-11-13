@@ -73,8 +73,7 @@ function SaleRecord({ id }: { id: string }) {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
 
-  const canCancel =
-    user?.role === 'business_owner' || user?.role === 'admin';
+  const canCancel = user?.role === 'business_owner';
 
   const query = useQuery({
     queryKey: ['sale-detail', user?.organization_id, id],
@@ -143,7 +142,7 @@ function SaleRecord({ id }: { id: string }) {
         }
         secondary={
           <div className="flex flex-wrap gap-2">
-            {/* Cancel / Reverse button — only for admin/owner on completed sales */}
+            {/* Only a business owner can reverse a completed sale. */}
             {canCancel && isCancellable && (
               <Button
                 variant="destructive"

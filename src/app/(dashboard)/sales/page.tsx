@@ -252,7 +252,7 @@ function SalesPageInner() {
   const [cancelReason, setCancelReason] = useState('');
 
   const user = useAuthStore((s) => s.user);
-  const canCancel = user?.role === 'business_owner' || user?.role === 'admin';
+  const canCancel = user?.role === 'business_owner';
   const queryClient = useQueryClient();
 
   const cancelMutation = useMutation({

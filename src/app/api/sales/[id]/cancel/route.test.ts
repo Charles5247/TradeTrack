@@ -21,6 +21,7 @@ it('uses the atomic reversal function for a completed sale', async () => {
     method: 'POST', body: JSON.stringify({ reason: 'Duplicate sale' }),
   }), { params: Promise.resolve({ id: 'sale-2' }) });
   expect(response.status).toBe(200);
+  expect(apiContext).toHaveBeenCalledWith(['business_owner']);
   expect(rpc).toHaveBeenCalledWith('reverse_financial_sale', {
     target: 'sale-2', reversal_kind: 'void', reversal_reason: 'Duplicate sale',
   });

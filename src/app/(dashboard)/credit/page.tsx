@@ -95,6 +95,7 @@ async function loadCreditSales() {
 }
 
 function CreditLedger() {
+  const isOwner = useAuthStore(state => state.user?.role === 'business_owner');
   const organizationId = useAuthStore(state => state.user?.organization_id);
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
@@ -160,7 +161,7 @@ function CreditLedger() {
       <div className="flex flex-wrap justify-between gap-2"><div><p className="font-medium">{customer.name}</p><p className="text-sm tt-muted">{customer.phone || 'No phone'} · {customer.sales.length} open sale(s)</p></div><p className="font-semibold">Owes {formatCurrency(customer.balance)}</p></div>
       <div className="space-y-3 border-t pt-2">{customer.sales.map(sale => <div key={sale.id} className="flex flex-wrap items-center justify-between gap-3 text-sm">
         <div><p>{sale.invoice_number} · {formatDateTime(sale.created_at)}</p><p className="tt-muted">{formatCurrency(Number(sale.amount_paid) + sale.additionalPaid)} paid · {formatCurrency(sale.writtenOff)} written off · {formatCurrency(sale.remaining)} remaining</p></div>
-        <div className="flex gap-2"><Button size="sm" disabled={!data?.settlementReady} onClick={() => begin(sale, 'payment')}>Record payment</Button><Button size="sm" variant="outline" disabled={!data?.settlementReady} onClick={() => begin(sale, 'write_off')}>Write off debt</Button></div>
+        <div className="flex gap-2"><Button size="sm" disabled={!data?.settlementReady} onClick={() => begin(sale, 'payment')}>Record payment</Button>{isOwner && <Button size="sm" variant="outline" disabled={!data?.settlementReady} onClick={() => begin(sale, 'write_off')}>Write off debt</Button>}</div>
       </div>)}</div>
       <Link className="text-sm text-primary underline" href="/sales">View sales</Link>
     </CardContent></Card>)}</div>

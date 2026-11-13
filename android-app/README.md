@@ -19,9 +19,10 @@ exact asset before showing an update notice; it does not require a Vercel
 environment variable for this repair release. Future release URLs and versions
 can use `TracKasuwa_ANDROID_LATEST_VERSION` and
 `TracKasuwa_ANDROID_DOWNLOAD_URL` (or `NEXT_PUBLIC_ANDROID_APK_URL`).
-Older installed shells may need the merchant to copy the link from **App
-update** into Chrome for this first update. Version 1.0.2 opens later APK
-downloads in the browser directly.
+The **App update** page provides an **Update app** button that opens the APK
+download. Android may ask for permission to install the downloaded update.
+Version 1.0.2 opens APK downloads in the browser directly. An older 1.0.1
+shell may still need the secondary copy-link fallback for this first update.
 
 ## Why a WebView wrapper (not React Native)?
 

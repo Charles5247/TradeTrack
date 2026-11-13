@@ -29,10 +29,11 @@ it('does not offer the old APK as a repair for Android photos', async () => {
   expect(host.querySelector('a[href$=".apk"]')).toBeNull();
 });
 
-it('offers a copyable link when the fixed APK is published for an old shell', async () => {
+it('offers a one-click update with a fallback for an old shell', async () => {
   update.release = { version: '1.0.2', download_url: 'https://github.com/owner/repo/releases/download/v1.0.2/TracKasuwa-1.0.2.apk' };
   update.available = true;
   await act(() => root.render(<AppUpdatePage />));
-  expect(host.querySelector('button')?.textContent).toBe('Copy update link');
+  expect(host.querySelector('a[href$=".apk"]')?.textContent).toBe('Update app');
+  expect(host.textContent).toContain('Copy link');
   expect(host.textContent).toContain('TracKasuwa-1.0.2.apk');
 });
