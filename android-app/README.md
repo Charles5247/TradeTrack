@@ -3,6 +3,23 @@
 A minimal native Android **WebView shell** around the TracKasuwa web app —
 the mobile counterpart to the Electron desktop shell in `../desktop-app`.
 
+Product photo capture and gallery selection are handled by this APK's
+`WebChromeClient`. Changes to the web form alone do not update the installed
+file chooser. Release 1.0.2 removes the unnecessary app camera permission and
+opens the system camera or image picker directly. Build and sign an in-place
+APK update with the same signing key; do not uninstall an older app that may
+still hold unsynced sales or photos in its local storage.
+
+The app navigation checks `/api/version` for a newer signed Android APK.
+After publishing release 1.0.2 as a public GitHub Release asset, set
+`TracKasuwa_ANDROID_LATEST_VERSION=1.0.2` and either
+`NEXT_PUBLIC_ANDROID_APK_URL` or `TracKasuwa_ANDROID_DOWNLOAD_URL` to its
+direct HTTPS `.apk` release URL. The API verifies the asset before showing
+an update notice. Do not advertise the version before the signed APK exists.
+Older installed shells may need the merchant to copy the link from **App
+update** into Chrome for this first update. Version 1.0.2 opens later APK
+downloads in the browser directly.
+
 ## Why a WebView wrapper (not React Native)?
 
 TracKasuwa is already an offline-first PWA: it ships a service worker

@@ -20,6 +20,7 @@ import {
   Search,
   FileInput,
   Calculator,
+  Download,
 } from "lucide-react";
 import type { UserRole } from "@/types";
 import { isMedicalIndustry } from '@/lib/industries';
@@ -170,6 +171,7 @@ export const NAV_GROUPS_BO: NavGroup[] = [
         roles: ["business_owner"],
       },
       { navKey: "settings", href: "/settings", icon: Settings },
+      { navKey: "appUpdate", label: "App update", href: "/app-update", icon: Download },
     ],
   },
 ];
@@ -206,6 +208,7 @@ export const NAV_GROUPS_PO: NavGroup[] = [
     items: [
       { navKey: "notifications", href: "/notifications", icon: Bell },
       { navKey: "settings", href: "/settings", icon: Settings },
+      { navKey: "appUpdate", label: "App update", href: "/app-update", icon: Download },
     ],
   },
 ];

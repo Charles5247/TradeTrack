@@ -20,6 +20,7 @@ import { Logo } from "@/components/layout/logo";
 import { getNavGroupsForRole } from "@/components/layout/nav-config";
 import { isPosRoute } from "@/lib/utils/route-mode";
 import type { UserRole } from "@/types";
+import { useAndroidUpdate } from '@/lib/downloads/use-android-update';
 
 /**
  * Rebuilt per README §6.3 / design_files/shell.jsx's `Sidebar` +
@@ -53,6 +54,7 @@ export function Sidebar() {
   const { user } = useAuthStore();
   const { organization, industry } = useOrganization();
   const { t } = useI18n();
+  const { available: androidUpdateAvailable } = useAndroidUpdate();
 
   const [isMobile, setIsMobile] = useState(false);
   const forceCollapsed = isPosRoute(pathname ?? "");
@@ -201,7 +203,13 @@ export function Sidebar() {
                           {item.navKey === "notifications" && (
                             <NotificationBadge />
                           )}
+                          {item.navKey === "appUpdate" && androidUpdateAvailable && (
+                            <Badge variant="destructive" className="text-[10px] py-0 px-1.5 h-5">New</Badge>
+                          )}
                         </>
+                      )}
+                      {!sidebarOpen && item.navKey === "appUpdate" && androidUpdateAvailable && (
+                        <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" aria-label="Update available" />
                       )}
                     </Link>
                   );

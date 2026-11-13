@@ -15,7 +15,7 @@ it.each([375,1280])('presents all four grouped choices at %ipx with camera/galle
   await act(()=>root.render(<ImageUpload onImageUploaded={vi.fn()} onImageRemoved={vi.fn()} onProductMatched={vi.fn()} onCodeSelected={vi.fn()} />));
   await act(()=>host.querySelector<HTMLElement>('[role="button"]')!.click());
   const dialog=document.querySelector('[role="dialog"]')!;
-  expect(host.textContent).toContain('Take a photo');expect(host.textContent).toContain('Choose from gallery');expect(dialog.textContent).toContain('Scan barcode / QR');expect(dialog.textContent).toContain('Upload a photo');
+  expect(host.textContent).toContain('Take a photo');expect(host.textContent).toContain('Choose from gallery');expect(dialog.textContent).toContain('Scan barcode / QR');
   const link=dialog.querySelector('a')!;expect(link.getAttribute('href')).toBe('/imports');expect(link.getAttribute('target')).toBe('_blank');
   expect(host.querySelector('[aria-label="Take product photo"]')?.getAttribute('capture')).toBe('environment');
   expect(host.querySelector('[aria-label="Upload product photo"]')?.hasAttribute('capture')).toBe(false);
@@ -33,9 +33,7 @@ it('keeps gallery selection separate from capture and makes removal available wi
   await act(()=>root.render(<ImageUpload currentImageUrl="/test-product.png" onImageUploaded={vi.fn()} onImageRemoved={removed} onProductMatched={vi.fn()} onCodeSelected={vi.fn()} />));
   expect(host.querySelector('[aria-label="Remove image"]')).not.toBeNull();
   await act(()=>host.querySelector<HTMLButtonElement>('[aria-label="Replace image"]')!.click());
-  const gallery=vi.spyOn(host.querySelector<HTMLInputElement>('[aria-label="Upload product photo"]')!,'click').mockImplementation(()=>{});
-  await act(()=>Array.from(document.querySelectorAll('[role="dialog"] button')).find(b=>b.textContent?.includes('Upload a photo'))!.dispatchEvent(new MouseEvent('click',{bubbles:true})));
-  expect(gallery).toHaveBeenCalledOnce();
+  expect(document.querySelector<HTMLInputElement>('[aria-label="Choose product photo from menu"]')?.getAttribute('type')).toBe('file');
   await act(()=>host.querySelector<HTMLButtonElement>('[aria-label="Remove image"]')!.click());
   expect(removed).toHaveBeenCalledOnce();expect(host.querySelector('img')).toBeNull();
 });
@@ -47,6 +45,7 @@ it('updates the preview when the parent selects a different product image',async
   expect(host.querySelector('img')?.getAttribute('src')).toBe('/second.png');
 });
 it('opens the device camera on desktop and releases it when cancelled', async () => {
+  Object.defineProperty(window, 'matchMedia', { configurable: true, value: () => ({ matches: true }) });
   const stop = vi.fn();
   const getUserMedia = vi.fn().mockResolvedValue({ getTracks: () => [{ stop }] });
   Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getUserMedia } });
@@ -60,4 +59,14 @@ it('opens the device camera on desktop and releases it when cancelled', async ()
   expect(stop).toHaveBeenCalled();
   play.mockRestore();
   Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: undefined });
+});
+it('hides the webcam permission path on Android while keeping native camera and gallery inputs', async () => {
+  Object.defineProperty(navigator, 'userAgent', { configurable: true, value: 'Mozilla/5.0 (Linux; Android 14)' });
+  Object.defineProperty(window, 'matchMedia', { configurable: true, value: () => ({ matches: true }) });
+  await act(() => root.render(<ImageUpload onImageUploaded={vi.fn()} onImageRemoved={vi.fn()} onProductMatched={vi.fn()} onCodeSelected={vi.fn()} />));
+  await act(() => host.querySelector<HTMLElement>('[role="button"]')!.click());
+  expect(document.querySelector('[role="dialog"]')?.textContent).not.toContain('Use live camera');
+  expect(host.querySelector<HTMLInputElement>('[aria-label="Take product photo"]')?.getAttribute('capture')).toBe('environment');
+  expect(host.querySelector<HTMLInputElement>('[aria-label="Upload product photo"]')?.hasAttribute('capture')).toBe(false);
+  Object.defineProperty(navigator, 'userAgent', { configurable: true, value: 'Mozilla/5.0' });
 });
