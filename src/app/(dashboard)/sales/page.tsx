@@ -37,42 +37,45 @@ async function fetchSales(filters: {
   credit_status: 'all' | 'paid' | 'partial' | 'unpaid';
 }) {
   const supabase = createClient();
-  let query = supabase
-    .from('sales')
-    .select('*, cashier:users!sales_cashier_id_fkey(full_name), warehouse:warehouses(name), items:sale_items(id,quantity,product_name_snapshot), financial_reversals(kind)')
-    .order('created_at', { ascending: false });
-
-  if (filters.search) {
-    query = query.or(
-      `invoice_number.ilike.%${filters.search}%,customer_name.ilike.%${filters.search}%`
-    );
-  }
-  if (filters.payment_method && filters.payment_method !== 'all') query = query.eq('payment_method', filters.payment_method as import('@/lib/supabase/types').PaymentMethod);
-  if (filters.sale_type && filters.sale_type !== 'all') query = query.eq('sale_type', filters.sale_type);
-  if (filters.start_date) query = query.gte('created_at', filters.start_date);
-  if (filters.end_date) query = query.lte('created_at', filters.end_date + 'T23:59:59');
+  const makeLiveQuery = (items: string) => {
+    let query = supabase
+      .from('sales')
+      .select(`*, cashier:users!sales_cashier_id_fkey(full_name), warehouse:warehouses(name), items:sale_items(${items}), financial_reversals(kind)`)
+      .order('created_at', { ascending: false });
+    if (filters.search) query = query.or(`invoice_number.ilike.%${filters.search}%,customer_name.ilike.%${filters.search}%`);
+    if (filters.payment_method && filters.payment_method !== 'all') query = query.eq('payment_method', filters.payment_method as import('@/lib/supabase/types').PaymentMethod);
+    if (filters.sale_type && filters.sale_type !== 'all') query = query.eq('sale_type', filters.sale_type);
+    if (filters.start_date) query = query.gte('created_at', filters.start_date);
+    if (filters.end_date) query = query.lte('created_at', filters.end_date + 'T23:59:59');
+    return query;
+  };
 
   const historicalQuery = supabase
     .from('historical_sales' as never)
     .select('id,invoice_number,sold_at,total,amount_paid,payment_method,status,imported,created_at')
     .order('sold_at', { ascending: false });
-  const loadPages = async <T,>(builder: { range: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }> }): Promise<T[]> => {
+  const loadPages = async <T,>(builder: { range: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string; code?: string } | null }> }): Promise<T[]> => {
     const records: T[] = [];
     for (let offset = 0; ; offset += 500) {
       const { data, error } = await builder.range(offset, offset + 499);
-      if (error) throw new Error(error.message);
+      if (error) throw error;
       records.push(...(data || []));
       if (!data || data.length < 500) break;
     }
     return records;
   };
   const [data, historicalData] = await Promise.all([
-    loadPages(query),
+    loadPages(makeLiveQuery('id,quantity,product_name_snapshot')).catch(error => {
+      const failure = error as { code?: string; message?: string };
+      if (failure.code !== '42703' || !failure.message?.includes('product_name_snapshot')) throw error;
+      return loadPages(makeLiveQuery('id,quantity,product:products(name)'));
+    }),
     loadPages(historicalQuery),
   ]);
 
-  const reversalKinds = await loadVisibleReversals((data || []).map(sale => sale.id));
-  const liveSales = (data as unknown as (Sale & { financial_reversals?: { kind: string }[] })[])
+  const liveRows = data as unknown as (Sale & { financial_reversals?: { kind: string }[] })[];
+  const reversalKinds = await loadVisibleReversals(liveRows.map(sale => sale.id));
+  const liveSales = liveRows
     .map((sale) => {
       return { ...sale, status: effectiveSaleStatus(withReversalStatus(sale, reversalKinds)) } as Sale;
     })
@@ -275,9 +278,10 @@ function SalesPageInner() {
   const currentPage = Math.min(page, lastPage);
   const displayedSales = sales.slice(currentPage * 50, (currentPage + 1) * 50);
 
+  if (pageError) return <ErrorState title={copy('Could not load sales history')} body={pageError.message} onRetry={() => retryPage()} />;
+
   return (
     <div className="min-w-0 space-y-6">
-      {pageError && <ErrorState title={copy("Could not load this page")} body={pageError.message} onRetry={() => retryPage()} />}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="tt-page-title">{t.sales.title}</h1>

@@ -266,7 +266,7 @@ export default function AdminPage() {
         const rows: T[] = [];
         for (let offset = 0; ; offset += 500) {
           const { data, error } = await builder.range(offset, offset + 499);
-          if (error) throw new Error(error.message);
+          if (error) throw error;
           rows.push(...(data || []));
           if (!data || data.length < 500) break;
         }
@@ -276,7 +276,11 @@ export default function AdminPage() {
         loadAll(supabase.from('merchants').select('organization_id,business_name,contact_email').order('created_at')),
         loadAll(supabase.from('organizations').select('id,subscription_status,trial_ends_at').order('created_at')),
         loadAll(supabase.from('subscriptions').select('organization_id,status,expires_at').eq('status', 'active').order('expires_at', { ascending: false })),
-        loadAll(supabase.from('merchant_app_activity' as never).select('organization_id,last_opened_at').order('organization_id')),
+        loadAll(supabase.from('merchant_app_activity' as never).select('organization_id,last_opened_at').order('organization_id')).catch(error => {
+          const failure = error as { code?: string };
+          if (failure.code === '42P01' || failure.code === 'PGRST205') return [];
+          throw error;
+        }),
       ]);
       const orgById = new Map((organizations as Array<{ id: string; subscription_status: string; trial_ends_at: string | null }>).map(org => [org.id, org]));
       const paidOrgs = new Set((subscriptions as Array<{ organization_id: string; expires_at: string }>).filter(sub => new Date(sub.expires_at).getTime() > Date.now()).map(sub => sub.organization_id));

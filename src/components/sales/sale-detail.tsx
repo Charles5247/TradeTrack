@@ -80,14 +80,14 @@ function SaleRecord({ id }: { id: string }) {
     queryKey: ['sale-detail', user?.organization_id, id],
     enabled: Boolean(user?.organization_id),
     queryFn: async () => {
-      const { data, error } = await createClient()
-        .from('sales')
-        .select(
-          '*, cashier:users!sales_cashier_id_fkey(full_name), warehouse:warehouses(name), items:sale_items(id, quantity, unit_price, total, product_name_snapshot), financial_reversals(kind)',
-        )
-        .eq('organization_id', user!.organization_id!)
-        .eq('id', id)
-        .single();
+      const client = createClient();
+      const fetchDetail = (items: string) => client.from('sales')
+        .select(`*, cashier:users!sales_cashier_id_fkey(full_name), warehouse:warehouses(name), items:sale_items(${items}), financial_reversals(kind)`)
+        .eq('organization_id', user!.organization_id!).eq('id', id).single();
+      let { data, error } = await fetchDetail('id, quantity, unit_price, total, product_name_snapshot');
+      if (error?.code === '42703' && error.message.includes('product_name_snapshot')) {
+        ({ data, error } = await fetchDetail('id, quantity, unit_price, total, product:products(name, sku)'));
+      }
       if (error) throw error;
       const sale = data as unknown as SaleRecordData & { financial_reversals?: { kind: string }[] };
       const reversal = sale.financial_reversals?.find((entry) => ['void', 'refund', 'return'].includes(entry.kind));
@@ -200,7 +200,7 @@ function SaleRecord({ id }: { id: string }) {
                   {sale.items.map((item) => (
                     <TableRow key={item.id}>
                       <TableCell>
-                        {item.product_name_snapshot || 'Product unavailable'}
+                        {item.product_name_snapshot || item.product?.name || 'Product unavailable'}
                       </TableCell>
                       <TableCell>{item.quantity}</TableCell>
                       <TableCell>{formatCurrency(item.unit_price)}</TableCell>
