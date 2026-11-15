@@ -38,7 +38,7 @@ jobs:
           cat > notes.md <<'NOTES'
           Android APK update for TracKasuwa.
 
-          This update repairs Android product camera and gallery selection. Install over the existing app using the same signing identity. Sync queued sales and photos before updating. Do not uninstall: uninstalling removes local data.
+          This update lets Trackasuwa download future Android updates in the app and open the Android installer. It preserves the product camera and gallery selection fix. Install over the existing app using the same signing identity. Sync queued sales and photos before updating. Do not uninstall: uninstalling removes local data.
 
           The app opens https://trackasuwa.vercel.app/login. An internet connection is required for the first sign-in.
 

@@ -4,11 +4,18 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ClipData;
+import android.app.DownloadManager;
+import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.webkit.CookieManager;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -47,11 +54,22 @@ public class MainActivity extends Activity {
     // with a different domain".
     private static final String APP_URL = BuildConfig.APP_URL;
     private static final int FILE_CHOOSER_REQUEST_CODE = 1001;
+    private static final String UPDATE_ID_KEY = "update_download_id";
+    private static final String UPDATE_FILE_KEY = "update_file_name";
 
     private WebView webView;
     private ValueCallback<Uri[]> filePathCallback;
     private Uri cameraOutputUri;
     private File cameraOutputFile;
+    private final Handler updateHandler = new Handler(Looper.getMainLooper());
+    private boolean updatePolling;
+    private boolean installPermissionRequested;
+    private final Runnable updatePoll = new Runnable() {
+        @Override public void run() {
+            checkUpdateDownload();
+            if (updatePolling) updateHandler.postDelayed(this, 1500);
+        }
+    };
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -121,12 +139,12 @@ public class MainActivity extends Activity {
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                if (openApkDownloadInBrowser(url)) return true;
+                if (startApkUpdate(url)) return true;
                 return false;
             }
         });
         webView.setDownloadListener((url, userAgent, contentDisposition, mimeType, contentLength) -> {
-            if (!openApkDownloadInBrowser(url)) {
+            if (!startApkUpdate(url)) {
                 Toast.makeText(this, "Open this download in your browser.", Toast.LENGTH_LONG).show();
             }
         });
@@ -134,18 +152,101 @@ public class MainActivity extends Activity {
         webView.loadUrl(APP_URL);
     }
 
-    private boolean openApkDownloadInBrowser(String url) {
+    private boolean startApkUpdate(String url) {
         Uri uri = Uri.parse(url);
-        if (!"https".equals(uri.getScheme()) || !"github.com".equals(uri.getHost())
-                || !uri.getPath().matches("/[^/]+/[^/]+/releases/download/[^/]+/[^/]+\\.apk")) {
+        if (!"https".equals(uri.getScheme()) || !"github.com".equalsIgnoreCase(uri.getHost())
+                || uri.getUserInfo() != null || uri.getQuery() != null || uri.getFragment() != null
+                || !uri.getPath().matches("/Charles5247/TradeTrack/releases/download/v[0-9]+\\.[0-9]+\\.[0-9]+/TracKasuwa-[0-9]+\\.[0-9]+\\.[0-9]+\\.apk")) {
             return false;
         }
         try {
-            startActivity(new Intent(Intent.ACTION_VIEW, uri));
-        } catch (ActivityNotFoundException error) {
-            Toast.makeText(this, "No browser is available to download the update.", Toast.LENGTH_LONG).show();
+            if (getPreferences(MODE_PRIVATE).getLong(UPDATE_ID_KEY, -1) >= 0) {
+                Toast.makeText(this, "Update is already downloading.", Toast.LENGTH_SHORT).show();
+                startUpdatePolling();
+                return true;
+            }
+            String fileName = uri.getLastPathSegment();
+            File directory = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+            if (directory == null) throw new IllegalStateException("Update storage is unavailable");
+            File target = new File(directory, fileName);
+            if (target.exists() && !target.delete()) throw new IllegalStateException("Old update file cannot be replaced");
+            DownloadManager.Request request = new DownloadManager.Request(uri);
+            request.setTitle("Trackasuwa update " + fileName);
+            request.setMimeType("application/vnd.android.package-archive");
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
+            request.setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, fileName);
+            DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+            long id = manager.enqueue(request);
+            getPreferences(MODE_PRIVATE).edit().putLong(UPDATE_ID_KEY, id).putString(UPDATE_FILE_KEY, fileName).apply();
+            Toast.makeText(this, "Downloading update. Keep Trackasuwa open.", Toast.LENGTH_LONG).show();
+            startUpdatePolling();
+        } catch (Exception error) {
+            Toast.makeText(this, "Update could not start. Check your connection and try again.", Toast.LENGTH_LONG).show();
         }
         return true;
+    }
+
+    private void startUpdatePolling() {
+        if (updatePolling || getPreferences(MODE_PRIVATE).getLong(UPDATE_ID_KEY, -1) < 0) return;
+        updatePolling = true;
+        updateHandler.post(updatePoll);
+    }
+
+    private void checkUpdateDownload() {
+        long id = getPreferences(MODE_PRIVATE).getLong(UPDATE_ID_KEY, -1);
+        if (id < 0) return;
+        DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+        try (Cursor cursor = manager.query(new DownloadManager.Query().setFilterById(id))) {
+            if (cursor == null || !cursor.moveToFirst()) { clearUpdate(); return; }
+            int status = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS));
+            if (status == DownloadManager.STATUS_SUCCESSFUL) {
+                String fileName = getPreferences(MODE_PRIVATE).getString(UPDATE_FILE_KEY, "");
+                File file = new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), fileName);
+                if (file.length() > 0) offerInstall(file);
+                else { clearUpdate(); Toast.makeText(this, "Update download was empty. Try again.", Toast.LENGTH_LONG).show(); }
+            } else if (status == DownloadManager.STATUS_FAILED) {
+                clearUpdate();
+                Toast.makeText(this, "Update download failed. Check your connection and try again.", Toast.LENGTH_LONG).show();
+            }
+        } catch (Exception error) {
+            clearUpdate();
+            Toast.makeText(this, "Could not open the update. Try again.", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void offerInstall(File file) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !getPackageManager().canRequestPackageInstalls()) {
+            if (!installPermissionRequested) {
+                installPermissionRequested = true;
+                Toast.makeText(this, "Allow Trackasuwa to install this update, then return here.", Toast.LENGTH_LONG).show();
+                startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                        Uri.parse("package:" + getPackageName())));
+            }
+            return;
+        }
+        clearUpdate();
+        Uri apkUri = FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", file);
+        Intent install = new Intent(Intent.ACTION_VIEW);
+        install.setDataAndType(apkUri, "application/vnd.android.package-archive");
+        install.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        startActivity(install);
+    }
+
+    private void clearUpdate() {
+        updatePolling = false;
+        updateHandler.removeCallbacks(updatePoll);
+        getPreferences(MODE_PRIVATE).edit().remove(UPDATE_ID_KEY).remove(UPDATE_FILE_KEY).apply();
+    }
+
+    @Override protected void onResume() {
+        super.onResume();
+        startUpdatePolling();
+    }
+
+    @Override protected void onPause() {
+        updatePolling = false;
+        updateHandler.removeCallbacks(updatePoll);
+        super.onPause();
     }
 
     private Intent createCameraIntent() {

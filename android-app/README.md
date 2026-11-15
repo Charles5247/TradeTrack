@@ -11,18 +11,20 @@ APK update with the same signing key; do not uninstall an older app that may
 still hold unsynced sales or photos in its local storage.
 
 The app navigation checks `/api/version` for a newer signed Android APK.
-Push the 1.0.2 source to `main`. GitHub Actions **Build installers** then
+Push the 1.0.3 source to `main`. GitHub Actions **Build installers** then
 builds and signs the Android APK, and **Publish verified installers** runs
-after a successful build. The publisher creates `v1.0.2` with
-`TracKasuwa-1.0.2.apk`. The API checks that
+after a successful build. The publisher creates `v1.0.3` with
+`TracKasuwa-1.0.3.apk`. The API checks that
 exact asset before showing an update notice; it does not require a Vercel
-environment variable for this repair release. Future release URLs and versions
+environment variable for this release. Future release URLs and versions
 can use `TracKasuwa_ANDROID_LATEST_VERSION` and
 `TracKasuwa_ANDROID_DOWNLOAD_URL` (or `NEXT_PUBLIC_ANDROID_APK_URL`).
-The **App update** page provides an **Update app** button that opens the APK
-download. Android may ask for permission to install the downloaded update.
-Version 1.0.2 opens APK downloads in the browser directly. An older 1.0.1
-shell may still need the secondary copy-link fallback for this first update.
+The **App update** page provides an **Update app** button. Version 1.0.3
+downloads the release in the app and opens Android's installer; Android may
+ask once to allow Trackasuwa to install an update. The user must confirm the
+system installation. Version 1.0.2 opens APK links in the browser, so existing
+users need one browser-assisted installation to gain in-app updates. Version
+1.0.1 may need the copy-link fallback if its WebView cannot open APK links.
 
 ## Why a WebView wrapper (not React Native)?
 

@@ -47,6 +47,17 @@ describe('installer configuration', () => {
     vi.stubEnv('NEXT_PUBLIC_ANDROID_APK_URL', 'https://github.com/Charles5247/TradeTrack/releases/download/v1.0.1/TracKasuwa-1.0.1.apk');
     const info = await getDownloadInfo();
     expect(info.latest.android).toMatchObject({
+      version: '1.0.3',
+      download_url: 'https://github.com/Charles5247/TradeTrack/releases/download/v1.0.3/TracKasuwa-1.0.3.apk',
+    });
+  });
+
+  it('keeps the published 1.0.2 update available until 1.0.3 is released', async () => {
+    vi.stubGlobal('fetch', vi.fn((url: string) => Promise.resolve(new Response(null, {
+      status: url.includes('/v1.0.3/') ? 404 : 200,
+    }))));
+    const info = await getDownloadInfo();
+    expect(info.latest.android).toMatchObject({
       version: '1.0.2',
       download_url: 'https://github.com/Charles5247/TradeTrack/releases/download/v1.0.2/TracKasuwa-1.0.2.apk',
     });

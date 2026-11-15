@@ -1,7 +1,9 @@
 import { isNewerVersion } from './android-update';
 
-const PHOTO_FIX_VERSION = '1.0.2';
-const PHOTO_FIX_APK_URL = 'https://github.com/Charles5247/TradeTrack/releases/download/v1.0.2/TracKasuwa-1.0.2.apk';
+const CURRENT_ANDROID_VERSION = '1.0.3';
+const CURRENT_ANDROID_APK_URL = 'https://github.com/Charles5247/TradeTrack/releases/download/v1.0.3/TracKasuwa-1.0.3.apk';
+const PREVIOUS_ANDROID_VERSION = '1.0.2';
+const PREVIOUS_ANDROID_APK_URL = 'https://github.com/Charles5247/TradeTrack/releases/download/v1.0.2/TracKasuwa-1.0.2.apk';
 
 function safeHttpsUrl(value: string | undefined): string | null {
   if (!value?.trim()) return null;
@@ -47,15 +49,21 @@ async function verifyReleaseAsset(url: string | null, label: string): Promise<st
 
 export async function getDownloadInfo() {
   const configuredAndroidVersion = process.env.TracKasuwa_ANDROID_LATEST_VERSION || null;
-  const usePhotoFixRelease = !configuredAndroidVersion || isNewerVersion(PHOTO_FIX_VERSION, configuredAndroidVersion);
-  const androidVersion = usePhotoFixRelease ? PHOTO_FIX_VERSION : configuredAndroidVersion;
   const configuredAndroidUrl = process.env.NEXT_PUBLIC_ANDROID_APK_URL ?? process.env.TracKasuwa_ANDROID_DOWNLOAD_URL;
-  const androidReleaseUrl = usePhotoFixRelease || !configuredAndroidUrl ? PHOTO_FIX_APK_URL : configuredAndroidUrl;
-  const [androidUrl, windowsUrl] = await Promise.all([
-    verifyReleaseAsset(
-      releaseUrl(androidReleaseUrl, '.apk'),
-      'Android',
-    ),
+  const configuredIsNewer = configuredAndroidVersion && !isNewerVersion(CURRENT_ANDROID_VERSION, configuredAndroidVersion);
+  const androidCandidates = [
+    ...(configuredIsNewer && configuredAndroidUrl ? [{ version: configuredAndroidVersion, url: configuredAndroidUrl }] : []),
+    { version: CURRENT_ANDROID_VERSION, url: CURRENT_ANDROID_APK_URL },
+    { version: PREVIOUS_ANDROID_VERSION, url: PREVIOUS_ANDROID_APK_URL },
+  ];
+  const [androidRelease, windowsUrl] = await Promise.all([
+    (async () => {
+      for (const candidate of androidCandidates) {
+        const url = await verifyReleaseAsset(releaseUrl(candidate.url, '.apk'), 'Android');
+        if (url) return { version: candidate.version, url };
+      }
+      return null;
+    })(),
     verifyReleaseAsset(
       releaseUrl(process.env.NEXT_PUBLIC_WINDOWS_EXE_URL ?? process.env.TracKasuwa_WINDOWS_DOWNLOAD_URL, '.exe'),
       'Windows',
@@ -65,9 +73,9 @@ export async function getDownloadInfo() {
     api_version: process.env.NEXT_PUBLIC_APP_VERSION || '0.1.0',
     latest: {
       android: {
-        version: androidVersion,
+        version: androidRelease?.version ?? null,
         file_size: process.env.TracKasuwa_ANDROID_FILE_SIZE || null,
-        download_url: androidUrl,
+        download_url: androidRelease?.url ?? null,
         unknown_sources_help_url: safeHttpsUrl(process.env.TracKasuwa_ANDROID_UNKNOWN_SOURCES_HELP_URL),
       },
       windows: {
