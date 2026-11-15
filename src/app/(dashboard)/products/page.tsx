@@ -6,7 +6,7 @@ import { productVariantLabel } from '@/lib/industries';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Edit, Trash2, Package, MoreHorizontal, Eye, AlertTriangle, SlidersHorizontal } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Package, MoreHorizontal, Eye, AlertTriangle, SlidersHorizontal, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import { ErrorState } from '@/components/ui/error-state';
@@ -268,10 +268,13 @@ function ProductsPageInner() {
           <h1 className="tt-page-title">{t.products.title}</h1>
           <p className="tt-muted text-sm mt-1">{products.length} product types · {products.reduce((sum, product) => sum + totalStock(product), 0)} individual units in stock</p>
         </div>
-        {canManageStock && <Button onClick={() => { setEditProduct(null); setIsFormOpen(true); }}>
-          <Plus className="h-4 w-4" strokeWidth={1.75} />
-          {t.products.add_product}
-        </Button>}
+        {canManageStock && <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline"><a href="/api/products/export" onClick={event => { if (isOffline()) { event.preventDefault(); toast.error(copy('Connect to the internet to export the full product list.')); } }}><Download className="h-4 w-4" strokeWidth={1.75} />{copy('Export products CSV')}</a></Button>
+          <Button onClick={() => { setEditProduct(null); setIsFormOpen(true); }}>
+            <Plus className="h-4 w-4" strokeWidth={1.75} />
+            {t.products.add_product}
+          </Button>
+        </div>}
       </div>
 
       {/* Filters */}

@@ -1,8 +1,9 @@
 import { isNewerVersion } from './android-update';
 
-const CURRENT_ANDROID_VERSION = '1.0.4';
-const CURRENT_ANDROID_APK_URL = 'https://github.com/Charles5247/TradeTrack/releases/download/v1.0.4/TracKasuwa-1.0.4.apk';
+const CURRENT_ANDROID_VERSION = '1.0.5';
+const CURRENT_ANDROID_APK_URL = 'https://github.com/Charles5247/TradeTrack/releases/download/v1.0.5/TracKasuwa-1.0.5.apk';
 const PREVIOUS_ANDROID_RELEASES = [
+  { version: '1.0.4', url: 'https://github.com/Charles5247/TradeTrack/releases/download/v1.0.4/TracKasuwa-1.0.4.apk' },
   { version: '1.0.3', url: 'https://github.com/Charles5247/TradeTrack/releases/download/v1.0.3/TracKasuwa-1.0.3.apk' },
   { version: '1.0.2', url: 'https://github.com/Charles5247/TradeTrack/releases/download/v1.0.2/TracKasuwa-1.0.2.apk' },
 ];

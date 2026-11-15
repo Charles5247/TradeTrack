@@ -157,12 +157,42 @@ public class MainActivity extends Activity {
             }
         });
         webView.setDownloadListener((url, userAgent, contentDisposition, mimeType, contentLength) -> {
-            if (!startApkUpdate(url)) {
+            if (!startApkUpdate(url) && !startProductExport(url, userAgent)) {
                 Toast.makeText(this, "Open this download in your browser.", Toast.LENGTH_LONG).show();
             }
         });
 
         webView.loadUrl(APP_URL);
+    }
+
+    private boolean startProductExport(String url, String userAgent) {
+        Uri uri = Uri.parse(url);
+        Uri app = Uri.parse(APP_URL);
+        if (!"https".equals(uri.getScheme()) || !app.getHost().equalsIgnoreCase(uri.getHost())
+                || uri.getUserInfo() != null || uri.getPort() != app.getPort()
+                || !"/api/products/export".equals(uri.getPath())
+                || uri.getQuery() != null || uri.getFragment() != null) return false;
+        try {
+            DownloadManager.Request request = new DownloadManager.Request(uri);
+            String cookies = CookieManager.getInstance().getCookie(url);
+            if (cookies != null) request.addRequestHeader("Cookie", cookies);
+            if (userAgent != null) request.addRequestHeader("User-Agent", userAgent);
+            request.setMimeType("text/csv");
+            request.setTitle("Trackasuwa product list");
+            request.setDescription("Exporting products");
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS,
+                        "Trackasuwa-products-" + new SimpleDateFormat("yyyy-MM-dd-HHmmss", Locale.US).format(new Date()) + ".csv");
+            }
+            DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+            if (manager == null) throw new IllegalStateException("Downloads unavailable");
+            manager.enqueue(request);
+            Toast.makeText(this, "Saving product list to Downloads", Toast.LENGTH_LONG).show();
+        } catch (Exception error) {
+            Toast.makeText(this, "Could not save product list. Try again online.", Toast.LENGTH_LONG).show();
+        }
+        return true;
     }
 
     private boolean startApkUpdate(String url) {

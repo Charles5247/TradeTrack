@@ -38,7 +38,7 @@ jobs:
           cat > notes.md <<'NOTES'
           Android APK update for TracKasuwa.
 
-          This update adds a launcher notification badge where Android and the device launcher support it. It preserves in-app APK updates and product camera and gallery selection. Install over the existing app using the same signing identity. Sync queued sales and photos before updating. Do not uninstall: uninstalling removes local data.
+          This update lets Android merchants export their product list to Downloads. It preserves in-app APK updates, the launcher notification badge, and product camera and gallery selection. Install over the existing app using the same signing identity. Sync queued sales and photos before updating. Do not uninstall: uninstalling removes local data.
 
           The app opens https://trackasuwa.vercel.app/login. An internet connection is required for the first sign-in.
 
