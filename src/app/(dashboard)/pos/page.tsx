@@ -52,7 +52,7 @@ import {
 import { AccessGuard } from "@/components/shared/access-guard";
 import { downloadReceiptPDF } from "@/lib/pdf/receipt-pdf";
 import { Receipt } from "@/components/pos/receipt";
-import { getAllFromOfflineDB } from "@/lib/offline/db";
+import { getAllFromOfflineDB, saveToOfflineDB } from "@/lib/offline/db";
 import { persistOfflineSale } from "@/lib/offline/sales";
 import { generateId } from "@/lib/utils/id";
 import { requireOnline } from "@/lib/utils/network";
@@ -293,7 +293,9 @@ function POSPageInner() {
       const cached = () => getAllFromOfflineDB<{ id: string; name: string }>('categories');
       if (!navigator.onLine) return cached();
       const { data, error } = await createClient().from('categories').select('id,name').order('name');
-      return error ? cached() : data || [];
+      if (error) return cached();
+      if (data?.length) await saveToOfflineDB('categories', data);
+      return data || [];
     },
     enabled: Boolean(user?.organization_id),
   });
@@ -615,6 +617,7 @@ function POSPageInner() {
           <Select
             value={isHydrated ? cart.warehouse_id : ""}
             onValueChange={cart.setWarehouse}
+            disabled={user?.role !== 'business_owner'}
           >
             <SelectTrigger className="h-[52px] w-full sm:w-56 text-sm">
               <SelectValue placeholder={t.pos.select_warehouse} />

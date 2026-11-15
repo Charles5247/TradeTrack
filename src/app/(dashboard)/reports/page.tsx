@@ -47,26 +47,31 @@ async function fetchReport(period: ReportPeriod, fromDate: string, toDate: strin
   const endDate = period === 'custom' ? new Date(`${toDate}T00:00:00`) : new Date(now.getFullYear(), now.getMonth(), now.getDate());
   endDate.setDate(endDate.getDate() + 1);
 
-  const [salesData, topProductsData] = await Promise.all([
-    supabase
-      .from('sales')
-      .select('id,total,subtotal,discount,tax,payment_method,status,created_at,financial_reversals(kind)')
-      .gte('created_at', startDate.toISOString())
-      .lt('created_at', endDate.toISOString())
-      .eq('status', 'completed'),
-    supabase
-      .from('sale_items')
-      .select('sale_id,product_id,quantity,total,unit_price,cost_price,product:products(name,sku)')
-      .gte('created_at', startDate.toISOString())
-      .lt('created_at', endDate.toISOString())
-      .limit(200),
-  ]);
-
-  const queryError = [salesData, topProductsData].find(result => result.error)?.error;
-  if (queryError) throw new Error(queryError.message);
-  const sales = ((salesData.data || []) as unknown as Array<{ id: string; total: number; status: string; created_at: string; payment_method: string; financial_reversals?: { kind: string }[] }>).filter(countsAsCompletedSale);
+  const salesRows: Array<{ id: string; total: number; status: string; created_at: string; payment_method: string; financial_reversals?: { kind: string }[] }> = [];
+  const itemRows: Array<{ sale_id: string; product_id: string; quantity: number; total: number; cost_price: number | null; product: { name?: string } | null }> = [];
+  for (let offset = 0; ; offset += 1000) {
+    const { data, error } = await supabase.from('sales')
+      .select('id,total,payment_method,status,created_at,financial_reversals(kind)')
+      .gte('created_at', startDate.toISOString()).lt('created_at', endDate.toISOString())
+      .eq('status', 'completed').order('id').range(offset, offset + 999);
+    if (error) throw new Error(error.message);
+    salesRows.push(...((data || []) as unknown as typeof salesRows));
+    if (!data || data.length < 1000) break;
+  }
+  const sales = salesRows.filter(countsAsCompletedSale);
   const completedSaleIds = new Set(sales.map(sale => sale.id));
-  const items = (topProductsData.data || []).filter(item => completedSaleIds.has(item.sale_id));
+  const saleIds = [...completedSaleIds];
+  for (let batch = 0; batch < saleIds.length; batch += 200) {
+    for (let offset = 0; ; offset += 1000) {
+      const { data, error } = await supabase.from('sale_items')
+        .select('sale_id,product_id,quantity,total,cost_price,product:products(name)')
+        .in('sale_id', saleIds.slice(batch, batch + 200)).order('id').range(offset, offset + 999);
+      if (error) throw new Error(error.message);
+      itemRows.push(...(data || []) as unknown as typeof itemRows);
+      if (!data || data.length < 1000) break;
+    }
+  }
+  const items = itemRows;
 
   const totalRevenue = sales.reduce((s, r) => s + r.total, 0);
   const totalCost = items.reduce((s, i) => s + (i.cost_price || 0) * i.quantity, 0);

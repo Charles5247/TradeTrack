@@ -47,3 +47,17 @@ it('records provider failures without executing an import', async () => {
   expect((await POST(request({ action: 'inventory', text: 'Rice 5 100' }))).status).toBe(400);
   expect(mock.rpc).toHaveBeenLastCalledWith('finish_ai_job', { job: 'job-1', output: { error: 'Generation failed' }, failed: true });
 });
+it('keeps photo and voice stock extraction as owner-reviewed drafts', async () => {
+  const mapInventoryImage = vi.fn().mockResolvedValue([{ name: 'Rice', opening_stock: '5' }]);
+  const transcribeInventoryAudio = vi.fn().mockResolvedValue('Rice 5 100');
+  const mapInventory = vi.fn().mockResolvedValue([{ name: 'Rice', opening_stock: '5' }]);
+  mock.provider.mockReturnValue({ stub: false, mapInventoryImage, transcribeInventoryAudio, mapInventory });
+  const image = await POST(request({ action: 'inventory_image', image: 'data:image/jpeg;base64,YWJj' }));
+  expect(image.status).toBe(200);
+  expect((await image.json()).rows).toEqual([{ name: 'Rice', opening_stock: '5' }]);
+  const voice = await POST(request({ action: 'inventory_audio', audio: 'data:audio/webm;base64,YWJj' }));
+  expect(voice.status).toBe(200);
+  expect(transcribeInventoryAudio).toHaveBeenCalledOnce();
+  expect(mapInventory).toHaveBeenCalledWith('Rice 5 100');
+  expect(mock.rpc.mock.calls.filter(([name]) => name === 'approve_ai_job')).toHaveLength(0);
+});

@@ -20,3 +20,18 @@ it('does not expose provider error bodies or credentials', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('secret diagnostic', { status: 401 })));
   await expect(new OpenAIProvider('secret-key').mapInventory('Rice')).rejects.toThrow('configuration');
 });
+it('sends stock-list photos as private vision input for a draft', async () => {
+  const fetcher = vi.fn().mockResolvedValue(completed({ rows: [] }));
+  vi.stubGlobal('fetch', fetcher);
+  await new OpenAIProvider('test-key').mapInventoryImage('data:image/jpeg;base64,YWJj');
+  const body = JSON.parse(fetcher.mock.calls[0][1].body);
+  expect(body.store).toBe(false);
+  expect(body.input[0].content[1]).toMatchObject({ type: 'input_image', image_url: 'data:image/jpeg;base64,YWJj' });
+});
+it('transcribes a voice list without logging or saving the recording', async () => {
+  const fetcher = vi.fn().mockResolvedValue(Response.json({ text: 'Rice 5 bags' }));
+  vi.stubGlobal('fetch', fetcher);
+  expect(await new OpenAIProvider('test-key').transcribeInventoryAudio('data:audio/webm;base64,YWJj')).toBe('Rice 5 bags');
+  expect(fetcher.mock.calls[0][0]).toBe('https://api.openai.com/v1/audio/transcriptions');
+  expect(fetcher.mock.calls[0][1].body).toBeInstanceOf(FormData);
+});

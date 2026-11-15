@@ -6,7 +6,7 @@ const mocks=vi.hoisted(()=>({mutate:vi.fn(),invalidate:vi.fn(),update:vi.fn(),re
 vi.mock('@/components/shared/access-guard',()=>({AccessGuard:({children}:any)=>children}));
 vi.mock('@/store',()=>({useAuthStore:(selector?:any)=>selector?selector({user:{id:'owner',organization_id:'org',role:'business_owner'}}):{user:{id:'owner',organization_id:'org',role:'business_owner'}},useNotificationStore:(selector:any)=>selector({setUnreadCount:vi.fn(),decrementUnread:vi.fn()})}));
 vi.mock('@/hooks/use-realtime-sync',()=>({useRealtimeSync:vi.fn()}));
-vi.mock('@/lib/supabase/client',()=>({createClient:()=>({from:()=>{const q:any={};for(const name of ['select','gte','lt','eq','limit'])q[name]=()=>q;q.then=(resolve:any)=>Promise.resolve({data:null,error:{message:'Report unavailable'}}).then(resolve);return q;}})}));
+vi.mock('@/lib/supabase/client',()=>({createClient:()=>({from:()=>{const q:any={};for(const name of ['select','gte','lt','eq','in','order','range'])q[name]=()=>q;q.then=(resolve:any)=>Promise.resolve({data:null,error:{message:'Report unavailable'}}).then(resolve);return q;}})}));
 vi.mock('@/components/imports/import-workbench',()=>({ImportWorkbench:()=>null}));
 vi.mock('@/i18n',()=>({useI18n:()=>({t:{notifications:new Proxy({},{get:(_t,k)=>String(k)})}})}));
 vi.mock('@tanstack/react-query',()=>({

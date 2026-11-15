@@ -118,7 +118,7 @@ async function deleteProduct(id: string) {
 
 export default function ProductsPage() {
   return (
-    <AccessGuard allow={['business_owner', 'admin', 'cashier']}>
+    <AccessGuard allow={['business_owner', 'admin']}>
       <ProductsPageInner />
     </AccessGuard>
   );
