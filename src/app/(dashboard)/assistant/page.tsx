@@ -51,7 +51,18 @@ export default function AssistantPage() {
   const [proposal, setProposal] = useState<{ job: string; rows: ImportRow[] } | null>(null);
   const [report, setReport] = useState<{ job: string; insights: Insight[] } | null>(null);
   const [channel, setChannel] = useState<'in_app' | 'email' | 'sms'>('in_app'); const [notice, setNotice] = useState('');
-  useEffect(() => { void fetch('/api/ai').then(async r => { const data = await r.json(); if (!r.ok) throw new Error(data.error); setStatus(data); setPreferences(data.preferences); }).catch(e => setError(e.message)); }, []);
+  useEffect(() => {
+    void fetch('/api/ai').then(async r => { const data = await r.json(); if (!r.ok) throw new Error(data.error); setStatus(data); setPreferences(data.preferences); }).catch(e => setError(e.message));
+    const job = window.localStorage.getItem('trackasuwa.ai.stockJob');
+    if (job) void fetch(`/api/ai/stock-receipts?job=${encodeURIComponent(job)}`)
+      .then(async response => { const data = await response.json(); if (!response.ok) throw new Error(data.error); return data; })
+      .then(data => { if (Array.isArray(data.rows)) setProposal({ job, rows: data.rows }); })
+      .catch(() => window.localStorage.removeItem('trackasuwa.ai.stockJob'));
+  }, []);
+  const rememberProposal = (result: { job: string; rows: ImportRow[] }) => {
+    window.localStorage.setItem('trackasuwa.ai.stockJob', result.job);
+    setProposal(result);
+  };
   const run = async (action: () => Promise<void>) => { setBusy(true); setError(''); setNotice(''); try { await action(); } catch (e) { setError(e instanceof Error ? e.message : 'Assistant unavailable'); } finally { setBusy(false); } };
   return <AccessGuard allow={['business_owner']}><div className="min-w-0 space-y-6 [&_button]:max-w-full [&_button]:whitespace-normal [&_button]:h-auto [&_button]:min-h-11 [&_button]:py-2">
     <h1 className="tt-page-title"><TranslatedText text={"TracKasuwa assistant"} /></h1>
@@ -62,11 +73,11 @@ export default function AssistantPage() {
       <legend className="tt-section-title px-2"><TranslatedText text={"Stock receiving draft"} /></legend><p>Paste a list, upload a spreadsheet, photo or voice recording. Review every product, quantity and cost before saving stock.</p>
       <Input aria-label={copy("Product CSV or Excel file")} type="file" accept=".csv,.xlsx" onChange={e => { const file = e.target.files?.[0]; if (file) void run(async () => { const rows = await parseImportFile(file); const headers = Array.from(new Set(rows.flatMap(Object.keys))); setText([headers.join('\t'), ...rows.map(row => headers.map(h => String(row[h] ?? '').replace(/[\t\r\n]/g,' ')).join('\t'))].join('\n')); }); }} />
       {status?.stub ? <p className="text-sm text-muted-foreground">Photo and voice extraction need a live AI provider configured on the server.</p> : <div className="grid gap-3 sm:grid-cols-2">
-        <label className="text-sm">Stock-list photo <Input aria-label="Stock-list photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={e => { const file = e.target.files?.[0]; if (file) void run(async () => setProposal(await call({ action: 'inventory_image', image: await stockPhotoDataUrl(file) }))); }} /></label>
-        <label className="text-sm">Voice stock list <Input aria-label="Voice stock list" type="file" accept="audio/webm,audio/mp4,audio/mpeg,audio/ogg,audio/wav,audio/x-m4a" onChange={e => { const file = e.target.files?.[0]; if (file) void run(async () => { if (file.size > 2_000_000) throw new Error('Voice recording must be under 2 MB.'); setProposal(await call({ action: 'inventory_audio', audio: await fileDataUrl(file) })); }); }} /></label>
+        <label className="text-sm">Stock-list photo <Input aria-label="Stock-list photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={e => { const file = e.target.files?.[0]; if (file) void run(async () => rememberProposal(await call({ action: 'inventory_image', image: await stockPhotoDataUrl(file) }))); }} /></label>
+        <label className="text-sm">Voice stock list <Input aria-label="Voice stock list" type="file" accept="audio/webm,audio/mp4,audio/mpeg,audio/ogg,audio/wav,audio/x-m4a" onChange={e => { const file = e.target.files?.[0]; if (file) void run(async () => { if (file.size > 2_000_000) throw new Error('Voice recording must be under 2 MB.'); rememberProposal(await call({ action: 'inventory_audio', audio: await fileDataUrl(file) })); }); }} /></label>
       </div>}
       <Textarea aria-label={copy("Messy product data")}  rows={7} value={text} onChange={e => setText(e.target.value)} />
-      <Button  onClick={() => void run(async () => setProposal(await call({ action: 'inventory', text })))}><TranslatedText text={"Propose mapped rows"} /></Button>
+      <Button  onClick={() => void run(async () => rememberProposal(await call({ action: 'inventory', text })))}><TranslatedText text={"Propose mapped rows"} /></Button>
     </fieldset>
     {proposal && <StockReceivingReview key={proposal.job} job={proposal.job} rows={proposal.rows} />}
     <fieldset id="insights" disabled={busy || !status} className="min-w-0 space-y-4 rounded-[var(--radius-lg)] border border-border bg-card p-4 sm:p-6"><legend className="tt-section-title px-2"><TranslatedText text={"Business insights"} /></legend>
