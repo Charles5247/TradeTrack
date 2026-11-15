@@ -22,11 +22,21 @@ import { NotificationSync } from './notification-sync';
 
 it('shows unread notifications when staff enter the dashboard', async () => {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+  const setAppBadge = vi.fn().mockResolvedValue(undefined);
+  const nativeBadge = { setCount: vi.fn() };
+  Object.assign(navigator, { setAppBadge });
+  Object.assign(window, { TrackasuwaBadge: nativeBadge });
   const host = document.createElement('div');
   const root = createRoot(host);
   try {
     await act(async () => { root.render(<NotificationSync />); });
     expect(setUnreadCount).toHaveBeenCalledWith(2);
+    expect(setAppBadge).toHaveBeenCalledWith(2);
+    expect(nativeBadge.setCount).toHaveBeenCalledWith(2);
     expect(announce).toHaveBeenCalledWith('You have 2 unread notifications.', expect.objectContaining({ action: expect.objectContaining({ label: 'View' }) }));
-  } finally { await act(async () => root.unmount()); }
+  } finally {
+    await act(async () => root.unmount());
+    Object.assign(navigator, { setAppBadge: undefined });
+    delete (window as Window & { TrackasuwaBadge?: unknown }).TrackasuwaBadge;
+  }
 });

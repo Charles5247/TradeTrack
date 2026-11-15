@@ -25,6 +25,11 @@ ask once to allow Trackasuwa to install an update. The user must confirm the
 system installation. Version 1.0.2 opens APK links in the browser, so existing
 users need one browser-assisted installation to gain in-app updates. Version
 1.0.1 may need the copy-link fallback if its WebView cannot open APK links.
+Version 1.0.4 also posts a quiet unread-summary notification so Android
+launchers that display numeric badges can show the unread count. Android 13+
+asks for notification permission. Some launchers display a dot rather than a
+number. The count refreshes while the app can sync; background delivery after
+the app is closed requires a future push-notification service.
 
 ## Why a WebView wrapper (not React Native)?
 

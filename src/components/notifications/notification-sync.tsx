@@ -6,6 +6,14 @@ import { createClient } from '@/lib/supabase/client';
 import { useAuthStore, useNotificationStore } from '@/store';
 import { playAlertSound, showDesktopAlert } from '@/lib/notifications/desktop';
 
+function updateAppBadge(count: number) {
+  const badge = navigator as Navigator & { clearAppBadge?: () => Promise<void> };
+  const native = window as Window & { TrackasuwaBadge?: { setCount: (value: number) => void } };
+  if (count > 0) void badge.setAppBadge?.(count)?.catch(() => {});
+  else void badge.clearAppBadge?.()?.catch(() => {});
+  native.TrackasuwaBadge?.setCount(count);
+}
+
 /** Keeps the global bell accurate with Realtime and a polling fallback. */
 export function NotificationSync() {
   const user = useAuthStore(state => state.user);
@@ -27,12 +35,10 @@ export function NotificationSync() {
         if (result.error.code === '42703' || result.error.message.includes('in_app_visible')) hasVisibilityColumn = false;
         result = await supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('is_read', false);
       }
-      if (result.error) {
-        result = await supabase.from('notifications').select('id', { count: 'exact', head: true });
-      }
       if (!disposed && !result.error) {
         const next = result.count || 0;
         setUnreadCount(next);
+        updateAppBadge(next);
         localStorage.setItem(storageKey, String(next));
         if (!announced) {
           announced = true;
@@ -61,7 +67,9 @@ export function NotificationSync() {
           knownIds = new Set(rows.map(item => item.id));
         }
       } else if (!disposed) {
-        setUnreadCount(Number(localStorage.getItem(storageKey) || 0));
+        const cached = Number(localStorage.getItem(storageKey) || 0);
+        setUnreadCount(cached);
+        updateAppBadge(cached);
       }
     };
     void refresh();
@@ -75,6 +83,7 @@ export function NotificationSync() {
     window.addEventListener('online', reconnect);
     return () => {
       disposed = true;
+      updateAppBadge(0);
       window.clearInterval(timer);
       window.removeEventListener('online', reconnect);
       void supabase.removeChannel(channel);

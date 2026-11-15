@@ -47,13 +47,48 @@ async function fetchNotifications(page: number, filter: string, eventType: strin
   const inventoryTypes = ['low_stock','out_of_stock','stock_in','stock_adjustment','pending_transfer'];
   const paymentTypes = ['pending_payment','payment_confirmed','payment_failed','subscription_expiry'];
 
-  return ((result.data || []) as Notification[]).filter((notification) => {
+  const visible = ((result.data || []) as Notification[]).filter((notification) => {
     if (filter === 'unread' && notification.is_read) return false;
     if (filter === 'inventory' && !inventoryTypes.includes(notification.type)) return false;
     if (filter === 'payments' && !paymentTypes.includes(notification.type)) return false;
     if (eventType !== 'all' && notification.type !== eventType) return false;
     if (staffId !== 'all' && notification.staff_user_id !== staffId) return false;
     return notification.in_app_visible !== false;
+  });
+  const productIds = [...new Set(visible.filter(n => ['stock_adjustment', 'stock_in', 'low_stock', 'out_of_stock'].includes(n.type))
+    .map(n => String(n.data?.product_id || n.entity_id || '')).filter(Boolean))];
+  const warehouseIds = [...new Set(visible.map(n => String(n.data?.warehouse_id || '')).filter(Boolean))];
+  const saleIds = visible.filter(n => n.type === 'sale_made').map(n => n.entity_id).filter((id): id is string => Boolean(id));
+  const [products, warehouses, saleItems] = await Promise.all([
+    productIds.length ? supabase.from('products').select('id,name').in('id', productIds) : Promise.resolve({ data: [] }),
+    warehouseIds.length ? supabase.from('warehouses').select('id,name').in('id', warehouseIds) : Promise.resolve({ data: [] }),
+    saleIds.length ? supabase.from('sale_items').select('sale_id,quantity,product:products(name)').in('sale_id', saleIds).limit(1000) : Promise.resolve({ data: [] }),
+  ]);
+  const productNames = new Map((products.data || []).map(p => [p.id, p.name]));
+  const warehouseNames = new Map((warehouses.data || []).map(w => [w.id, w.name]));
+  const sold = new Map<string, string[]>();
+  for (const item of (saleItems.data || []) as unknown as { sale_id: string; quantity: number; product: { name: string } | null }[]) {
+    const list = sold.get(item.sale_id) || [];
+    list.push(`${item.product?.name || 'Product'} × ${item.quantity}`);
+    sold.set(item.sale_id, list);
+  }
+  return visible.map(notification => {
+    const product = productNames.get(String(notification.data?.product_id || notification.entity_id || ''));
+    const warehouse = warehouseNames.get(String(notification.data?.warehouse_id || ''));
+    const location = warehouse ? ` at ${warehouse}` : '';
+    const quantity = Number(notification.data?.quantity);
+    if (product && Number.isFinite(quantity) && ['stock_adjustment', 'stock_in'].includes(notification.type)) {
+      const removed = notification.data?.movement_type === 'out' || quantity < 0;
+      return { ...notification, message: `${product}${location}: ${Math.abs(quantity)} unit(s) ${removed ? 'removed' : 'added'}.` };
+    }
+    if (product && Number.isFinite(quantity) && ['low_stock', 'out_of_stock'].includes(notification.type)) {
+      return { ...notification, message: `${product}${location}: ${quantity} unit(s) remaining${Number.isFinite(Number(notification.data?.min_stock_level)) ? `; alert level ${notification.data?.min_stock_level}` : ''}.` };
+    }
+    const items = notification.entity_id ? sold.get(notification.entity_id) : undefined;
+    if (notification.type === 'sale_made' && items?.length && !notification.message.includes('Products:')) {
+      return { ...notification, message: `${notification.message} Products: ${items.slice(0, 4).join(', ')}${items.length > 4 ? ` and ${items.length - 4} more` : ''}.` };
+    }
+    return notification;
   });
 }
 
@@ -99,6 +134,7 @@ export default function NotificationsPage() {
   const [page, setPage] = useState(0);
   const setUnreadCount = useNotificationStore(state => state.setUnreadCount);
   const decrementUnread = useNotificationStore(state => state.decrementUnread);
+  const unreadCount = useNotificationStore(state => state.unreadCount);
 
   const { data: notifications = [], isLoading, error, refetch } = useQuery({
     queryKey: ['notifications', page, filter, eventType, staffId],
@@ -151,8 +187,6 @@ export default function NotificationsPage() {
     },
     onSuccess: () => { decrementUnread(); queryClient.invalidateQueries({ queryKey: ['notifications'] }); },
   });
-
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   const visible = notifications;
   return (

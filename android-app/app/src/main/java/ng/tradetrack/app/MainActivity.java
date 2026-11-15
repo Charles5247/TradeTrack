@@ -2,10 +2,15 @@ package ng.TracKasuwa.app;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.app.DownloadManager;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -17,6 +22,7 @@ import android.os.Looper;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.webkit.CookieManager;
+import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
@@ -56,6 +62,8 @@ public class MainActivity extends Activity {
     private static final int FILE_CHOOSER_REQUEST_CODE = 1001;
     private static final String UPDATE_ID_KEY = "update_download_id";
     private static final String UPDATE_FILE_KEY = "update_file_name";
+    private static final String BADGE_CHANNEL = "trackasuwa_unread";
+    private static final int BADGE_NOTIFICATION_ID = 2401;
 
     private WebView webView;
     private ValueCallback<Uri[]> filePathCallback;
@@ -78,6 +86,11 @@ public class MainActivity extends Activity {
 
         webView = new WebView(this);
         setContentView(webView);
+        webView.addJavascriptInterface(new Object() {
+            @JavascriptInterface public void setCount(int count) {
+                runOnUiThread(() -> updateUnreadBadge(Math.max(0, Math.min(count, 999))));
+            }
+        }, "TrackasuwaBadge");
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
@@ -236,6 +249,43 @@ public class MainActivity extends Activity {
         updatePolling = false;
         updateHandler.removeCallbacks(updatePoll);
         getPreferences(MODE_PRIVATE).edit().remove(UPDATE_ID_KEY).remove(UPDATE_FILE_KEY).apply();
+    }
+
+    private void updateUnreadBadge(int count) {
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (count == 0) {
+            manager.cancel(BADGE_NOTIFICATION_ID);
+            return;
+        }
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            if (!getPreferences(MODE_PRIVATE).getBoolean("badge_permission_asked", false)) {
+                getPreferences(MODE_PRIVATE).edit().putBoolean("badge_permission_asked", true).apply();
+                requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 2402);
+            }
+            return;
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(BADGE_CHANNEL, "Unread Trackasuwa alerts", NotificationManager.IMPORTANCE_LOW);
+            channel.setShowBadge(true);
+            manager.createNotificationChannel(channel);
+        }
+        Intent open = new Intent(this, MainActivity.class);
+        open.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent pending = PendingIntent.getActivity(this, 0, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        Notification.Builder builder = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                ? new Notification.Builder(this, BADGE_CHANNEL) : new Notification.Builder(this);
+        builder.setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle("Trackasuwa")
+                .setContentText(count + " unread notification" + (count == 1 ? "" : "s"))
+                .setContentIntent(pending).setAutoCancel(false).setOnlyAlertOnce(true).setNumber(count);
+        manager.notify(BADGE_NOTIFICATION_ID, builder.build());
+    }
+
+    @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 2402 && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED && webView != null) {
+            webView.evaluateJavascript("window.dispatchEvent(new Event('online'))", null);
+        }
     }
 
     @Override protected void onResume() {

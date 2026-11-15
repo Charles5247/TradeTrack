@@ -1,9 +1,11 @@
 import { isNewerVersion } from './android-update';
 
-const CURRENT_ANDROID_VERSION = '1.0.3';
-const CURRENT_ANDROID_APK_URL = 'https://github.com/Charles5247/TradeTrack/releases/download/v1.0.3/TracKasuwa-1.0.3.apk';
-const PREVIOUS_ANDROID_VERSION = '1.0.2';
-const PREVIOUS_ANDROID_APK_URL = 'https://github.com/Charles5247/TradeTrack/releases/download/v1.0.2/TracKasuwa-1.0.2.apk';
+const CURRENT_ANDROID_VERSION = '1.0.4';
+const CURRENT_ANDROID_APK_URL = 'https://github.com/Charles5247/TradeTrack/releases/download/v1.0.4/TracKasuwa-1.0.4.apk';
+const PREVIOUS_ANDROID_RELEASES = [
+  { version: '1.0.3', url: 'https://github.com/Charles5247/TradeTrack/releases/download/v1.0.3/TracKasuwa-1.0.3.apk' },
+  { version: '1.0.2', url: 'https://github.com/Charles5247/TradeTrack/releases/download/v1.0.2/TracKasuwa-1.0.2.apk' },
+];
 
 function safeHttpsUrl(value: string | undefined): string | null {
   if (!value?.trim()) return null;
@@ -54,7 +56,7 @@ export async function getDownloadInfo() {
   const androidCandidates = [
     ...(configuredIsNewer && configuredAndroidUrl ? [{ version: configuredAndroidVersion, url: configuredAndroidUrl }] : []),
     { version: CURRENT_ANDROID_VERSION, url: CURRENT_ANDROID_APK_URL },
-    { version: PREVIOUS_ANDROID_VERSION, url: PREVIOUS_ANDROID_APK_URL },
+    ...PREVIOUS_ANDROID_RELEASES,
   ];
   const [androidRelease, windowsUrl] = await Promise.all([
     (async () => {
