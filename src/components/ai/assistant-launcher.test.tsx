@@ -21,6 +21,8 @@ it('opens a contextual floating assistant for the owner only', async () => {
     await act(() => root.render(<AssistantLauncher />));
     await act(() => host.querySelector('button')!.click());
     expect(host.querySelector('[role="dialog"]')?.textContent).toContain('Prepare stock from this area');
+    expect(host.querySelector('textarea[aria-label="Paste a stock list"]')).not.toBeNull();
+    expect(Array.from(host.querySelectorAll('button')).find(button => button.textContent === 'Prepare and review stock')?.hasAttribute('disabled')).toBe(true);
     expect(host.querySelector('a[href="/assistant#inventory"]')).not.toBeNull();
     expect(host.querySelector('button[aria-expanded]')?.className).toContain('size-12');
     state.pathname = '/pos';
