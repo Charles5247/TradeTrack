@@ -1,25 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { getDB } from '@/lib/offline/db';
+import { loadStockReview, saveStockReview, lookupStockReviewReceipt, submitStockReviewReceipt, readStockReviewProposal, sameStockReviewSource, confirmedStockReviewReceipt,
+  type StockReviewDraft, type StockReviewRow, type StockReviewScope, type StockReviewAttempt, type SavedStockReviewReceipt } from '@/lib/ai/stock-review-draft';
 import { useAuthStore } from '@/store';
 import { useCopy } from '@/i18n/text';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
-import { STOCK_UNITS } from '@/lib/industries';
 import type { ImportRow } from '@/lib/imports/preview';
+import { STOCK_UNITS } from '@/lib/industries';
 
 type Product = { id: string; name: string; sku: string; barcode: string | null; stock_unit: string; cost_price: number; organization_id: string; medical_stock_managed?: boolean | null };
 type Warehouse = { id: string; name: string; is_main: boolean; organization_id: string };
-type Draft = {
-  rowIndex: number; source: string; productId: string; warehouseId: string;
-  mode: 'existing' | 'new'; newName: string; newSku: string; stockUnit: string; sellingPrice: string;
-  quantity: string; unitCost: string; zeroConfirmed: boolean; selected: boolean;
-  result?: 'saved'; error?: string;
-};
-type SavedReceipt = { row_index: number; product_id: string; warehouse_id: string; quantity: number; unit_cost: number; created_product: boolean; approved_product: { name: string; sku: string; stock_unit: string; selling_price: number } | null };
+type ReviewProps = { job: string; rows: ImportRow[]; onBusyChange?: (busy: boolean) => void };
 
 async function loadAll<T>(table: 'products' | 'warehouses', columns: string, orgId: string): Promise<T[]> {
   const db = createClient();
@@ -32,146 +29,296 @@ async function loadAll<T>(table: 'products' | 'warehouses', columns: string, org
   }
 }
 
-function ready(row: Draft) {
-  const quantity = Number(row.quantity);
-  const cost = Number(row.unitCost);
-  const selling = Number(row.sellingPrice);
-  const targetReady = row.mode === 'existing' ? Boolean(row.productId)
-    : Boolean(row.newName.trim() && row.newSku.trim() && STOCK_UNITS.includes(row.stockUnit as typeof STOCK_UNITS[number])
-      && row.sellingPrice.trim() && Number.isFinite(selling) && selling >= 0 && selling <= 9999999999.99);
-  return Boolean(targetReady && row.warehouseId && row.quantity.trim() && row.unitCost.trim()
-    && Number.isSafeInteger(quantity) && quantity > 0 && Number.isFinite(cost) && cost >= 0
-    && (cost > 0 || row.zeroConfirmed) && !row.result);
+function validCost(value: string) {
+  return /^\d+(?:\.\d{1,2})?$/.test(value.trim()) && Number(value) <= 9999999999.99;
 }
 
-export function StockReceivingReview({ job, rows }: { job: string; rows: ImportRow[] }) {
-  const copy = useCopy();
+function ready(row: StockReviewRow) {
+  const targetReady = row.mode === 'existing' ? Boolean(row.productId) : Boolean(row.newName.trim() && row.newSku.trim()
+    && row.newName.trim().length <= 255 && row.newSku.trim().length <= 100
+    && STOCK_UNITS.some(unit => unit === row.stockUnit) && validCost(row.sellingPrice));
+  return row.state === 'draft' && targetReady && Boolean(row.warehouseId)
+    && /^\d+$/.test(row.quantity.trim()) && Number(row.quantity) > 0 && Number(row.quantity) <= 2147483647
+    && validCost(row.unitCost) && (Number(row.unitCost) > 0 || row.zeroConfirmed);
+}
+
+function attemptFor(row: StockReviewRow, index: number, job: string, organizationId: string): StockReviewAttempt {
+  return { receipt_id: row.receiptId, organization_id: organizationId,
+    product_id: row.productId, warehouse_id: row.warehouseId, quantity: Number(row.quantity), unit_cost: Number(row.unitCost),
+    job, row_index: index, mode: row.mode, name: row.newName, sku: row.newSku, stock_unit: row.stockUnit,
+    selling_price: row.mode === 'new' ? Number(row.sellingPrice) : 0, confirm: true };
+}
+
+function initialRows(sourceRows: ImportRow[], products: Product[], warehouses: Warehouse[], receipts: SavedStockReviewReceipt[], job: string, org: string): StockReviewRow[] {
+  const main = warehouses.find(location => location.is_main)?.id || warehouses[0]?.id || '';
+  return sourceRows.map((source, index) => {
+    const name = String(source.name || '').trim();
+    const sku = String(source.sku || '').trim();
+    const barcode = String(source.barcode || '').trim();
+    const candidates = products.filter(product => Boolean(barcode && product.barcode?.toLowerCase() === barcode.toLowerCase())
+      || Boolean(sku && product.sku?.toLowerCase() === sku.toLowerCase())
+      || Boolean(name && product.name.toLowerCase() === name.toLowerCase()));
+    const saved = receipts.find(receipt => receipt.row_index === index);
+    const row: StockReviewRow = { receiptId: `${job}:${index}`, source: name || `Source row ${index + 1}`,
+      mode: saved ? (saved.created_product ? 'new' : 'existing') : candidates.length === 0 ? 'new' : 'existing',
+      newName: saved?.approved_product?.name || name, newSku: saved?.approved_product?.sku || sku,
+      stockUnit: saved?.approved_product?.stock_unit || 'piece',
+      sellingPrice: String(saved?.approved_product?.selling_price ?? source.selling_price ?? ''),
+      productId: saved?.product_id || (candidates.length === 1 ? candidates[0].id : ''), warehouseId: saved?.warehouse_id || main,
+      quantity: String(saved?.quantity ?? source.opening_stock ?? ''), unitCost: String(saved?.unit_cost ?? source.cost_price ?? ''),
+      zeroConfirmed: !!saved && Number(saved.unit_cost) === 0, state: saved ? 'saved' : 'draft', savedProductId: saved?.product_id };
+    if (saved) row.attempt = attemptFor(row, index, job, org);
+    return row;
+  });
+}
+
+export function StockReceivingReview({ job, onBusyChange }: ReviewProps) {
   const user = useAuthStore(state => state.user);
+  const copy = useCopy();
+  if (!user?.organization_id || user.role !== 'business_owner' || user.status !== 'active') {
+    return <p role="alert">{copy('An active business owner must sign in to review these receipts.')}</p>;
+  }
+  return <StockReceivingReviewForAccount key={`${user.organization_id}:${user.id}:${job}`}
+    scope={{ ownerId: user.id, organizationId: user.organization_id }} job={job} onBusyChange={onBusyChange} />;
+}
+
+function StockReceivingReviewForAccount({ scope, job, onBusyChange }: { scope: StockReviewScope; job: string; onBusyChange?: (busy: boolean) => void }) {
+  const copy = useCopy();
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
-  const [drafts, setDrafts] = useState<Draft[]>([]);
+  const [draft, setDraft] = useState<StockReviewDraft | null>(null);
+  const current = useRef<StockReviewDraft | null>(null);
+  const mounted = useRef(true);
+  const working = useRef(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [catalogError, setCatalogError] = useState('');
+  const [serverNotice, setServerNotice] = useState('');
   const [reviewing, setReviewing] = useState(false);
-  const [applying, setApplying] = useState(false);
+  const [reload, setReload] = useState(0);
+  const { ownerId, organizationId } = scope;
+
+  const sameAccount = useCallback(() => {
+    const active = useAuthStore.getState().user;
+    return mounted.current && active?.id === ownerId && active.organization_id === organizationId
+      && active.role === 'business_owner' && active.status === 'active';
+  }, [ownerId, organizationId]);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  useEffect(() => { onBusyChange?.(loading || busy); }, [loading, busy, onBusyChange]);
+  useEffect(() => () => { onBusyChange?.(false); }, [onBusyChange]);
+
+  const update = useCallback(async (rows: StockReviewRow[]) => {
+    if (!current.current || !sameAccount()) throw new Error('The signed-in account changed. Reopen this review.');
+    const saved = await saveStockReview({ ownerId, organizationId }, current.current, rows);
+    if (!sameAccount()) throw new Error('The signed-in account changed. Reopen this review.');
+    current.current = saved; setDraft(saved);
+    return saved;
+  }, [ownerId, organizationId, sameAccount]);
 
   useEffect(() => {
-    if (!user?.organization_id) return;
     let disposed = false;
-    const orgId = user.organization_id;
-    void Promise.all([
-      loadAll<Product>('products', 'id,name,sku,barcode,stock_unit,cost_price,organization_id,medical_stock_managed', orgId),
-      loadAll<Warehouse>('warehouses', 'id,name,is_main,organization_id', orgId),
-      fetch(`/api/ai/stock-receipts?job=${encodeURIComponent(job)}`).then(async response => {
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Could not load stock proposal.');
-        return data as { rows: ImportRow[]; receipts: SavedReceipt[] };
-      }),
-    ]).then(([allProducts, locations, proposal]) => {
-      if (disposed) return;
-      if (!Array.isArray(proposal.rows) || proposal.rows.length !== rows.length) throw new Error('Stock proposal changed. Generate it again.');
-      const catalog = allProducts.filter(product => !product.medical_stock_managed);
-      setProducts(catalog);
-      setWarehouses(locations);
-      const main = locations.find(location => location.is_main)?.id || locations[0]?.id || '';
-      setDrafts(rows.map((row, index) => {
-        const name = String(row.name || '').trim();
-        const sku = String(row.sku || '').trim();
-        const barcode = String(row.barcode || '').trim();
-        const candidates = catalog.filter(product =>
-          Boolean(barcode && product.barcode?.toLowerCase() === barcode.toLowerCase())
-          || Boolean(sku && product.sku?.toLowerCase() === sku.toLowerCase())
-          || Boolean(name && product.name.toLowerCase() === name.toLowerCase()));
-        const saved = proposal.receipts.find(receipt => receipt.row_index === index);
-        const mode = saved ? (saved.created_product ? 'new' : 'existing') : candidates.length === 0 ? 'new' : 'existing';
-        return { rowIndex: index, source: name || `Source row ${index + 1}`,
-          mode: mode as Draft['mode'], newName: saved?.approved_product?.name || name,
-          newSku: saved?.approved_product?.sku || sku,
-          stockUnit: saved?.approved_product?.stock_unit || 'piece',
-          sellingPrice: String(saved?.approved_product?.selling_price ?? row.selling_price ?? ''),
-          productId: saved?.product_id || (candidates.length === 1 ? candidates[0].id : ''),
-          warehouseId: saved?.warehouse_id || main,
-          quantity: String(saved?.quantity ?? row.opening_stock ?? ''),
-          unitCost: String(saved?.unit_cost ?? row.cost_price ?? ''),
-          zeroConfirmed: false, selected: false, result: saved ? 'saved' as const : undefined };
-      }));
-    }).catch(cause => { if (!disposed) setError(cause instanceof Error ? cause.message : 'Could not load your catalog.'); })
-      .finally(() => { if (!disposed) setLoading(false); });
-    return () => { disposed = true; };
-  }, [job, rows, user?.organization_id]);
-
-  const edit = (id: string, patch: Partial<Draft>) => {
-    setDrafts(current => current.map(row => String(row.rowIndex) === id ? { ...row, ...patch, selected: false, error: undefined } : row));
-    setReviewing(false);
-  };
-  const selected = drafts.filter(row => row.selected && ready(row));
-  const pending = drafts.filter(row => !row.result);
-  const unresolved = pending.filter(row => !ready(row));
-  const apply = async () => {
-    if (!user?.organization_id || user.role !== 'business_owner' || selected.length === 0) return;
-    setApplying(true); setError('');
-    try {
-      for (const row of selected) {
+    const active = () => !disposed && sameAccount();
+    void (async () => {
+      const saved = await loadStockReview({ ownerId, organizationId });
+      if (!active()) return;
+      if (!saved || saved.job !== job) throw new Error('This saved stock review is unavailable. Reopen it from the assistant.');
+      current.current = saved; setDraft(saved);
+      const loaded = await Promise.allSettled([
+        loadAll<Product>('products', 'id,name,sku,barcode,stock_unit,cost_price,organization_id,medical_stock_managed', organizationId),
+        loadAll<Warehouse>('warehouses', 'id,name,is_main,organization_id', organizationId),
+        readStockReviewProposal({ ownerId, organizationId }, job),
+      ]);
+      if (!active()) return;
+      let catalog = loaded[0].status === 'fulfilled' ? loaded[0].value : [];
+      let locations = loaded[1].status === 'fulfilled' ? loaded[1].value : [];
+      if (loaded.slice(0, 2).some(result => result.status === 'rejected')) {
+        setCatalogError('Could not refresh the catalog. Saved receipts remain available; reconnect before relying on product or location details.');
         try {
-          const response = await fetch('/api/ai/stock-receipts', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ job, row_index: row.rowIndex, mode: row.mode,
-              product_id: row.productId, name: row.newName, sku: row.newSku,
-              stock_unit: row.stockUnit, selling_price: Number(row.sellingPrice),
-              warehouse_id: row.warehouseId, quantity: Number(row.quantity),
-              unit_cost: Number(row.unitCost), confirm: true }),
-          });
-          const result = await response.json();
-          if (!response.ok) throw new Error(result.error || 'Receipt was not confirmed');
-          setDrafts(current => current.map(item => item.rowIndex === row.rowIndex
-            ? { ...item, productId: row.mode === 'new' ? result.product_id : row.productId,
-              selected: false, result: 'saved', error: undefined } : item));
-        } catch (cause) {
-          setDrafts(current => current.map(item => item.rowIndex === row.rowIndex
-            ? { ...item, selected: false, error: cause instanceof Error ? cause.message : 'Receipt was not confirmed' } : item));
+          const db = await getDB();
+          if (!active()) return;
+          const [cachedProducts, cachedWarehouses] = await Promise.all([db.getAll('products'), db.getAll('warehouses')]);
+          if (!active()) return;
+          if (loaded[0].status === 'rejected') catalog = cachedProducts.filter((product: Product) => product.organization_id === organizationId);
+          if (loaded[1].status === 'rejected') locations = cachedWarehouses.filter((warehouse: Warehouse) => warehouse.organization_id === organizationId);
+        } catch { /* Keep saved receipts visible even if the catalog cache cannot be read. */ }
+      }
+      if (!active()) return;
+      catalog = catalog.filter(product => product.organization_id === organizationId && !product.medical_stock_managed);
+      locations = locations.filter(warehouse => warehouse.organization_id === organizationId);
+      setProducts(catalog); setWarehouses(locations);
+      if (saved.rows === null) {
+        if (loaded[2].status === 'rejected') throw new Error('Could not confirm the stock proposal. Reconnect and reload the saved review.');
+        if (!sameStockReviewSource(loaded[2].value.rows, saved.sourceRows)) throw new Error('The source proposal changed. Keep this review and check the original job before applying.');
+        if (loaded.slice(0, 2).some(result => result.status === 'rejected') && (!catalog.length || !locations.length)) return;
+        try { await update(initialRows(saved.sourceRows, catalog, locations, loaded[2].value.receipts, job, organizationId)); }
+        catch (cause) {
+          const latest = await loadStockReview({ ownerId, organizationId });
+          if (!active()) return;
+          if (!latest || latest.job !== job || latest.rows === null) throw cause;
+          current.current = latest; setDraft(latest);
+        }
+      } else if (loaded[2].status === 'fulfilled') {
+        if (!sameStockReviewSource(loaded[2].value.rows, saved.sourceRows)) throw new Error('The source proposal changed. Keep this review and check its original job.');
+        const receipts = loaded[2].value.receipts;
+        const authoritative = initialRows(saved.sourceRows, catalog, locations, receipts, job, organizationId);
+        let changed = false;
+        const reconciled = saved.rows.map((row, index) => {
+          const receipt = receipts.find(item => item.row_index === index);
+          if (!receipt) return row;
+          if (row.state === 'saved') {
+            if (row.savedProductId) return row;
+            changed = true;
+            return { ...row, savedProductId: receipt.product_id };
+          }
+          if (!row.attempt) {
+            changed = true;
+            const restored = { ...authoritative[index], receiptId: row.receiptId };
+            return { ...restored, attempt: attemptFor(restored, index, job, organizationId) };
+          }
+          try {
+            if (confirmedStockReviewReceipt(row.attempt, [receipt])) {
+              changed = true;
+              return { ...row, state: 'saved' as const, error: undefined, savedProductId: receipt.product_id };
+            }
+          } catch (cause) {
+            changed = true;
+            return { ...row, error: cause instanceof Error ? cause.message : 'Saved receipt differs. Keep the original attempt for review.' };
+          }
+          return row;
+        });
+        if (changed) {
+          await update(reconciled);
+          if (active()) setServerNotice('The server has results for this review. Matching results are marked saved; rows with different effects need attention. Unapplied local edits to completed rows were not submitted.');
         }
       }
-      setReviewing(false);
-    } finally { setApplying(false); }
-  };
+    })().catch(cause => { if (active()) setError(cause instanceof Error ? cause.message : 'Could not restore this stock review.'); })
+      .finally(() => { if (active()) setLoading(false); });
+    return () => { disposed = true; };
+    // Read durable source rows: a newly allocated rows prop must not replace receipt IDs.
+  }, [job, ownerId, organizationId, reload, sameAccount, update]);
 
-  if (loading) return <p role="status">{copy('Loading your products and warehouses...')}</p>;
-  if (error) return <p role="alert" className="text-destructive">{error}</p>;
+  const run = async (action: () => Promise<void>) => {
+    if (working.current || loading || !sameAccount()) return;
+    working.current = true; setBusy(true); setError('');
+    try { await action(); }
+    catch (cause) { if (sameAccount()) setError(cause instanceof Error ? cause.message : 'This receipt is not confirmed. Keep this review and check its status.'); }
+    finally { working.current = false; if (sameAccount()) setBusy(false); }
+  };
+  const edit = (id: string, patch: Partial<Pick<StockReviewRow, 'productId' | 'warehouseId' | 'quantity' | 'unitCost' | 'zeroConfirmed' | 'mode' | 'newName' | 'newSku' | 'stockUnit' | 'sellingPrice'>>) => {
+    if (working.current || loading) return;
+    setReviewing(false); setSelectedIds(ids => ids.filter(value => value !== id));
+    void run(async () => { await update((current.current?.rows ?? []).map(row => row.receiptId === id && row.state === 'draft'
+      ? { ...row, ...patch, error: undefined } : row)); });
+  };
+  const setOutcome = async (receiptId: string, state: StockReviewRow['state'], error?: string, savedProductId?: string) => {
+    await update((current.current?.rows ?? []).map(row => row.receiptId === receiptId ? { ...row, state, error, savedProductId: savedProductId || row.savedProductId } : row));
+  };
+  const dispatch = async (attempt: StockReviewAttempt) => {
+    if (!sameAccount()) return;
+    let result;
+    try { result = await submitStockReviewReceipt({ ownerId, organizationId }, attempt); }
+    catch (cause) {
+      if (!sameAccount()) return;
+      await setOutcome(attempt.receipt_id!, 'confirmation_pending', cause instanceof Error ? cause.message : 'No receipt confirmation received.');
+      return;
+    }
+    if (!sameAccount()) return;
+    await setOutcome(attempt.receipt_id!, 'saved', undefined, result.productId);
+  };
+  const drafts = draft?.rows ?? [];
+  const canReceive = (row: StockReviewRow) => ready(row)
+    && (row.mode === 'new' ? !catalogError : products.some(product => product.id === row.productId))
+    && warehouses.some(warehouse => warehouse.id === row.warehouseId);
+  const selected = drafts.filter(row => selectedIds.includes(row.receiptId) && canReceive(row));
+  const locked = loading || busy;
+  const apply = () => void run(async () => {
+    if (!navigator.onLine) {
+      setError(copy('Reconnect before applying stock. Nothing was submitted; your review remains saved on this device.'));
+      return;
+    }
+    const approved = selected.filter(canReceive).map(row => ({ ...row }));
+    setReviewing(false); setSelectedIds([]);
+    for (const row of approved) {
+      if (!sameAccount()) break;
+      const attempt = attemptFor(row, (current.current?.rows ?? []).findIndex(item => item.receiptId === row.receiptId), job, organizationId);
+      await update((current.current?.rows ?? []).map(item => item.receiptId === row.receiptId
+        ? { ...item, state: 'confirmation_pending', attempt, error: undefined } : item));
+      if (!sameAccount()) break;
+      await dispatch(attempt);
+    }
+  });
+  const reconcile = (receiptId: string, retry: boolean) => void run(async () => {
+    const row = current.current?.rows?.find(item => item.receiptId === receiptId);
+    if (!row?.attempt || row.state === 'saved' || (retry && row.state !== 'confirmation_pending')) return;
+    const outcome = await lookupStockReviewReceipt({ ownerId, organizationId }, row.attempt);
+    if (!sameAccount()) return;
+    if (outcome === 'saved') { await setOutcome(receiptId, 'saved'); return; }
+    if (retry && navigator.onLine) {
+      await setOutcome(receiptId, 'confirmation_pending');
+      if (sameAccount()) await dispatch(row.attempt);
+    } else await setOutcome(receiptId, row.state,
+      retry ? 'Reconnect before retrying this same receipt.' : 'Not confirmed yet. Keep this receipt reference; absence of confirmation does not mean stock was not saved.');
+  });
+
+  if (loading && !draft) return <p role="status">{copy('Restoring your saved stock review...')}</p>;
   return <section className="space-y-4" aria-label={copy('Review stock receiving draft')}>
     <div><h2 className="tt-section-title">{copy('Review stock receiving draft')}</h2>
-      <p className="text-sm text-muted-foreground">{copy('The assistant only suggested these rows. Check the product, quantity, buying cost, selling price for new products, and location before applying.')}</p></div>
-    {drafts.some(row => row.result || row.error) && <p role="status" className="rounded-lg border border-border p-3 text-sm">{drafts.filter(row => row.result === 'saved').length} {copy('stock rows saved')}. {drafts.filter(row => row.error).length} {copy('rows need review')}. {copy('A failed or uncertain row has not been marked as saved; check its result before trying again.')}</p>}
-    {warehouses.length === 0 && <p role="alert">{copy('Create a warehouse before receiving stock.')} <Link className="underline" href="/warehouses">{copy('Open warehouses')}</Link></p>}
-    {drafts.length === 0 && <p>{copy('No product rows were found. Edit the source and try again.')}</p>}
+      <p className="text-sm text-muted-foreground">{copy('The assistant only suggested these rows. Check the product, quantity, buying cost, selling price for new products, and location before applying.')}</p>
+      {draft && <p className="text-xs text-muted-foreground">{copy('This review is saved on this device. Selected rows still need your review and Apply.')}</p>}</div>
+    {loading && <p role="status">{copy('Restoring saved receipt results and refreshing the catalog...')}</p>}
+    {error && <p role="alert" className="text-destructive">{error}</p>}
+    {catalogError && <p role="status" className="text-sm text-muted-foreground">{copy(catalogError)}</p>}
+    {serverNotice && <p role="status" className="text-sm text-muted-foreground">{copy(serverNotice)}</p>}
+    {(error || catalogError) && <Button variant="outline" disabled={locked} onClick={() => {
+      setLoading(true); setError(''); setCatalogError(''); setReviewing(false); setSelectedIds([]);
+      setServerNotice('');
+      setReload(value => value + 1);
+    }}>{copy('Reload saved review')}</Button>}
+    {!loading && !catalogError && warehouses.length === 0 && <p role="alert">{copy('Create a warehouse before receiving stock.')} <Link className="underline" href="/warehouses">{copy('Open warehouses')}</Link></p>}
+    {draft?.rows?.length === 0 && <p>{copy('No product rows were found. Close this review and correct the source.')}</p>}
     {drafts.map((row, index) => {
       const product = products.find(item => item.id === row.productId);
-      return <article key={row.rowIndex} className="space-y-3 rounded-lg border border-border bg-card p-4">
-        <div className="flex flex-wrap items-center justify-between gap-2"><div><p className="font-medium">{copy('Source row')} {index + 1}: {row.source}</p><p className="text-xs text-muted-foreground">{row.result ? copy('Stock saved') : ready(row) ? copy(row.mode === 'new' ? 'New product ready to review' : 'Ready to select') : copy('Needs your decision')}</p></div>{row.result && <span className="text-sm font-medium text-primary">{copy('Applied')}</span>}</div>
-        {row.result && <Link className="text-sm text-primary underline" href={`/products/${row.productId}/edit`}>{copy('View product')}</Link>}
-        {!row.result && <div className="grid gap-3 sm:grid-cols-2">
-          <label className="text-sm">{copy('Stock destination')}<NativeSelect className="mt-1 w-full" value={row.mode === 'new' ? '__new__' : row.productId} onChange={event => edit(String(row.rowIndex), event.target.value === '__new__' ? { mode: 'new', productId: '' } : { mode: 'existing', productId: event.target.value })}><option value="">{copy('Choose product')}</option><option value="__new__">{copy('Create a new product')}</option>{products.map(item => <option key={item.id} value={item.id}>{item.name} · {item.sku}</option>)}</NativeSelect></label>
-          {row.mode === 'new' && <>
-            <label className="text-sm">{copy('New product name')}<Input className="mt-1" maxLength={255} value={row.newName} onChange={event => edit(String(row.rowIndex), { newName: event.target.value })} /></label>
-            <label className="text-sm">{copy('New product SKU')}<Input className="mt-1" maxLength={100} value={row.newSku} onChange={event => edit(String(row.rowIndex), { newSku: event.target.value })} /></label>
-            <label className="text-sm">{copy('Stock unit')}<NativeSelect className="mt-1 w-full" value={row.stockUnit} onChange={event => edit(String(row.rowIndex), { stockUnit: event.target.value })}>{STOCK_UNITS.map(unit => <option key={unit} value={unit}>{copy(unit)}</option>)}</NativeSelect></label>
-            <label className="text-sm">{copy('Selling price per unit')}<Input className="mt-1" type="number" min="0" step="0.01" value={row.sellingPrice} onChange={event => edit(String(row.rowIndex), { sellingPrice: event.target.value })} /></label>
-          </>}
-          <label className="text-sm">{copy('Receiving warehouse')}<NativeSelect className="mt-1 w-full" value={row.warehouseId} onChange={event => edit(String(row.rowIndex), { warehouseId: event.target.value })}><option value="">{copy('Choose warehouse')}</option>{warehouses.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</NativeSelect></label>
-          <label className="text-sm">{copy('Quantity')} {row.mode === 'new' ? `(${copy(row.stockUnit)})` : product ? `(${copy(product.stock_unit || 'piece')})` : ''}<Input className="mt-1" type="number" min="1" step="1" value={row.quantity} onChange={event => edit(String(row.rowIndex), { quantity: event.target.value })} /></label>
-          <label className="text-sm">{copy('Buying cost per unit')}<Input className="mt-1" type="number" min="0" step="0.01" value={row.unitCost} onChange={event => edit(String(row.rowIndex), { unitCost: event.target.value, zeroConfirmed: false })} /></label>
+      const stateLabel = row.state === 'saved' ? 'Stock saved' : row.state === 'queued' ? 'Queued for upload — not yet confirmed'
+        : row.state === 'confirmation_pending' ? 'Receipt confirmation pending' : canReceive(row) ? 'Ready to select' : 'Needs your decision';
+      return <article key={row.receiptId} className="space-y-3 rounded-lg border border-border bg-card p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2"><div><p className="font-medium">{copy('Source row')} {index + 1}: {row.source}</p><p role="status" className="text-xs text-muted-foreground">{copy(stateLabel)}</p></div>{row.state !== 'draft' && <span className="text-sm font-medium text-primary">{copy(row.state === 'saved' ? 'Applied' : 'Pending confirmation')}</span>}</div>
+        {row.state === 'draft' ? <>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="text-sm">{copy('Stock destination')}<NativeSelect disabled={locked} className="mt-1 w-full" value={row.mode === 'new' ? '__new__' : row.productId} onChange={event => edit(row.receiptId, event.target.value === '__new__' ? { mode: 'new', productId: '' } : { mode: 'existing', productId: event.target.value })}><option value="">{copy('Choose product')}</option><option value="__new__">{copy('Create a new product')}</option>{products.map(item => <option key={item.id} value={item.id}>{item.name} · {item.sku}</option>)}</NativeSelect></label>
+            {row.mode === 'new' && <>
+              <label className="text-sm">{copy('New product name')}<Input disabled={locked} maxLength={255} value={row.newName} onChange={event => edit(row.receiptId, { newName: event.target.value })} /></label>
+              <label className="text-sm">{copy('New product SKU')}<Input disabled={locked} maxLength={100} value={row.newSku} onChange={event => edit(row.receiptId, { newSku: event.target.value })} /></label>
+              <label className="text-sm">{copy('Stock unit')}<NativeSelect disabled={locked} value={row.stockUnit} onChange={event => edit(row.receiptId, { stockUnit: event.target.value })}>{STOCK_UNITS.map(unit => <option key={unit} value={unit}>{copy(unit)}</option>)}</NativeSelect></label>
+              <label className="text-sm">{copy('Selling price per unit')}<Input disabled={locked} type="number" min="0" step="0.01" value={row.sellingPrice} onChange={event => edit(row.receiptId, { sellingPrice: event.target.value })} /></label>
+            </>}
+            <label className="text-sm">{copy('Receiving warehouse')}<NativeSelect disabled={locked} className="mt-1 w-full" value={row.warehouseId} onChange={event => edit(row.receiptId, { warehouseId: event.target.value })}><option value="">{copy('Choose warehouse')}</option>{warehouses.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</NativeSelect></label>
+            <label className="text-sm">{copy('Quantity')} {product ? `(${copy(product.stock_unit || 'piece')})` : ''}<Input disabled={locked} className="mt-1" type="number" min="1" max="2147483647" step="1" value={row.quantity} onChange={event => edit(row.receiptId, { quantity: event.target.value })} /></label>
+            <label className="text-sm">{copy('Buying cost per unit')}<Input disabled={locked} className="mt-1" type="number" min="0" max="9999999999.99" step="0.01" value={row.unitCost} onChange={event => edit(row.receiptId, { unitCost: event.target.value, zeroConfirmed: false })} /></label>
+          </div>
+          {row.unitCost.trim() !== '' && Number(row.unitCost) === 0 && <label className="flex items-center gap-2 text-sm"><input type="checkbox" disabled={locked} checked={row.zeroConfirmed} onChange={event => edit(row.receiptId, { zeroConfirmed: event.target.checked })} />{copy('Confirm this stock really has zero buying cost')}</label>}
+          {row.unitCost.trim() !== '' && !validCost(row.unitCost) && <p className="text-sm text-destructive">{copy('Enter a buying cost with no more than two decimal places, up to ₦9,999,999,999.99.')}</p>}
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={selectedIds.includes(row.receiptId)} disabled={locked || !canReceive(row)} onChange={event => { if (working.current) return; setSelectedIds(ids => event.target.checked ? [...ids, row.receiptId] : ids.filter(id => id !== row.receiptId)); setReviewing(false); }} />{copy('Include this row')}</label>
+        </> : <div className="space-y-2 text-sm">
+          <p>{row.mode === 'new' ? row.newName : product?.name || row.productId}: +{row.quantity} {copy(row.mode === 'new' ? row.stockUnit : product?.stock_unit || 'units')} at ₦{Number(row.unitCost).toLocaleString('en-NG')} → {warehouses.find(item => item.id === row.warehouseId)?.name || row.warehouseId}</p>
+          {row.mode === 'new' && <p>{copy('Create SKU')} {row.newSku} · {copy('Selling price per unit')}: ₦{Number(row.sellingPrice).toLocaleString('en-NG')}</p>}
+          {row.state === 'saved' && <Link className="text-sm text-primary underline" href={row.savedProductId || row.productId ? `/products/${row.savedProductId || row.productId}/edit` : '/products'}>{copy(row.savedProductId || row.productId ? 'View product' : 'View products')}</Link>}
+          <p className="break-all text-xs text-muted-foreground">{copy('Catalog product')}: {row.productId} · {copy('Receiving warehouse')}: {row.warehouseId}</p>
+          <p className="break-all text-xs text-muted-foreground">{copy('Receipt reference')}: {row.receiptId}</p>
+          {row.state !== 'saved' && <div className="flex flex-wrap gap-2"><Button variant="outline" disabled={locked} onClick={() => reconcile(row.receiptId, false)}>{copy('Check receipt status')}</Button>
+            {row.state === 'confirmation_pending' && <Button variant="outline" disabled={locked} onClick={() => reconcile(row.receiptId, true)}>{copy('Retry same receipt')}</Button>}</div>}
         </div>}
-        {!row.result && row.unitCost.trim() === '0' && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={row.zeroConfirmed} onChange={event => edit(String(row.rowIndex), { zeroConfirmed: event.target.checked })} />{copy('Confirm this stock really has zero buying cost')}</label>}
-        {!row.result && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={row.selected} disabled={!ready(row)} onChange={event => { setDrafts(current => current.map(item => item.rowIndex === row.rowIndex ? { ...item, selected: event.target.checked } : item)); setReviewing(false); }} />{copy('Include this row')}</label>}
         {row.error && <p role="alert" className="text-sm text-destructive">{row.error}</p>}
       </article>;
     })}
-    {pending.length > 0 && <div className="space-y-3 rounded-lg border border-border p-4">
-      <p className="text-sm">{selected.length} {copy('selected')} · {unresolved.length} {copy('need decisions')}</p>
-      {!reviewing ? <Button disabled={selected.length === 0} onClick={() => setReviewing(true)}>{copy('Review exact stock changes')}</Button> : <>
+    {drafts.some(row => row.state === 'draft') && <div className="space-y-3 rounded-lg border border-border p-4">
+      <p className="text-sm">{selected.length} {copy('selected')} · {drafts.filter(row => row.state === 'draft' && !canReceive(row)).length} {copy('need decisions')}</p>
+      {!reviewing ? <Button disabled={locked || selected.length === 0} onClick={() => setReviewing(true)}>{copy('Review exact stock changes')}</Button> : <>
         <h3 className="font-semibold">{copy('These changes will be applied')}</h3>
-        <ul className="list-disc space-y-1 pl-5 text-sm">{selected.map(row => <li key={row.rowIndex}>{row.mode === 'new' ? row.newName : products.find(item => item.id === row.productId)?.name}: +{row.quantity} {copy(row.mode === 'new' ? row.stockUnit : products.find(item => item.id === row.productId)?.stock_unit || 'piece')} at ₦{Number(row.unitCost).toLocaleString()} buying cost each → {warehouses.find(item => item.id === row.warehouseId)?.name}. {row.mode === 'new' ? `Create SKU ${row.newSku} at ₦${Number(row.sellingPrice).toLocaleString()} selling price.` : copy('Selling price unchanged.')}</li>)}</ul>
+        <ul className="list-disc space-y-1 pl-5 text-sm">{selected.map(row => <li key={row.receiptId}>{row.mode === 'new' ? row.newName : products.find(item => item.id === row.productId)?.name}: +{row.quantity} {copy(row.mode === 'new' ? row.stockUnit : products.find(item => item.id === row.productId)?.stock_unit || 'piece')} at ₦{Number(row.unitCost).toLocaleString('en-NG')} each → {warehouses.find(item => item.id === row.warehouseId)?.name}. {row.mode === 'new' ? `Create SKU ${row.newSku} at ₦${Number(row.sellingPrice).toLocaleString('en-NG')} selling price.` : copy('Selling price unchanged.')}</li>)}</ul>
         <p className="text-xs text-muted-foreground">{copy('Check every new product and price. Similar catalog items must be matched instead of duplicated.')}</p>
-        <div className="flex flex-wrap gap-2"><Button disabled={applying || selected.length === 0} onClick={() => void apply()}>{copy(applying ? 'Applying...' : `Apply ${selected.length} stock receipt${selected.length === 1 ? '' : 's'}`)}</Button><Button variant="outline" disabled={applying} onClick={() => setReviewing(false)}>{copy('Edit draft')}</Button></div>
+        <div className="flex flex-wrap gap-2"><Button disabled={locked || selected.length === 0} onClick={apply}>{copy(locked ? 'Applying...' : `Apply ${selected.length} stock receipt${selected.length === 1 ? '' : 's'}`)}</Button><Button variant="outline" disabled={locked} onClick={() => setReviewing(false)}>{copy('Edit draft')}</Button></div>
       </>}
     </div>}
   </section>;
