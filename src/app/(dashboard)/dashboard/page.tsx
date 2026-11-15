@@ -239,7 +239,16 @@ async function fetchDashboardData() {
 export default function DashboardPage() {
   const { user } = useAuthStore();
   if (!user) return <Skeleton className="h-64 w-full" />;
-  return user.role === "platform_owner" ? <AdminPage /> : <MerchantDashboard />;
+  if (user.role === "platform_owner") return <AdminPage />;
+  if (user.role === "cashier") return <CashierDashboard />;
+  return <MerchantDashboard />;
+}
+
+function CashierDashboard() {
+  return <div className="space-y-5"><h1 className="tt-page-title">Ready to sell</h1>
+    <p className="tt-muted">Open the point of sale to serve customers in your assigned warehouse.</p>
+    <Button asChild><Link href="/pos"><ShoppingCart className="mr-2 h-4 w-4" />Open Point of Sale</Link></Button>
+  </div>;
 }
 
 function MerchantDashboard() {

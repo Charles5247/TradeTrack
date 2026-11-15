@@ -7,6 +7,8 @@ export interface AIProvider {
   readonly name: string;
   readonly stub: boolean;
   mapInventory(text: string): Promise<ImportRow[]>;
+  mapInventoryImage?(image: string): Promise<ImportRow[]>;
+  transcribeInventoryAudio?(audio: string): Promise<string>;
   insights(data: BusinessAggregate, question?: string): Promise<Insight[]>;
 }
 export interface DeliveryAdapter {

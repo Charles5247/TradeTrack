@@ -64,7 +64,7 @@ async function cartFingerprint(items: CartItem[], subtotal: number) {
   return Array.from(new Uint8Array(bytes), byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
-async function searchProducts(query: string, warehouseId: string, user: { id: string; organization_id?: string | null; role: string } | null) {
+async function searchProducts(query: string, warehouseId: string, categoryId: string, user: { id: string; organization_id?: string | null; role: string } | null) {
   const visibleIds = await visibleWarehouseIds(user);
   if (!warehouseId || (visibleIds && !visibleIds.has(warehouseId))) return [];
   const supabase = createClient();
@@ -83,7 +83,7 @@ async function searchProducts(query: string, warehouseId: string, user: { id: st
     );
 
     return offlineProducts
-      .filter((product: any) => product?.status === "active" && Number(inventoryByWarehouse.get(product.id)) > 0)
+      .filter((product: any) => product?.status === "active" && Number(inventoryByWarehouse.get(product.id)) > 0 && (categoryId === 'all' || product.category_id === categoryId))
       .filter((product: any) => {
         if (!queryText) return true;
         return [product?.name, product?.sku, product?.barcode]
@@ -112,6 +112,7 @@ async function searchProducts(query: string, warehouseId: string, user: { id: st
       .eq("status", "active")
       .eq("inventory.warehouse_id", warehouseId)
       .gt("inventory.quantity", 0);
+    if (categoryId !== 'all') q = q.eq('category_id', categoryId);
 
     if (query) {
       q = q.or(
@@ -139,7 +140,7 @@ async function searchProducts(query: string, warehouseId: string, user: { id: st
     );
 
     return offlineProducts
-      .filter((product: any) => product?.status === "active" && Number(inventoryByWarehouse.get(product.id)) > 0)
+      .filter((product: any) => product?.status === "active" && Number(inventoryByWarehouse.get(product.id)) > 0 && (categoryId === 'all' || product.category_id === categoryId))
       .filter((product: any) => {
         if (!queryText) return true;
         return [product?.name, product?.sku, product?.barcode]
@@ -257,6 +258,7 @@ function POSPageInner() {
   const cartRef = useRef<HTMLDivElement>(null);
   const cartOpenButtonRef = useRef<HTMLButtonElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [categoryId, setCategoryId] = useState('all');
   const [amountPaid, setAmountPaid] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
@@ -284,6 +286,16 @@ function POSPageInner() {
   const { data: warehouses = [] } = useQuery({
     queryKey: ["warehouses-pos", user?.id],
     queryFn: () => fetchWarehouses(user),
+  });
+  const { data: categories = [] } = useQuery({
+    queryKey: ['pos-categories', user?.organization_id],
+    queryFn: async () => {
+      const cached = () => getAllFromOfflineDB<{ id: string; name: string }>('categories');
+      if (!navigator.onLine) return cached();
+      const { data, error } = await createClient().from('categories').select('id,name').order('name');
+      return error ? cached() : data || [];
+    },
+    enabled: Boolean(user?.organization_id),
   });
 
   const { data: creditApprovers = [] } = useQuery({
@@ -313,8 +325,8 @@ function POSPageInner() {
   }, [warehouses, cart]);
 
   const { data: products = [], isLoading: productsLoading } = useQuery({
-    queryKey: ["pos-products", user?.id, searchQuery, cart.warehouse_id],
-    queryFn: () => searchProducts(searchQuery, cart.warehouse_id, user),
+    queryKey: ["pos-products", user?.id, searchQuery, cart.warehouse_id, categoryId],
+    queryFn: () => searchProducts(searchQuery, cart.warehouse_id, categoryId, user),
     enabled: !!cart.warehouse_id,
   });
 
@@ -614,6 +626,10 @@ function POSPageInner() {
                 </SelectItem>
               ))}
             </SelectContent>
+          </Select>
+          <Select value={categoryId} onValueChange={setCategoryId}>
+            <SelectTrigger aria-label="Filter products by category" className="h-[52px] w-full sm:w-48 text-sm"><SelectValue placeholder="All categories" /></SelectTrigger>
+            <SelectContent><SelectItem value="all">All categories</SelectItem>{categories.map(category => <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>)}</SelectContent>
           </Select>
         </div>
 

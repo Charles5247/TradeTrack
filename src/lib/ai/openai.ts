@@ -11,7 +11,7 @@ export class OpenAIProvider implements AIProvider {
   readonly stub = false;
   constructor(private readonly apiKey: string) {}
 
-  private async generate<T>(name: string, schema: z.ZodType<T>, instructions: string, input: string): Promise<T> {
+  private async generate<T>(name: string, schema: z.ZodType<T>, instructions: string, input: string | Array<Record<string, unknown>>): Promise<T> {
     const response = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
       headers: { Authorization: `Bearer ${this.apiKey}`, 'Content-Type': 'application/json' },
@@ -39,6 +39,30 @@ export class OpenAIProvider implements AIProvider {
     const result = await this.generate('inventory', inventorySchema,
       'Map the supplied product data into inventory rows for owner review. Preserve provided identifiers and values. Use empty strings for missing values; never invent prices, stock or identifiers. Return at most 1000 rows. No changes will be applied automatically.', text);
     return result.rows;
+  }
+
+  async mapInventoryImage(image: string) {
+    const result = await this.generate('inventory', inventorySchema,
+      'Read only clearly visible product names, identifiers, quantities and prices from this stock-list photo. Unreadable or missing fields must be empty strings. Never infer prices or quantity from product packaging. Return a draft for owner review; apply nothing automatically.',
+      [{ role: 'user', content: [{ type: 'input_text', text: 'Extract the written inventory rows from this photo.' }, { type: 'input_image', image_url: image, detail: 'high' }] }]);
+    return result.rows;
+  }
+
+  async transcribeInventoryAudio(audio: string) {
+    const match = /^data:(audio\/(?:webm|mp4|mpeg|ogg|wav|x-m4a));base64,([A-Za-z0-9+/=]+)$/.exec(audio);
+    if (!match) throw new Error('Choose a supported voice recording.');
+    const bytes = Buffer.from(match[2], 'base64');
+    if (!bytes.length || bytes.length > 2_000_000) throw new Error('Voice recording must be under 2 MB.');
+    const form = new FormData();
+    const extension = match[1].split('/')[1].replace('x-m4a', 'm4a');
+    form.append('file', new Blob([bytes], { type: match[1] }), `stock.${extension}`);
+    form.append('model', 'gpt-4o-mini-transcribe');
+    form.append('prompt', 'Transcribe the merchant stock list exactly. Preserve product names, quantities, units and prices.');
+    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', { method: 'POST', headers: { Authorization: `Bearer ${this.apiKey}` }, body: form, signal: AbortSignal.timeout(60000) });
+    if (!response.ok) throw new Error('Voice transcription failed. Please retry or type the stock list.');
+    const result = await response.json();
+    if (typeof result.text !== 'string' || !result.text.trim()) throw new Error('No stock words were detected in the recording.');
+    return result.text;
   }
 
   async insights(data: BusinessAggregate, question?: string): Promise<Insight[]> {

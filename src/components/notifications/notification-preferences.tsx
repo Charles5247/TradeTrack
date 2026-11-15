@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
 const events = [
-  'staff_login','sale_made','low_stock','stock_in','stock_adjustment','discount_requested','discount_approved',
+  'staff_login','sale_made','sale_anomaly','low_stock','stock_in','stock_adjustment','discount_requested','discount_approved',
   'discount_rejected','discount_given','pending_payment','pending_transfer','purchase_order_status','import_finished',
   'import_failed','payment_confirmed','payment_failed','trial_ending','trial_expired','subscription_changed','sync_failed','app_update',
 ] as const;

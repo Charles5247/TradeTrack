@@ -17,6 +17,30 @@ async function call(body: Record<string, unknown>) {
   const response = await fetch('/api/ai', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   const result = await response.json(); if (!response.ok) throw new Error(result.error); return result;
 }
+async function fileDataUrl(file: File): Promise<string> {
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error('Could not read this file.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function stockPhotoDataUrl(file: File): Promise<string> {
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) throw new Error('Choose a JPEG, PNG or WebP photo.');
+  const image = new Image();
+  const url = URL.createObjectURL(file);
+  try {
+    await new Promise<void>((resolve, reject) => { image.onload = () => resolve(); image.onerror = () => reject(new Error('Could not open this photo.')); image.src = url; });
+    const scale = Math.min(1, 1600 / Math.max(image.width, image.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(image.width * scale); canvas.height = Math.round(image.height * scale);
+    canvas.getContext('2d')?.drawImage(image, 0, 0, canvas.width, canvas.height);
+    const encoded = canvas.toDataURL('image/jpeg', 0.78);
+    if (encoded.length > 3_000_000) throw new Error('Photo is too large after resizing. Try a clearer, closer photo.');
+    return encoded;
+  } finally { URL.revokeObjectURL(url); }
+}
 export default function AssistantPage() {
   const copy = useCopy();
   const [question, setQuestion] = useState('');
@@ -33,8 +57,12 @@ export default function AssistantPage() {
     <p><Link className="text-sm font-medium text-primary underline underline-offset-4" href="/imports"><TranslatedText text={"Business imports"} /></Link> · <Link className="text-sm font-medium text-primary underline underline-offset-4" href="/notifications"><TranslatedText text={"Notifications"} /></Link></p>
     {busy && <p role="status" className="tt-muted text-sm"><TranslatedText text={"Working on your request?"} /></p>}{!status && !error && <p role="status" className="tt-muted text-sm"><TranslatedText text={"Loading assistant preferences?"} /></p>}{error && <p role="alert" className="text-destructive">{error}</p>}{notice && <p role="status">{notice}</p>}
     <fieldset id="inventory" disabled={busy || !status} className="min-w-0 space-y-4 rounded-[var(--radius-lg)] border border-border bg-card p-4 sm:p-6">
-      <legend className="tt-section-title px-2"><TranslatedText text={"Stock receiving draft"} /></legend><p><TranslatedText text={"Paste a stock list or upload a CSV or Excel file. Check every buying cost before receiving stock. Product photos and PDFs are not supported here yet."} /></p>
+      <legend className="tt-section-title px-2"><TranslatedText text={"Stock receiving draft"} /></legend><p>Paste a list, upload a spreadsheet, photo or voice recording. Review every product, quantity and cost before saving stock.</p>
       <Input aria-label={copy("Product CSV or Excel file")} type="file" accept=".csv,.xlsx" onChange={e => { const file = e.target.files?.[0]; if (file) void run(async () => { const rows = await parseImportFile(file); const headers = Array.from(new Set(rows.flatMap(Object.keys))); setText([headers.join('\t'), ...rows.map(row => headers.map(h => String(row[h] ?? '').replace(/[\t\r\n]/g,' ')).join('\t'))].join('\n')); }); }} />
+      {status?.stub ? <p className="text-sm text-muted-foreground">Photo and voice extraction need a live AI provider configured on the server.</p> : <div className="grid gap-3 sm:grid-cols-2">
+        <label className="text-sm">Stock-list photo <Input aria-label="Stock-list photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={e => { const file = e.target.files?.[0]; if (file) void run(async () => setProposal(await call({ action: 'inventory_image', image: await stockPhotoDataUrl(file) }))); }} /></label>
+        <label className="text-sm">Voice stock list <Input aria-label="Voice stock list" type="file" accept="audio/webm,audio/mp4,audio/mpeg,audio/ogg,audio/wav,audio/x-m4a" onChange={e => { const file = e.target.files?.[0]; if (file) void run(async () => { if (file.size > 2_000_000) throw new Error('Voice recording must be under 2 MB.'); setProposal(await call({ action: 'inventory_audio', audio: await fileDataUrl(file) })); }); }} /></label>
+      </div>}
       <Textarea aria-label={copy("Messy product data")}  rows={7} value={text} onChange={e => setText(e.target.value)} />
       <Button  onClick={() => void run(async () => setProposal(await call({ action: 'inventory', text })))}><TranslatedText text={"Propose mapped rows"} /></Button>
     </fieldset>

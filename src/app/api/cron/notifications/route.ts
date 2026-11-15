@@ -9,6 +9,8 @@ export async function GET(request: NextRequest) {
   const admin = paymentAdmin();
   const { error: reminderError } = await admin.rpc('generate_scheduled_notifications');
   if (reminderError) console.warn('[notifications] scheduled reminder generation unavailable', { reason: reminderError.message });
+  const { error: anomalyError } = await admin.rpc('generate_unusual_sale_notifications');
+  if (anomalyError) console.warn('[notifications] unusual-sale alerts unavailable', { reason: anomalyError.message });
   const { data: jobs, error } = await admin.from('notification_delivery_outbox').select('id,notification_id,channel,attempts').in('status', ['pending','failed']).lt('attempts', 5).order('created_at').limit(100);
   if (error) return NextResponse.json({ error: 'Outbox unavailable' }, { status: 503 });
   let sent = 0;

@@ -53,14 +53,23 @@ export async function POST(request: Request) {
       await rpc('complete_ai_delivery', { delivery, succeeded: true });
       return Response.json({ delivered: true });
     }
-    if (!['inventory','insights'].includes(body.action)) throw new Error('Unknown assistant action.');
+    if (!['inventory','inventory_image','inventory_audio','insights'].includes(body.action)) throw new Error('Unknown assistant action.');
     if (body.action === 'inventory' && (typeof body.text !== 'string' || !body.text.trim() || body.text.length > 200000)) throw new Error('Paste between 1 and 200,000 characters of product data.');
+    if (body.action === 'inventory_image' && (typeof body.image !== 'string' || !/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(body.image) || body.image.length > 3_000_000)) throw new Error('Choose a JPEG, PNG or WebP photo under 2 MB.');
+    if (body.action === 'inventory_audio' && (typeof body.audio !== 'string' || body.audio.length > 3_000_000)) throw new Error('Choose a voice recording under 2 MB.');
     if (body.question !== undefined && (typeof body.question !== 'string' || body.question.length > 2000)) throw new Error('Keep your business question under 2,000 characters.');
     const provider = getAIProvider();
-    const job = await rpc('reserve_ai_job', { job_kind: body.action });
+    const job = await rpc('reserve_ai_job', { job_kind: body.action === 'insights' ? 'insights' : 'inventory' });
     try {
       let output;
-      if (body.action === 'inventory') {
+      if (body.action === 'inventory_image') {
+        if (!provider.mapInventoryImage) throw new Error('Photo extraction requires a configured live AI provider.');
+        output = { rows: await provider.mapInventoryImage(body.image), stub: false };
+      } else if (body.action === 'inventory_audio') {
+        if (!provider.transcribeInventoryAudio) throw new Error('Voice extraction requires a configured live AI provider.');
+        const transcript = await provider.transcribeInventoryAudio(body.audio);
+        output = { rows: await provider.mapInventory(transcript), transcript, stub: false };
+      } else if (body.action === 'inventory') {
         // Product-only input: remove recognizable contact details before any provider call.
         const text = body.text.replace(/[\w.+-]+@[\w.-]+\.[a-z]{2,}/gi, '[email removed]').replace(/\+\d[\d ()-]{8,}\d/g, '[phone removed]');
         output = { rows: await provider.mapInventory(text), stub: provider.stub };

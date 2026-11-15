@@ -61,6 +61,16 @@ it.each(['quarter','constructor','__proto__',''])('rejects invalid billing cycle
 });
 
 it('requires a payment phone number before contacting the provider',async()=>{expect((await POST(request({planId:'p',billingCycle:'monthly',mobile:'bad'}))).status).toBe(400);expect(mocks.fetch).not.toHaveBeenCalled();});
+it('keeps one-time checkout available when automatic renewal is not configured',async()=>{
+ vi.stubEnv('SUBSCRIPTION_CARD_TOKEN_KEY','');
+ const recurring=await POST(request({planId:'p',billingCycle:'monthly',autoRenew:true}));
+ expect(recurring.status).toBe(422);
+ expect((await recurring.json()).error).toContain('Untick automatic renewal');
+ expect(mocks.fetch).not.toHaveBeenCalled();
+ const oneTime=await POST(request({planId:'p',billingCycle:'monthly',autoRenew:false}));
+ expect(oneTime.status).toBe(200);
+ vi.unstubAllEnvs();
+});
 it('retries temporary Zainpay gateway failures and keeps the same checkout reference',async()=>{
  mocks.fetch.mockResolvedValueOnce(new Response('<html>bad gateway</html>',{status:502})).mockResolvedValueOnce(new Response(JSON.stringify({code:'00',data:'https://pay.zainpay.ng/checkout'})));
  const response=await POST(request({planId:'p',billingCycle:'monthly'}));

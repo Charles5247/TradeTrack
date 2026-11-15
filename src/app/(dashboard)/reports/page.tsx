@@ -25,9 +25,9 @@ import { countsAsCompletedSale } from '@/lib/sales/effective-sale';
 import { useRealtimeSync } from '@/hooks/use-realtime-sync';
 import { useAuthStore } from '@/store';
 
-type ReportPeriod = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+type ReportPeriod = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly' | 'custom';
 
-async function fetchReport(period: ReportPeriod) {
+async function fetchReport(period: ReportPeriod, fromDate: string, toDate: string) {
   const supabase = createClient();
   const now = new Date();
   let startDate: Date;
@@ -38,18 +38,27 @@ async function fetchReport(period: ReportPeriod) {
     case 'monthly': startDate = new Date(now.getFullYear(), now.getMonth(), 1); break;
     case 'quarterly': startDate = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1); break;
     case 'yearly': startDate = new Date(now.getFullYear(), 0, 1); break;
+    case 'custom': {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(fromDate) || !/^\d{4}-\d{2}-\d{2}$/.test(toDate) || fromDate > toDate) throw new Error('Choose a valid start and end date.');
+      startDate = new Date(`${fromDate}T00:00:00`);
+      break;
+    }
   }
+  const endDate = period === 'custom' ? new Date(`${toDate}T00:00:00`) : new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  endDate.setDate(endDate.getDate() + 1);
 
   const [salesData, topProductsData] = await Promise.all([
     supabase
       .from('sales')
       .select('id,total,subtotal,discount,tax,payment_method,status,created_at,financial_reversals(kind)')
       .gte('created_at', startDate.toISOString())
+      .lt('created_at', endDate.toISOString())
       .eq('status', 'completed'),
     supabase
       .from('sale_items')
       .select('sale_id,product_id,quantity,total,unit_price,cost_price,product:products(name,sku)')
       .gte('created_at', startDate.toISOString())
+      .lt('created_at', endDate.toISOString())
       .limit(200),
   ]);
 
@@ -127,10 +136,13 @@ function ReportsPageInner() {
   const { user } = useAuthStore();
   useRealtimeSync(['sales', 'financial_reversals'], user?.organization_id, ['reports']);
   const [period, setPeriod] = useState<ReportPeriod>('monthly');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
 
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['reports', period],
-    queryFn: () => fetchReport(period),
+    queryKey: ['reports', user?.organization_id, period, fromDate, toDate],
+    queryFn: () => fetchReport(period, fromDate, toDate),
+    enabled: period !== 'custom' || (Boolean(fromDate && toDate) && fromDate <= toDate),
   });
 
   const exportCSV = () => {
@@ -184,8 +196,10 @@ function ReportsPageInner() {
               <SelectItem value="monthly"><TranslatedText text={"This Month"} /></SelectItem>
               <SelectItem value="quarterly"><TranslatedText text={"This Quarter"} /></SelectItem>
               <SelectItem value="yearly"><TranslatedText text={"This Year"} /></SelectItem>
+              <SelectItem value="custom">Custom dates</SelectItem>
             </SelectContent>
           </Select>
+          {period === 'custom' && <><label className="text-sm">From <input aria-label="Report from date" type="date" value={fromDate} onChange={event => setFromDate(event.target.value)} className="block min-h-11 rounded-lg border border-border bg-background px-2" /></label><label className="text-sm">To <input aria-label="Report to date" type="date" value={toDate} min={fromDate} onChange={event => setToDate(event.target.value)} className="block min-h-11 rounded-lg border border-border bg-background px-2" /></label></>}
           <Button variant="outline" onClick={exportCSV}>
             <Download className="h-4 w-4 mr-2" /><TranslatedText text={"Export"} /></Button>
           <Button variant="outline" onClick={exportPDF}>

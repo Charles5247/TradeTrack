@@ -473,6 +473,15 @@ export default function SubscriptionsPage() {
   const [checkoutPlan, setCheckoutPlan] = useState<Plan | null>(null);
   const [checkoutPhone, setCheckoutPhone] = useState('');
   const [autoRenewConsent, setAutoRenewConsent] = useState(false);
+  const { data: gatewayCapabilities } = useQuery({
+    queryKey: ['payment-gateway-capabilities'],
+    queryFn: async () => {
+      const response = await fetch('/api/payments/initialize');
+      if (!response.ok) throw new Error('Payment options unavailable');
+      return await response.json() as { automaticRenewalAvailable: boolean; configured: boolean; environment: string };
+    },
+    enabled: Boolean(checkoutPlan),
+  });
   const [billingCycle, setBillingCycle] = useState<BillingCycle>(
     "monthly",
   );
@@ -543,7 +552,7 @@ export default function SubscriptionsPage() {
       if (!session) throw new Error('Sign in again to continue.');
       const response = await fetch('/api/payments/initialize', {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
-        body: JSON.stringify({ planId, billingCycle: cycle, mobile: checkoutPhone, autoRenew: autoRenewConsent }),
+        body: JSON.stringify({ planId, billingCycle: cycle, mobile: checkoutPhone, autoRenew: autoRenewConsent && gatewayCapabilities?.automaticRenewalAvailable === true }),
       });
       const result = await response.json();
       if (!response.ok || !result.paymentUrl) throw new Error(result.error || 'Unable to start payment');
@@ -598,10 +607,12 @@ export default function SubscriptionsPage() {
           <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); if (checkoutPlan) upgradeMutation.mutate({planId: checkoutPlan.id, cycle: billingCycle}); }}>
             <p className="text-sm text-muted-foreground">{copy('Renewing the same plan keeps your remaining paid time. A different plan replaces your current plan immediately after payment.')}</p>
             <div className="space-y-2"><Label htmlFor="checkout-phone">{copy('Phone number')}</Label><Input id="checkout-phone" type="tel" inputMode="tel" autoComplete="tel" required value={checkoutPhone} onChange={event => setCheckoutPhone(event.target.value)} /></div>
-            <label className="flex items-start gap-3 text-sm"><input type="checkbox" checked={autoRenewConsent} onChange={event => setAutoRenewConsent(event.target.checked)} className="mt-1" />
+            <label className="flex items-start gap-3 text-sm"><input type="checkbox" checked={autoRenewConsent && gatewayCapabilities?.automaticRenewalAvailable === true} disabled={gatewayCapabilities?.automaticRenewalAvailable !== true} onChange={event => setAutoRenewConsent(event.target.checked)} className="mt-1" />
               <span>{copy('After I authorize this card payment, use a provider-issued card token to renew this plan at the same amount and billing period. I can stop future automatic charges at any time. Trackasuwa will not store my card number.')}</span>
             </label>
-            <Button className="w-full" type="submit" disabled={upgradeMutation.isPending}>{copy('Continue to secure payment')}</Button>
+            {gatewayCapabilities?.automaticRenewalAvailable === false && <p className="text-sm text-muted-foreground">Automatic renewal is temporarily unavailable. You can continue with a one-time payment.</p>}
+            {gatewayCapabilities?.configured === false && <p role="alert" className="text-sm text-destructive">Subscription payments are temporarily unavailable. Please contact Trackasuwa support.</p>}
+            <Button className="w-full" type="submit" disabled={upgradeMutation.isPending || gatewayCapabilities?.configured === false}>{copy('Continue to secure payment')}</Button>
           </form>
         </DialogContent>
       </Dialog>
