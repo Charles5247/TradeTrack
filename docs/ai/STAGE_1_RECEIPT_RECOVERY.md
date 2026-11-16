@@ -1,102 +1,184 @@
-# Stage 1: saved review and receipt recovery
+# Stage 1: durable review and approved stock receiving
 
-Baseline: upstream `f147635` (15 November 2026). This is an internal Smart Intake
-increment, not the complete first release. The existing Assistant entry, latest
-launcher/UI changes, new-product intake and manual stock workflows are preserved.
+16 November 2026. Integrated with upstream `f622cfe` through merge `1f5a196`.
+This is an internal Smart Intake increment, not the complete first release.
+The Assistant entry, newer invoice/PO and insight comparisons, new-product path
+and manual stock workflows are preserved.
 
-## Current upstream foundation
+## The new boundary
 
-Upstream now supplies `/api/ai/stock-receipts` and the
-`20261115120000_ai_stock_intake_receipts.sql` /
-`20261115130000_ai_new_product_intake.sql` migrations. These check the active
-Business Owner, AI entitlement, organisation and ready job. They bind receipt
-identity to `(job_id, row_index)`, record effects and audit information, and reject
-changed effects on replay. New-product creation and its first receipt share the
-server transaction. Source code is evidence of these mechanisms, not proof that
-the migrations have been deployed to a particular hosted project.
+Corrected reviews are saved to the account as well as scoped IndexedDB.
+The server prepares exact selected effects: quantities, destination, buying cost,
+stock before/after and calculated average cost. Explicit approval binds the
+revision, digest, actor, expiry and material dependencies. Execution accepts only
+approval and row references; the browser cannot replace approved business fields.
 
-This change uses that API. It does not call the generic stock writer or introduce
-another stock queue, receipt RPC or migration.
+The canonical runtime contract is
+[stock-review-contract.ts](../../src/lib/ai/stock-review-contract.ts).
+The new migration is
+[20261116080912_ai_stock_review_approvals.sql](../../supabase/migrations/20261116080912_ai_stock_review_approvals.sql).
+It depends on existing purchase-cost, AI plumbing/Owner access and both
+15 November AI receipt/new-product migrations. Fetching Git does not deploy SQL.
+Inspect the target schema/history before applying dependencies.
 
-## Merchant behaviour
+## Merchant flow
 
-- A generated review is saved in the existing account-specific IndexedDB
-  `app_meta` store, additionally keyed by organisation and Owner.
-- Reloading preserves row corrections, new-product details, buying costs,
-  selling prices and outcomes. Selection and the review confirmation reset.
-- The older browser-wide `trackasuwa.ai.stockJob` pointer can be adopted only
-  after its existing server endpoint authorises access. A network failure does
-  not delete that pointer; it presents a retry state before new work can begin.
-- Unmatched rows retain upstream's new-product path. New products require a
-  name, SKU, supported unit and explicit selling price. Existing products retain
-  their selling price. Unknown buying cost stays unresolved; genuinely free
-  stock requires explicit zero-cost confirmation.
-- New approvals require a resolved destination and online connectivity. Missing
-  catalog data prevents approval while saved attempts remain available for checks.
-- Before dispatch, the exact selected row command is durably saved. All inputs
-  and replacement controls lock during execution; an attempted row is immutable.
-- A timeout or failed response means confirmation pending. It does not produce
-  an optimistic stock delta or enter the manual offline queue.
-- Check receipt status performs a read. Only a matching server result establishes
-  completion. Missing, denied or failed lookup remains unconfirmed. An explicit
-  retry checks first and sends the same job, row and frozen effects.
-- A review with unresolved attempts cannot be closed or replaced. Completed
-  receipts remain recorded when the review is closed; unattempted rows are discarded.
-
-## Concurrency and account isolation
-
-Scoped storage transactions use a revision comparison so an older tab cannot
-overwrite a newer review. Session/namespace checks surround asynchronous work;
-switching Owner, organisation, role or account namespace stops later dispatches
-and prevents late responses from updating another account's review. The server
-also binds the original job to its Owner, so the current session cannot execute
-another Owner's job. An already dispatched operation may still commit: retain its
-original identity and recover its outcome.
-
-Only mapped source fields and corrected commands are stored, not original photos,
-recordings, files or credentials. Browser storage failure blocks submission.
-Clearing browser storage can remove local corrections and recovery references;
-these are device-local drafts, not permanent or cross-device backups.
+1. Reopen unfinished work, or submit input through the existing Assistant.
+   Existing reviews are checked before spending another generation.
+2. Correct rows. Typing saves to this device; finishing a field saves to the
+   account. Failure remains visible; a stale tab cannot silently overwrite a
+   newer account revision.
+3. Select ready rows, confirm physical receipt and review server-calculated
+   effects. Existing products keep their selling price. New products require
+   name, SKU, supported unit and explicit selling price.
+4. Explicitly approve that selection. Selection is not approval; approval is
+   not completion.
+5. The server rechecks current Owner, organisation, entitlement, revision,
+   expiry, product, warehouse, stock and valuation within the execution
+   transaction. Changed facts produce a durable no-effect result.
+6. Each item's effects and durable result commit together. Successful independent
+   rows remain saved while other rows are repaired.
+7. After a lost response, check the original operation. Retry retains its identity.
+   A missing, denied or failed lookup never proves nothing happened.
 
 ```mermaid
 stateDiagram-v2
-  [*] --> Draft: save mapped review on this device
-  Draft --> Pending: Owner reviews and applies / persist exact command
-  Pending --> Saved: server confirms matching effects
-  Pending --> Pending: no confirmation / check or explicit same-command retry
-  Saved --> [*]: close review; recorded stock is retained
+  [*] --> DeviceDraft: submit / correct
+  DeviceDraft --> AccountReview: save revision with precondition
+  AccountReview --> ExactSelection: prepare selected effects online
+  ExactSelection --> Approved: explicit approval of digest
+  Approved --> Completed: revalidate + apply + result + audit
+  Approved --> NoEffect: stale / expired / rolled-back rejection
+  Approved --> Unknown: response lost
+  Unknown --> Completed: recover committed result
+  Unknown --> NoEffect: recover authoritative no-effect result
+  Unknown --> Unknown: offline / denied / lookup failed
+  NoEffect --> AccountReview: correct and review again
 ```
 
-## Verification and remaining boundaries
+## Permission, source and recovery guarantees
 
-Tests cover IndexedDB reload/CAS/storage failure, immutable attempts, wrong
-account/role, missing receipt evidence, offline submission prevention, locked
-in-flight rows, new-product review, legacy-job recovery and existing server-confirmed
-rows. Existing upstream AI/database regressions are checked separately.
+- API, RPC and direct-table policies require the current active Business Owner.
+  Account precondition headers reject session switches; they grant no authority.
+  Tenant and nested-resource scope remain server-derived.
+- Original text/CSV and normalised spreadsheet text are retained privately with
+  fingerprints. Original XLSX binaries are not retained. Images/audio retain
+  fingerprints only; the review states original media is unavailable.
+  Source text, filename metadata and transcripts are excluded from revised
+  job/suggestion audit copies. Production retention remains a decision.
+- All approved operations remain discoverable by exact selection after later
+  revisions. Corrections invalidate old unexecuted selections. Confirmed outcomes
+  remain immutable and recoverable after expiry or plan loss.
+- Legacy public AI receipt writers allow matching-result replay only. Private
+  base writers are unavailable to browser roles. Ledger tables are SELECT-only
+  under RLS.
+- Whole base quantities and two-decimal known costs are enforced. Missing cost
+  remains unresolved. Explicit incoming zero is supported; positive existing
+  stock with zero valuation requires separate valuation review.
+- Preview and the domain receipt share average-cost arithmetic. All locations
+  affect average cost; displayed stock identifies the selected destination.
+  New product plus first receipt is atomic.
+- Apply requires online checks. No competing inventory snapshot or generic
+  offline stock queue is introduced. Offline review is device-saved work.
+- Unresolved approvals cannot be discarded by closing a review. Cancelling an
+  in-flight request does not reverse its possible server effect.
 
-Controlled tests do not establish production deployment, real Owner usability,
-provider extraction accuracy or a full release gate. The installed upstream
-receipt migrations remain a deployment prerequisite; this PR does not apply them.
-Local drafts are not a server-persisted pre-execution proposal revision or approval
-digest. Those stronger cross-device/stale-dependency semantics remain future work.
-An unresolved rejected attempt stays locked until its result can be reconciled;
-the UI does not infer that an unsuccessful response proves no prior effect.
+## Explicit expiry policy
 
-All accepted first-release inputs remain required: text/messages, CSV/Excel,
-printed invoice photos/PDFs, other photos and handwriting. Document/provider
-accuracy, delivery duplicate detection, PO/partial-receipt reconciliation,
-memo lineage, unit/pack modelling and sourced price suggestions need their own
-bounded implementation and evaluation. This recovery increment does not claim
-those capabilities are complete.
+Before preview, the target organisation must configure
+`organizations.settings.ai_stock_review_ttl_seconds`, from 60 to 3,600 seconds.
+Missing/invalid configuration blocks preview. No production default is invented.
+Synthetic tests use 600 seconds only as a fixture. Fresh wall-clock checks follow
+potentially blocking locks. Expiry prevents first execution, not result recovery.
 
-Validation on this change: 101 tests passed across 11 files (AI tests, review/page/
-launcher DOM tests and purchase-cost database tests); TypeScript, lint for the six
-changed TypeScript files, tracked-environment hygiene and diff checks passed.
-`npm run build -- --webpack` completed, including 70 page-generation tasks. The
-4 GB laptop build used a temporary single-worker override and a 1280 MB JavaScript
-heap cap; that override was restored. Build-only dummy Supabase values avoided
-connecting to a hosted backend. The earlier missing server-key failure was an
-isolated-worktree configuration issue, not a completed build. No hosted database
-migration, provider-live accuracy test or merchant/device acceptance was performed.
-Tests reused the existing dependency installation through a worktree junction,
-with a temporary Vitest resolution override; neither became a repository change.
+## Concurrency trade-off
+
+The current boundary takes an organisation row lock before job/product locks and
+locks relevant inventory. Product parent locks also guard new inventory-location
+inserts through foreign keys. This conservative policy can serialize same-business
+activity, including status reads. Manual helpers may acquire locks in another
+order. Native multi-session checks must establish observed blocking and rollback;
+PGlite alone cannot prove concurrency or production throughput. Narrower shared
+locking requires a separately reviewed change.
+
+## Verification and remaining gates
+
+Verified so far on this branch:
+
+- The selected regression set passed 155 tests across 16 files, including the
+  page, launcher, invoice comparison, draft/cache, receiving UI, AI APIs and
+  database tests. One cold notification-fixture timeout was rerun successfully
+  after increasing only its bootstrap-inclusive budget. TypeScript passed.
+  The final typed API changes were checked again with 24 focused tests, including
+  two new analytics record-validation cases (included in the 155 total).
+  Changed TypeScript/TSX lint, tracked-environment hygiene and diff checks passed.
+  The full Next.js 16.2.12 Webpack production build passed, including all 71
+  page-generation tasks. It used a temporary single-worker setting and 1,280 MB
+  heap cap; the original Next configuration was restored. The build's generated
+  route checks exposed an optional GET parameter, which was corrected and its
+  focused tests rerun before this successful build.
+- 40 new database cases and 18 stock-review API cases passed. The fixtures load
+  the actual purchase-cost, receipt, new-product and approval migrations; they
+  do not replace the domain receipt with a success stub.
+  Browser testing exposed Next's internal-host normalisation rejecting a genuine
+  loopback Origin. The check now compares the actual Host, protocol and port,
+  ignores forwarded-host overrides and rejects malformed/foreign origins. Five
+  additional cases passed; independent read-only security review found no blocker.
+  Missing-Origin non-browser clients retain authenticated API compatibility. This
+  exception is not a claim of complete CSRF protection; deployment proxies must
+  preserve external Host/protocol or use an explicitly trusted origin policy.
+- A separate native PostgreSQL 18.1 harness proved real lock waits using
+  `pg_stat_activity` and `pg_blocking_pids`. Five scenarios covered manual stock
+  update, manual costed receipt, new-location insertion/product FK locking,
+  concurrent same-approval retries, and a deliberate deadlock. Stale effects
+  were refused, retries produced one receipt, and the deadlock victim rolled
+  back. Actual sale/transfer endpoints and throughput remain separate gates.
+- The required migrations were rehearsed only on authorised disposable project
+  `jtqyxfoyllcvptxgwhmk`, then those four exact versions were registered with
+  `supabase migration repair --status applied`. The project's older baseline
+  history was absent: this does not establish full migration-history parity or
+  authorise replaying all other migrations.
+  Hosted grant checks confirmed browser-role private writer execution, selection
+  INSERT and receipt TRUNCATE are denied, and receipt RLS is enabled.
+- A normal authenticated synthetic QA Owner used the hosted RPC boundary to
+  reserve a controlled job, save/restore its correction, preview, approve, execute,
+  replay, recover the durable result and close. Destination stock changed from
+  13 to 15 once; average cost was 111.11 and matched the server preview. The
+  600-second TTL was configured only for that synthetic QA organisation. No
+  subscription or paid entitlement was fabricated and no provider was called.
+- The built HTTP API recovered the same receipt with normal Owner cookies,
+  rejected a mismatched account (409) and rejected a raw unapproved write (400).
+  Headless Chrome then uploaded an actual synthetic CSV, changed quantity 2 to
+  3 and saved it to the account. Independent hosted reads before approval found
+  zero products/receipts and review revision 1 containing quantity 3. The exact
+  preview showed stock 0 → 3, buying cost 150 and selling price 200. After the
+  explicit approval, the UI showed **Stock saved** and linked the product.
+  Independent reads found one product, stock 3, cost 150, selling price 200, one
+  receipt, one cost-history row and a completed operation. Reload retained the
+  confirmed state. At a 390-pixel viewport the document width was also 390 pixels
+  (no horizontal overflow in this check). The job was
+  `f65bc533-8d88-4089-9b33-6c18759764ce`. This is controlled browser evidence,
+  not real merchant/device usability or live document-understanding evidence.
+
+Controlled fixtures do not establish provider extraction accuracy, merchant
+usability or production deployment. The earlier failed Vercel preview's build
+logs are unavailable to this account and the product owner; its cause and
+preview acceptance remain unverified.
+
+The test environment also showed a missing `record_merchant_app_open` RPC (404)
+and an intermittent subscription-verification HTTP 503. They remain recorded
+environment limitations; this increment does not repair unrelated schema or
+claim that every application workflow passed.
+
+Stage 1 remains partly implemented until wider migration/schema parity, actual
+sale/transfer/PO contention, device/accessibility and merchant review have
+acceptance evidence. Accepted Free/other-paid eligibility
+also exceeds the existing introductory/Growth guard and needs scoped work.
+
+All first-release inputs remain required: text/messages, CSV/Excel, printed
+invoice photos/PDFs, other photos and handwriting. This increment does not
+complete PDF handling, all-format/provider accuracy, source-to-line evidence,
+pack conversion, bulk setup, shared physical-delivery lineage, atomic PO partial
+receiving, memo composition or sourced price suggestions. Job/row idempotency
+does not prevent receiving the same physical delivery through a different job.
+These need bounded follow-ups and their own acceptance evidence.

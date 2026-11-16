@@ -6,7 +6,7 @@ export const PLAN_ORDER = [
  'b4000000-0000-0000-0000-000000000004',
  'b5000000-0000-0000-0000-000000000005',
 ];
-export function hasAIEntitlement(state: { active: boolean; plan_id?: string; trial_ends_at?: string | null; server_time: string }) {
+export function hasAIEntitlement(state: { active: boolean; plan_id?: string | null; trial_ends_at?: string | null; server_time: string }) {
   if (!state.active) return false;
   const serverTime=Date.parse(state.server_time);
   if (!Number.isFinite(serverTime)) return false;

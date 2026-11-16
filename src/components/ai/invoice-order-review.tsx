@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { useCopy } from '@/i18n/text';
+import { useAuthStore } from '@/store';
 
 type Order = { id: string; created_at: string; supplier: { name: string } | null };
 type Comparison = { order: { id: string; supplier: { name: string } | null }; ready: boolean;
@@ -40,31 +41,56 @@ async function imageDataUrl(file: File) {
 }
 
 export function InvoiceOrderReview({ enabled }: { enabled: boolean }) {
+  const user = useAuthStore(state => state.user);
+  const owner = user?.role === 'business_owner' && user.status === 'active' && user.organization_id ? user : null;
+  return <InvoiceOrderWorkspace key={owner ? `${owner.organization_id}:${owner.id}` : 'unavailable'}
+    enabled={enabled && !!owner} ownerId={owner?.id ?? null} organizationId={owner?.organization_id ?? null} />;
+}
+
+function InvoiceOrderWorkspace({ enabled, ownerId, organizationId }: {
+  enabled: boolean; ownerId: string | null; organizationId: string | null;
+}) {
   const copy = useCopy();
+  const mounted = useRef(true);
+  const running = useRef(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const [order, setOrder] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [comparison, setComparison] = useState<Comparison | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const sameAccount = useCallback(() => {
+    const current = useAuthStore.getState().user;
+    return mounted.current && !!ownerId && !!organizationId && current?.id === ownerId
+      && current.organization_id === organizationId && current.role === 'business_owner' && current.status === 'active';
+  }, [ownerId, organizationId]);
   useEffect(() => {
-    if (!enabled) return;
-    void fetch('/api/ai/purchase-order-match').then(json).then(data => setOrders(data.orders))
-      .catch(cause => setError(cause instanceof Error ? cause.message : 'Could not load purchase orders.'));
-  }, [enabled]);
+    mounted.current = true;
+    if (enabled && sameAccount()) {
+      void fetch('/api/ai/purchase-order-match', { headers: {
+        'X-Track-Expected-Owner': ownerId!, 'X-Track-Expected-Organization': organizationId!,
+      } }).then(json).then(data => { if (sameAccount()) setOrders(data.orders); })
+        .catch(cause => { if (sameAccount()) setError(cause instanceof Error ? cause.message : 'Could not load purchase orders.'); });
+    }
+    return () => { mounted.current = false; };
+  }, [enabled, ownerId, organizationId, sameAccount]);
   const review = async () => {
-    if (!order || !file) return;
+    if (!enabled || !order || !file || running.current || !sameAccount()) return;
+    running.current = true;
     setBusy(true); setError(''); setComparison(null);
     try {
+      const image = await imageDataUrl(file);
+      if (!sameAccount()) return;
+      const headers = { 'Content-Type': 'application/json',
+        'X-Track-Expected-Owner': ownerId!, 'X-Track-Expected-Organization': organizationId! };
       const extracted = await json(await fetch('/api/ai', { method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'invoice_image', image: await imageDataUrl(file) }) }));
+        headers, body: JSON.stringify({ action: 'invoice_image', image }) }));
+      if (!sameAccount()) return;
       const result = await json(await fetch('/api/ai/purchase-order-match', { method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ job: extracted.job, order }) }));
-      setComparison(result);
-    } catch (cause) { setError(cause instanceof Error ? cause.message : 'Could not compare invoice.'); }
-    finally { setBusy(false); }
+        headers, body: JSON.stringify({ job: extracted.job, order }) }));
+      if (sameAccount()) setComparison(result);
+    } catch (cause) { if (sameAccount()) setError(cause instanceof Error ? cause.message : 'Could not compare invoice.'); }
+    finally { running.current = false; if (sameAccount()) setBusy(false); }
   };
   return <section className="min-w-0 space-y-4 rounded-[var(--radius-lg)] border border-border bg-card p-4 sm:p-6" aria-label={copy('Invoice and purchase order review')}>
     <h2 className="tt-section-title">{copy('Compare supplier invoice with a purchase order')}</h2>

@@ -62,4 +62,6 @@ it('creates one product and receipt, replays the same approval, and rejects chan
     await db.exec(`UPDATE public.users SET role = 'admin' WHERE id = '${owner}'`);
     await expect(db.query(`SELECT public.apply_ai_new_product_receipt('${job}',1,'Rice','RICE-1','bag',1200,'${warehouse}',2,900)`)).rejects.toThrow('business owner');
   } finally { await db.close(); }
-}, 15000);
+// This case includes cold PGlite/WASM bootstrap on the supported 4 GB laptop.
+// Keep its business assertions intact while allowing fixture startup to finish.
+}, 120000);

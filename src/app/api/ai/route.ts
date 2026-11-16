@@ -3,13 +3,30 @@ import { hasAIEntitlement } from '@/lib/ai/entitlement';
 import { getAIProvider } from '@/lib/ai/provider';
 import { deliveryAdapter } from '@/lib/ai/delivery';
 import { periodComparison, recentAnalysis } from '@/lib/ai/analysis';
+import { z } from 'zod';
+import { assertExpectedAccount } from '@/lib/auth/expected-account';
+import type { Database } from '@/lib/supabase/types';
+
+const intakeSourceSchema = z.object({
+  kind: z.enum(['text', 'csv', 'xlsx']), text: z.string().max(200000), file_name: z.string().max(255).optional(),
+}).strict();
+type ActionFunction = 'reserve_ai_job' | 'finish_ai_job' | 'approve_ai_job'
+  | 'set_ai_preferences' | 'reserve_ai_delivery' | 'complete_ai_delivery' | 'attach_ai_stock_source';
+const productSchema = z.object({ id: z.string(), name: z.string(), cost_price: z.number() });
+const inventorySchema = z.object({ id: z.string(), product_id: z.string(), quantity: z.number() });
+const saleSchema = z.object({ id: z.string(), created_at: z.string(), total: z.number(), status: z.string(),
+  cashier_id: z.string().nullable().optional(), sale_items: z.array(z.object({
+    product_id: z.string(), quantity: z.number(), unit_price: z.number().optional(),
+  })).nullable().optional().transform(value => value ?? []),
+});
+const reversalSchema = z.object({ id: z.string(), sale_id: z.string(), kind: z.string() });
 
 async function context() {
   const ctx = await apiContext(['business_owner']);
-  const db = ctx.db as any;
+  const db = ctx.db;
   const { data, error } = await db.rpc('verify_business_subscription');
   if (error || !data || !hasAIEntitlement(data)) throw new Error('AI requires an active introductory period or Growth plan and above.');
-  const rpc = async (name: string, args: Record<string, unknown>) => {
+  const rpc = async <Name extends ActionFunction>(name: Name, args: Database['public']['Functions'][Name]['Args']) => {
     const result = await db.rpc(name, args);
     if (result.error) throw new Error(result.error.message);
     return result.data;
@@ -27,6 +44,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const { db, org, profile, rpc } = await context();
+    assertExpectedAccount(request, profile);
     const body = await request.json();
     if (['approve','preferences','deliver'].includes(body.action) && body.confirm !== true) throw new Error('Review the preview and explicitly confirm first.');
     if (body.action === 'preferences') {
@@ -48,7 +66,8 @@ export async function POST(request: Request) {
       await rpc('approve_ai_job', { job: job.id, batch: null });
       const delivery = await rpc('reserve_ai_delivery', { job: job.id, delivery_channel: channel });
       try {
-        if (adapter) await adapter.send({ recipient: recipient!, title: 'TracKasuwa business insights', message: job.result.summary, idempotencyKey: delivery });
+        if (adapter) await adapter.send({ recipient: recipient!, title: 'TracKasuwa business insights',
+          message: z.object({ summary: z.string() }).parse(job.result).summary, idempotencyKey: delivery });
       } catch (e) { await rpc('complete_ai_delivery', { delivery, succeeded: false }); throw e; }
       await rpc('complete_ai_delivery', { delivery, succeeded: true });
       return Response.json({ delivered: true });
@@ -58,9 +77,19 @@ export async function POST(request: Request) {
     if (['inventory_image','invoice_image'].includes(body.action) && (typeof body.image !== 'string' || !/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(body.image) || body.image.length > 3_000_000)) throw new Error('Choose a JPEG, PNG or WebP photo under 2 MB.');
     if (body.action === 'inventory_audio' && (typeof body.audio !== 'string' || body.audio.length > 3_000_000)) throw new Error('Choose a voice recording under 2 MB.');
     if (body.question !== undefined && (typeof body.question !== 'string' || body.question.length > 2000)) throw new Error('Keep your business question under 2,000 characters.');
+    const suppliedSource = body.action === 'inventory' && body.source !== undefined ? intakeSourceSchema.parse(body.source) : null;
     const provider = getAIProvider();
-    const job = await rpc('reserve_ai_job', { job_kind: body.action === 'insights' ? 'insights' : 'inventory' });
+    const job = z.string().parse(await rpc('reserve_ai_job', { job_kind: body.action === 'insights' ? 'insights' : 'inventory' }));
     try {
+      if (body.action !== 'insights') {
+        const kind = body.action === 'inventory' ? suppliedSource?.kind || 'text'
+          : body.action === 'inventory_audio' ? 'audio' : 'image';
+        const content = body.action === 'inventory' ? suppliedSource?.text ?? body.text
+          : body.action === 'inventory_audio' ? body.audio : body.image;
+        await rpc('attach_ai_stock_source', { p_job_id: job, p_kind: kind, p_content: content,
+          p_metadata: { purpose: body.action === 'invoice_image' ? 'po_compare' : 'stock_intake',
+            ...(suppliedSource?.file_name ? { file_name: suppliedSource.file_name } : {}) } });
+      }
       let output;
       if (body.action === 'invoice_image') {
         if (!provider.mapInvoiceImage) throw new Error('Invoice extraction requires a configured live AI provider.');
@@ -77,15 +106,17 @@ export async function POST(request: Request) {
         const text = body.text.replace(/[\w.+-]+@[\w.-]+\.[a-z]{2,}/gi, '[email removed]').replace(/\+\d[\d ()-]{8,}\d/g, '[phone removed]');
         output = { rows: await provider.mapInventory(text), stub: provider.stub };
       } else {
-        const read = async (table: string, columns: string) => {
-          const rows: any[] = [];
+        const read = async (table: 'products' | 'inventory' | 'sales' | 'financial_reversals', columns: string) => {
+          const rows: unknown[] = [];
           for (let start = 0; ; start += 1000) {
             const { data, error } = await db.from(table).select(columns).eq('organization_id', org).order('id').range(start, start + 999);
             if (error) throw error;
             rows.push(...data); if (data.length < 1000) return rows;
           }
         };
-        const [products, inventory, sales, reversals] = await Promise.all([read('products','id,name,cost_price'), read('inventory','id,product_id,quantity'), read('sales','id,total,status,created_at,cashier_id,sale_items(product_id,quantity,unit_price)'), read('financial_reversals','id,sale_id,kind')]);
+        const raw = await Promise.all([read('products','id,name,cost_price'), read('inventory','id,product_id,quantity'), read('sales','id,total,status,created_at,cashier_id,sale_items(product_id,quantity,unit_price)'), read('financial_reversals','id,sale_id,kind')]);
+        const products = z.array(productSchema).parse(raw[0]), inventory = z.array(inventorySchema).parse(raw[1]);
+        const sales = z.array(saleSchema).parse(raw[2]), reversals = z.array(reversalSchema).parse(raw[3]);
         const reversed = new Set(reversals.filter(r => r.kind !== 'vendor_payment_correction').map(r => r.sale_id));
         const currentSales = sales.filter(s => s.status === 'completed' && !reversed.has(s.id));
         const stock = products.map(p => ({ name: p.name, quantity: inventory.filter(i => i.product_id === p.id).reduce((n,i) => n + Number(i.quantity), 0), cost: Number(p.cost_price) }));
