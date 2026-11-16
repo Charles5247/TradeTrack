@@ -49,11 +49,9 @@ function createWindow() {
 
   // targetOrigin (e.g. "https://trackasuwa.vercel.app") is used ONLY to decide
   // whether a link is "in-app" vs. "external" below. launchUrl (the
-  // same origin + "/login") is what actually loads first — the app's
-  // "/" now serves the public marketing site, so returning traders are
-  // sent straight to /login instead (the web app's auth middleware
-  // silently forwards an already-authenticated session on to
-  // /dashboard). Keeping these as two separate values, both derived
+  // same origin + "/dashboard") is what actually loads first. The dashboard
+  // is prepared for offline use; signed-out users are sent to login by the
+  // app. Keeping these as two separate values, both derived
   // from config.js, means in-app navigation to any post-login path
   // (e.g. /dashboard, /pos) still correctly matches targetOrigin and
   // stays inside the window instead of being treated as "external".
