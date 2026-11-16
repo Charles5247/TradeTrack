@@ -42,6 +42,7 @@ beforeAll(async()=>{
   const migration=readFileSync('supabase/migrations/20261106112119_warehouse_memos.sql','utf8');
   await db.exec(migration);
   await db.exec(migration);
+  await db.exec(readFileSync('supabase/migrations/20261116100000_edit_warehouse_memo_drafts.sql','utf8'));
 },30000);
 afterAll(async()=>{await db?.close();});
 
@@ -76,5 +77,23 @@ it('hides drafts from staff and rejects submissions from unassigned cashiers',as
     await expect(db.exec(`UPDATE warehouse_memos SET reference='Changed' WHERE id='${draft}'`)).rejects.toThrow();
     await db.exec(`SELECT set_config('test.uid','${unassigned}',false);`);
     await expect(db.exec(`SELECT public.submit_warehouse_memo('${draft}','[{"product_id":"${product}","quantity":4}]'::jsonb);`)).rejects.toThrow('not assigned');
+  } finally { await db.exec('RESET ROLE'); }
+});
+
+it('lets an owner revise only an unsent draft without changing stock',async()=>{
+  await db.exec(`SELECT set_config('test.uid','${owner}',false); SET ROLE authenticated;`);
+  try {
+    const created=await db.query<{create_warehouse_memo:string}>(`SELECT public.create_warehouse_memo('${warehouse}','in','Original draft','[{"product_id":"${product}","quantity":2}]'::jsonb,false)`);
+    const draft=created.rows[0].create_warehouse_memo;
+    await expect(db.exec(`SELECT public.edit_warehouse_memo_draft('${draft}','50000000-0000-0000-0000-000000000001','out','Wrong warehouse','[{"product_id":"${product}","quantity":5}]'::jsonb);`)).rejects.toThrow('Warehouse not found');
+    await expect(db.exec(`SELECT public.edit_warehouse_memo_draft('${draft}','${warehouse}','out','Invalid quantity','[{"product_id":"${product}","quantity":0}]'::jsonb);`)).rejects.toThrow('Expected quantities must exceed zero');
+    await db.exec(`SELECT public.edit_warehouse_memo_draft('${draft}','${warehouse}','out','Revised draft','[{"product_id":"${product}","quantity":5}]'::jsonb);`);
+    expect((await db.query(`SELECT reference,direction,expected_items FROM warehouse_memos WHERE id='${draft}'`)).rows[0])
+      .toMatchObject({reference:'Revised draft',direction:'out',expected_items:[{product_id:product,quantity:5}]});
+    expect((await db.query(`SELECT count(*)::integer AS n FROM warehouse_memo_effects WHERE memo_id='${draft}'`)).rows[0]).toMatchObject({n:0});
+    await db.exec(`SELECT set_config('test.uid','${cashier}',false);`);
+    await expect(db.exec(`SELECT public.edit_warehouse_memo_draft('${draft}','${warehouse}','in','Staff edit','[{"product_id":"${product}","quantity":2}]'::jsonb);`)).rejects.toThrow('Business owner permission required');
+    await db.exec(`SELECT set_config('test.uid','${owner}',false); SELECT public.send_warehouse_memo('${draft}');`);
+    await expect(db.exec(`SELECT public.edit_warehouse_memo_draft('${draft}','${warehouse}','in','Late edit','[{"product_id":"${product}","quantity":2}]'::jsonb);`)).rejects.toThrow('Only a draft memo can be edited');
   } finally { await db.exec('RESET ROLE'); }
 });

@@ -1064,6 +1064,7 @@ export type Database = {
     Functions: {
       receive_stock_at_cost: { Args: { p_receipt_id: string; p_product_id: string; p_warehouse_id: string; p_quantity: number; p_unit_cost: number; p_notes?: string | null }; Returns: number };
       create_warehouse_memo: { Args: { p_warehouse: string; p_direction: string; p_reference: string; p_items: Array<{ product_id: string; quantity: number }>; p_send?: boolean }; Returns: string };
+      edit_warehouse_memo_draft: { Args: { p_memo: string; p_warehouse: string; p_direction: string; p_reference: string; p_items: Array<{ product_id: string; quantity: number }> }; Returns: void };
       send_warehouse_memo: { Args: { p_memo: string }; Returns: void };
       submit_warehouse_memo: { Args: { p_memo: string; p_items: Array<{ product_id: string; quantity: number }> }; Returns: void };
       review_warehouse_memo: { Args: { p_memo: string; p_items: Array<{ product_id: string; quantity: number }>; p_reason: string }; Returns: void };
