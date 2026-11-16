@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { decryptCardToken } from '@/lib/subscriptions/card-renewal';
 import { paymentAdmin, verifyCheckout } from '@/lib/subscriptions/zainpay-checkout';
 import { getZainpayConfig } from '@/lib/zainpay-config';
+import { classifyCardCharge } from '@/lib/subscriptions/card-charge';
 
 type RenewalClaim = {
   organization_id: string; reference: string; encrypted_token: string;
@@ -62,12 +63,14 @@ export async function GET(request: NextRequest) {
           emailAddress: claim.email_address, callBackUrl: callback.href, cardToken }),
         signal: AbortSignal.timeout(20000),
       });
-      if (response.ok) submitted++;
+      const providerResult: unknown = response.ok ? await response.json().catch(() => null) : null;
+      const charge = classifyCardCharge(response.status, providerResult);
+      if (charge.accepted) submitted++;
       else {
         unresolved++;
         await admin.from('subscription_card_mandates').update({
-          last_error: `Provider returned HTTP ${response.status}`,
-          ...(response.status >= 400 && response.status < 500 ? { status: 'action_required' } : {}),
+          last_error: response.ok ? 'Provider did not confirm the card charge' : `Provider returned HTTP ${response.status}`,
+          ...(charge.actionRequired ? { status: 'action_required' } : {}),
         })
           .eq('organization_id', claim.organization_id).eq('pending_reference', claim.reference);
       }

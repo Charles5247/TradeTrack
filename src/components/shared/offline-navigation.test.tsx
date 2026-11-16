@@ -32,3 +32,24 @@ it('caches full HTML and its scripts before reporting offline readiness', async 
     Reflect.deleteProperty(navigator, 'serviceWorker');
   }
 });
+
+it('does not advertise merchant POS for a platform owner while offline', async () => {
+  Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+  const priorRole = user.role;
+  user.role = 'platform_owner';
+  vi.stubGlobal('caches', { match: vi.fn(async () => new Response('cached')) });
+  Object.defineProperty(navigator, 'serviceWorker', { configurable: true, value: { addEventListener: vi.fn(), removeEventListener: vi.fn() } });
+  Object.defineProperty(navigator, 'onLine', { configurable: true, value: false });
+  const host = document.createElement('div');
+  const root = createRoot(host);
+  try {
+    await act(async () => { root.render(<OfflineNavigation />); });
+    expect(host.textContent).toContain('Platform owner accounts cannot use merchant POS');
+    expect(host.textContent).not.toContain('Offline POS data is available');
+  } finally {
+    await act(async () => root.unmount());
+    user.role = priorRole;
+    Reflect.deleteProperty(navigator, 'serviceWorker');
+    Reflect.deleteProperty(navigator, 'onLine');
+  }
+});

@@ -117,6 +117,7 @@ export function registerServiceWorker(
     if (
       disposed ||
       checkingForUpdate ||
+      !navigator.onLine ||
       document.visibilityState !== 'visible'
     ) {
       return;

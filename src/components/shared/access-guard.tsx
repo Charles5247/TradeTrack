@@ -33,7 +33,9 @@ export function AccessGuard({
         <div className="text-center">
           <p className="font-medium">{t.common.access_denied}</p>
           <p className="text-sm text-muted-foreground">
-            {t.common.access_denied_desc}
+            {user?.role === 'platform_owner' && allow.includes('business_owner')
+              ? 'This is a platform owner account. Merchant pages require a business owner or assigned staff account. Connect to the internet to switch accounts.'
+              : t.common.access_denied_desc}
           </p>
         </div>
       </div>

@@ -6,7 +6,7 @@ vi.mock('@/lib/subscriptions/zainpay-checkout',async importOriginal=>({
  paymentAdmin:()=>({auth:{getUser:mocks.getUser},from:mocks.from}),
 }));
 vi.mock('@/lib/zainpay-config',()=>({getZainpayConfig:()=>({mode:'live',publicKey:'server-key',baseUrl:'https://api.zainpay.ng',defaultZainbox:'server-box'})}));
-import { POST } from './route';
+import { GET, POST } from './route';
 beforeEach(()=>{
  vi.clearAllMocks();mocks.role='business_owner';mocks.saveError=null;mocks.privateOffer=null;
  vi.stubEnv('NEXT_PUBLIC_APP_URL','https://trackasuwa.vercel.app');
@@ -28,7 +28,9 @@ it('derives price, identity and destination on the server, ignoring tampering',a
  expect(response.status).toBe(200);
  expect(mocks.insert).toHaveBeenCalledWith(expect.objectContaining({amount_kobo:6000000,organization_id:'org-from-auth',user_id:'owner',plan_id:'plan-from-db',zainbox_code:'server-box',billing_cycle:'quarterly'}));
  const body=JSON.parse(mocks.fetch.mock.calls[0][1].body);
- expect(body).toMatchObject({amount:'60000',emailAddress:'owner@example.com',zainboxCode:'server-box'});
+ expect(body).toMatchObject({amount:'60000.00',currencyCode:'NGN',emailAddress:'owner@example.com',zainboxCode:'server-box',
+  logoUrl:'https://trackasuwa.vercel.app/brand/logos/trackasuwa_primary_color_transparent.png',
+  paymentChannels:['card','bank_transfer'],allowRecurringPayment:false});
  expect(body.callBackUrl).toContain('/api/payments/verify?txnRef=TT-');
  expect(body).not.toHaveProperty('callbackUrl');
  expect(body.txnRef).not.toBe('chosen');
@@ -69,6 +71,21 @@ it('keeps one-time checkout available when automatic renewal is not configured',
  expect(mocks.fetch).not.toHaveBeenCalled();
  const oneTime=await POST(request({planId:'p',billingCycle:'monthly',autoRenew:false}));
  expect(oneTime.status).toBe(200);
+ vi.unstubAllEnvs();
+});
+it('offers automatic renewal only when the live gateway and daily job are configured',async()=>{
+ vi.stubEnv('SUBSCRIPTION_CARD_TOKEN_KEY','a'.repeat(64));
+ vi.stubEnv('CRON_SECRET','');
+ expect((await GET()).status).toBe(200);
+ await expect((await GET()).json()).resolves.toMatchObject({automaticRenewalAvailable:false});
+ expect((await POST(request({planId:'p',billingCycle:'monthly',autoRenew:true}))).status).toBe(422);
+ vi.stubEnv('CRON_SECRET','scheduled-job-secret');
+ await expect((await GET()).json()).resolves.toMatchObject({automaticRenewalAvailable:true});
+ const response=await POST(request({planId:'p',billingCycle:'monthly',autoRenew:true}));
+ expect(response.status).toBe(200);
+ expect(JSON.parse(mocks.fetch.mock.calls[0][1].body)).toMatchObject({
+  allowRecurringPayment:true,paymentChannels:['card'],currencyCode:'NGN',
+ });
  vi.unstubAllEnvs();
 });
 it('retries temporary Zainpay gateway failures and keeps the same checkout reference',async()=>{

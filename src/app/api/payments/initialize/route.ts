@@ -4,6 +4,12 @@ import { getZainpayConfig } from '@/lib/zainpay-config';
 import { BILLING_MONTHS, billingPrice, privateAgreementPrice, type BillingCycle } from '@/lib/subscriptions/billing-cycle';
 import { paymentAdmin, checkoutUrl } from '@/lib/subscriptions/zainpay-checkout';
 
+function automaticRenewalAvailable(config: ReturnType<typeof getZainpayConfig>): boolean {
+  return config.mode === 'live' && Boolean(config.publicKey && (config.defaultZainbox || config.zainboxCode)
+    && process.env.CRON_SECRET && process.env.NEXT_PUBLIC_APP_URL)
+    && /^[0-9a-f]{64}$/i.test(process.env.SUBSCRIPTION_CARD_TOKEN_KEY || '');
+}
+
 export async function POST(request: NextRequest) {
   try {
     const token = request.headers.get('authorization')?.match(/^Bearer (.+)$/)?.[1];
@@ -35,7 +41,7 @@ export async function POST(request: NextRequest) {
       ? privateAgreementPrice(privatePrice, body.billingCycle as BillingCycle)
       : billingPrice(Number(plan.price), body.billingCycle as BillingCycle)) * 100);
     if (!Number.isSafeInteger(amount) || amount <= 0 || !user.email) return NextResponse.json({ error: 'Invalid checkout details' }, { status: 400 });
-    if (body.autoRenew && !/^[0-9a-f]{64}$/i.test(process.env.SUBSCRIPTION_CARD_TOKEN_KEY || ''))
+    if (body.autoRenew && !automaticRenewalAvailable(config))
       return NextResponse.json({ error: 'Automatic renewal is unavailable. Untick automatic renewal to make a one-time payment.' }, { status: 422 });
     const reference = `TT-${randomUUID()}`;
     const { error: saveError } = await admin.from('subscription_checkouts').insert({
@@ -47,9 +53,11 @@ export async function POST(request: NextRequest) {
     const callback = new URL('/api/payments/verify', process.env.NEXT_PUBLIC_APP_URL);
     callback.searchParams.set('txnRef', reference);
     callback.searchParams.set('redirect', '1');
-    const providerPayload = JSON.stringify({ amount: String(amount / 100), currency: 'NGN', txnRef: reference, emailAddress: user.email,
-      mobileNumber: mobile, zainboxCode: zainbox, callBackUrl: callback.href,
-      ...(body.autoRenew === true ? { allowRecurringPayment: true } : {}) });
+    const logoUrl = new URL('/brand/logos/trackasuwa_primary_color_transparent.png', process.env.NEXT_PUBLIC_APP_URL);
+    const providerPayload = JSON.stringify({ amount: (amount / 100).toFixed(2), currencyCode: 'NGN', txnRef: reference,
+      emailAddress: user.email, mobileNumber: mobile, zainboxCode: zainbox, callBackUrl: callback.href,
+      logoUrl: logoUrl.href, paymentChannels: body.autoRenew === true ? ['card'] : ['card', 'bank_transfer'],
+      allowRecurringPayment: body.autoRenew === true });
     let providerStatus = 503;
     let url: string | null = null;
     for (let attempt = 0; attempt < 3 && !url; attempt += 1) {
@@ -75,5 +83,5 @@ export async function POST(request: NextRequest) {
 }
 export async function GET() {
   const config = getZainpayConfig();
-  return NextResponse.json({ gateway: 'Zainpay', environment: config.mode, configured: Boolean(config.publicKey && (config.defaultZainbox || config.zainboxCode)), automaticRenewalAvailable: /^[0-9a-f]{64}$/i.test(process.env.SUBSCRIPTION_CARD_TOKEN_KEY || '') });
+  return NextResponse.json({ gateway: 'Zainpay', environment: config.mode, configured: Boolean(config.publicKey && (config.defaultZainbox || config.zainboxCode)), automaticRenewalAvailable: automaticRenewalAvailable(config) });
 }

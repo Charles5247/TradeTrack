@@ -87,6 +87,10 @@ export function OfflineNavigation() {
     document.addEventListener('click', navigate, true);
     window.addEventListener('online', prepare);
     const onOffline = () => {
+      if (user.role === 'platform_owner') {
+        setStatus('Platform owner accounts cannot use merchant POS. Sign in to a merchant account while online to prepare an offline demo.');
+        return;
+      }
       if (posPrepared && pagesPrepared) {
         setStatus('Offline navigation and POS catalog were prepared on this device.');
         return;
@@ -98,7 +102,9 @@ export function OfflineNavigation() {
         getAllFromOfflineDB('inventory'),
       ]).then(([page, warehouses, products, inventory]) => {
         if (cancelled || navigator.onLine) return;
-        setStatus(page && warehouses.length && products.length && inventory.length
+        const accountMatches = localStorage.getItem('TracKasuwa-page-account') === `${user.id}:${user.organization_id}`;
+        const ownsData = (records: unknown[]) => records.some(record => (record as { organization_id?: string }).organization_id === user.organization_id);
+        setStatus(accountMatches && page && ownsData(warehouses) && ownsData(products) && ownsData(inventory)
           ? 'Offline POS data is available on this device. Some other pages may need internet.'
           : 'Offline setup incomplete. Reconnect before relying on offline POS.');
       }).catch(() => { if (!cancelled && !navigator.onLine) setStatus('Offline storage unavailable. Reconnect before relying on offline POS.'); });
