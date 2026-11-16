@@ -39,8 +39,26 @@ it('only drafts inventory and records the suggestion, stripping recognizable con
   expect(response.status).toBe(200);
   expect(mapInventory.mock.calls[0][0]).not.toContain('owner@example.test');
   expect(mapInventory.mock.calls[0][0]).not.toContain('+234');
-  expect(mock.rpc.mock.calls.map(([name]) => name)).toEqual(['verify_business_subscription','reserve_ai_job','finish_ai_job']);
+  expect(mock.rpc.mock.calls.map(([name]) => name)).toEqual(['verify_business_subscription','reserve_ai_job','attach_ai_stock_source','finish_ai_job']);
+  expect(mock.rpc).toHaveBeenCalledWith('attach_ai_stock_source', expect.objectContaining({ p_kind: 'text', p_content: 'Rice 5 100 owner@example.test +234 800 123 4567', p_metadata: { purpose: 'stock_intake' } }));
   expect(mock.from).not.toHaveBeenCalled();
+});
+
+it('rejects an account-switch precondition before storing source or invoking the provider', async () => {
+  const response = await POST(new Request('http://localhost/api/ai', { method: 'POST',
+    headers: { 'X-Track-Expected-Owner': 'another-owner' }, body: JSON.stringify({ action: 'inventory', text: 'Rice 4' }) }));
+  expect(response.status).toBe(400);
+  expect(mock.rpc.mock.calls.map(([name]) => name)).toEqual(['verify_business_subscription']);
+  expect(mock.provider).not.toHaveBeenCalled();
+});
+
+it('retains original CSV text separately from prepared provider input', async () => {
+  mock.provider.mockReturnValue({ stub: true, mapInventory: vi.fn().mockResolvedValue([{ name: 'Rice' }]) });
+  const response = await POST(request({ action: 'inventory', text: 'name\tquantity\nRice\t4',
+    source: { kind: 'csv', text: 'name,quantity\n"Rice",4', file_name: 'stock.csv' } }));
+  expect(response.status).toBe(200);
+  expect(mock.rpc).toHaveBeenCalledWith('attach_ai_stock_source', { p_job_id: 'job-1', p_kind: 'csv',
+    p_content: 'name,quantity\n"Rice",4', p_metadata: { purpose: 'stock_intake', file_name: 'stock.csv' } });
 });
 it('records provider failures without executing an import', async () => {
   mock.provider.mockReturnValue({ stub: true, mapInventory: vi.fn().mockRejectedValue(new Error('Unavailable')) });
@@ -70,4 +88,45 @@ it('marks invoice extraction as an invoice job and never applies stock', async (
     job: 'job-1', output: { rows: [{ name: 'Peak Milk', opening_stock: '4', cost_price: '120' }], source: 'invoice', stub: false }, failed: false,
   });
   expect(mock.rpc.mock.calls.some(([name]) => name.startsWith('apply_'))).toBe(false);
+});
+
+function aggregateRecords(invalidQuantity = false) {
+  const records: Record<string, unknown[]> = {
+    products: [{ id: 'p1', name: 'Rice', cost_price: 100 }],
+    inventory: [{ id: 'i1', product_id: 'p1', quantity: invalidQuantity ? null : 10 }],
+    sales: [
+      { id: 's1', total: 400, status: 'completed', created_at: new Date().toISOString(), cashier_id: 'cashier', sale_items: [{ product_id: 'p1', quantity: 2, unit_price: 200 }] },
+      { id: 's2', total: 300, status: 'completed', created_at: new Date().toISOString(), cashier_id: 'cashier', sale_items: [] },
+      { id: 's3', total: 50, status: 'cancelled', created_at: new Date().toISOString(), cashier_id: 'cashier', sale_items: [] },
+    ],
+    financial_reversals: [{ id: 'r1', sale_id: 's2', kind: 'void' }],
+  };
+  const chains: Array<{ eq: ReturnType<typeof vi.fn> }> = [];
+  mock.from.mockImplementation((table: string) => {
+    const chain = { select: vi.fn(), eq: vi.fn(), order: vi.fn(), range: vi.fn().mockResolvedValue({ data: records[table], error: null }) };
+    chain.select.mockReturnValue(chain); chain.eq.mockReturnValue(chain); chain.order.mockReturnValue(chain);
+    chains.push(chain); return chain;
+  });
+  return chains;
+}
+
+it('validates business records and sends deterministic scoped totals to the insight provider', async () => {
+  const chains = aggregateRecords();
+  const insights = vi.fn().mockResolvedValue([{ title: 'Sales', message: 'Reviewed figures', source: 'organization-data-only' }]);
+  mock.provider.mockReturnValue({ stub: true, insights });
+  const response = await POST(request({ action: 'insights', organization_id: 'foreign-org' }));
+  expect(response.status).toBe(200);
+  expect(insights).toHaveBeenCalledWith(expect.objectContaining({
+    productCount: 1, unitsOnHand: 10, stockCost: 1000, salesTotal: 400, saleCount: 1,
+  }), undefined);
+  expect(chains).toHaveLength(4);
+  expect(chains.every(chain => chain.eq.mock.calls.some(call => call[0] === 'organization_id' && call[1] === 'own-org'))).toBe(true);
+});
+
+it('refuses malformed analytical records instead of converting unknown stock into a numerical claim', async () => {
+  aggregateRecords(true); const insights = vi.fn();
+  mock.provider.mockReturnValue({ stub: true, insights });
+  expect((await POST(request({ action: 'insights' }))).status).toBe(400);
+  expect(insights).not.toHaveBeenCalled();
+  expect(mock.rpc).toHaveBeenLastCalledWith('finish_ai_job', { job: 'job-1', output: { error: 'Generation failed' }, failed: true });
 });

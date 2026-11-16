@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Sparkles, X } from 'lucide-react';
 import { useAuthStore } from '@/store';
 import { useCopy } from '@/i18n/text';
+import { loadStockReview } from '@/lib/ai/stock-review-draft';
 
 export function AssistantLauncher() {
   const user = useAuthStore(state => state.user);
@@ -15,16 +16,30 @@ export function AssistantLauncher() {
   const [stockText, setStockText] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  if (user?.role !== 'business_owner') return null;
+  if (user?.role !== 'business_owner' || user.status !== 'active') return null;
 
   const prepareStock = async () => {
     if (!stockText.trim() || busy) return;
     setBusy(true); setError('');
     try {
+      const scope = { ownerId: user.id, organizationId: user.organization_id };
+      const active = await loadStockReview(scope);
+      const current = useAuthStore.getState().user;
+      if (current?.id !== scope.ownerId || current.organization_id !== scope.organizationId
+        || current.role !== 'business_owner' || current.status !== 'active')
+        throw new Error('Your account changed. Open the assistant again.');
+      if (active) {
+        setError('An unfinished stock review is already open. Open that review before preparing another delivery.');
+        return;
+      }
       const response = await fetch('/api/ai', { method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Track-Expected-Owner': scope.ownerId,
+          'X-Track-Expected-Organization': scope.organizationId },
         body: JSON.stringify({ action: 'inventory', text: stockText }) });
       const result = await response.json();
+      const after = useAuthStore.getState().user;
+      if (after?.id !== scope.ownerId || after.organization_id !== scope.organizationId
+        || after.role !== 'business_owner' || after.status !== 'active') return;
       if (!response.ok || !result.job || !Array.isArray(result.rows))
         throw new Error(result.error || 'Could not prepare the stock draft.');
       window.localStorage.setItem('trackasuwa.ai.stockJob', result.job);

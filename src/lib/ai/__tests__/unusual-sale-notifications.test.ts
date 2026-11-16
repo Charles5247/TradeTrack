@@ -20,4 +20,5 @@ it('alerts the owner once for an unusually large sale without changing sales', a
     expect((await db.query<{ generate_unusual_sale_notifications: number }>('SELECT generate_unusual_sale_notifications()')).rows[0].generate_unusual_sale_notifications).toBe(0);
     expect((await db.query('SELECT id FROM sales')).rows).toHaveLength(11);
   } finally { await db.close(); }
-}, 30000);
+// Includes cold PGlite/WASM bootstrap; avoid a machine-speed failure on 4 GB.
+}, 120000);

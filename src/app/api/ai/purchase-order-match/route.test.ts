@@ -14,14 +14,14 @@ function query(result: unknown) {
 
 beforeEach(() => {
   vi.resetAllMocks();
-  mock.context.mockResolvedValue({ db: { rpc: mock.rpc, from: mock.from }, org: 'own-org', profile: { id: 'owner' } });
+  mock.context.mockResolvedValue({ db: { rpc: mock.rpc, from: mock.from }, org: 'own-org', profile: { id: 'owner', organization_id: 'own-org' } });
   mock.rpc.mockResolvedValue({ data: { active: true, plan_id: PLAN_ORDER[3], server_time: '2026-11-15' }, error: null });
 });
 
 it('limits open-order listing to the authenticated organization', async () => {
   const orders = query({ data: [], error: null });
   mock.from.mockReturnValue(orders);
-  expect((await GET()).status).toBe(200);
+  expect((await GET(new Request('http://localhost/api/ai/purchase-order-match'))).status).toBe(200);
   expect(mock.context).toHaveBeenCalledWith(['business_owner']);
   expect(orders.eq).toHaveBeenCalledWith('organization_id', 'own-org');
   expect(orders.eq).toHaveBeenCalledWith('status', 'sent');
@@ -38,4 +38,13 @@ it('requires an invoice job belonging to this owner and a sent order in the same
   expect(job.eq).toHaveBeenCalledWith('user_id', 'owner');
   expect(order.eq).toHaveBeenCalledWith('organization_id', 'own-org');
   expect(order.eq).toHaveBeenCalledWith('status', 'sent');
+});
+
+it('rejects a changed account before retrieving an old invoice or order', async () => {
+  const response = await POST(new Request('http://localhost/api/ai/purchase-order-match', {
+    method: 'POST', headers: { 'X-Track-Expected-Owner': 'previous-owner' }, body: '{}',
+  }));
+  expect(response.status).toBe(400);
+  expect((await response.json()).error).toContain('ACCOUNT_CHANGED');
+  expect(mock.from).not.toHaveBeenCalled();
 });

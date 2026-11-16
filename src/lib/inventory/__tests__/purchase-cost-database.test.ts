@@ -41,7 +41,9 @@ beforeAll(async () => {
     INSERT INTO public.purchase_order_items VALUES ('${line}','${order}','${product}',10,0,150);
     SELECT set_config('test.uid','${owner}',false);`);
   await db.exec(readFileSync('supabase/migrations/20261108090000_purchase_cost_history.sql', 'utf8'));
-}, 30000);
+// Cold WASM/database startup can exceed 30 seconds on the supported 4 GB laptop.
+// Only fixture startup gets the larger budget; operation assertions are unchanged.
+}, 120000);
 afterAll(async () => { await db?.close(); });
 
 it('receives the second purchase atomically and records the new average', async () => {
