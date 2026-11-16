@@ -55,6 +55,11 @@ self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
     event.waitUntil(self.skipWaiting());
   }
+  if (event.data && event.data.type === "OFFLINE_PREPARED" && event.data.build === CACHE_VERSION) {
+    event.waitUntil(caches.keys().then(keys => Promise.all(keys
+      .filter(key => key.startsWith("TracKasuwa-") && key !== STATIC_CACHE && key !== PAGES_CACHE)
+      .map(key => caches.delete(key)))));
+  }
 });
 
 self.addEventListener("notificationclick", (event) => {
@@ -73,18 +78,10 @@ self.addEventListener("notificationclick", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches
-      .keys()
-      .then((keys) =>
-        Promise.all(
-          keys
-            .filter((key) => key.startsWith("TracKasuwa-") && key !== STATIC_CACHE && key !== PAGES_CACHE)
-            .map((key) => caches.delete(key)),
-        ),
-      )
-      .then(() => self.clients.claim()),
-  );
+  // Keep the previous working pages and chunks until the client has finished
+  // preparing this deployment. Losing signal during an update must not erase
+  // the only offline copy.
+  event.waitUntil(self.clients.claim());
 });
 
 function isApiOrAuthRequest(url) {
@@ -146,7 +143,8 @@ self.addEventListener("fetch", (event) => {
   if (request.mode === "navigate") {
     event.respondWith(
       (async () => {
-        const cachedPage = await caches.match(request);
+        const currentPages = await caches.open(PAGES_CACHE);
+        const cachedPage = await currentPages.match(request) || await caches.match(request);
 
         // Kick off a background revalidation regardless of whether we have
         // a cached copy — this is what keeps the cache fresh. We don't
@@ -181,6 +179,16 @@ self.addEventListener("fetch", (event) => {
         // offline shell rather than an ugly browser error.
         const networkResponse = await revalidate;
         if (networkResponse) return networkResponse;
+
+        // The Android shell opens /login on every cold start. After sign-in,
+        // account-scoped page preparation clears that cached login document,
+        // while /dashboard remains available. Redirect the offline cold start
+        // to the cached dashboard; its client auth guard restores the local
+        // session or denies access. Explicit sign-out clears page caches.
+        if (url.pathname === "/login") {
+          const dashboard = await caches.match(new Request(new URL("/dashboard", self.location.origin)));
+          if (dashboard) return Response.redirect(new URL("/dashboard", self.location.origin), 302);
+        }
 
         const offlinePage = await caches.match(OFFLINE_URL);
         return offlinePage || Response.error();

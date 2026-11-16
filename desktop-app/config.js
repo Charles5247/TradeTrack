@@ -43,12 +43,10 @@ const path = require("path");
 const DEFAULT_APP_URL = "https://trackasuwa.vercel.app";
 
 // The path the shell opens on launch. "/" now serves the public
-// marketing site (logged-out); traders should land straight on
-// /login instead — the web app's own auth middleware silently
-// forwards an already-authenticated session on to /dashboard, so
-// returning users see no extra step. This is derived from
+// marketing site. Open the dashboard, which is prepared for offline use;
+// signed-out users are redirected to login by the app. This is derived from
 // DEFAULT_APP_URL/getAppUrl() above, NOT a second hardcoded domain.
-const DEFAULT_LAUNCH_PATH = "/login";
+const DEFAULT_LAUNCH_PATH = "/dashboard";
 
 function readConfigFile() {
   try {
@@ -102,7 +100,7 @@ function getVersionCheckUrl() {
 // TracKasuwa_APP_URL or TracKasuwa-config.json's `appUrl` continues to
 // work exactly as documented, and so main.js's external-link detection
 // (which compares against the plain origin) is unaffected by the
-// "start on /login" behavior.
+// "start on /dashboard" behavior.
 function getLaunchUrl() {
   try {
     const origin = new URL(getAppUrl()).origin;

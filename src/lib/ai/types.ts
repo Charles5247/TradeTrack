@@ -1,5 +1,9 @@
 import type { ImportRow } from '@/lib/imports/preview';
 export interface BusinessAggregate { productCount: number; unitsOnHand: number; stockCost: number; salesTotal: number; saleCount: number; lowStock: { name: string; quantity: number }[];
+  comparison?: { current: { from: string; to: string; sales: number; revenue: number };
+    previous: { from: string; to: string; sales: number; revenue: number };
+    changePercent: number | null; missingItemSales: number;
+    topProducts: { name: string; units: number; revenue: number }[] };
   analysis?: { windowDays: number; observedDays: number; salesTotal: number; saleCount: number; products: { name: string; stock: number; unitsSold: number; dailyUnits: number; estimatedDaysLeft: number | null }[]; staff: { label: string; salesTotal: number; transactions: number; averageSale: number }[]; limitations: string[] };
 }
 export interface Insight { title: string; message: string; source: 'organization-data-only'; }
@@ -8,6 +12,7 @@ export interface AIProvider {
   readonly stub: boolean;
   mapInventory(text: string): Promise<ImportRow[]>;
   mapInventoryImage?(image: string): Promise<ImportRow[]>;
+  mapInvoiceImage?(image: string): Promise<ImportRow[]>;
   transcribeInventoryAudio?(audio: string): Promise<string>;
   insights(data: BusinessAggregate, question?: string): Promise<Insight[]>;
 }

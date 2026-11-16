@@ -95,12 +95,11 @@ remains `https://trackasuwa.vercel.app` until told otherwise — this mechanism
 only makes the domain swappable, it does not perform any actual
 domain change.
 
-Whichever method is used, the shell always launches at `{domain}/login`
+Whichever method is used, the shell always launches at `{domain}/dashboard`
 (see `DEFAULT_LAUNCH_PATH` / `getLaunchUrl()` in `config.js`), not the
 domain root — `/` on the web app now serves the public marketing site,
-so launching at `/login` means an already-authenticated trader is
-forwarded on to `/dashboard` automatically by the web app's own auth
-middleware, with no extra step. This launch path is derived from
+so the cached dashboard can open offline. Signed-out traders are sent to
+login by the app. This launch path is derived from
 whichever origin resolves from steps 1–3 above; it is not a second
 hardcoded URL, and `getAppUrl()` (the bare origin, used for the
 external-link-vs-in-app-navigation check in `main.js`) is unaffected.

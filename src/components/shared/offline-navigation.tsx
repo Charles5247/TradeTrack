@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store';
 import { getNavGroupsForRole } from '@/components/layout/nav-config';
+import { prepareOfflinePos } from '@/lib/offline/prepare-pos';
+import { getAllFromOfflineDB } from '@/lib/offline/db';
 
 /** Cache complete documents: Next's RSC prefetch only survives in memory. */
 export function OfflineNavigation() {
@@ -11,6 +13,8 @@ export function OfflineNavigation() {
     if (!user || !('serviceWorker' in navigator) || !('caches' in window)) return;
     let cancelled = false;
     let preparing = false;
+    let posPrepared = false;
+    let pagesPrepared = false;
     const readyRoutes = new Set<string>();
     const navigate = (event: MouseEvent) => {
       if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -29,6 +33,14 @@ export function OfflineNavigation() {
       preparing = true;
       setStatus('Preparing pages for offline use...');
       try {
+        const posReady = ['business_owner', 'admin', 'cashier'].includes(user.role)
+          ? await prepareOfflinePos(user) : null;
+        if (posReady) posPrepared = true;
+        if (cancelled || !navigator.onLine) {
+          if (!cancelled) setStatus('Offline setup was interrupted. Reconnect before relying on offline POS.');
+          return;
+        }
+        if (posReady) setStatus(`POS data ready offline: ${posReady.products} products across ${posReady.warehouses} warehouse(s). Preparing pages...`);
         const registration = await navigator.serviceWorker.ready;
         if (cancelled || !registration.active) return;
         const version = new URL(registration.active.scriptURL).searchParams.get('build') || 'v6';
@@ -62,19 +74,43 @@ export function OfflineNavigation() {
             completed++;
           } catch { /* Keep good cached pages; retry on reconnect. */ }
         }
-        if (!cancelled) setStatus(completed === routes.length ? 'Pages ready offline. Keep online until data sync finishes.' : 'Some pages are not ready offline. Reconnect to finish downloading.');
+        if (!cancelled) {
+          const complete = completed === routes.length;
+          pagesPrepared = complete;
+          setStatus(complete ? 'Offline navigation and POS catalog ready. Keep online until pending uploads finish.' : 'POS data saved, but some pages are not ready offline. Reconnect to finish downloading.');
+          if (complete) registration.active.postMessage({ type: 'OFFLINE_PREPARED', build: version });
+        }
       } catch {
-        if (!cancelled) setStatus('Offline page storage unavailable. Keep this page open.');
+        if (!cancelled) setStatus('Offline setup incomplete. Stay online and retry before disconnecting.');
       } finally { preparing = false; }
     };
     document.addEventListener('click', navigate, true);
     window.addEventListener('online', prepare);
+    const onOffline = () => {
+      if (posPrepared && pagesPrepared) {
+        setStatus('Offline navigation and POS catalog were prepared on this device.');
+        return;
+      }
+      void Promise.all([
+        caches.match(new URL('/pos', location.origin)),
+        getAllFromOfflineDB('warehouses'),
+        getAllFromOfflineDB('products'),
+        getAllFromOfflineDB('inventory'),
+      ]).then(([page, warehouses, products, inventory]) => {
+        if (cancelled || navigator.onLine) return;
+        setStatus(page && warehouses.length && products.length && inventory.length
+          ? 'Offline POS data is available on this device. Some other pages may need internet.'
+          : 'Offline setup incomplete. Reconnect before relying on offline POS.');
+      }).catch(() => { if (!cancelled && !navigator.onLine) setStatus('Offline storage unavailable. Reconnect before relying on offline POS.'); });
+    };
+    window.addEventListener('offline', onOffline);
     navigator.serviceWorker.addEventListener('controllerchange', prepare);
-    void prepare();
+    if (navigator.onLine) void prepare(); else onOffline();
     return () => {
       cancelled = true;
       document.removeEventListener('click', navigate, true);
       window.removeEventListener('online', prepare);
+      window.removeEventListener('offline', onOffline);
       navigator.serviceWorker.removeEventListener('controllerchange', prepare);
     };
   }, [user]);

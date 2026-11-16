@@ -9,6 +9,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { AccessGuard } from '@/components/shared/access-guard';
 import { StockReceivingReview } from '@/components/ai/stock-receiving-review';
+import { InvoiceOrderReview } from '@/components/ai/invoice-order-review';
 import { parseImportFile } from '@/lib/imports/parse';
 import type { ImportRow } from '@/lib/imports/preview';
 import type { Insight } from '@/lib/ai/types';
@@ -64,7 +65,11 @@ function AssistantWorkspace({ scope }: { scope: StockReviewScope }) {
   const [receiptBusy, setReceiptBusy] = useState(false);
   const running = useRef(false);
   const mounted = useRef(true);
-  const [report, setReport] = useState<{ job: string; insights: Insight[] } | null>(null);
+  const [report, setReport] = useState<{ job: string; insights: Insight[]; comparison?: {
+    current: { from: string; to: string; sales: number; revenue: number };
+    previous: { from: string; to: string; sales: number; revenue: number };
+    changePercent: number | null; missingItemSales: number;
+    topProducts: { name: string; units: number; revenue: number }[] } } | null>(null);
   const [channel, setChannel] = useState<'in_app' | 'email' | 'sms'>('in_app'); const [notice, setNotice] = useState('');
   const sameAccount = useCallback(() => {
     const current = useAuthStore.getState().user;
@@ -118,7 +123,7 @@ function AssistantWorkspace({ scope }: { scope: StockReviewScope }) {
   };
   return <div className="min-w-0 space-y-6 [&_button]:max-w-full [&_button]:whitespace-normal [&_button]:h-auto [&_button]:min-h-11 [&_button]:py-2">
     <h1 className="tt-page-title"><TranslatedText text={"TracKasuwa assistant"} /></h1>
-    <p className="tt-muted text-sm"><TranslatedText text={"Prepare product imports and review insights from your business data."} /></p><p className="rounded-lg border border-border bg-muted p-4 text-sm"><TranslatedText text={status && !status.stub ? "Current assistant preview: AI can map inventory and summarize records. Review all import changes before applying. Document receiving and purchase-order reconciliation are still being built." : "Current assistant preview: fixed rules, with no live AI model or external market data. Document receiving and purchase-order reconciliation are still being built."} /></p>
+    <p className="tt-muted text-sm"><TranslatedText text={"Prepare product imports and review insights from your business data."} /></p><p className="rounded-lg border border-border bg-muted p-4 text-sm"><TranslatedText text={status && !status.stub ? "The assistant drafts stock entries and compares invoice photos with sent purchase orders. Review every amount. Invoice comparisons do not receive stock." : "Current assistant preview: fixed rules, with no live AI model or external market data. Photo extraction requires a configured live provider."} /></p>
     <p><Link className="text-sm font-medium text-primary underline underline-offset-4" href="/imports"><TranslatedText text={"Business imports"} /></Link> · <Link className="text-sm font-medium text-primary underline underline-offset-4" href="/notifications"><TranslatedText text={"Notifications"} /></Link></p>
     {busy && <p role="status" className="tt-muted text-sm"><TranslatedText text={"Working on your request?"} /></p>}{!status && !error && <p role="status" className="tt-muted text-sm"><TranslatedText text={"Loading assistant preferences?"} /></p>}{error && <p role="alert" className="text-destructive">{error}</p>}{notice && <p role="status">{notice}</p>}
     {draftLoading && <p role="status">{copy('Opening your saved stock review...')}</p>}
@@ -138,10 +143,19 @@ function AssistantWorkspace({ scope }: { scope: StockReviewScope }) {
       <Button  onClick={() => void run(async () => proposeStock({ action: 'inventory', text }))}><TranslatedText text={"Propose mapped rows"} /></Button>
     </fieldset>
     {proposal && <StockReceivingReview key={proposal.job} job={proposal.job} rows={proposal.sourceRows} onBusyChange={setReceiptBusy} />}
+    <InvoiceOrderReview enabled={Boolean(status && !status.stub)} />
     <fieldset id="insights" disabled={busy || !status} className="min-w-0 space-y-4 rounded-[var(--radius-lg)] border border-border bg-card p-4 sm:p-6"><legend className="tt-section-title px-2"><TranslatedText text={"Business insights"} /></legend>
       <Textarea aria-label={copy("Ask about your business")} placeholder={copy("Ask about your sales or stock")} maxLength={2000} value={question} onChange={e => setQuestion(e.target.value)} />
       <Button onClick={() => void run(async () => setReport(await call({ action: 'insights', question })))}><TranslatedText text={"Generate organization-only insights"} /></Button>
-      {report && <div className="space-y-3">{report.insights.map(i => <article key={i.title}><h3 className="font-semibold">{i.title}</h3><p>{i.message}</p></article>)}
+      {report && <div className="space-y-3">{report.comparison && <div className="rounded-lg border border-border p-4 text-sm">
+        <h3 className="font-semibold">{copy('Sales figures from rolling 30-day windows')}</h3>
+        <p>{new Date(report.comparison.current.from).toLocaleString()} {copy('to')} {new Date(report.comparison.current.to).toLocaleString()}: {report.comparison.current.sales} {copy('sales')} · ₦{report.comparison.current.revenue.toLocaleString()}</p>
+        <p>{new Date(report.comparison.previous.from).toLocaleString()} {copy('to')} {new Date(report.comparison.previous.to).toLocaleString()}: {report.comparison.previous.sales} {copy('sales')} · ₦{report.comparison.previous.revenue.toLocaleString()}</p>
+        <p>{report.comparison.changePercent === null ? copy('Not enough prior-period revenue for a percentage comparison.') : `${copy('Revenue change')}: ${report.comparison.changePercent > 0 ? '+' : ''}${report.comparison.changePercent}%`}</p>
+        {report.comparison.missingItemSales > 0 && <p>{report.comparison.missingItemSales} {copy('sales have no item rows, so product rankings are incomplete.')}</p>}
+        {report.comparison.topProducts.length > 0 && <><p className="mt-2 font-medium">{copy('Top products by recorded line value')}</p><ol className="list-decimal pl-5">{report.comparison.topProducts.map(product => <li key={product.name}>{product.name}: {product.units} {copy('units')} · ₦{product.revenue.toLocaleString()}</li>)}</ol></>}
+        <Link className="text-primary underline" href="/reports">{copy('Check reports and source records')}</Link>
+      </div>}{report.insights.map(i => <article key={i.title}><h3 className="font-semibold">{i.title}</h3><p>{i.message}</p></article>)}
         <label className="block min-w-0 space-y-2 text-sm font-medium"><TranslatedText text={"Deliver this preview to your profile"} />{" "}<NativeSelect  value={channel} onChange={e => setChannel(e.target.value as typeof channel)}>{(['in_app','email','sms'] as const).map(c => <option key={c} value={c} disabled={!status?.channels[c]}>{c.replace('_',' ')}<TranslatedText text={!status?.channels[c] ? ' (disabled)' : ''} /></option>)}</NativeSelect></label>
         <Button  onClick={() => void run(async () => { await call({ action: 'deliver', job: report.job, channel, confirm: true }); setNotice('Insight delivered.'); })}><TranslatedText text={"Confirm and deliver displayed insights"} /></Button>
       </div>}
