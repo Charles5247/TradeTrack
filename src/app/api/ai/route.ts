@@ -2,7 +2,7 @@ import { apiContext } from '@/lib/auth/api-context';
 import { hasAIEntitlement } from '@/lib/ai/entitlement';
 import { getAIProvider } from '@/lib/ai/provider';
 import { deliveryAdapter } from '@/lib/ai/delivery';
-import { recentAnalysis } from '@/lib/ai/analysis';
+import { periodComparison, recentAnalysis } from '@/lib/ai/analysis';
 
 async function context() {
   const ctx = await apiContext(['business_owner']);
@@ -53,16 +53,19 @@ export async function POST(request: Request) {
       await rpc('complete_ai_delivery', { delivery, succeeded: true });
       return Response.json({ delivered: true });
     }
-    if (!['inventory','inventory_image','inventory_audio','insights'].includes(body.action)) throw new Error('Unknown assistant action.');
+    if (!['inventory','inventory_image','invoice_image','inventory_audio','insights'].includes(body.action)) throw new Error('Unknown assistant action.');
     if (body.action === 'inventory' && (typeof body.text !== 'string' || !body.text.trim() || body.text.length > 200000)) throw new Error('Paste between 1 and 200,000 characters of product data.');
-    if (body.action === 'inventory_image' && (typeof body.image !== 'string' || !/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(body.image) || body.image.length > 3_000_000)) throw new Error('Choose a JPEG, PNG or WebP photo under 2 MB.');
+    if (['inventory_image','invoice_image'].includes(body.action) && (typeof body.image !== 'string' || !/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(body.image) || body.image.length > 3_000_000)) throw new Error('Choose a JPEG, PNG or WebP photo under 2 MB.');
     if (body.action === 'inventory_audio' && (typeof body.audio !== 'string' || body.audio.length > 3_000_000)) throw new Error('Choose a voice recording under 2 MB.');
     if (body.question !== undefined && (typeof body.question !== 'string' || body.question.length > 2000)) throw new Error('Keep your business question under 2,000 characters.');
     const provider = getAIProvider();
     const job = await rpc('reserve_ai_job', { job_kind: body.action === 'insights' ? 'insights' : 'inventory' });
     try {
       let output;
-      if (body.action === 'inventory_image') {
+      if (body.action === 'invoice_image') {
+        if (!provider.mapInvoiceImage) throw new Error('Invoice extraction requires a configured live AI provider.');
+        output = { rows: await provider.mapInvoiceImage(body.image), source: 'invoice', stub: false };
+      } else if (body.action === 'inventory_image') {
         if (!provider.mapInventoryImage) throw new Error('Photo extraction requires a configured live AI provider.');
         output = { rows: await provider.mapInventoryImage(body.image), stub: false };
       } else if (body.action === 'inventory_audio') {
@@ -82,12 +85,14 @@ export async function POST(request: Request) {
             rows.push(...data); if (data.length < 1000) return rows;
           }
         };
-        const [products, inventory, sales, reversals] = await Promise.all([read('products','id,name,cost_price'), read('inventory','id,product_id,quantity'), read('sales','id,total,status,created_at,cashier_id,sale_items(product_id,quantity)'), read('financial_reversals','id,sale_id,kind')]);
+        const [products, inventory, sales, reversals] = await Promise.all([read('products','id,name,cost_price'), read('inventory','id,product_id,quantity'), read('sales','id,total,status,created_at,cashier_id,sale_items(product_id,quantity,unit_price)'), read('financial_reversals','id,sale_id,kind')]);
         const reversed = new Set(reversals.filter(r => r.kind !== 'vendor_payment_correction').map(r => r.sale_id));
         const currentSales = sales.filter(s => s.status === 'completed' && !reversed.has(s.id));
         const stock = products.map(p => ({ name: p.name, quantity: inventory.filter(i => i.product_id === p.id).reduce((n,i) => n + Number(i.quantity), 0), cost: Number(p.cost_price) }));
-        const insights = await provider.insights({ analysis: recentAnalysis(products, inventory, currentSales), productCount: products.length, unitsOnHand: stock.reduce((n,p) => n+p.quantity,0), stockCost: stock.reduce((n,p) => n+p.quantity*p.cost,0), salesTotal: currentSales.reduce((n,s) => n+Number(s.total),0), saleCount: currentSales.length, lowStock: stock.filter(p => p.quantity <= 5).slice(0,20).map(({name,quantity}) => ({name,quantity})) }, body.question); 
-        output = { insights, summary: insights.map(i => `${i.title}: ${i.message}`).join('\n'), stub: provider.stub };
+        const comparison = periodComparison(products, currentSales);
+        const insights = await provider.insights({ analysis: recentAnalysis(products, inventory, currentSales), comparison, productCount: products.length, unitsOnHand: stock.reduce((n,p) => n+p.quantity,0), stockCost: stock.reduce((n,p) => n+p.quantity*p.cost,0), salesTotal: currentSales.reduce((n,s) => n+Number(s.total),0), saleCount: currentSales.length, lowStock: stock.filter(p => p.quantity <= 5).slice(0,20).map(({name,quantity}) => ({name,quantity})) }, body.question);
+        const figures = `${comparison.current.from} to ${comparison.current.to}: ${comparison.current.sales} sales, ₦${comparison.current.revenue.toFixed(2)}. Previous ${comparison.previous.from} to ${comparison.previous.to}: ${comparison.previous.sales} sales, ₦${comparison.previous.revenue.toFixed(2)}.`;
+        output = { insights, comparison, summary: [figures, ...insights.map(i => `${i.title}: ${i.message}`)].join('\n'), stub: provider.stub };
       }
       await rpc('finish_ai_job', { job, output, failed: false });
       return Response.json({ job, ...output });

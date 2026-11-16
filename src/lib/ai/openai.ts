@@ -48,6 +48,13 @@ export class OpenAIProvider implements AIProvider {
     return result.rows;
   }
 
+  async mapInvoiceImage(image: string) {
+    const result = await this.generate('inventory', inventorySchema,
+      'Read the supplier invoice line items only. Put invoice product name in name, printed SKU in sku, invoiced quantity in opening_stock, buying cost PER UNIT in cost_price. Use empty strings for unreadable or absent fields. Never treat a line total as unit cost. Leave barcode and selling_price empty. Do not invent quantities, prices, or matches. This is only a draft for owner review.',
+      [{ role: 'user', content: [{ type: 'input_text', text: 'Extract the supplier invoice line items. Do not interpret the grand total as a line item.' }, { type: 'input_image', image_url: image, detail: 'high' }] }]);
+    return result.rows;
+  }
+
   async transcribeInventoryAudio(audio: string) {
     const match = /^data:(audio\/(?:webm|mp4|mpeg|ogg|wav|x-m4a));base64,([A-Za-z0-9+/=]+)$/.exec(audio);
     if (!match) throw new Error('Choose a supported voice recording.');

@@ -61,3 +61,13 @@ it('keeps photo and voice stock extraction as owner-reviewed drafts', async () =
   expect(mapInventory).toHaveBeenCalledWith('Rice 5 100');
   expect(mock.rpc.mock.calls.filter(([name]) => name === 'approve_ai_job')).toHaveLength(0);
 });
+it('marks invoice extraction as an invoice job and never applies stock', async () => {
+  const mapInvoiceImage = vi.fn().mockResolvedValue([{ name: 'Peak Milk', opening_stock: '4', cost_price: '120' }]);
+  mock.provider.mockReturnValue({ stub: false, mapInvoiceImage });
+  const response = await POST(request({ action: 'invoice_image', image: 'data:image/jpeg;base64,YWJj' }));
+  expect(response.status).toBe(200);
+  expect(mock.rpc).toHaveBeenLastCalledWith('finish_ai_job', {
+    job: 'job-1', output: { rows: [{ name: 'Peak Milk', opening_stock: '4', cost_price: '120' }], source: 'invoice', stub: false }, failed: false,
+  });
+  expect(mock.rpc.mock.calls.some(([name]) => name.startsWith('apply_'))).toBe(false);
+});

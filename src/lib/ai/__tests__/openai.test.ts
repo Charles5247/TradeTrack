@@ -28,6 +28,15 @@ it('sends stock-list photos as private vision input for a draft', async () => {
   expect(body.store).toBe(false);
   expect(body.input[0].content[1]).toMatchObject({ type: 'input_image', image_url: 'data:image/jpeg;base64,YWJj' });
 });
+it('reads invoice unit costs into a review-only draft', async () => {
+  const fetcher = vi.fn().mockResolvedValue(completed({ rows: [] }));
+  vi.stubGlobal('fetch', fetcher);
+  await new OpenAIProvider('test-key').mapInvoiceImage('data:image/jpeg;base64,YWJj');
+  const body = JSON.parse(fetcher.mock.calls[0][1].body);
+  expect(body.store).toBe(false);
+  expect(body.instructions).toContain('buying cost PER UNIT');
+  expect(body.tools).toBeUndefined();
+});
 it('transcribes a voice list without logging or saving the recording', async () => {
   const fetcher = vi.fn().mockResolvedValue(Response.json({ text: 'Rice 5 bags' }));
   vi.stubGlobal('fetch', fetcher);
