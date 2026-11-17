@@ -28,9 +28,10 @@ it('derives price, identity and destination on the server, ignoring tampering',a
  expect(response.status).toBe(200);
  expect(mocks.insert).toHaveBeenCalledWith(expect.objectContaining({amount_kobo:6000000,organization_id:'org-from-auth',user_id:'owner',plan_id:'plan-from-db',zainbox_code:'server-box',billing_cycle:'quarterly'}));
  const body=JSON.parse(mocks.fetch.mock.calls[0][1].body);
- expect(body).toMatchObject({amount:'60000.00',currencyCode:'NGN',emailAddress:'owner@example.com',zainboxCode:'server-box',
-  logoUrl:'https://trackasuwa.vercel.app/brand/logos/trackasuwa_primary_color_transparent.png',
-  paymentChannels:['card','bank_transfer'],allowRecurringPayment:false});
+ expect(body).toMatchObject({amount:'60000',currency:'NGN',emailAddress:'owner@example.com',zainboxCode:'server-box'});
+ expect(body).not.toHaveProperty('allowRecurringPayment');
+ expect(body).not.toHaveProperty('paymentChannels');
+ expect(body).not.toHaveProperty('currencyCode');
  expect(body.callBackUrl).toContain('/api/payments/verify?txnRef=TT-');
  expect(body).not.toHaveProperty('callbackUrl');
  expect(body.txnRef).not.toBe('chosen');
@@ -91,6 +92,7 @@ it('offers automatic renewal only when the live gateway and daily job are config
  expect(response.status).toBe(200);
  expect(JSON.parse(mocks.fetch.mock.calls[0][1].body)).toMatchObject({
   allowRecurringPayment:true,paymentChannels:['card'],currencyCode:'NGN',
+  logoUrl:'https://trackasuwa.vercel.app/brand/logos/trackasuwa_primary_color_transparent.png',
  });
  vi.unstubAllEnvs();
 });

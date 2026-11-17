@@ -26,7 +26,7 @@ import { industryProfile, type StockUnit } from '@/lib/industries';
 import { generateId } from '@/lib/utils/id';
 import { adjustProductStock } from '@/lib/inventory/adjust-stock';
 import { receiveStockAtCost } from '@/lib/inventory/receive-stock';
-import { addToSyncQueue, getAllFromOfflineDB, saveToOfflineDB } from '@/lib/offline/db';
+import { addToSyncQueue, getAllFromOfflineDB, getDB, saveToOfflineDB } from '@/lib/offline/db';
 import { isOffline } from '@/lib/utils/network';
 import { useAuthStore } from '@/store';
 
@@ -253,6 +253,16 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
       };
 
       const id = product?.id || generateId();
+      const retireMissingPhoto = async () => {
+        if (!product || product.image_url === imageUrl) return;
+        const db = await getDB();
+        const failed = await db.getAllFromIndex('sync_queue', 'by-status', 'failed');
+        for (const entry of failed) {
+          if (entry.table_name !== 'product_images' || entry.payload.product_id !== id) continue;
+          if (await db.get('pending_product_images', entry.record_id)) continue;
+          await db.delete('sync_queue', entry.id);
+        }
+      };
       const saveOffline = async () => {
         const now = new Date().toISOString();
         const imageId = imageUrl?.startsWith('offline-image:') ? imageUrl.slice('offline-image:'.length) : null;
@@ -274,6 +284,7 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
             warehouse_id: warehouseId, inventory_id: stockRow?.id, current_quantity: stockRow?.quantity ?? 0,
             quantity_change: stockChange, reason: product ? 'Quantity updated from product form' : 'Opening stock' });
         }
+        await retireMissingPhoto();
         toast.success('Saved on this device. Product, photo and stock will upload when you reconnect.');
         onSuccess();
       };
@@ -316,6 +327,8 @@ export function ProductForm({ product: initialProduct, categories, onSuccess, on
             image_url: imageUrl,
           },
         });
+
+        await retireMissingPhoto();
 
         toast.success('Product updated successfully');
       } else {

@@ -61,11 +61,15 @@ export async function POST(request: NextRequest) {
     const callback = new URL('/api/payments/verify', process.env.NEXT_PUBLIC_APP_URL);
     callback.searchParams.set('txnRef', reference);
     callback.searchParams.set('redirect', '1');
-    const logoUrl = new URL('/brand/logos/trackasuwa_primary_color_transparent.png', process.env.NEXT_PUBLIC_APP_URL);
-    const providerPayload = JSON.stringify({ amount: (amount / 100).toFixed(2), currencyCode: 'NGN', txnRef: reference,
-      emailAddress: user.email, mobileNumber: mobile, zainboxCode: zainbox, callBackUrl: callback.href,
-      logoUrl: logoUrl.href, paymentChannels: body.autoRenew === true ? ['card'] : ['card', 'bank_transfer'],
-      allowRecurringPayment: body.autoRenew === true });
+    // Keep the established one-time checkout contract. Card tokenization is
+    // opt-in and must not change ordinary subscription payments.
+    const providerPayload = JSON.stringify(body.autoRenew === true
+      ? { amount: (amount / 100).toFixed(2), currencyCode: 'NGN', txnRef: reference,
+          emailAddress: user.email, mobileNumber: mobile, zainboxCode: zainbox, callBackUrl: callback.href,
+          logoUrl: new URL('/brand/logos/trackasuwa_primary_color_transparent.png', process.env.NEXT_PUBLIC_APP_URL).href,
+          paymentChannels: ['card'], allowRecurringPayment: true }
+      : { amount: String(amount / 100), currency: 'NGN', txnRef: reference,
+          emailAddress: user.email, mobileNumber: mobile, zainboxCode: zainbox, callBackUrl: callback.href });
     let providerStatus = 503;
     let providerCode: string | null = null;
     let url: string | null = null;
