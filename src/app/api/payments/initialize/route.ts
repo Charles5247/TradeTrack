@@ -10,6 +10,14 @@ function automaticRenewalAvailable(config: ReturnType<typeof getZainpayConfig>):
     && /^[0-9a-f]{64}$/i.test(process.env.SUBSCRIPTION_CARD_TOKEN_KEY || '');
 }
 
+function nigerianPaymentPhone(value: string): string | null {
+  const digits = value.replace(/[\s()-]/g, '');
+  const local = digits.startsWith('+234') ? `0${digits.slice(4)}`
+    : digits.startsWith('234') ? `0${digits.slice(3)}`
+      : /^[789]\d{9}$/.test(digits) ? `0${digits}` : digits;
+  return /^0[789]\d{9}$/.test(local) ? local : null;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const token = request.headers.get('authorization')?.match(/^Bearer (.+)$/)?.[1];
@@ -22,8 +30,8 @@ export async function POST(request: NextRequest) {
     let body: { planId?: string; billingCycle?: string; mobile?: string; autoRenew?: boolean };
     try { body = await request.json(); } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }); }
     if (!body || typeof body.planId !== 'string' || !Object.hasOwn(BILLING_MONTHS, body.billingCycle || '')) return NextResponse.json({ error: 'Choose a plan and billing period' }, { status: 400 });
-    const mobile = (typeof body.mobile === 'string' ? body.mobile : profile.phone || '').replace(/[\s()-]/g, '');
-    if (!/^\+?\d{10,15}$/.test(mobile)) return NextResponse.json({ error: 'Enter a valid phone number for payment' }, { status: 400 });
+    const mobile = nigerianPaymentPhone(typeof body.mobile === 'string' ? body.mobile : profile.phone || '');
+    if (!mobile) return NextResponse.json({ error: 'Enter a valid Nigerian phone number for payment' }, { status: 400 });
     const { data: plan, error: planError } = await admin.from('subscription_plans').select('id,name,price,currency,billing_cycle,is_active').eq('id', body.planId).single();
     const { data: privateOffer, error: offerError } = await admin.from('private_subscription_offers')
       .select('plan_id,monthly_price').eq('organization_id', profile.organization_id).eq('plan_id', body.planId).eq('is_active', true).maybeSingle();
@@ -59,6 +67,7 @@ export async function POST(request: NextRequest) {
       logoUrl: logoUrl.href, paymentChannels: body.autoRenew === true ? ['card'] : ['card', 'bank_transfer'],
       allowRecurringPayment: body.autoRenew === true });
     let providerStatus = 503;
+    let providerCode: string | null = null;
     let url: string | null = null;
     for (let attempt = 0; attempt < 3 && !url; attempt += 1) {
       try {
@@ -67,13 +76,20 @@ export async function POST(request: NextRequest) {
           body: providerPayload, signal: AbortSignal.timeout(20000),
         });
         providerStatus = response.status;
-        if (response.ok) url = checkoutUrl(await response.json());
+        if (response.ok) {
+          const result: unknown = await response.json();
+          providerCode = result && typeof result === 'object' && 'code' in result && typeof result.code === 'string'
+            && /^[a-z0-9_-]{1,16}$/i.test(result.code) ? result.code : null;
+          url = checkoutUrl(result);
+        }
         if (response.status < 500) break;
       } catch { providerStatus = 503; }
       if (!url && attempt < 2) await new Promise(resolve => setTimeout(resolve, 400 * (attempt + 1)));
     }
     if (!url) {
-      console.error('[Zainpay] checkout initialization unavailable', { providerStatus, reference });
+      console.error('[Zainpay] checkout initialization unavailable', { providerStatus, providerCode, reference });
+      if ((providerStatus >= 400 && providerStatus < 500) || (providerStatus >= 200 && providerStatus < 300))
+        return NextResponse.json({ error: 'Payment gateway rejected this checkout. Contact Trackasuwa support; no payment was started.', reference }, { status: 502 });
       return NextResponse.json({ error: 'Zainpay is temporarily unavailable. Retry this checkout; do not make another payment.' }, { status: 503 });
     }
     return NextResponse.json({ success: true, txnRef: reference, paymentUrl: url, amount: amount / 100, currency: 'NGN' });

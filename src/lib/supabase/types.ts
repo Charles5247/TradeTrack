@@ -1069,6 +1069,7 @@ export type Database = {
       submit_warehouse_memo: { Args: { p_memo: string; p_items: Array<{ product_id: string; quantity: number }> }; Returns: void };
       review_warehouse_memo: { Args: { p_memo: string; p_items: Array<{ product_id: string; quantity: number }>; p_reason: string }; Returns: void };
       reverse_financial_sale: { Args: { target: string; reversal_kind: string; reversal_reason: string }; Returns: string };
+      reverse_unapplied_duplicate_sale: { Args: { target: string; reversal_reason: string }; Returns: string };
       apply_sale_stock: { Args: { p_sale_id: string }; Returns: number };
       get_marketing_traction: { Args: Record<string, never>; Returns: Record<string, unknown> };
       request_discount_approval: { Args: { p_cart_snapshot: Record<string, unknown>; p_cart_hash: string; p_cart_subtotal: number; p_discount_amount: number; p_reason: string }; Returns: string };

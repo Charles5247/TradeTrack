@@ -63,6 +63,12 @@ it.each(['quarter','constructor','__proto__',''])('rejects invalid billing cycle
 });
 
 it('requires a payment phone number before contacting the provider',async()=>{expect((await POST(request({planId:'p',billingCycle:'monthly',mobile:'bad'}))).status).toBe(400);expect(mocks.fetch).not.toHaveBeenCalled();});
+it.each(['+2349014921243','2349014921243','9014921243','09014921243'])('sends Nigerian mobile %s in the local format expected by Zainpay',async mobile=>{
+ const response=await POST(request({planId:'p',billingCycle:'monthly',mobile}));
+ expect(response.status).toBe(200);
+ expect(mocks.insert).toHaveBeenCalledWith(expect.objectContaining({payer_mobile:'09014921243'}));
+ expect(JSON.parse(mocks.fetch.mock.calls[0][1].body)).toMatchObject({mobileNumber:'09014921243'});
+});
 it('keeps one-time checkout available when automatic renewal is not configured',async()=>{
  vi.stubEnv('SUBSCRIPTION_CARD_TOKEN_KEY','');
  const recurring=await POST(request({planId:'p',billingCycle:'monthly',autoRenew:true}));
@@ -100,4 +106,11 @@ it('returns a retryable message when Zainpay remains unavailable',async()=>{
  const response=await POST(request({planId:'p',billingCycle:'monthly'}));
  expect(response.status).toBe(503);expect(mocks.fetch).toHaveBeenCalledTimes(3);
  expect(await response.json()).toMatchObject({error:expect.stringContaining('temporarily unavailable')});
+});
+it.each([new Response('{"code":"04","description":"Invalid mobile"}',{status:400}),new Response('{"code":"04","description":"Rejected"}',{status:200})])('does not label a provider rejection as a temporary outage',async providerResponse=>{
+ mocks.fetch.mockResolvedValue(providerResponse);
+ const response=await POST(request({planId:'p',billingCycle:'monthly'}));
+ expect(response.status).toBe(502);
+ expect(mocks.fetch).toHaveBeenCalledTimes(1);
+ expect(await response.json()).toMatchObject({error:expect.stringContaining('rejected this checkout'),reference:expect.stringMatching(/^TT-/)});
 });
