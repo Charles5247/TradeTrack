@@ -99,6 +99,30 @@ beforeAll(async () => {
 
 afterAll(async () => { await db?.close(); });
 
+it('revokes the legacy two-argument overload when present and tolerates its absence', async () => {
+  const legacyDb = new PGlite();
+  try {
+    await legacyDb.exec(`
+      CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role;
+      CREATE FUNCTION public.reset_thrive_well_sales_history(uuid, uuid)
+        RETURNS void LANGUAGE sql AS $$ SELECT $$;
+      GRANT EXECUTE ON FUNCTION public.reset_thrive_well_sales_history(uuid, uuid)
+        TO service_role;
+    `);
+    const revoke = readFileSync('supabase/migrations/20261118120000_revoke_legacy_thrive_well_reset.sql', 'utf8');
+    await legacyDb.exec(revoke);
+    const grants = await legacyDb.query<{ allowed: boolean }>(`
+      SELECT has_function_privilege('service_role',
+        'public.reset_thrive_well_sales_history(uuid, uuid)', 'EXECUTE') AS allowed
+    `);
+    expect(grants.rows[0].allowed).toBe(false);
+    await legacyDb.exec('DROP FUNCTION public.reset_thrive_well_sales_history(uuid, uuid)');
+    await legacyDb.exec(revoke);
+  } finally {
+    await legacyDb.close();
+  }
+});
+
 it('deducts stock once and archives both sales sets without deleting evidence', async () => {
   await expect(db.exec(`SET ROLE authenticated; SELECT ${resetCall}`))
     .rejects.toThrow('Verified Thrive-Well owner authorization required');

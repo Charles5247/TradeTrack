@@ -14,7 +14,13 @@ movement and audit rows remain in the database.
 2. Apply that migration through the normal project migration workflow. It
    creates a function callable by the signed-in Thrive-Well owner; deployment
    alone does not change Thrive-Well's data.
-3. Have that owner invoke `reset_thrive_well_sales_history` through their own
+3. Apply follow-up migration
+   `20261118120000_revoke_legacy_thrive_well_reset.sql`. It removes execution
+   grants from the older two-argument overload if that overload was ever
+   deployed. It does nothing when the old overload is absent. Confirm that
+   `service_role` cannot execute the two-argument signature before invoking
+   the reset.
+4. Have that owner invoke `reset_thrive_well_sales_history` through their own
    authenticated app session, passing only request ID
    `8eab7920-3c72-4aaa-a327-c6872d6cc80c`. Keep the same request ID if the
    response is lost and the outcome needs checking. The Supabase SQL Editor
