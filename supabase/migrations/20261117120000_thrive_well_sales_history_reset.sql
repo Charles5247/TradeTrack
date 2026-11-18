@@ -80,8 +80,10 @@ BEGIN
   END IF;
 
   -- Block new sales/imports for the duration of the count and marker snapshot.
+  -- Stock writers take inventory before inventory_movements; match that order.
   LOCK TABLE public.sales, public.historical_sales, public.sale_items,
-    public.inventory_movements, public.financial_reversals IN SHARE ROW EXCLUSIVE MODE;
+    public.inventory, public.inventory_movements, public.financial_reversals
+    IN SHARE ROW EXCLUSIVE MODE;
   IF EXISTS (SELECT 1 FROM track_private.sales_history_reset_events WHERE organization_id = org_id) THEN
     RAISE EXCEPTION 'Thrive-Well sales history already reset';
   END IF;
