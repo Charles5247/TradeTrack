@@ -7,13 +7,17 @@ const original = 'e1b3776a-92ad-4e6a-9d1d-e961a5b4d083';
 const duplicate = '66485543-096e-495c-bcf6-22d6c8091aa8';
 const request = '60000000-0000-0000-0000-000000000001';
 const owner = 'ae38e198-f146-44c9-8d65-86818986ac4b';
-const resetCall = `public.reset_thrive_well_sales_history('${request}','${owner}')`;
+const resetCall = `public.reset_thrive_well_sales_history('${request}')`;
 let db: PGlite;
 
 beforeAll(async () => {
   db = new PGlite();
   await db.exec(`
     CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role;
+    CREATE SCHEMA auth;
+    CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$
+      SELECT NULLIF(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
+    GRANT USAGE ON SCHEMA auth TO authenticated;
     CREATE SCHEMA track_private;
     CREATE TABLE organizations(id uuid PRIMARY KEY);
     CREATE TABLE users(id uuid PRIMARY KEY, organization_id uuid, role text, status text);
@@ -97,19 +101,27 @@ afterAll(async () => { await db?.close(); });
 
 it('deducts stock once and archives both sales sets without deleting evidence', async () => {
   await expect(db.exec(`SET ROLE authenticated; SELECT ${resetCall}`))
+    .rejects.toThrow('Verified Thrive-Well owner authorization required');
+  await db.exec('RESET ROLE');
+  await db.exec(`SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',false)`);
+  await expect(db.exec(`SET ROLE authenticated; SELECT ${resetCall}`))
+    .rejects.toThrow('Verified Thrive-Well owner authorization required');
+  await db.exec('RESET ROLE');
+  await db.exec(`SELECT set_config('request.jwt.claim.sub','${owner}',false)`);
+  await expect(db.exec(`SET ROLE service_role; SELECT ${resetCall}`))
     .rejects.toThrow();
   await db.exec('RESET ROLE');
-  await expect(db.exec(`SELECT public.reset_thrive_well_sales_history('${request}',
-    '00000000-0000-0000-0000-000000000001')`))
-    .rejects.toThrow('Verified Thrive-Well owner authorization required');
   const extra = '70000000-0000-0000-0000-000000000001';
   await db.exec(`INSERT INTO sales VALUES ('${extra}','${org}','NEW','completed',100,now())`);
-  await expect(db.exec(`SELECT ${resetCall}`))
+  await expect(db.exec(`SET ROLE authenticated; SELECT ${resetCall}`))
     .rejects.toThrow('Sales counts changed');
+  await db.exec('RESET ROLE');
   expect((await db.query('SELECT sum(quantity) AS units FROM inventory')).rows[0])
     .toMatchObject({ units: 112 });
   await db.exec(`DELETE FROM sales WHERE id='${extra}'`);
+  await db.exec('SET ROLE authenticated');
   const result = await db.query(`SELECT ${resetCall} AS result`);
+  await db.exec('RESET ROLE');
   expect(result.rows[0]).toMatchObject({ result: {
     current_sales: 46, historical_sales: 1050, stock_units_deducted: 40,
     already_applied: false,
@@ -132,13 +144,15 @@ it('deducts stock once and archives both sales sets without deleting evidence', 
   await db.exec('RESET ROLE');
   await db.exec(`INSERT INTO historical_sales(id,organization_id,sold_at)
     VALUES(gen_random_uuid(),'${org}',now() + interval '1 day')`);
+  await db.exec('SET ROLE authenticated');
   const retry = await db.query(`SELECT ${resetCall} AS result`);
   expect(retry.rows[0]).toMatchObject({ result: { already_applied: true } });
-  await expect(db.exec(`SELECT public.reset_thrive_well_sales_history('${request}',
-    '00000000-0000-0000-0000-000000000001')`)).rejects.toThrow('Reset request ID already used');
+  await db.exec('RESET ROLE');
   await db.exec(`UPDATE users SET status='inactive' WHERE id='${owner}'`);
+  await db.exec('SET ROLE authenticated');
   expect((await db.query(`SELECT ${resetCall} AS result`)).rows[0])
     .toMatchObject({ result: { already_applied: true } });
+  await db.exec('RESET ROLE');
   expect((await db.query('SELECT sum(quantity) AS units FROM inventory')).rows[0])
     .toMatchObject({ units: 72 });
 });

@@ -65,7 +65,7 @@ REVOKE ALL ON FUNCTION track_private.guard_historical_sale_before_history_reset(
 CREATE TRIGGER guard_historical_sale_before_history_reset BEFORE INSERT ON public.historical_sales
   FOR EACH ROW EXECUTE FUNCTION track_private.guard_historical_sale_before_history_reset();
 
-CREATE FUNCTION public.reset_thrive_well_sales_history(p_request_id uuid, p_authorized_by uuid)
+CREATE FUNCTION public.reset_thrive_well_sales_history(p_request_id uuid)
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 DECLARE
   org_id constant uuid := '461a56a3-86f0-4385-bc17-c2d0e3694ffa';
@@ -84,18 +84,21 @@ DECLARE
   existing track_private.sales_history_reset_events;
 BEGIN
   IF p_request_id IS NULL THEN RAISE EXCEPTION 'Reset request ID required'; END IF;
+  IF auth.uid() IS DISTINCT FROM owner_id THEN
+    RAISE EXCEPTION 'Verified Thrive-Well owner authorization required';
+  END IF;
   SELECT * INTO existing FROM track_private.sales_history_reset_events WHERE id = p_request_id;
   IF FOUND THEN
     IF existing.organization_id <> org_id OR existing.source_sale_id <> original_id
-       OR existing.created_by <> owner_id OR p_authorized_by IS DISTINCT FROM existing.created_by THEN
+       OR existing.created_by IS DISTINCT FROM auth.uid() THEN
       RAISE EXCEPTION 'Reset request ID already used';
     END IF;
     RETURN jsonb_build_object('current_sales', existing.current_sale_count,
       'historical_sales', existing.historical_sale_count,
       'stock_units_deducted', existing.stock_units_deducted, 'already_applied', true);
   END IF;
-  IF p_authorized_by IS DISTINCT FROM owner_id OR NOT EXISTS (
-    SELECT 1 FROM public.users WHERE id = owner_id AND organization_id = org_id
+  IF NOT EXISTS (
+    SELECT 1 FROM public.users WHERE id = auth.uid() AND id = owner_id AND organization_id = org_id
       AND role = 'business_owner' AND status = 'active'
   ) THEN RAISE EXCEPTION 'Verified Thrive-Well owner authorization required'; END IF;
   IF EXISTS (SELECT 1 FROM track_private.sales_history_reset_events WHERE organization_id = org_id) THEN
@@ -194,7 +197,7 @@ BEGIN
   INSERT INTO track_private.sales_history_reset_events
     (id, organization_id, source_sale_id, created_by, current_sale_count,
      historical_sale_count, stock_units_deducted, reason)
-  VALUES (p_request_id, org_id, original_id, owner_id, current_count, historical_count,
+  VALUES (p_request_id, org_id, original_id, auth.uid(), current_count, historical_count,
     item_units, 'Merchant confirmed duplicate checkout, physical delivery and full history reset');
   -- Install visibility rules only after stock and all markers have committed in
   -- this same transaction. Other merchants retain their existing history.
@@ -213,7 +216,7 @@ BEGIN
     'historical_sales', historical_count, 'stock_units_deducted', item_units,
     'already_applied', false);
 END $$;
-REVOKE ALL ON FUNCTION public.reset_thrive_well_sales_history(uuid, uuid) FROM PUBLIC, anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.reset_thrive_well_sales_history(uuid, uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.reset_thrive_well_sales_history(uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.reset_thrive_well_sales_history(uuid) TO authenticated;
 
 COMMIT;
