@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { User, CartItem, Cart, Warehouse, SyncStatus } from "@/types";
+import { generateId } from "@/lib/utils/id";
 
 // ── Auth Store ────────────────────────────────────────────────
 interface AuthState {
@@ -50,6 +51,8 @@ export const useOrgStore = create<OrgState>()(
 
 // ── Cart Store (POS) ──────────────────────────────────────────
 interface CartState extends Cart {
+  checkout_id?: string;
+  ensureCheckoutId: () => string;
   addItem: (item: Omit<CartItem, "discount"> & { discount?: number }) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
@@ -82,9 +85,18 @@ export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       ...defaultCart,
+      checkout_id: undefined,
+      ensureCheckoutId: () => {
+        const existing = get().checkout_id;
+        if (existing) return existing;
+        const checkout_id = generateId();
+        set({ checkout_id });
+        return checkout_id;
+      },
 
       addItem: (item) => {
         const { items } = get();
+        if (!get().checkout_id) set({ checkout_id: generateId() });
         const existingIndex = items.findIndex(
           (i) => i.product.id === item.product.id,
         );
@@ -102,7 +114,8 @@ export const useCartStore = create<CartState>()(
       },
 
       removeItem: (productId) => {
-        set({ items: get().items.filter((i) => i.product.id !== productId) });
+        const items = get().items.filter((i) => i.product.id !== productId);
+        set({ items, checkout_id: items.length ? get().checkout_id : undefined });
       },
 
       updateQuantity: (productId, quantity) => {
@@ -132,7 +145,7 @@ export const useCartStore = create<CartState>()(
       setCustomer: (customer_name, customer_phone) =>
         set({ customer_name, customer_phone }),
       setNotes: (notes) => set({ notes }),
-      clearCart: () => set({ ...defaultCart }),
+      clearCart: () => set({ ...defaultCart, checkout_id: undefined }),
 
       getSubtotal: () => {
         return get().items.reduce((sum, item) => {
@@ -164,6 +177,7 @@ export const useCartStore = create<CartState>()(
       name: "TracKasuwa-cart",
       partialize: (state) => ({
         items: state.items,
+        checkout_id: state.checkout_id,
         discount: state.discount,
         tax_rate: state.tax_rate,
         warehouse_id: state.warehouse_id,

@@ -13,6 +13,7 @@ export interface OfflineSaleItemPayload {
 }
 
 export interface OfflineSalePayload {
+  checkout_id?: string;
   cashier_id: string;
   organization_id: string;
   warehouse_id: string;
@@ -39,12 +40,20 @@ export interface OfflineSalePayload {
 }
 
 export async function persistOfflineSale(payload: OfflineSalePayload) {
+  const saleId = payload.checkout_id ?? generateId();
+  const signature = JSON.stringify(payload);
+  const db = await getDB();
+  const saved = await db.get('sales', saleId);
+  if (saved) {
+    if (saved.checkout_payload_signature !== signature) throw new Error('This checkout ID was already used with different sale details. Review the existing receipt before starting a new sale.');
+    return saved;
+  }
   await requireTransactionSubscription(payload.organization_id);
-  const saleId = generateId();
   const createdAt = new Date().toISOString();
 
   const saleRecord = {
     id: saleId,
+    checkout_payload_signature: signature,
     organization_id: payload.organization_id,
     invoice_number: payload.invoice_number,
     cashier_id: payload.cashier_id,
@@ -91,11 +100,18 @@ export async function persistOfflineSale(payload: OfflineSalePayload) {
     created_at: createdAt,
   }));
 
-  const db = await getDB();
   const transaction = db.transaction(['sales', 'sale_items', 'inventory', 'sync_queue', 'products'], 'readwrite');
   const done = transaction.done;
   void done.catch(() => {});
   try {
+  // The readwrite transaction serializes concurrent tabs on this device.
+  // A retry returns the original receipt without touching stock or the queue.
+  const existing = await transaction.objectStore('sales').get(saleId);
+  if (existing) {
+    if (existing.checkout_payload_signature !== signature) throw new Error('This checkout ID was already used with different sale details. Review the existing receipt before starting a new sale.');
+    await done;
+    return existing;
+  }
   for (const [index, item] of payload.items.entries()) {
     const product = await transaction.objectStore('products').get(item.product_id);
     if (product?.medical_stock_managed) throw new Error('Use the medical batch workflow for this product');

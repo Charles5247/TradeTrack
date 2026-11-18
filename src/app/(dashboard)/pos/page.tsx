@@ -180,6 +180,7 @@ async function fetchWarehouses(user: { id: string; organization_id?: string | nu
 }
 
 async function completeSale(payload: {
+  checkout_id: string;
   cashier_id: string;
   organization_id: string;
   warehouse_id: string;
@@ -211,7 +212,7 @@ async function completeSale(payload: {
   discount_cart_hash?: string;
   discount_permission_snapshot?: Record<string, unknown>;
 }) {
-  const invoiceNumber = `INV-${generateId().toUpperCase()}`;
+  const invoiceNumber = `INV-${payload.checkout_id.toUpperCase()}`;
   // Always commit locally first. A stale `navigator.onLine` state must never
   // block checkout or prevent a receipt from being available.
   const saleRecord = await persistOfflineSale({
@@ -492,6 +493,7 @@ function POSPageInner() {
     setLastSaleItems([...cart.items]);
 
     await saleMutation.mutateAsync({
+      checkout_id: cart.ensureCheckoutId(),
       cashier_id: user.id,
       organization_id: orgId,
       warehouse_id: cart.warehouse_id,
@@ -1069,7 +1071,7 @@ function POSPageInner() {
                 isUploadingReceipt
               }
             >
-              {saleMutation.isPending ? (
+              {checkoutLocked || saleMutation.isPending ? (
                 <>{t.pos.processing}</>
               ) : (
                 <>

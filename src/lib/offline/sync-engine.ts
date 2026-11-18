@@ -665,6 +665,7 @@ class SyncEngine {
     // `synced` is a local IndexedDB marker; it is not a column on the
     // Supabase sales table and must never be sent through the Data API.
     const { synced: _localSynced, ...serverPayload } = item.payload;
+    delete serverPayload.checkout_payload_signature;
     if (["sales", "sale_items", "inventory", "inventory_movements", "purchase_orders", "vendor_transactions", "products"].includes(item.table_name)) {
       serverPayload.original_device_timestamp = item.payload.updated_at || item.payload.created_at || item.created_at;
     }
