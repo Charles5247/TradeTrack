@@ -19,20 +19,25 @@ movement and audit rows remain in the database.
 
    ```sql
    SELECT public.reset_thrive_well_sales_history(
-     '8eab7920-3c72-4aaa-a327-c6872d6cc80c'::uuid
+     '8eab7920-3c72-4aaa-a327-c6872d6cc80c'::uuid,
+     'ae38e198-f146-44c9-8d65-86818986ac4b'::uuid
    );
    ```
 
    The function checks the exact organization, receipt, duplicate, void,
    36 item rows, 40 units, stock ledger and expected 46 current plus 1,050
-   imported sales. It fails without a partial change if these facts changed.
+   imported sales and the active Thrive-Well owner account supplied as the
+   second argument. The reset event records that account as `created_by` for
+   the audit trigger. It fails without a partial change if these facts changed.
+   After the reset, historical imports with a sale date before the reset are
+   rejected so an old import cannot reappear in merchant history.
 
 ## Verify before telling the merchant it is complete
 
 Run in the same project SQL editor:
 
 ```sql
-SELECT current_sale_count, historical_sale_count, stock_units_deducted
+SELECT current_sale_count, historical_sale_count, stock_units_deducted, created_by
 FROM track_private.sales_history_reset_events
 WHERE id = '8eab7920-3c72-4aaa-a327-c6872d6cc80c';
 
