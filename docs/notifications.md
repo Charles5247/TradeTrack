@@ -20,12 +20,36 @@ private value only in the server environment. Rotating the pair requires users
 to subscribe again. The public key is returned only to authenticated users;
 device endpoint and encryption keys are private database rows.
 
-`/api/cron/notifications` runs once daily on Vercel Hobby. Background push
-alerts may therefore arrive many hours after the event; this does not meet a
-prompt-alert requirement. A more frequent server-side scheduler or an
-event-driven delivery path must be configured and verified before promising
-timely alerts while the app is closed. The app's existing live in-app alerts
-and local badge refresh continue while open. The Android APK is a WebView of the same
+The Vercel Hobby notification cron runs once daily as a fallback. For prompt
+background delivery, enable `pg_cron`, `pg_net`, and Vault in the intended
+Supabase project, then deploy
+`20261119120000_schedule_web_push_delivery.sql`. The job calls the protected
+push-only endpoint every five minutes. In that project's SQL editor, store
+the endpoint and a dedicated `PUSH_CRON_SECRET` in Vault. Configure that same
+secret as a server-only Vercel environment variable; keep it distinct from
+`CRON_SECRET`, which protects other scheduled jobs:
+
+```sql
+SELECT vault.create_secret(
+  'https://trackasuwa.vercel.app/api/cron/push-notifications',
+  'trackasuwa_push_delivery_url'
+);
+SELECT vault.create_secret(
+  '<the dedicated Vercel PUSH_CRON_SECRET value>',
+  'trackasuwa_push_cron_secret'
+);
+```
+
+Replace the placeholder privately; never commit or share the filled SQL.
+Only an operator with access to the protected endpoint and Vault should run
+this setup. Check `cron.job_run_details` for successful runs and
+`net._http_response` for HTTP 200 responses, then create a test notification
+for a subscribed iPhone with the Home Screen app closed. Check that it appears
+within a few minutes and updates the badge. A scheduled call or HTTP 200 alone
+does not prove that iOS displayed the alert. To roll back the frequent job,
+run `SELECT cron.unschedule('trackasuwa-push-delivery');`; the daily Vercel job
+remains. The app's existing live in-app alerts and local badge refresh continue
+while open. The Android APK is a WebView of the same
 POS, so checkout changes ship with the web deployment; it does not need a new
 APK binary for that change.
 
