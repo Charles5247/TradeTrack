@@ -20,11 +20,12 @@ private value only in the server environment. Rotating the pair requires users
 to subscribe again. The public key is returned only to authenticated users;
 device endpoint and encryption keys are private database rows.
 
-`/api/cron/notifications` delivers queued push alerts every five minutes.
-This schedule needs a Vercel plan that supports more than daily cron runs;
-confirm the project's plan before deploying the five-minute schedule. It is
-not instantaneous delivery. The app's existing live in-app alerts and local
-badge refresh continue while open. The Android APK is a WebView of the same
+`/api/cron/notifications` runs once daily on Vercel Hobby. Background push
+alerts may therefore arrive many hours after the event; this does not meet a
+prompt-alert requirement. A more frequent server-side scheduler or an
+event-driven delivery path must be configured and verified before promising
+timely alerts while the app is closed. The app's existing live in-app alerts
+and local badge refresh continue while open. The Android APK is a WebView of the same
 POS, so checkout changes ship with the web deployment; it does not need a new
 APK binary for that change.
 

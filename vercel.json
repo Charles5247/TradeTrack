@@ -16,7 +16,7 @@
     }
   },
   "crons": [
-    { "path": "/api/cron/notifications", "schedule": "*/5 * * * *" },
+    { "path": "/api/cron/notifications", "schedule": "0 0 * * *" },
     { "path": "/api/cron/card-renewals", "schedule": "0 6 * * *" }
   ]
 }
