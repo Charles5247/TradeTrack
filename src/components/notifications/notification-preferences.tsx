@@ -19,6 +19,41 @@ const events = [
 
 type Preference = { event_type: string; in_app_enabled: boolean; email_enabled: boolean; sms_enabled: boolean };
 
+function isAppleMobile() {
+  return /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+async function subscribeApplePush() {
+  if (!('serviceWorker' in navigator)) throw new Error('Install Trackasuwa to your Home Screen to receive background alerts.');
+  const registration = await navigator.serviceWorker.ready;
+  if (!registration.pushManager) throw new Error('Install Trackasuwa to your Home Screen to receive background alerts.');
+  const response = await fetch('/api/notifications/push');
+  const config = await response.json();
+  if (!response.ok || !config.publicKey) throw new Error('Background alerts are not configured yet.');
+  const publicKey = String(config.publicKey).replace(/-/g, '+').replace(/_/g, '/');
+  const bytes = Uint8Array.from(atob(publicKey.padEnd(Math.ceil(publicKey.length / 4) * 4, '=')), character => character.charCodeAt(0));
+  const subscription = await registration.pushManager.getSubscription() ?? await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: bytes });
+  const saved = await fetch('/api/notifications/push', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(subscription.toJSON()) });
+  if (!saved.ok) {
+    if (saved.status === 409) {
+      await subscription.unsubscribe();
+      const replacement = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: bytes });
+      const retry = await fetch('/api/notifications/push', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(replacement.toJSON()) });
+      if (retry.ok) return;
+    }
+    throw new Error('Could not connect background alerts. Please try again.');
+  }
+}
+
+async function unsubscribeApplePush() {
+  const registration = await navigator.serviceWorker.ready;
+  const subscription = await registration.pushManager?.getSubscription();
+  if (!subscription) return;
+  const response = await fetch('/api/notifications/push', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint: subscription.endpoint }) });
+  if (!response.ok) throw new Error('Could not turn off background alerts. Please try again.');
+  await subscription.unsubscribe();
+}
+
 export function NotificationPreferences() {
   const copy = useCopy();
   const user = useAuthStore(state => state.user);
@@ -33,7 +68,9 @@ export function NotificationPreferences() {
   const [desktopError, setDesktopError] = useState('');
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      setDesktopEnabled(localStorage.getItem(desktopAlertsKey) === 'on' && 'Notification' in window && Notification.permission === 'granted');
+      const enabled = localStorage.getItem(desktopAlertsKey) === 'on' && 'Notification' in window && Notification.permission === 'granted';
+      setDesktopEnabled(enabled);
+      if (enabled && isAppleMobile()) void subscribeApplePush().catch(error => setDesktopError(error instanceof Error ? error.message : 'Background alerts are unavailable.'));
       setSoundEnabled(localStorage.getItem(alertSoundKey) !== 'off');
     }, 0);
     return () => window.clearTimeout(timer);
@@ -42,10 +79,27 @@ export function NotificationPreferences() {
     if (!('Notification' in window) || !('serviceWorker' in navigator)) {
       setDesktopError('This browser does not support desktop notifications.'); return;
     }
+    if (isAppleMobile() && !window.matchMedia('(display-mode: standalone)').matches) {
+      setDesktopError('Add Trackasuwa to your Home Screen, open it there, then allow notifications.'); return;
+    }
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') { setDesktopError('Allow notifications in your browser settings to see alerts outside the app.'); return; }
     localStorage.setItem(desktopAlertsKey, 'on');
     setDesktopEnabled(true); setDesktopError('');
+    if (isAppleMobile()) {
+      try { await subscribeApplePush(); }
+      catch (error) { setDesktopError(error instanceof Error ? error.message : 'Background alerts are unavailable.'); }
+    }
+  };
+  const disableDesktop = async () => {
+    try {
+      if (isAppleMobile()) await unsubscribeApplePush();
+      localStorage.setItem(desktopAlertsKey, 'off');
+      setDesktopEnabled(false);
+      setDesktopError('');
+    } catch (error) {
+      setDesktopError(error instanceof Error ? error.message : 'Could not turn off background alerts.');
+    }
   };
   const query = useQuery({ queryKey: ['notification-preferences', user?.id], enabled: Boolean(user?.id && orgId), queryFn: async () => {
     const db = createClient();
@@ -80,8 +134,9 @@ export function NotificationPreferences() {
   return <Card><CardHeader><CardTitle className="flex items-center gap-2"><Bell className="h-5 w-5" />{copy('Notification preferences')}</CardTitle><CardDescription>{copy('In-app alerts are on by default. Choose email or SMS separately for each event.')}</CardDescription></CardHeader><CardContent className="space-y-4">
     <div className="space-y-3 rounded-lg border p-4">
       <p className="font-medium">{copy('Screen and sound alerts')}</p>
-      <p className="text-sm text-muted-foreground">{copy('Allow screen alerts to see new notifications when Trackasuwa is minimized. Keep the app open in a browser tab. Your device controls notification volume and Do Not Disturb.')}</p>
-      <Button type="button" variant="outline" onClick={() => { if (desktopEnabled) { localStorage.setItem(desktopAlertsKey, 'off'); setDesktopEnabled(false); } else void enableDesktop(); }}>{desktopEnabled ? copy('Turn off screen alerts') : copy('Allow screen alerts')}</Button>
+      <p className="text-sm text-muted-foreground">{copy('Allow screen alerts to see new notifications when Trackasuwa is minimized. On iPhone or iPad, install Trackasuwa to the Home Screen and allow notifications for background alerts and icon badges. Your device controls sound and Focus settings.')}</p>
+      <Button type="button" variant="outline" onClick={() => { if (desktopEnabled) void disableDesktop(); else void enableDesktop(); }}>{desktopEnabled ? copy('Turn off screen alerts') : copy('Allow screen alerts')}</Button>
+      {desktopEnabled && desktopError && isAppleMobile() && <Button type="button" variant="outline" onClick={() => { void subscribeApplePush().then(() => setDesktopError('')).catch(error => setDesktopError(error instanceof Error ? error.message : 'Background alerts are unavailable.')); }}>{copy('Retry background alerts')}</Button>}
       <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={soundEnabled} onChange={event => { setSoundEnabled(event.target.checked); localStorage.setItem(alertSoundKey, event.target.checked ? 'on' : 'off'); }} />{copy('Play a sound for new alerts')}</label>
       {desktopError && <p role="alert" className="text-sm text-destructive">{copy(desktopError)}</p>}
     </div>

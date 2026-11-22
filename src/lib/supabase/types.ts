@@ -1086,10 +1086,12 @@ export type Database = {
       close_ai_stock_review: { Args: { p_job_id: string; p_expected_revision: number | null }; Returns: unknown };
       receive_stock_at_cost: { Args: { p_receipt_id: string; p_product_id: string; p_warehouse_id: string; p_quantity: number; p_unit_cost: number; p_notes?: string | null }; Returns: number };
       create_warehouse_memo: { Args: { p_warehouse: string; p_direction: string; p_reference: string; p_items: Array<{ product_id: string; quantity: number }>; p_send?: boolean }; Returns: string };
+      edit_warehouse_memo_draft: { Args: { p_memo: string; p_warehouse: string; p_direction: string; p_reference: string; p_items: Array<{ product_id: string; quantity: number }> }; Returns: void };
       send_warehouse_memo: { Args: { p_memo: string }; Returns: void };
       submit_warehouse_memo: { Args: { p_memo: string; p_items: Array<{ product_id: string; quantity: number }> }; Returns: void };
       review_warehouse_memo: { Args: { p_memo: string; p_items: Array<{ product_id: string; quantity: number }>; p_reason: string }; Returns: void };
       reverse_financial_sale: { Args: { target: string; reversal_kind: string; reversal_reason: string }; Returns: string };
+      reverse_unapplied_duplicate_sale: { Args: { target: string; reversal_reason: string }; Returns: string };
       apply_sale_stock: { Args: { p_sale_id: string }; Returns: number };
       get_marketing_traction: { Args: Record<string, never>; Returns: Record<string, unknown> };
       request_discount_approval: { Args: { p_cart_snapshot: Record<string, unknown>; p_cart_hash: string; p_cart_subtotal: number; p_discount_amount: number; p_reason: string }; Returns: string };

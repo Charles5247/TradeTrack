@@ -25,7 +25,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       reversal_kind: 'void',
       reversal_reason: reason,
     });
-    if (error) return Response.json({ error: error.message }, { status: 409 });
+    if (error) {
+      if (!error.message.includes('Stock has not reconciled'))
+        return Response.json({ error: error.message }, { status: 409 });
+      const duplicate = await db.rpc('reverse_unapplied_duplicate_sale', {
+        target: id, reversal_reason: reason,
+      });
+      if (duplicate.error) return Response.json({ error: duplicate.error.message }, { status: 409 });
+      return Response.json({ reversal_id: duplicate.data }, { headers: { 'Cache-Control': 'no-store' } });
+    }
     return Response.json({ reversal_id: data }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : 'Reversal failed' }, { status: 403 });

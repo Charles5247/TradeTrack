@@ -180,6 +180,7 @@ async function fetchWarehouses(user: { id: string; organization_id?: string | nu
 }
 
 async function completeSale(payload: {
+  checkout_id: string;
   cashier_id: string;
   organization_id: string;
   warehouse_id: string;
@@ -211,7 +212,7 @@ async function completeSale(payload: {
   discount_cart_hash?: string;
   discount_permission_snapshot?: Record<string, unknown>;
 }) {
-  const invoiceNumber = `INV-${generateId().toUpperCase()}`;
+  const invoiceNumber = `INV-${payload.checkout_id.toUpperCase()}`;
   // Always commit locally first. A stale `navigator.onLine` state must never
   // block checkout or prevent a receipt from being available.
   const saleRecord = await persistOfflineSale({
@@ -274,6 +275,8 @@ function POSPageInner() {
   const [discountBusy, setDiscountBusy] = useState(false);
   const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
+  const checkoutLockRef = useRef(false);
+  const [checkoutLocked, setCheckoutLocked] = useState(false);
   const [lastSale, setLastSale] = useState<Record<string, unknown> | null>(
     null,
   );
@@ -431,6 +434,12 @@ function POSPageInner() {
   );
 
   const handleCheckout = async () => {
+    // Lock before the first async check: a second tap must not create a new sale.
+    if (checkoutLockRef.current) return;
+    checkoutLockRef.current = true;
+    setCheckoutLocked(true);
+    let completed = false;
+    try {
     if (!user) return toast.error(t.pos.not_authenticated);
     if (cart.items.length === 0) return toast.error(t.pos.cart_is_empty_toast);
     const allowedWarehouses = await visibleWarehouseIds(user);
@@ -483,7 +492,8 @@ function POSPageInner() {
     // itself doesn't carry (it only has product_id).
     setLastSaleItems([...cart.items]);
 
-    saleMutation.mutate({
+    await saleMutation.mutateAsync({
+      checkout_id: cart.ensureCheckoutId(),
       cashier_id: user.id,
       organization_id: orgId,
       warehouse_id: cart.warehouse_id,
@@ -511,6 +521,17 @@ function POSPageInner() {
       receipt_url: paymentReceiptUrl || undefined,
       ...discountAuthorization,
     });
+    completed = true;
+    } catch {
+      // The mutation's onError callback shows the actionable error.
+    } finally {
+      // Keep the cart locked while its receipt is open. A new sale requires
+      // the explicit New Sale action; failed validation or persistence unlocks.
+      if (!completed) {
+        checkoutLockRef.current = false;
+        setCheckoutLocked(false);
+      }
+    }
   };
 
   const applyOrRequestDiscount = async () => {
@@ -1046,10 +1067,11 @@ function POSPageInner() {
                 !isHydrated ||
                 cart.items.length === 0 ||
                 saleMutation.isPending ||
+                checkoutLocked ||
                 isUploadingReceipt
               }
             >
-              {saleMutation.isPending ? (
+              {checkoutLocked || saleMutation.isPending ? (
                 <>{t.pos.processing}</>
               ) : (
                 <>
@@ -1220,6 +1242,8 @@ function POSPageInner() {
                 setShowReceipt(false);
                 setLastSale(null);
                 setLastSaleItems([]);
+                checkoutLockRef.current = false;
+                setCheckoutLocked(false);
               }}
             >
               {t.pos.new_sale}

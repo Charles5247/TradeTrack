@@ -621,7 +621,7 @@ class SyncEngine {
     if (item.table_name === "product_images") {
       const db = await getDB();
       const image = await db.get("pending_product_images", item.record_id) as { blob: Blob; path: string; content_type: string } | undefined;
-      if (!image) return { error: new Error("Offline product photo is missing from this device") };
+      if (!image) return { error: new Error("Offline product photo is missing from this device. Open the product on this device, replace its photo, and save it again") };
       const upload = await supabase.storage.from("product-images").upload(image.path, image.blob, { contentType: image.content_type, upsert: false });
       if (upload.error && String(upload.error.statusCode) !== "409") return upload;
       const url = supabase.storage.from("product-images").getPublicUrl(image.path).data.publicUrl;
@@ -665,6 +665,7 @@ class SyncEngine {
     // `synced` is a local IndexedDB marker; it is not a column on the
     // Supabase sales table and must never be sent through the Data API.
     const { synced: _localSynced, ...serverPayload } = item.payload;
+    delete serverPayload.checkout_payload_signature;
     if (["sales", "sale_items", "inventory", "inventory_movements", "purchase_orders", "vendor_transactions", "products"].includes(item.table_name)) {
       serverPayload.original_device_timestamp = item.payload.updated_at || item.payload.created_at || item.created_at;
     }
@@ -792,16 +793,16 @@ class SyncEngine {
 
     if (inventory?.length) {
       const db = await getDB();
-      const tx = db.transaction(["inventory", "sync_queue"], "readwrite");
       for (const row of inventory) {
+        const tx = db.transaction(["inventory", "sync_queue"], "readwrite");
+        const queue = tx.objectStore("sync_queue").index("by-queue-key");
         const entries = [
-          ...(await tx.objectStore("sync_queue").index("by-queue-key").getAll(["inventory", row.id, "UPDATE"]) as SyncQueueRecord[]),
-          ...(await tx.objectStore("sync_queue").index("by-queue-key").getAll(["inventory", row.id, "INSERT"]) as SyncQueueRecord[]),
+          ...(await queue.getAll(["inventory", row.id, "UPDATE"]) as SyncQueueRecord[]),
+          ...(await queue.getAll(["inventory", row.id, "INSERT"]) as SyncQueueRecord[]),
         ];
-        if (entries.some((entry) => entry.status !== "synced")) continue;
-        await tx.objectStore("inventory").put(row);
+        if (!entries.some((entry) => entry.status !== "synced")) await tx.objectStore("inventory").put(row);
+        await tx.done;
       }
-      await tx.done;
     }
 
     const warehouses = await this.pullRows(supabase, "warehouses", orgId);
@@ -857,17 +858,13 @@ class SyncEngine {
           .order("id")
           .range(offset, offset + 499);
         if (error) throw error;
-        const tx = db.transaction([table, "sync_queue"], "readwrite");
-        const queue = tx.objectStore("sync_queue");
         for (const row of data ?? []) {
-          const pending = (await queue
-            .index("by-queue-key")
-            .getAll([table, row.id, "INSERT"])) as SyncQueueRecord[];
-          if (pending.some((entry) => entry.status !== "synced")) continue;
+          const tx = db.transaction([table, "sync_queue"], "readwrite");
+          const pending = (await tx.objectStore("sync_queue").index("by-queue-key").getAll([table, row.id, "INSERT"])) as SyncQueueRecord[];
           const { purchase_orders: _join, ...record } = row;
-          await tx.objectStore(table).put({ ...record, synced: true });
+          if (!pending.some((entry) => entry.status !== "synced")) await tx.objectStore(table).put({ ...record, synced: true });
+          await tx.done;
         }
-        await tx.done;
         if (!data || data.length < 500) break;
       }
     }
@@ -904,17 +901,13 @@ class SyncEngine {
           .order("id")
           .range(offset, offset + 499);
         if (error) throw error;
-        const tx = db.transaction([table, "sync_queue"], "readwrite");
         for (const row of data ?? []) {
-          const pending = (await tx
-            .objectStore("sync_queue")
-            .index("by-queue-key")
-            .getAll([table, row.id, "INSERT"])) as SyncQueueRecord[];
-          if (pending.some((entry) => entry.status !== "synced")) continue;
+          const tx = db.transaction([table, "sync_queue"], "readwrite");
+          const pending = (await tx.objectStore("sync_queue").index("by-queue-key").getAll([table, row.id, "INSERT"])) as SyncQueueRecord[];
           const { vendor_transactions: _join, ...record } = row;
-          await tx.objectStore(table).put({ ...record, synced: true });
+          if (!pending.some((entry) => entry.status !== "synced")) await tx.objectStore(table).put({ ...record, synced: true });
+          await tx.done;
         }
-        await tx.done;
         if (!data || data.length < 500) break;
       }
     }

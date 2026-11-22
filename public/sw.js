@@ -77,6 +77,25 @@ self.addEventListener("notificationclick", (event) => {
   }));
 });
 
+self.addEventListener("push", (event) => {
+  event.waitUntil((async () => {
+    let payload = {};
+    try { payload = event.data ? event.data.json() : {}; } catch { /* Show a generic alert. */ }
+    const count = Number(payload.badgeCount);
+    if (Number.isSafeInteger(count) && count >= 0) {
+      if (count > 0) await self.navigator.setAppBadge?.(count).catch(() => {});
+      else await self.navigator.clearAppBadge?.().catch(() => {});
+    }
+    await self.registration.showNotification(String(payload.title || 'Trackasuwa notification'), {
+      body: String(payload.body || 'Open Trackasuwa to view the latest update.'),
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/favicon-48x48.png',
+      tag: `trackasuwa-${String(payload.id || 'update')}`,
+      data: { href: '/notifications' },
+    });
+  })());
+});
+
 self.addEventListener("activate", (event) => {
   // Keep the previous working pages and chunks until the client has finished
   // preparing this deployment. Losing signal during an update must not erase

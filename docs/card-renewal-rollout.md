@@ -2,6 +2,10 @@
 
 Trackasuwa uses Zainpay's hosted card checkout. An owner may opt in to future charges for the same plan, amount, and billing period. Trackasuwa stores only the provider's reusable card token, encrypted with `SUBSCRIPTION_CARD_TOKEN_KEY`; it never accepts a card number or CVV. A payment without a verified provider token leaves renewal manual.
 
+Opt-in checkout sends `allowRecurringPayment: true`, limits `paymentChannels` to `card`, and includes `currencyCode: "NGN"` and the public Trackasuwa logo URL from `NEXT_PUBLIC_APP_URL`. One-time checkout keeps the earlier working Zainpay request (`currency: "NGN"`, with no tokenization fields) while provider compatibility is verified.
+
+Provider reference: [ZainPay card tokenization](https://docs.zainpay.ng/developers/card-tokenization) and the [official Node SDK recurring-card example](https://github.com/zainpay/zainpay-nodejs-sdk/blob/main/README.md#25-make-recurring-card-payment). The hosted checkout must return a reusable card token in the verified payment response before Trackasuwa can activate a mandate. The tokenization guide was unavailable from this workspace during the November 2026 review, so confirm that response shape and merchant enablement directly with ZainPay during the provider-approved test below.
+
 Before enabling this in production:
 
 1. Apply `20261112100000_subscription_card_renewal.sql` after the verified checkout migration.

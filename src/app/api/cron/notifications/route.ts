@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { paymentAdmin } from '@/lib/subscriptions/zainpay-checkout';
 import { configuredSmsProvider } from '@/lib/notifications/sms-provider';
+import { deliverPushJobs } from '@/lib/notifications/push-delivery';
 
 export async function GET(request: NextRequest) {
   const expected = process.env.CRON_SECRET;
@@ -43,5 +44,9 @@ export async function GET(request: NextRequest) {
       skipped += 1;
     }
   }
-  return NextResponse.json({ processed: jobs?.length || 0, sent, skipped });
+  const push = await deliverPushJobs().catch((error) => {
+    console.warn('[notifications] push outbox unavailable', { reason: error instanceof Error ? error.message : 'Unknown error' });
+    return { sent: 0, skipped: 'outbox_unavailable' };
+  });
+  return NextResponse.json({ processed: jobs?.length || 0, sent, skipped, push });
 }

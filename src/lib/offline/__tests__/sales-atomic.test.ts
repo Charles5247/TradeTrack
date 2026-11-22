@@ -41,6 +41,28 @@ it('keeps both receipts and queues each sale stock change separately',async()=>{
   expect(new Set(stock.map(r=>r.payload.sale_id)).size).toBe(2);
   expect(queue.filter(r=>r.table_name==='inventory')).toHaveLength(0);
 });
+it('returns the first receipt when the same checkout is retried without reducing stock twice',async()=>{
+  const checkout = {...payload,checkout_id:'60000000-0000-4000-8000-000000000001',invoice_number:'INV-60000000-0000-4000-8000-000000000001'};
+  const first = await persistOfflineSale(checkout);
+  const second = await persistOfflineSale(checkout);
+  expect(second.id).toBe(first.id);
+  const db=await getDB();
+  expect(await db.count('sales')).toBe(1);
+  expect(await db.count('sale_items')).toBe(1);
+  expect((await db.get('inventory','stock')).quantity).toBe(8);
+  expect((await db.getAll('sync_queue')).filter(r=>r.table_name==='sale_stock')).toHaveLength(1);
+  await expect(persistOfflineSale({...checkout,amount_paid:10})).rejects.toThrow('already used with different sale details');
+  expect((await db.get('inventory','stock')).quantity).toBe(8);
+});
+it('serializes simultaneous submissions of one checkout on this device',async()=>{
+  const checkout = {...payload,checkout_id:'60000000-0000-4000-8000-000000000002',invoice_number:'INV-60000000-0000-4000-8000-000000000002'};
+  const [first, second] = await Promise.all([persistOfflineSale(checkout), persistOfflineSale(checkout)]);
+  expect(second.id).toBe(first.id);
+  const db=await getDB();
+  expect(await db.count('sales')).toBe(1);
+  expect((await db.get('inventory','stock')).quantity).toBe(8);
+  expect((await db.getAll('sync_queue')).filter(r=>r.table_name==='sale_stock')).toHaveLength(1);
+});
 it('cannot use ordinary offline checkout to bypass batch-managed stock',async()=>{
   const db=await getDB();
   await db.put('products',{id:'product',organization_id:'org',medical_stock_managed:true});

@@ -5,9 +5,11 @@ import { TranslatedText as T } from "@/i18n/text";
 /** Illustrative product preview: never presented as real merchant traction. */
 export function Hero() {
   return (
-    <section className="relative overflow-hidden border-b border-border bg-[var(--c-bgAlt)]">
-      <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-12 sm:px-6 sm:py-20 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
-        <div>
+    <section className="relative isolate overflow-hidden border-b border-border bg-[var(--c-bgAlt)]">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_20%,color-mix(in_oklch,var(--c-primary),transparent_87%),transparent_38%),radial-gradient(circle_at_90%_75%,color-mix(in_oklch,var(--c-primary),transparent_91%),transparent_35%)]" />
+      <div aria-hidden="true" className="tt-blob-float-1 pointer-events-none absolute -right-24 -top-32 h-96 w-96 rounded-full border border-primary/10 bg-primary/5 blur-3xl" />
+      <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[1.1fr_1fr] lg:gap-16 lg:py-32">
+        <div className="tt-hero-photo">
           <p className="tt-eyebrow mb-6 flex items-center gap-2 text-primary"><span className="h-2 w-2 rounded-full bg-primary" /><T text="Built for Nigerian retail" /></p>
           <h1 className="market-display max-w-2xl text-[clamp(2.75rem,5.5vw,4.75rem)] leading-[1.06] tracking-tight">
             <T text="Your shop. Your numbers." /><br /><span className="text-primary"><T text="Your next move." /></span>
@@ -25,7 +27,9 @@ export function Hero() {
           </div>
           <p className="mt-7 text-sm text-muted-foreground"><T text="Prefer a guided setup?" />{" "}<Link href="/contact#installation" className="font-semibold text-primary underline underline-offset-4"><T text="Talk to our team" /></Link></p>
         </div>
-        <div className="min-w-0 rounded-2xl border border-border bg-card p-4 shadow-xl shadow-black/5 sm:p-6">
+        <div className="relative min-w-0">
+          <div aria-hidden="true" className="tt-blob-float-2 pointer-events-none absolute -inset-5 rounded-[2rem] bg-primary/10 blur-2xl" />
+          <div className="tt-hero-mockup relative min-w-0 rounded-2xl border border-border bg-card p-4 shadow-2xl shadow-primary/10 sm:p-6">
           <div className="flex items-center justify-between gap-3 border-b border-border pb-4">
             <span className="font-semibold">TracKasuwa <span className="text-muted-foreground">/</span> <T text="Overview" /></span>
             <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium"><T text="Sample data" /></span>
@@ -39,6 +43,8 @@ export function Hero() {
           </div>
           <div className="mt-5 flex gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4"><WifiOff className="mt-0.5 h-5 w-5 shrink-0 text-primary" /><div><p className="text-sm font-semibold"><T text="Keep selling when the network drops" /></p><p className="mt-1 text-xs leading-relaxed text-muted-foreground"><T text="Set up online first. Record sales offline, then sync when connected." /></p></div></div>
           <p className="mt-3 text-center text-xs text-muted-foreground"><T text="Illustrative preview, not live business results." /></p>
+          </div>
+          <div className="tt-hero-pill absolute -left-3 -top-5 flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold shadow-lg sm:-left-8"><span className="tt-dot-pulse h-2 w-2 rounded-full bg-emerald-500" /><T text="One clear view of your trading day." /></div>
         </div>
       </div>
     </section>
