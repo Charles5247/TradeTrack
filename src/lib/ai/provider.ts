@@ -1,12 +1,13 @@
 import 'server-only';
 import type { AIProvider } from './types';
+import { DEFAULT_GEMINI_MODEL, GeminiProvider } from './gemini';
 import { MockAIProvider } from './mock';
-import { OpenAIProvider } from './openai';
+
 export function getAIProvider(): AIProvider {
-  const provider=process.env.AI_PROVIDER || (process.env.OPENAI_API_KEY ? 'openai' : 'mock');
+  const provider = process.env.AI_PROVIDER?.trim() || 'mock';
   if (provider === 'mock') return new MockAIProvider();
-  if (provider !== 'openai') throw new Error('Unsupported AI provider. Choose openai or mock.');
-  const key = process.env.OPENAI_API_KEY || process.env.AI_API_KEY;
-  if (!key) throw new Error('Live AI needs OPENAI_API_KEY in the server environment.');
-  return new OpenAIProvider(key);
+  if (provider !== 'gemini') throw new Error('Unsupported assistant provider. Choose gemini or mock.');
+  const key = process.env.GEMINI_API_KEY?.trim();
+  if (!key) throw new Error('Live assistant processing requires the server Gemini key.');
+  return new GeminiProvider(key, process.env.GEMINI_MODEL?.trim() || DEFAULT_GEMINI_MODEL);
 }

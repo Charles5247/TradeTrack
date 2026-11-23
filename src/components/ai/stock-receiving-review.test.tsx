@@ -88,6 +88,22 @@ async function apply(host: HTMLElement, count = 1) { await act(async () => { but
 function deferred<T>() { let resolve!: (value: T) => void; const promise = new Promise<T>(done => { resolve = done; }); return { promise, resolve }; }
 async function changeInput(input: HTMLInputElement, value: string) { await act(async () => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input, value); input.dispatchEvent(new Event('input', { bubbles: true })); input.dispatchEvent(new Event('change', { bubbles: true })); }); }
 
+it('keeps Gemini source evidence and requires re-entry for a different receiving unit', async () => {
+  mock.saved = {
+    ...makeDraft(), rows: null,
+    source: { kind: 'image', text: null, hash: 'source-reference', byte_length: 100, evidence_available: false },
+    sourceRows: [{ name: 'Rice', sku: 'RICE', opening_stock: '4', cost_price: '150',
+      stock_unit: 'carton', source_unit: 'cartons', source_reference: 'Line 01' }],
+  };
+  const { host } = await mount();
+  expect(mock.saved?.rows?.[0]).toMatchObject({ productId: 'product', quantity: '', unitCost: '' });
+  expect(host.textContent).toContain('Unit as printed');
+  expect(host.textContent).toContain('Line 01');
+  expect(host.textContent).toContain('Check the pack size');
+  expect(includes(host)[0].disabled).toBe(true);
+  expect(mock.execute).not.toHaveBeenCalled();
+});
+
 it('requires physical delivery confirmation and renders authoritative effects before approval', async () => {
   const { host } = await mount(); await act(() => includes(host)[0].click());
   expect(button(host, 'Review exact stock changes').disabled).toBe(true); expect(mock.preview).not.toHaveBeenCalled();

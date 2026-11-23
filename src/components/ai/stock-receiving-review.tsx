@@ -18,10 +18,11 @@ import type { ImportRow } from '@/lib/imports/preview';
 import { STOCK_UNITS } from '@/lib/industries';
 import { useOnlineStatus } from '@/hooks/use-online-status';
 import styles from './stock-receiving-review.module.css';
+import { LocalPriceCheck } from './local-price-check';
 
 type Product = { id: string; name: string; sku: string; barcode: string | null; stock_unit: string; cost_price: number; organization_id: string; medical_stock_managed?: boolean | null };
 type Warehouse = { id: string; name: string; is_main: boolean; organization_id: string };
-type ReviewProps = { job: string; rows: ImportRow[]; onBusyChange?: (busy: boolean) => void; onBackToOverview?: () => void; visible?: boolean };
+type ReviewProps = { job: string; rows: ImportRow[]; onBusyChange?: (busy: boolean) => void; onBackToOverview?: () => void; visible?: boolean; localPrices?: boolean; priceWrites?: boolean };
 type RowCorrections = Partial<Pick<StockReviewRow, 'productId' | 'warehouseId' | 'quantity' | 'unitCost' | 'zeroConfirmed' | 'mode' | 'newName' | 'newSku' | 'stockUnit' | 'sellingPrice'>>;
 
 function correctedRows(rows: StockReviewRow[], corrections: Map<string, RowCorrections>) {
@@ -50,16 +51,30 @@ function ready(row: StockReviewRow) {
   return row.state === 'draft' && target && !!row.warehouseId && validQuantity(row.quantity) && validCost(row.unitCost)
     && (Number(row.unitCost) > 0 || row.zeroConfirmed);
 }
-function initialRows(sourceRows: ImportRow[], products: Product[], warehouses: Warehouse[], job: string): StockReviewRow[] {
+function sourceStockUnit(source?: ImportRow): string | undefined {
+  return STOCK_UNITS.find(unit => unit === source?.stock_unit)
+    ?? (source?.source_unit || source?.stock_unit === 'unknown' ? 'unknown' : undefined);
+}
+
+function initialRows(
+  sourceRows: ImportRow[], products: Product[], warehouses: Warehouse[], job: string, photo: boolean,
+): StockReviewRow[] {
   const main = warehouses.find(item => item.is_main)?.id || warehouses[0]?.id || '';
   return sourceRows.map((source, index) => {
     const name = String(source.name || '').trim(), sku = String(source.sku || '').trim(), barcode = String(source.barcode || '').trim();
     const candidates = products.filter(product => !!(barcode && product.barcode?.toLowerCase() === barcode.toLowerCase())
       || !!(sku && product.sku?.toLowerCase() === sku.toLowerCase()) || !!(name && product.name.toLowerCase() === name.toLowerCase()));
+    const product = candidates.length === 1 ? candidates[0] : undefined;
+    const printedUnit = sourceStockUnit(source);
+    const stockUnit = printedUnit && printedUnit !== 'unknown' ? printedUnit : (printedUnit || photo) ? '' : 'piece';
+    const needsUnitReview = printedUnit === 'unknown'
+      || (!!printedUnit && candidates.length > 0 && printedUnit !== product?.stock_unit)
+      || (photo && !printedUnit);
     return { receiptId: `${job}:${index}`, source: name || `Source row ${index + 1}`,
-      mode: candidates.length === 0 ? 'new' : 'existing', newName: name, newSku: sku, stockUnit: 'piece',
-      sellingPrice: String(source.selling_price ?? ''), productId: candidates.length === 1 ? candidates[0].id : '',
-      warehouseId: main, quantity: String(source.opening_stock ?? ''), unitCost: String(source.cost_price ?? ''),
+      mode: candidates.length === 0 ? 'new' : 'existing', newName: name, newSku: sku, stockUnit,
+      sellingPrice: String(source.selling_price ?? ''), productId: product?.id ?? '',
+      warehouseId: main, quantity: needsUnitReview ? '' : String(source.opening_stock ?? ''),
+      unitCost: needsUnitReview ? '' : String(source.cost_price ?? ''),
       zeroConfirmed: false, state: 'draft' };
   });
 }
@@ -117,6 +132,8 @@ function SourceEvidence({ draft, rowIndex }: { draft: StockReviewDraft; rowIndex
       return <div key={index} className={styles.sourceLine}>
         <strong>{row.name || copy('Unnamed item')}</strong>
         {row.sku && <p>{row.sku}</p>}
+        {row.source_reference && <p>{copy('Source line')} · {row.source_reference}</p>}
+        {row.source_unit && <p>{copy('Unit as printed')} · {row.source_unit}</p>}
         <div><span>{quantity || '—'} × {cost === null ? '—' : money(cost)}</span>
           <strong>{line === null ? '—' : money(line)}</strong></div>
       </div>;
@@ -135,15 +152,15 @@ function SourceEvidence({ draft, rowIndex }: { draft: StockReviewDraft; rowIndex
 
 function display(value: unknown) { return typeof value === 'string' ? value : JSON.stringify(value) ?? '—'; }
 
-export function StockReceivingReview({ job, onBusyChange, onBackToOverview, visible = true }: ReviewProps) {
+export function StockReceivingReview({ job, onBusyChange, onBackToOverview, visible = true, localPrices, priceWrites }: ReviewProps) {
   const user = useAuthStore(state => state.user), copy = useCopy();
   if (!user?.organization_id || user.role !== 'business_owner' || user.status !== 'active')
     return <p role="alert">{copy('An active business owner must sign in to review these receipts.')}</p>;
   return <StockReceivingReviewForAccount key={`${user.organization_id}:${user.id}:${job}`}
-    scope={{ ownerId: user.id, organizationId: user.organization_id }} job={job} visible={visible} onBusyChange={onBusyChange} onBackToOverview={onBackToOverview} />;
+    scope={{ ownerId: user.id, organizationId: user.organization_id }} job={job} visible={visible} localPrices={localPrices} priceWrites={priceWrites} onBusyChange={onBusyChange} onBackToOverview={onBackToOverview} />;
 }
 
-function StockReceivingReviewForAccount({ scope, job, onBusyChange, onBackToOverview, visible }: Omit<ReviewProps, 'rows'> & { scope: StockReviewScope }) {
+function StockReceivingReviewForAccount({ scope, job, onBusyChange, onBackToOverview, visible, localPrices, priceWrites }: Omit<ReviewProps, 'rows'> & { scope: StockReviewScope }) {
   const copy = useCopy();
   const isOnline = useOnlineStatus();
   const [products, setProducts] = useState<Product[]>([]), [warehouses, setWarehouses] = useState<Warehouse[]>([]);
@@ -207,7 +224,7 @@ function StockReceivingReviewForAccount({ scope, job, onBusyChange, onBackToOver
         availableWarehouses = availableWarehouses.filter(item => item.organization_id === organizationId);
         setProducts(availableProducts); setWarehouses(availableWarehouses);
         if (!saved.rows) saved = await initializeStockReviewRows({ ownerId, organizationId }, saved,
-          initialRows(saved.sourceRows, availableProducts, availableWarehouses, job));
+          initialRows(saved.sourceRows, availableProducts, availableWarehouses, job, saved.source?.kind === 'image'));
         if (cancelled || !sameAccount()) return;
         accept(saved);
       } catch (cause) { if (!cancelled && sameAccount()) setError(cause instanceof Error ? cause.message : 'Could not open the saved stock review.'); }
@@ -466,6 +483,9 @@ function StockReceivingReviewForAccount({ scope, job, onBusyChange, onBackToOver
                   const matchNeeded = row.mode === 'new' || !row.productId || !row.warehouseId;
                   const attention = needsAttention.includes(row);
                   const total = lineTotalMinor(row.quantity, row.unitCost);
+                  const printedUnit = sourceStockUnit(draft?.sourceRows[index]);
+                  const unitNeedsCheck = printedUnit === 'unknown' || (!!printedUnit && printedUnit !== unit)
+                    || (draft?.source?.kind === 'image' && !printedUnit);
                   const label = row.state === 'saved' ? 'Stock saved' : row.state !== 'draft' ? 'Receipt confirmation pending'
                     : !eligible(row) || row.error ? (matchNeeded ? 'Check product' : 'Check values') : 'Ready to review';
                   return <article key={row.receiptId} className={styles.item} data-attention={attention}
@@ -493,7 +513,14 @@ function StockReceivingReviewForAccount({ scope, job, onBusyChange, onBackToOver
                         <summary>{copy(matchNeeded ? 'Which product did you receive?' : 'Edit product or warehouse')}</summary>
                         <div className={styles.matchFields}>
                           <label>{copy('Stock destination')}<NativeSelect disabled={locked} value={row.mode === 'new' ? '__new__' : row.productId}
-                            onChange={event => edit(row.receiptId, event.target.value === '__new__' ? { mode: 'new', productId: '' } : { mode: 'existing', productId: event.target.value }, true)}>
+                            onChange={event => {
+                              const choice = event.target.value;
+                              const nextUnit = choice === '__new__' ? row.stockUnit : products.find(item => item.id === choice)?.stock_unit;
+                              const corrections = (printedUnit || draft?.source?.kind === 'image') && nextUnit !== unit
+                                ? { quantity: '', unitCost: '', zeroConfirmed: false } : {};
+                              edit(row.receiptId, choice === '__new__' ? { ...corrections, mode: 'new', productId: '' }
+                                : { ...corrections, mode: 'existing', productId: choice }, true);
+                            }}>
                             <option value="">{copy('Choose product')}</option><option value="__new__">{copy('Create a new product')}</option>
                             {products.map(item => <option key={item.id} value={item.id}>{item.name} · {item.sku}</option>)}
                           </NativeSelect></label>
@@ -505,13 +532,19 @@ function StockReceivingReviewForAccount({ scope, job, onBusyChange, onBackToOver
                           {row.mode === 'new' && <>
                             <label>{copy('New product name')}<Input disabled={locked} maxLength={255} value={row.newName} onChange={event => edit(row.receiptId, { newName: event.target.value })} onBlur={flushCorrections} /></label>
                             <label>{copy('New product SKU')}<Input disabled={locked} maxLength={100} value={row.newSku} onChange={event => edit(row.receiptId, { newSku: event.target.value })} onBlur={flushCorrections} /></label>
-                            <label>{copy('Stock unit')}<NativeSelect disabled={locked} value={row.stockUnit} onChange={event => edit(row.receiptId, { stockUnit: event.target.value }, true)}>
+                            <label>{copy('Stock unit')}<NativeSelect disabled={locked} value={row.stockUnit} onChange={event => edit(row.receiptId, {
+                              stockUnit: event.target.value,
+                              ...((printedUnit || draft?.source?.kind === 'image') && row.stockUnit && row.stockUnit !== event.target.value
+                                ? { quantity: '', unitCost: '', zeroConfirmed: false } : {}),
+                            }, true)}>
+                              <option value="">{copy('Choose stock unit')}</option>
                               {STOCK_UNITS.map(option => <option key={option} value={option}>{copy(option)}</option>)}
                             </NativeSelect></label>
                             <label>{copy('Selling price per unit')}<Input disabled={locked} type="number" inputMode="decimal" min="0" step="0.01" value={row.sellingPrice} onChange={event => edit(row.receiptId, { sellingPrice: event.target.value })} onBlur={flushCorrections} /></label>
                           </>}
                         </div>
                       </details>
+                      {unitNeedsCheck && <p className={styles.rowError}>{copy('Check the pack size. Enter the quantity and buying cost in the selected stock unit.')}</p>}
                       <div className={styles.itemFields}>
                         <label>{copy('Quantity physically received')}
                           <span className={styles.inputUnit}><Input disabled={locked} type="number" inputMode="numeric" min="1" max="2147483647" step="1" value={row.quantity}
@@ -629,7 +662,12 @@ function StockReceivingReviewForAccount({ scope, job, onBusyChange, onBackToOver
             <div className={styles.resultLineHeading}><strong>{name}</strong>
               <span className={styles.pill} data-tone={row.state === 'saved' ? 'success' : pending ? 'warning' : undefined}>{copy(stateLabel)}</span></div>
             {rowWarnings(row)}
-            {row.state === 'saved' && <Link className={styles.manual} href={`/products/${row.savedProductId || row.productId}/edit`}>{copy('View product')}</Link>}
+            {row.state === 'saved' && <div className={styles.controls}>
+              <Link className={styles.manual} href={`/products/${row.savedProductId || row.productId}/edit`}>{copy('View product')}</Link>
+              {visible && localPrices && (row.savedProductId || row.productId) &&
+                <LocalPriceCheck scope={scope} productId={row.savedProductId || row.productId} warehouseId={row.warehouseId}
+                  productName={name} job={job} rowIndex={index} allowPriceWrite={!!priceWrites && row.mode === 'existing'} />}
+            </div>}
             {row.state !== 'draft' && <details className={styles.sourceReference}>
               <summary>{copy('Receipt details')}</summary>
               <p>{copy('Receiving warehouse')}: {warehouses.find(item => item.id === row.warehouseId)?.name || row.warehouseId}</p>
