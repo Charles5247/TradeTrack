@@ -93,12 +93,13 @@ it('uses the actual Host when Next normalises a loopback request URL', async () 
   expect(mock.rpc).toHaveBeenCalledWith('save_ai_stock_review', { p_job_id: job, p_expected_revision: null, p_rows: [row] });
 });
 
-it.each([
+const invalidOriginHeaders: Record<string, string>[] = [
   { Origin: 'https://foreign.example', Host: 'app.example', 'X-Forwarded-Host': 'foreign.example' },
   { Origin: 'http://app.example', Host: 'app.example' },
   { Origin: 'null', Host: 'app.example' },
   { Origin: 'https://app.example', Host: 'app.example?invalid' },
-])('rejects forwarded-host spoofing, scheme changes and opaque origins: %j', async headers => {
+];
+it.each(invalidOriginHeaders)('rejects forwarded-host spoofing, scheme changes and opaque origins: %j', async headers => {
   expect((await POST(request({ action: 'close_review', job, expected_revision: 1 }, headers))).status).toBe(403);
   expect(mock.context).not.toHaveBeenCalled(); expect(mock.rpc).not.toHaveBeenCalled();
 });

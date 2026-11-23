@@ -113,6 +113,33 @@ it('keeps deliberate offline Apply as review only, without creating an approval 
   expect(mock.approve).not.toHaveBeenCalled(); expect(mock.execute).not.toHaveBeenCalled(); expect(mock.saved?.rows?.[0].attempt).toBeUndefined();
   expect(host.textContent).toContain('No new stock has been submitted');
 });
+it('retains an approved attempt when connectivity drops before execution', async () => {
+  const { host } = await mount();
+  await review(host);
+  mock.approve.mockImplementationOnce(async (_scope: StockReviewScope, draft: StockReviewDraft) => {
+    const approved = clone(freeze(draft));
+    mock.saved = approved;
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+    window.dispatchEvent(new Event('offline'));
+    return approved;
+  });
+  await apply(host);
+  expect(mock.execute).not.toHaveBeenCalled();
+  expect(mock.saved?.rows?.[0]).toMatchObject({ state: 'confirmation_pending', attempt: { operation_id: uid(20) } });
+  expect(button(host, 'Check receipt status').disabled).toBe(true);
+});
+it('opens the saved review offline and persists corrections locally without sending them', async () => {
+  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+  const { host } = await mount();
+  const quantity = Array.from(host.querySelectorAll<HTMLInputElement>('input[type=number]'))
+    .find(input => input.closest('label')?.textContent?.includes('Quantity physically received'))!;
+  expect(quantity.disabled).toBe(false);
+  await changeInput(quantity, '3');
+  expect(mock.saved?.rows?.[0].quantity).toBe('3');
+  expect(mock.serverSave).not.toHaveBeenCalled();
+  expect(button(host, 'Review exact stock changes').disabled).toBe(true);
+  expect(host.textContent).toContain('Corrections saved on this device');
+});
 it('locks other row controls while a receipt is outstanding and preserves the original selection', async () => {
   mock.saved!.sourceRows.push({ name: 'Beans' }); mock.saved!.rows!.push(baseRow(1));
   const first = deferred<StockExecution>(); mock.execute.mockImplementationOnce(() => first.promise);

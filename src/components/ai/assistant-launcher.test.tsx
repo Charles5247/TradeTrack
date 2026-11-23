@@ -3,18 +3,39 @@ import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { beforeEach, expect, it, vi } from 'vitest';
 
-const state = vi.hoisted(() => ({ role: 'business_owner', pathname: '/inventory', id: 'owner', organization_id: 'org', status: 'active', load: vi.fn() }));
+const state = vi.hoisted(() => ({ role: 'business_owner', pathname: '/inventory', id: 'owner', organization_id: 'org', status: 'active', load: vi.fn(), create: vi.fn() }));
 vi.mock('@/store', () => ({ useAuthStore: Object.assign(
   (pick: (value: { user: typeof state }) => unknown) => pick({ user: state }), { getState: () => ({ user: state }) },
 ) }));
-vi.mock('@/lib/ai/stock-review-draft', () => ({ loadStockReview: state.load }));
+vi.mock('@/lib/ai/stock-review-draft', () => ({ loadStockReview: state.load, createStockReview: state.create }));
 vi.mock('next/navigation', () => ({ usePathname: () => state.pathname }));
 vi.mock('@/i18n/text', () => ({ useCopy: () => (value: string) => value }));
 import { AssistantLauncher } from './assistant-launcher';
 
 beforeEach(() => {
   Object.assign(state, { role: 'business_owner', pathname: '/inventory', id: 'owner', organization_id: 'org', status: 'active' });
-  state.load.mockReset(); window.localStorage.clear();
+  state.load.mockReset(); state.create.mockReset(); window.localStorage.clear();
+});
+
+it('keeps the saved review link available offline and restores launcher focus on Escape', async () => {
+  Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+  const online = vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+  const host = document.createElement('div');
+  document.body.append(host);
+  const root = createRoot(host);
+  try {
+    await act(() => root.render(<AssistantLauncher />));
+    const trigger = host.querySelector<HTMLButtonElement>('button[aria-expanded]')!;
+    await act(() => trigger.click());
+    expect(document.activeElement?.getAttribute('aria-label')).toBe('Close assistant');
+    const draftLink = host.querySelector('a[href="/assistant#inventory"]');
+    expect(draftLink?.textContent).toBe('Open a saved stock review');
+    expect(Array.from(host.querySelectorAll('button')).find(button => button.textContent === 'Prepare and review stock')?.disabled).toBe(true);
+    expect(state.load).not.toHaveBeenCalled();
+    await act(() => document.activeElement?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })));
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+  } finally { await act(() => root.unmount()); host.remove(); online.mockRestore(); }
 });
 
 it('opens a contextual floating assistant for the owner only', async () => {

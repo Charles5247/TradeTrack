@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import type { ImportRow } from '@/lib/imports/preview';
 import { STOCK_UNITS } from '@/lib/industries';
+import { useOnlineStatus } from '@/hooks/use-online-status';
 
 type Product = { id: string; name: string; sku: string; barcode: string | null; stock_unit: string; cost_price: number; organization_id: string; medical_stock_managed?: boolean | null };
 type Warehouse = { id: string; name: string; is_main: boolean; organization_id: string };
@@ -70,6 +71,7 @@ export function StockReceivingReview({ job, onBusyChange }: ReviewProps) {
 
 function StockReceivingReviewForAccount({ scope, job, onBusyChange }: { scope: StockReviewScope; job: string; onBusyChange?: (busy: boolean) => void }) {
   const copy = useCopy();
+  const isOnline = useOnlineStatus();
   const [products, setProducts] = useState<Product[]>([]), [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [draft, setDraft] = useState<StockReviewDraft | null>(null), current = useRef<StockReviewDraft | null>(null);
   const mounted = useRef(true), working = useRef(false);
@@ -79,6 +81,10 @@ function StockReceivingReviewForAccount({ scope, job, onBusyChange }: { scope: S
   const [selectedIds, setSelectedIds] = useState<string[]>([]), [physicalReceived, setPhysicalReceived] = useState(false);
   const [loading, setLoading] = useState(true), [busy, setBusy] = useState(false), [error, setError] = useState('');
   const [catalogError, setCatalogError] = useState(''), [reviewing, setReviewing] = useState(false), [reload, setReload] = useState(0);
+  const [filter, setFilter] = useState<'all' | 'attention' | 'ready'>('all');
+  const [focusedRow, setFocusedRow] = useState<string | null>(null);
+  const approvalHeading = useRef<HTMLHeadingElement>(null);
+  const rowHeading = useRef<HTMLHeadingElement>(null);
   const { ownerId, organizationId } = scope;
   const sameAccount = useCallback(() => {
     const active = useAuthStore.getState().user;
@@ -99,9 +105,12 @@ function StockReceivingReviewForAccount({ scope, job, onBusyChange }: { scope: S
     let cancelled = false;
     void (async () => {
       try {
+        const onlineAtOpen = navigator.onLine;
+        const scopedDraft = loadStockReview({ ownerId, organizationId });
         const [productResult, warehouseResult, savedResult] = await Promise.allSettled([
-          loadAll<Product>('products', 'id,name,sku,barcode,stock_unit,cost_price,organization_id,medical_stock_managed', organizationId),
-          loadAll<Warehouse>('warehouses', 'id,name,is_main,organization_id', organizationId), loadStockReview({ ownerId, organizationId }),
+          onlineAtOpen ? loadAll<Product>('products', 'id,name,sku,barcode,stock_unit,cost_price,organization_id,medical_stock_managed', organizationId) : Promise.reject(new Error('Offline')),
+          onlineAtOpen ? loadAll<Warehouse>('warehouses', 'id,name,is_main,organization_id', organizationId) : Promise.reject(new Error('Offline')),
+          scopedDraft,
         ]);
         if (cancelled || !sameAccount()) return;
         if (savedResult.status === 'rejected') throw savedResult.reason;
@@ -117,7 +126,7 @@ function StockReceivingReviewForAccount({ scope, job, onBusyChange }: { scope: S
             if (productResult.status === 'rejected') availableProducts = cachedProducts.filter(item => item.organization_id === organizationId);
             if (warehouseResult.status === 'rejected') availableWarehouses = cachedWarehouses.filter(item => item.organization_id === organizationId);
           } catch { /* Pending receipts remain recoverable without catalog access. */ }
-          setCatalogError('Current catalog could not be loaded. Cached products may be shown; reconnect before preparing stock.');
+          setCatalogError('Showing available catalog data from this device. Reconnect and reload the review to check current stock.');
         }
         availableProducts = availableProducts.filter(item => item.organization_id === organizationId && !item.medical_stock_managed);
         availableWarehouses = availableWarehouses.filter(item => item.organization_id === organizationId);
@@ -209,15 +218,28 @@ function StockReceivingReviewForAccount({ scope, job, onBusyChange }: { scope: S
   // A new shop can have no products yet.
   const eligible = (row: StockReviewRow) => row.mode === 'new' ? ready(row) && !catalogError && warehouses.some(item => item.id === row.warehouseId) : canReceive(row);
   const selected = rows.filter(row => selectedIds.includes(row.receiptId) && eligible(row));
+  const needsAttention = rows.filter(row => row.state === 'draft' && (!eligible(row) || !!row.error));
+  const readyRows = rows.filter(row => eligible(row) && !row.error);
+  const completedCount = rows.filter(row => row.state === 'saved').length;
+  const pendingCount = rows.length - completedCount - rows.filter(row => row.state === 'draft').length;
+  const visibleRows = rows.filter(row => filter === 'all' || row.state !== 'draft' || row.receiptId === focusedRow
+    || selectedIds.includes(row.receiptId) || (filter === 'attention' ? needsAttention : readyRows).includes(row));
+  const stage = reviewing && draft?.selection ? 1 : draft?.pendingApproval || pendingCount || (rows.length > 0 && completedCount === rows.length) ? 2 : 0;
   const locked = loading || busy || !!draft?.pendingApproval || !!draft?.conflict;
   const actionsLocked = locked || savingCorrections || correctionError;
+  const onlineActionsLocked = actionsLocked || !isOnline;
+  useEffect(() => {
+    if (reviewing) approvalHeading.current?.focus();
+  }, [reviewing]);
   const prepare = () => run(async () => {
+    if (!navigator.onLine) throw new Error('Reconnect to review current stock changes.');
     if (!physicalReceived || !current.current || selected.length === 0) return;
     const indices = selected.map(row => rows.indexOf(row));
     accept(await previewStockSelection(scope, current.current, indices)); setReviewing(true);
   });
   const execute = async (index: number) => {
     if (!sameAccount()) throw new Error('The signed-in account changed. Reopen this review.');
+    if (!navigator.onLine) throw new Error('Reconnect to check this receipt before continuing.');
     const active = current.current, row = active?.rows?.[index];
     if (!active || !row?.attempt || row.state !== 'confirmation_pending') return;
     const result = await submitStockReviewReceipt(scope, row.attempt);
@@ -244,6 +266,7 @@ function StockReceivingReviewForAccount({ scope, job, onBusyChange }: { scope: S
     }
   });
   const check = (index?: number, retry = false, discardLocalEdits = false) => run(async () => {
+    if (!navigator.onLine) throw new Error('Reconnect to check the original receipt.');
     const original = index === undefined ? undefined : current.current?.rows?.[index]?.attempt;
     const saved = await loadStockReview(scope, { discardLocalEdits });
     if (!saved) throw new Error('This review could not be reopened.');
@@ -259,7 +282,13 @@ function StockReceivingReviewForAccount({ scope, job, onBusyChange }: { scope: S
   });
   if (loading) return <p role="status">{copy('Opening your saved stock review...')}</p>;
   return <section className="min-w-0 space-y-4" aria-label={copy('Review stock receiving')}>
-    <div><h2 className="tt-section-title">{copy('Review stock before receiving')}</h2><p className="text-sm text-muted-foreground">{copy('Match every item, confirm goods physically received and check each buying cost. Nothing is received until you approve and the server confirms it.')}</p></div>
+    <ol aria-label={copy('Stock review progress')} className="grid grid-cols-3 gap-2 rounded-xl border border-border bg-card p-2 text-sm">
+      {['Check items', 'Review and approve', 'Receipt outcome'].map((label, index) => <li key={label} aria-current={stage === index ? 'step' : undefined}
+        className={stage === index ? 'rounded-lg bg-primary/10 px-2 py-2 font-semibold text-primary' : 'px-2 py-2 text-muted-foreground'}>{copy(label)}</li>)}
+    </ol>
+    <div><h2 ref={rowHeading} tabIndex={-1} className="tt-section-title">{copy(stage === 1 ? 'Review stock changes' : stage === 2 ? 'Stock receipt outcome' : 'Review stock before receiving')}</h2><p className="text-sm text-muted-foreground">{copy('Check each item against what arrived. Stock is received when the server confirms your approved changes.')}</p></div>
+    {!isOnline && <p role="status" className="rounded-lg border border-border bg-muted p-3 text-sm">{copy('Offline. You can keep editing draft items on this device. Reconnect to review current changes, approve stock or check a receipt.')}</p>}
+    {(completedCount > 0 || pendingCount > 0) && <p role="status" className="rounded-lg border border-border bg-card p-3 text-sm">{completedCount} {copy('confirmed')} · {pendingCount} {copy('awaiting confirmation')} · {rows.length - completedCount - pendingCount} {copy('still in draft')}</p>}
     <p role="status" className="text-xs text-muted-foreground">{copy(correctionError ? 'Some corrections are only on this screen. Retry saving before leaving.' : savingCorrections ? 'Saving your corrections...' : draft?.dirty ? 'Corrections saved on this device; not yet saved to your account.' : draft?.serverRevision ? 'Review saved to your account. Selection is not approval.' : 'Review saved on this device; not yet saved to your account.')}</p>
     {busy && <p role="status" className="text-sm text-muted-foreground">{copy('Working on your stock review...')}</p>}
     {draft?.source && <details className="rounded-lg border border-border p-3 text-sm"><summary>{copy('Original source evidence')}</summary>
@@ -280,18 +309,28 @@ function StockReceivingReviewForAccount({ scope, job, onBusyChange }: { scope: S
     </div>}
     {draft?.syncError && <p role="alert" className="text-sm text-destructive">{draft.syncError}</p>}
     {catalogError && <p role="status" className="text-sm text-muted-foreground">{copy(catalogError)}</p>}
-    {draft?.conflict && <div role="alert" className="space-y-2 rounded-lg border border-border p-3"><p>{copy('This account review changed on another device. Your unsaved device corrections are preserved below. They have not replaced the account review.')}</p><Button variant="outline" disabled={busy || savingCorrections || correctionError} onClick={() => check(undefined, false, true)}>{copy('Reload account review and discard these device edits')}</Button></div>}
-    {draft?.pendingApproval && <div role="status" className="space-y-2"><p>{copy('Approval confirmation pending. No additional stock will be submitted until its original approval is found.')}</p><Button variant="outline" disabled={busy || savingCorrections || correctionError} onClick={() => check()}>{copy('Check approval status')}</Button></div>}
+    {draft?.conflict && <div role="alert" className="space-y-2 rounded-lg border border-border p-3"><p>{copy('This account review changed on another device. Your unsaved device corrections are preserved below. They have not replaced the account review.')}</p><Button variant="outline" disabled={!isOnline || busy || savingCorrections || correctionError} onClick={() => check(undefined, false, true)}>{copy('Reload account review and discard these device edits')}</Button></div>}
+    {draft?.pendingApproval && <div role="status" className="space-y-2"><p>{copy('Approval confirmation pending. No additional stock will be submitted until its original approval is found.')}</p><Button variant="outline" disabled={!isOnline || busy || savingCorrections || correctionError} onClick={() => check()}>{copy('Check approval status')}</Button></div>}
     {(error || catalogError || draft?.syncError) && <Button variant="outline" disabled={busy || savingCorrections || correctionError} onClick={() => {
       setLoading(true); setError(''); setCatalogError(''); setReviewing(false); setSelectedIds([]); setPhysicalReceived(false); setReload(value => value + 1);
     }}>{copy('Reload saved review')}</Button>}
     <p className="text-sm"><Link href="/inventory" className="text-primary underline">{copy('Open inventory for the manual workflow')}</Link></p>
     {rows.length === 0 && <p>{copy('No product rows were found. Close this review and correct the source.')}</p>}
+    <div hidden={stage === 1} className="space-y-3">
+    {rows.length > 1 && <div role="group" aria-label={copy('Filter stock review items')} className="flex flex-wrap gap-2">
+      <Button type="button" variant={filter === 'attention' ? 'default' : 'outline'} aria-pressed={filter === 'attention'} onClick={() => setFilter('attention')}>{copy('Needs attention')} ({needsAttention.length})</Button>
+      <Button type="button" variant={filter === 'ready' ? 'default' : 'outline'} aria-pressed={filter === 'ready'} onClick={() => setFilter('ready')}>{copy('Ready')} ({readyRows.length})</Button>
+      <Button type="button" variant={filter === 'all' ? 'default' : 'outline'} aria-pressed={filter === 'all'} onClick={() => setFilter('all')}>{copy('All items')} ({rows.length})</Button>
+    </div>}
+    {!visibleRows.length && rows.length > 0 && <p role="status" className="text-sm text-muted-foreground">{copy('No items match this filter. Choose All items to see the full review.')}</p>}
     {rows.map((row, index) => {
+      if (!visibleRows.includes(row)) return null;
       const product = products.find(item => item.id === row.productId);
       const stateLabel = row.state === 'saved' ? 'Stock saved' : row.state === 'queued' ? 'Queued for upload — not yet confirmed'
         : row.state === 'confirmation_pending' ? 'Receipt confirmation pending' : eligible(row) ? 'Ready to select' : 'Needs your decision';
-      return <article key={row.receiptId} className="space-y-3 rounded-lg border border-border bg-card p-4">
+      return <article key={row.receiptId} onFocus={() => setFocusedRow(row.receiptId)} onBlur={event => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setFocusedRow(null);
+      }} className="space-y-3 rounded-lg border border-border bg-card p-4">
         <div className="flex flex-wrap items-center justify-between gap-2"><div><p className="font-medium">{copy('Extracted source row')} {index + 1}: {row.source}</p><p role="status" className="text-xs text-muted-foreground">{copy(stateLabel)}</p></div>{row.state !== 'draft' && <span className="text-sm font-medium text-primary">{copy(row.state === 'saved' ? 'Applied' : 'Pending confirmation')}</span>}</div>
         {row.state === 'draft' ? <>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -315,21 +354,22 @@ function StockReceivingReviewForAccount({ scope, job, onBusyChange }: { scope: S
           {row.state === 'saved' && <Link className="text-primary underline" href={`/products/${row.savedProductId || row.productId}/edit`}>{copy('View product')}</Link>}
           <p className="break-all text-xs text-muted-foreground">{copy('Receiving warehouse')}: {row.warehouseId} · {copy('Receipt reference')}: {row.attempt?.receipt_id || row.receiptId}</p>
           {row.attempt?.operation_id && <p className="break-all text-xs text-muted-foreground">{copy('Operation reference')}: {row.attempt.operation_id}</p>}
-          {row.state !== 'saved' && <div className="flex flex-wrap gap-2"><Button variant="outline" disabled={busy || savingCorrections || correctionError} onClick={() => check(index)}>{copy('Check receipt status')}</Button>
-            {row.state === 'confirmation_pending' && row.attempt?.approval_id && <Button variant="outline" disabled={busy || savingCorrections || correctionError} onClick={() => check(index, true)}>{copy('Retry same receipt')}</Button>}</div>}
+          {row.state !== 'saved' && <div className="flex flex-wrap gap-2"><Button variant="outline" disabled={!isOnline || busy || savingCorrections || correctionError} onClick={() => check(index)}>{copy('Check receipt status')}</Button>
+            {row.state === 'confirmation_pending' && row.attempt?.approval_id && <Button variant="outline" disabled={!isOnline || busy || savingCorrections || correctionError} onClick={() => check(index, true)}>{copy('Retry same receipt')}</Button>}</div>}
           {row.state !== 'saved' && !row.attempt?.approval_id && <p>{copy('This older receipt can only be checked here. Resolve its original result before preparing another receipt.')}</p>}
         </div>}
         {row.error && <p role="alert" className="text-sm text-destructive">{row.error}</p>}
         {row.changes?.map(change => <p key={change.field} className="break-words text-sm">{change.field}: {copy('Reviewed')} {display(change.reviewed)} → {copy('Current')} {display(change.current)}. {copy('Check the proposed row above and review again.')}</p>)}
       </article>;
     })}
+    </div>
     {rows.some(row => row.state === 'draft') && <div className="space-y-3 rounded-lg border border-border p-4">
       <p className="text-sm">{selected.length} {copy('selected')} · {rows.filter(row => row.state === 'draft' && !eligible(row)).length} {copy('need decisions')}</p>
       {!reviewing || !draft?.selection ? <>
         <label className="flex items-start gap-2 text-sm"><input type="checkbox" disabled={locked || correctionError} checked={physicalReceived} onChange={event => setPhysicalReceived(event.target.checked)} />{copy('I checked that the selected quantities were physically received at these warehouses. An invoice alone does not confirm delivery.')}</label>
-        <Button disabled={actionsLocked || selected.length === 0 || !physicalReceived} onClick={prepare}>{copy('Review exact stock changes')}</Button>
+        <Button disabled={onlineActionsLocked || selected.length === 0 || !physicalReceived} onClick={prepare}>{copy('Review exact stock changes')}</Button>
       </> : <>
-        <h3 className="font-semibold">{copy('These exact changes will be applied')}</h3>
+        <h3 ref={approvalHeading} tabIndex={-1} className="font-semibold">{copy('These exact changes will be applied')}</h3>
         <ul className="space-y-3 text-sm">{draft.selection.groups.map(group => <li key={group.operation_id} className="rounded-lg border border-border p-3">
           <p>{group.product_name}: +{group.quantity} {copy(group.stock_unit)} at {money(group.unit_cost_minor)} {copy('each')} → {group.warehouse_name}.</p>
           <p>{copy('Stock at this warehouse')}: {group.stock_before} → {group.stock_after}. {copy('Average buying cost across all warehouses')}: {money(group.cost_before_minor)} → {money(group.cost_after_minor)}.</p>
@@ -337,7 +377,7 @@ function StockReceivingReviewForAccount({ scope, job, onBusyChange }: { scope: S
           <p>{group.mode === 'new' ? `${copy('Create product and receive stock together')}. ${copy('Selling price per unit')}: ${money(group.selling_price_minor || '0')}.` : copy('Existing product; selling price unchanged.')}</p>
         </li>)}</ul>
         <p className="text-xs text-muted-foreground">{copy('Approval applies only to this selection. Changed business records may require another review.')}</p>
-        <div className="flex flex-wrap gap-2"><Button disabled={actionsLocked} onClick={apply}>{copy(`Approve and apply ${draft.selection.groups.length} stock receipt${draft.selection.groups.length === 1 ? '' : 's'}`)}</Button><Button variant="outline" disabled={actionsLocked} onClick={() => setReviewing(false)}>{copy('Edit draft')}</Button></div>
+        <div className="flex flex-wrap gap-2"><Button disabled={onlineActionsLocked} onClick={apply}>{copy(`Approve and apply ${draft.selection.groups.length} stock receipt${draft.selection.groups.length === 1 ? '' : 's'}`)}</Button><Button variant="outline" disabled={actionsLocked} onClick={() => { setReviewing(false); rowHeading.current?.focus(); }}>{copy('Edit draft')}</Button></div>
       </>}
     </div>}
   </section>;

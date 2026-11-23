@@ -26,6 +26,12 @@ const saved: StockReviewDraft = {
 };
 const button = (label: string) => Array.from(host.querySelectorAll('button')).find(item => item.textContent === label)!;
 
+function enterStockList() {
+  const input = host.querySelector<HTMLTextAreaElement>('#inventory textarea')!;
+  Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!.call(input, 'Rice 4 bags at 100');
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
 beforeEach(() => {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
   mock.user = { id: 'owner', organization_id: 'org', role: 'business_owner', status: 'active' };
@@ -78,7 +84,8 @@ it('ignores a late generated proposal after the Owner changes in the same organi
   let respond!: (response: Response) => void;
   await act(async () => root.render(<AssistantPage />));
   mock.fetch.mockImplementationOnce(() => new Promise<Response>(resolve => { respond = resolve; }));
-  await act(() => button('Propose mapped rows').click());
+  await act(enterStockList);
+  await act(() => button('Prepare stock draft').click());
   mock.user = { ...mock.user, id: 'other-owner' };
   await act(async () => root.render(<AssistantPage />));
   await act(async () => respond(new Response(JSON.stringify({ job: 'old-owner-job', rows: [{ name: 'Rice' }] }))));
@@ -89,8 +96,21 @@ it('ignores a late generated proposal after the Owner changes in the same organi
 it('persists a generated proposal before opening its review', async () => {
   await act(async () => root.render(<AssistantPage />));
   mock.fetch.mockResolvedValueOnce(new Response(JSON.stringify({ job: 'saved-job', rows: saved.sourceRows })));
-  await act(async () => button('Propose mapped rows').click());
+  await act(enterStockList);
+  await act(async () => button('Prepare stock draft').click());
   expect(mock.create).toHaveBeenCalledWith({ ownerId: 'owner', organizationId: 'org' }, 'saved-job', saved.sourceRows);
   expect(host.querySelector('[aria-label="Recovered review"]')?.textContent).toBe('saved-job');
   expect(host.querySelector<HTMLFieldSetElement>('#inventory')?.disabled).toBe(true);
+});
+
+it('restores the panel-created draft on the same route while offline without contacting the assistant', async () => {
+  const online = vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+  try {
+    await act(async () => root.render(<AssistantPage />));
+    mock.load.mockResolvedValue(saved);
+    await act(async () => window.dispatchEvent(new Event('trackasuwa:stock-review-opened')));
+    expect(host.querySelector('[aria-label="Recovered review"]')?.textContent).toBe('saved-job');
+    expect(host.querySelector<HTMLFieldSetElement>('#inventory')?.disabled).toBe(true);
+    expect(mock.fetch).not.toHaveBeenCalled();
+  } finally { online.mockRestore(); }
 });
