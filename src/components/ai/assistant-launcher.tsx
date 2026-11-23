@@ -66,8 +66,11 @@ function AssistantPanel({ ownerId, organizationId }: { ownerId: string; organiza
         || owner.role !== 'business_owner' || owner.status !== 'active') return;
       setStockText('');
       setOpen(false);
-      if (pathname === '/assistant') window.dispatchEvent(new Event('trackasuwa:stock-review-opened'));
-      window.location.assign('/assistant#inventory');
+      if (pathname === '/assistant') {
+        window.dispatchEvent(new Event('trackasuwa:stock-review-opened'));
+      } else {
+        window.location.assign('/assistant#inventory');
+      }
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'Could not prepare the stock draft.'); }
     finally { preparing.current = false; setBusy(false); }
   };
@@ -95,8 +98,20 @@ function AssistantPanel({ ownerId, organizationId }: { ownerId: string; organiza
           {copy(busy ? 'Preparing draft...' : 'Prepare and review stock')}
         </button>
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-        <Link href="/assistant#inventory" onClick={() => setOpen(false)} className="block min-h-11 rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-muted">{copy(!isOnline ? 'Open a saved stock review' : stockContext ? 'Prepare stock from this area or resume review' : 'Open stock intake or resume review')}</Link>
-        <Link href="/assistant#insights" onClick={() => setOpen(false)} className="block min-h-11 rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-muted">{copy('Review business insights')}</Link>
+        <Link href="/assistant#inventory" onNavigate={event => {
+          closePanel();
+          if (pathname === '/assistant') {
+            event.preventDefault();
+            window.location.hash = 'inventory';
+          }
+        }} className="block min-h-11 rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-muted">{copy(!isOnline ? 'Open a saved stock review' : stockContext ? 'Prepare stock from this area or resume review' : 'Open stock intake or resume review')}</Link>
+        <Link href="/assistant#insights" onNavigate={event => {
+          closePanel();
+          if (pathname === '/assistant') {
+            event.preventDefault();
+            window.location.hash = 'insights';
+          }
+        }} className="block min-h-11 rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-muted">{copy('Review business insights')}</Link>
       </div>
       <p role="status" className="mt-3 text-sm text-muted-foreground">{copy(isOnline ? 'Review the proposed changes before approving stock.' : 'Offline. Open a saved review on this device or reconnect to prepare new work.')}</p>
     </section>}

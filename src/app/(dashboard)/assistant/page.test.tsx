@@ -24,7 +24,11 @@ const saved: StockReviewDraft = {
   version: 1, revision: 1, ownerId: 'owner', organizationId: 'org', job: 'saved-job',
   sourceRows: [{ name: 'Rice', opening_stock: 4, cost_price: 100 }], rows: null,
 };
-const button = (label: string) => Array.from(host.querySelectorAll('button')).find(item => item.textContent === label)!;
+const button = (label: string) => Array.from(host.querySelectorAll('button')).find(item =>
+  item.textContent === label || item.querySelector('strong')?.textContent === label)!;
+const review = () => host.querySelector('[aria-label="Recovered review"]');
+const openIntake = () => act(() => button('Receive new stock').click());
+const openSavedReview = () => act(() => button('Resume this task').click());
 
 function enterStockList() {
   const input = host.querySelector<HTMLTextAreaElement>('#inventory textarea')!;
@@ -34,6 +38,7 @@ function enterStockList() {
 
 beforeEach(() => {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+  window.history.replaceState(null, '', '/assistant');
   mock.user = { id: 'owner', organization_id: 'org', role: 'business_owner', status: 'active' };
   mock.load.mockReset().mockResolvedValue(null);
   mock.create.mockReset().mockResolvedValue(saved);
@@ -48,8 +53,11 @@ it('reopens the saved review and prevents a new delivery from replacing it', asy
   mock.load.mockResolvedValue(saved);
   await act(async () => root.render(<AssistantPage />));
   expect(mock.load).toHaveBeenCalledWith({ ownerId: 'owner', organizationId: 'org' });
-  expect(host.querySelector('[aria-label="Recovered review"]')?.textContent).toBe('saved-job');
-  expect(host.querySelector<HTMLFieldSetElement>('#inventory')?.disabled).toBe(true);
+  expect(host.querySelector('h1')?.textContent).toBe('Your workspace');
+  expect(review()).toBeNull();
+  await openSavedReview();
+  expect(review()?.textContent).toBe('saved-job');
+  expect(host.querySelector('#inventory fieldset')).toBeNull();
   expect(mock.create).not.toHaveBeenCalled();
 });
 
@@ -57,15 +65,17 @@ it('keeps the review open when a pending receipt prevents closing it', async () 
   mock.load.mockResolvedValue(saved);
   mock.clear.mockRejectedValue(new Error('Confirm pending receipts before closing this review.'));
   await act(async () => root.render(<AssistantPage />));
+  await openSavedReview();
   await act(async () => button('Close this review').click());
   expect(host.textContent).toContain('Confirm pending receipts before closing this review.');
   expect(host.querySelector('[aria-label="Recovered review"]')).not.toBeNull();
-  expect(host.querySelector<HTMLFieldSetElement>('#inventory')?.disabled).toBe(true);
+  expect(host.querySelector('#inventory fieldset')).toBeNull();
 });
 
 it('cannot close a newer job that replaced the review in another tab', async () => {
   mock.load.mockResolvedValueOnce(saved).mockResolvedValueOnce({ ...saved, job: 'newer-job' });
   await act(async () => root.render(<AssistantPage />));
+  await openSavedReview();
   await act(async () => button('Close this review').click());
   expect(mock.clear).not.toHaveBeenCalled();
   expect(host.textContent).toContain('Another stock review is now active');
@@ -74,16 +84,18 @@ it('cannot close a newer job that replaced the review in another tab', async () 
 it('fails closed when saved reviews cannot be read, and offers recovery', async () => {
   mock.load.mockRejectedValueOnce(new Error('Storage unavailable'));
   await act(async () => root.render(<AssistantPage />));
+  await openIntake();
   expect(host.textContent).toContain('Storage unavailable');
-  expect(host.querySelector<HTMLFieldSetElement>('#inventory')?.disabled).toBe(true);
+  expect(host.querySelector<HTMLFieldSetElement>('#inventory fieldset')?.disabled).toBe(true);
   await act(async () => button('Try opening saved review again').click());
-  expect(host.querySelector<HTMLFieldSetElement>('#inventory')?.disabled).toBe(false);
+  expect(host.querySelector<HTMLFieldSetElement>('#inventory fieldset')?.disabled).toBe(false);
 });
 
 it('ignores a late generated proposal after the Owner changes in the same organisation', async () => {
   let respond!: (response: Response) => void;
   await act(async () => root.render(<AssistantPage />));
   mock.fetch.mockImplementationOnce(() => new Promise<Response>(resolve => { respond = resolve; }));
+  await openIntake();
   await act(enterStockList);
   await act(() => button('Prepare stock draft').click());
   mock.user = { ...mock.user, id: 'other-owner' };
@@ -96,11 +108,12 @@ it('ignores a late generated proposal after the Owner changes in the same organi
 it('persists a generated proposal before opening its review', async () => {
   await act(async () => root.render(<AssistantPage />));
   mock.fetch.mockResolvedValueOnce(new Response(JSON.stringify({ job: 'saved-job', rows: saved.sourceRows })));
+  await openIntake();
   await act(enterStockList);
   await act(async () => button('Prepare stock draft').click());
   expect(mock.create).toHaveBeenCalledWith({ ownerId: 'owner', organizationId: 'org' }, 'saved-job', saved.sourceRows);
-  expect(host.querySelector('[aria-label="Recovered review"]')?.textContent).toBe('saved-job');
-  expect(host.querySelector<HTMLFieldSetElement>('#inventory')?.disabled).toBe(true);
+  expect(review()?.textContent).toBe('saved-job');
+  expect(host.querySelector('#inventory fieldset')).toBeNull();
 });
 
 it('restores the panel-created draft on the same route while offline without contacting the assistant', async () => {
@@ -110,7 +123,50 @@ it('restores the panel-created draft on the same route while offline without con
     mock.load.mockResolvedValue(saved);
     await act(async () => window.dispatchEvent(new Event('trackasuwa:stock-review-opened')));
     expect(host.querySelector('[aria-label="Recovered review"]')?.textContent).toBe('saved-job');
-    expect(host.querySelector<HTMLFieldSetElement>('#inventory')?.disabled).toBe(true);
+    expect(host.querySelector('#inventory fieldset')).toBeNull();
     expect(mock.fetch).not.toHaveBeenCalled();
   } finally { online.mockRestore(); }
+});
+
+it('navigates separate task screens and preserves the mounted review while offline', async () => {
+  const online = vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+  mock.load.mockResolvedValue(saved);
+  try {
+    await act(async () => root.render(<AssistantPage />));
+    expect(host.querySelector('h1')?.textContent).toBe('Your workspace');
+    expect(host.querySelector('textarea')).toBeNull();
+    await openSavedReview();
+    const mounted = review();
+    expect(mounted?.closest('[hidden]')).toBeNull();
+    await act(async () => {
+      window.history.pushState(null, '', '/assistant#insights');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+    expect(host.querySelector('h1')?.textContent).toBe('Business insights');
+    expect(mounted?.closest('[hidden]')).not.toBeNull();
+    await act(async () => {
+      window.history.pushState(null, '', '/assistant#inventory');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+    expect(review()).toBe(mounted);
+    expect(mounted?.closest('[hidden]')).toBeNull();
+    expect(mock.fetch).not.toHaveBeenCalled();
+  } finally { online.mockRestore(); }
+});
+
+it('shows a separate processing screen and restores the source if preparation fails', async () => {
+  let respond!: (response: Response) => void;
+  await act(async () => root.render(<AssistantPage />));
+  mock.fetch.mockImplementationOnce(() => new Promise<Response>(resolve => { respond = resolve; }));
+  await openIntake();
+  await act(enterStockList);
+  await act(async () => button('Prepare stock draft').click());
+  expect(host.querySelector('h1')?.textContent).toBe('Reading your source');
+  expect(host.querySelector('progress')).not.toBeNull();
+  expect(host.querySelector('textarea')).toBeNull();
+  await act(async () => respond(Response.json({ error: 'Try again when connected.' }, { status: 503 })));
+  expect(host.querySelector('h1')?.textContent).toBe('Receive stock');
+  expect(host.querySelector<HTMLTextAreaElement>('textarea')?.value).toBe('Rice 4 bags at 100');
+  expect(host.querySelector('[role="alert"]')?.textContent).toBe('Try again when connected.');
+  expect(mock.create).not.toHaveBeenCalled();
 });

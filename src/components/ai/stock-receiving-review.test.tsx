@@ -17,7 +17,7 @@ vi.mock('@/lib/ai/stock-review-draft', () => ({
   previewStockSelection: mock.preview, approveStockSelection: mock.approve, submitStockReviewReceipt: mock.execute, recordStockExecution: mock.record,
 }));
 vi.mock('@/store', () => ({ useAuthStore: Object.assign((pick: (state: { user: TestUser }) => unknown) => pick({ user: mock.user }), { getState: () => ({ user: mock.user }) }) }));
-vi.mock('@/i18n/text', () => ({ useCopy: () => (value: string) => value }));
+vi.mock('@/i18n/text', () => ({ useCopy: () => (value: string) => value, TranslatedText: ({ text }: { text: string }) => text }));
 vi.mock('@/lib/offline/db', () => ({ getDB: async () => ({ getAll: async () => [] }) }));
 vi.mock('@/lib/supabase/client', () => ({ createClient: () => ({ from: (table: string) => ({ select: () => ({ eq: () => ({ range: async () => ({
   error: mock.catalogFailed ? new Error('Catalog unavailable') : null,
@@ -93,7 +93,8 @@ it('requires physical delivery confirmation and renders authoritative effects be
   expect(button(host, 'Review exact stock changes').disabled).toBe(true); expect(mock.preview).not.toHaveBeenCalled();
   await act(() => checkbox(host, 'I checked').click()); await act(async () => { button(host, 'Review exact stock changes').click(); });
   expect(mock.preview).toHaveBeenCalledWith({ ownerId: 'owner', organizationId: 'org' }, expect.anything(), [0]);
-  expect(host.textContent).toContain('Stock at this warehouse: 7 → 11'); expect(host.textContent).toContain('₦100.00 → ₦118.18');
+  expect(host.textContent).toContain('Stock at this warehouse'); expect(host.textContent).toContain('7 → 11');
+  expect(host.textContent).toContain('₦100.00 → ₦118.18');
   expect(host.textContent).toContain('Server Main'); expect(mock.approve).not.toHaveBeenCalled(); expect(mock.execute).not.toHaveBeenCalled();
 });
 it('approves the exact selection, persists frozen attempts, then executes only its rows', async () => {
@@ -182,7 +183,32 @@ it('allows a known no-effect row to be corrected while preserving earlier confir
     : { status: 'no_effect', row_index: 1, operation_id: uid(21), receipt_id: uid(31), code: 'STALE_FACTS', message: 'Stock changed; review again.', changes: [{ field: 'stock', reviewed: 7, current: 8 }] });
   const { host } = await mount(); await review(host); await apply(host, 2);
   expect(mock.saved!.rows![0].state).toBe('saved'); expect(mock.saved!.rows![1].state).toBe('draft');
-  expect(host.textContent).toContain('Reviewed 7 → Current 8'); expect(includes(host)).toHaveLength(1);
+  expect(host.textContent).toContain('Reviewed 7 → Current 8'); expect(includes(host)).toHaveLength(0);
+  await act(() => button(host, 'Review remaining items').click());
+  expect(includes(host)).toHaveLength(1);
+});
+
+it('uses separate review, approval and receipt screens with a four-step indicator', async () => {
+  const { host } = await mount();
+  expect(host.querySelector('h1')?.textContent).toBe('Check the stock');
+  expect(host.querySelectorAll('ol > li')).toHaveLength(4);
+  expect(host.querySelector('[aria-current="step"]')?.textContent).toContain('Check items');
+  await act(() => button(host, 'Select ready').click());
+  expect(includes(host)[0].checked).toBe(true);
+  expect(mock.approve).not.toHaveBeenCalled();
+  await act(() => checkbox(host, 'I checked').click());
+  await act(async () => { button(host, 'Review exact stock changes').click(); });
+  expect(host.querySelector('h1')?.textContent).toBe('Approve changes');
+  expect(host.querySelector('[aria-current="step"]')?.textContent).toContain('Approve');
+  expect(includes(host)).toHaveLength(0);
+  expect(host.textContent).toContain('₦600.00');
+  await act(() => button(host, 'Back to check items').click());
+  expect(includes(host)[0].checked).toBe(true);
+  await act(async () => { button(host, 'Review exact stock changes').click(); });
+  await apply(host);
+  expect(host.querySelector('h1')?.textContent).toBe('Receipt summary');
+  expect(host.querySelector('[aria-current="step"]')?.textContent).toContain('Result');
+  expect(host.textContent).toContain('Stock receipt completed');
 });
 it('keeps conflicting device edits visible and requires explicit discard before account reload', async () => {
   mock.saved!.conflict = true; mock.saved!.rows![0].quantity = '9'; const { host } = await mount();
