@@ -106,7 +106,7 @@ async function searchProducts(query: string, warehouseId: string, categoryId: st
         `
         *,
         category:categories(name),
-        inventory!inner(quantity, warehouse_id)
+        inventory!inventory_product_id_fkey!inner(quantity, warehouse_id)
       `,
       )
       .eq("status", "active")

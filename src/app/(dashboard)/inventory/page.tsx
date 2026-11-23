@@ -55,8 +55,8 @@ async function fetchInventory(user: { id: string; organization_id?: string | nul
   const pageSize = 500;
   try {
   for (let start = 0; ; start += pageSize) {
-    let query = supabase.from('inventory').select(`*,product:products(id,name,sku,barcode,selling_price,cost_price,image_url,status,created_at,category:categories(name),supplier:suppliers(name)),warehouse:warehouses(name)`)
-      .order(sort === 'newest' || sort === 'oldest' ? 'created_at' : 'name', { ascending: sort === 'az' || sort === 'oldest', referencedTable: 'products' })
+    let query = supabase.from('inventory').select(`*,product:products!inventory_product_id_fkey(id,name,sku,barcode,selling_price,cost_price,image_url,status,created_at,category:categories(name),supplier:suppliers(name)),warehouse:warehouses!inventory_warehouse_id_fkey(name)`)
+      .order(sort === 'newest' || sort === 'oldest' ? 'created_at' : 'name', { ascending: sort === 'az' || sort === 'oldest', referencedTable: 'product' })
       .range(start, start + pageSize - 1);
     if (warehouseId && warehouseId !== 'all') query = query.eq('warehouse_id', warehouseId);
     if (visibleIds) query = query.in('warehouse_id', [...visibleIds]);
