@@ -47,15 +47,15 @@ function rpcFailure(message: string) {
 }
 
 export async function POST(request: Request) {
-  if (process.env.AI_PRICE_WRITES_ENABLED !== 'true') return failure('PRICE_DISABLED');
   if (!sameOrigin(request)) return failure('PRICE_FORBIDDEN');
 
   try {
-    const { db, org, profile } = await apiContext(['business_owner']);
-    assertExpectedAccount(request, profile);
     const payload = priceChangeRequestSchema.safeParse(await request.json().catch(() => null));
     if (!payload.success) return failure('PRICE_INVALID');
     const action = payload.data;
+    if (action.action !== 'status' && process.env.AI_PRICE_WRITES_ENABLED !== 'true') return failure('PRICE_DISABLED');
+    const { db, org, profile } = await apiContext(['business_owner']);
+    assertExpectedAccount(request, profile);
 
     // Expired access still permits an active Owner to reconcile an already
     // submitted operation. Creation and approval always require entitlement.

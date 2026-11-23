@@ -42,7 +42,14 @@ DECLARE
   reviewed_until timestamptz;
   digest text;
   ttl text;
+  original_sub text;
+  original_claims text;
+  eligible_until timestamptz;
 BEGIN
+  IF p_operation_id IS NULL OR p_action IS NULL OR p_action NOT IN ('prepare', 'approve', 'status') THEN
+    RAISE EXCEPTION 'PRICE_INVALID';
+  END IF;
+
   -- Identity comes only from the server's authenticated, entitled context.
   -- Lock membership for the duration so a revocation cannot race the effect.
   PERFORM 1 FROM public.users
@@ -50,16 +57,45 @@ BEGIN
       AND role = 'business_owner' AND status = 'active'
     FOR SHARE;
   IF NOT FOUND THEN RAISE EXCEPTION 'PRICE_FORBIDDEN'; END IF;
+
+  IF p_action <> 'status' THEN
+    IF p_access_until IS NULL OR p_access_until <= clock_timestamp() THEN
+      RAISE EXCEPTION 'PRICE_FORBIDDEN';
+    END IF;
+
+    -- Only this service-role RPC delegates the verified actor. Preserve the
+    -- service role and restore both claim representations before doing work.
+    -- Stock review's policy locks membership, organization and subscriptions
+    -- in their existing order, then checks the current plan and expiry.
+    original_sub := current_setting('request.jwt.claim.sub', true);
+    original_claims := current_setting('request.jwt.claims', true);
+    BEGIN
+      PERFORM set_config('request.jwt.claim.sub', p_actor_id::text, true);
+      PERFORM set_config('request.jwt.claims', jsonb_set(
+        COALESCE(NULLIF(original_claims, '')::jsonb, '{}'::jsonb), '{sub}', to_jsonb(p_actor_id)
+      )::text, true);
+      PERFORM track_private.stock_review_actor(true);
+      eligible_until := (public.verify_business_subscription()->>'valid_until')::timestamptz;
+      PERFORM set_config('request.jwt.claim.sub', COALESCE(original_sub, ''), true);
+      PERFORM set_config('request.jwt.claims', COALESCE(original_claims, ''), true);
+    EXCEPTION WHEN raise_exception THEN
+      -- PostgreSQL rolls the local claim changes back before entering a handler.
+      IF SQLERRM LIKE 'STOCK_REVIEW_FORBIDDEN:%'
+        OR SQLERRM IN ('AI requires the introductory period or Growth and above',
+          'Business owner required', 'Authentication required', 'Business membership required') THEN
+        RAISE EXCEPTION 'PRICE_FORBIDDEN';
+      END IF;
+      RAISE;
+    END;
+    IF eligible_until IS NULL OR eligible_until <= clock_timestamp() THEN
+      RAISE EXCEPTION 'PRICE_FORBIDDEN';
+    END IF;
+  END IF;
+
   SELECT settings->>'ai_stock_review_ttl_seconds' INTO ttl FROM public.organizations
     WHERE id = p_organization_id AND currency = 'NGN' FOR SHARE;
   IF NOT FOUND THEN RAISE EXCEPTION 'PRICE_FORBIDDEN'; END IF;
 
-  IF p_operation_id IS NULL OR p_action IS NULL OR p_action NOT IN ('prepare', 'approve', 'status') THEN
-    RAISE EXCEPTION 'PRICE_INVALID';
-  END IF;
-  IF p_action <> 'status' AND (p_access_until IS NULL OR p_access_until <= clock_timestamp()) THEN
-    RAISE EXCEPTION 'PRICE_FORBIDDEN';
-  END IF;
   IF p_action = 'prepare' THEN
     IF p_job_id IS NULL OR p_row_index IS NULL OR p_row_index < 0
       OR p_new_price_minor IS NULL OR p_new_price_minor NOT BETWEEN 0 AND 999999999999 THEN
@@ -89,6 +125,7 @@ BEGIN
         WHERE p.id = receipt.product_id AND p.organization_id = p_organization_id AND p.status = 'active'
         FOR UPDATE;
       IF NOT FOUND THEN RAISE EXCEPTION 'PRICE_NOT_FOUND'; END IF;
+      IF LEAST(p_access_until, eligible_until) <= clock_timestamp() THEN RAISE EXCEPTION 'PRICE_FORBIDDEN'; END IF;
       SELECT * INTO STRICT product FROM public.products WHERE id = receipt.product_id;
       old_price_minor := (product.selling_price * 100)::bigint;
       IF old_price_minor = p_new_price_minor THEN RAISE EXCEPTION 'PRICE_UNCHANGED'; END IF;
@@ -132,7 +169,7 @@ BEGIN
         WHERE p.id = operation.product_id AND p.organization_id = p_organization_id AND p.status = 'active'
         FOR UPDATE;
 
-      IF p_access_until <= clock_timestamp() THEN RAISE EXCEPTION 'PRICE_FORBIDDEN'; END IF;
+      IF LEAST(p_access_until, eligible_until) <= clock_timestamp() THEN RAISE EXCEPTION 'PRICE_FORBIDDEN'; END IF;
       IF operation.expires_at <= clock_timestamp() THEN
         UPDATE track_private.ai_product_price_operations SET status = 'expired'
           WHERE id = operation.id RETURNING * INTO operation;

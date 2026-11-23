@@ -22,6 +22,11 @@ beforeAll(async () => {
   db = new PGlite({ extensions: { uuid_ossp } });
   await db.exec(readFileSync('src/lib/ai/__tests__/fixtures/stock-review-bootstrap.sql', 'utf8'));
   await db.exec(`CREATE ROLE service_role;
+    CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$
+      SELECT COALESCE(NULLIF(current_setting('request.jwt.claim.sub', true), ''),
+        NULLIF(current_setting('request.jwt.claims', true), '')::jsonb->>'sub',
+        NULLIF(current_setting('test.uid', true), ''))::uuid
+    $$;
     ALTER TABLE public.organizations ADD COLUMN currency text NOT NULL DEFAULT 'NGN';
     ALTER TABLE public.products ADD COLUMN updated_at timestamptz NOT NULL DEFAULT clock_timestamp();`);
   for (const migration of ['20261108090000_purchase_cost_history.sql', '20261108160000_ai_owner_access.sql',
@@ -126,6 +131,24 @@ it('requires the original Owner and an existing-product receipt from the current
   await expect(call('prepare', { expiredAccess: true })).rejects.toThrow('PRICE_FORBIDDEN');
   await db.query('UPDATE public.ai_stock_receipts SET created_product = true WHERE id=$1', [receipt]);
   await expect(call('prepare')).rejects.toThrow('PRICE_NOT_FOUND');
+});
+
+it('rechecks entitlement on approval and restores claims while status still works after suspension', async () => {
+  const previousClaims = JSON.stringify({ role: 'service_role', sub: foreignOwner });
+  await db.query(`SELECT set_config('request.jwt.claim.sub', $1, true),
+    set_config('request.jwt.claims', $2, true)`, [foreignOwner, previousClaims]);
+  const review = await call('prepare');
+  const claims = async () => (await db.query(`SELECT current_setting('request.jwt.claim.sub') AS sub,
+    current_setting('request.jwt.claims') AS claims`)).rows;
+  expect(await claims()).toEqual([{ sub: foreignOwner, claims: previousClaims }]);
+  await db.query("UPDATE public.subscriptions SET status = 'suspended' WHERE organization_id = $1", [org]);
+  // The helper still sends a future HTTP eligibility timestamp.
+  await expect(call('approve', { digest: review.reviewDigest })).rejects.toThrow('PRICE_FORBIDDEN');
+  expect(await claims()).toEqual([{ sub: foreignOwner, claims: previousClaims }]);
+  expect((await call('status')).status).toBe('prepared');
+  expect(await price()).toBe('170.00');
+  expect((await db.query("SELECT count(*)::integer AS count FROM public.audit_logs WHERE action = 'AI_PRODUCT_PRICE_APPROVED'")).rows)
+    .toEqual([{ count: 0 }]);
 });
 
 it('rolls back the selling-price update when its audit cannot be recorded', async () => {

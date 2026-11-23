@@ -49,6 +49,15 @@ it('keeps the workflow disabled by default before consulting or writing to the d
   expect(mock.service).not.toHaveBeenCalled();
 });
 
+it('lets an active Owner recover a known operation after writes are switched off', async () => {
+  vi.stubEnv('AI_PRICE_WRITES_ENABLED', 'false');
+  expect((await POST(request(status))).status).toBe(200);
+  expect(mock.access).not.toHaveBeenCalled();
+  expect(mock.service).toHaveBeenCalledWith('manage_ai_price_change', {
+    p_actor_id: owner, p_organization_id: org, p_operation_id: operationId, p_action: 'status',
+  });
+});
+
 it('prepares a product from the scoped receipt and keeps the payload free of caller-supplied identity', async () => {
   const response = await POST(request(prepare));
   expect(response.status).toBe(200);

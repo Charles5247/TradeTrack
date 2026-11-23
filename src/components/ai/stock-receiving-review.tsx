@@ -664,9 +664,9 @@ function StockReceivingReviewForAccount({ scope, job, onBusyChange, onBackToOver
             {rowWarnings(row)}
             {row.state === 'saved' && <div className={styles.controls}>
               <Link className={styles.manual} href={`/products/${row.savedProductId || row.productId}/edit`}>{copy('View product')}</Link>
-              {visible && localPrices && (row.savedProductId || row.productId) &&
+              {visible && (row.savedProductId || row.productId) &&
                 <LocalPriceCheck scope={scope} productId={row.savedProductId || row.productId} warehouseId={row.warehouseId}
-                  productName={name} job={job} rowIndex={index} allowPriceWrite={!!priceWrites && row.mode === 'existing'} />}
+                  productName={name} job={job} rowIndex={index} lookupEnabled={!!localPrices} allowPriceWrite={!!priceWrites && row.mode === 'existing'} />}
             </div>}
             {row.state !== 'draft' && <details className={styles.sourceReference}>
               <summary>{copy('Receipt details')}</summary>

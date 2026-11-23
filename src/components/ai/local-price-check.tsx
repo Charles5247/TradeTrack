@@ -23,6 +23,7 @@ type Props = {
   job: string;
   rowIndex: number;
   allowPriceWrite: boolean;
+  lookupEnabled: boolean;
 };
 
 function decimal(minor: string) {
@@ -39,17 +40,29 @@ class PriceRequestError extends Error {
   constructor(message: string, readonly status: number) { super(message); }
 }
 
+function priceOperationKey({ scope, job, rowIndex }: Props) {
+  return `trackasuwa.ai.price-operation:${scope.organizationId}:${scope.ownerId}:${job}:${rowIndex}`;
+}
+
+function hasPriceOperation(key: string) {
+  if (typeof window === 'undefined') return false;
+  try { return stockReviewIdSchema.safeParse(window.localStorage.getItem(key)).success; }
+  catch { return false; }
+}
+
 export function LocalPriceCheck(props: Props) {
   const copy = useCopy();
   const online = useOnlineStatus();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  if (!props.lookupEnabled && !hasPriceOperation(priceOperationKey(props))) return null;
+  const title = props.lookupEnabled ? 'Check local price' : 'Check price change status';
   return <Dialog open={open} onOpenChange={next => { if (!busy || next) setOpen(next); }}>
     <DialogTrigger asChild>
-      <Button type="button" variant="outline">{copy('Check local price')}</Button>
+      <Button type="button" variant="outline">{copy(title)}</Button>
     </DialogTrigger>
     <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-lg">
-      <DialogTitle>{copy('Check local price')}</DialogTitle>
+      <DialogTitle>{copy(title)}</DialogTitle>
       <DialogDescription>{props.productName}</DialogDescription>
       {open && <LocalPriceReview {...props} online={online} onBusyChange={setBusy} />}
     </DialogContent>
@@ -57,8 +70,9 @@ export function LocalPriceCheck(props: Props) {
 }
 
 function LocalPriceReview({
-  scope, productId, warehouseId, job, rowIndex, allowPriceWrite, online, onBusyChange,
+  online, onBusyChange, ...props
 }: Props & { online: boolean; onBusyChange: (busy: boolean) => void }) {
+  const { scope, productId, warehouseId, job, rowIndex, allowPriceWrite, lookupEnabled } = props;
   const copy = useCopy();
   const [state, setState] = useState('');
   const [city, setCity] = useState('');
@@ -70,7 +84,7 @@ function LocalPriceReview({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const { ownerId, organizationId } = scope;
-  const storedKey = `trackasuwa.ai.price-operation:${organizationId}:${ownerId}:${job}:${rowIndex}`;
+  const storedKey = priceOperationKey(props);
   const requestBusy = useRef(false);
   const initialized = useRef(false);
   const areaEdited = useRef(false);
@@ -83,7 +97,7 @@ function LocalPriceReview({
   }, []);
 
   useEffect(() => {
-    if (!online || initialized.current) return;
+    if (!online || !lookupEnabled || initialized.current) return;
     const abort = new AbortController();
     void fetch(`/api/ai/local-prices?warehouseId=${encodeURIComponent(warehouseId)}`, {
       headers: { 'X-Track-Expected-Owner': ownerId, 'X-Track-Expected-Organization': organizationId },
@@ -105,7 +119,7 @@ function LocalPriceReview({
       }
     });
     return () => abort.abort();
-  }, [online, organizationId, ownerId, warehouseId]);
+  }, [lookupEnabled, online, organizationId, ownerId, warehouseId]);
 
   async function post(endpoint: string, input: Record<string, unknown>) {
     if (!navigator.onLine) throw new Error(copy('Reconnect to continue.'));
@@ -144,11 +158,7 @@ function LocalPriceReview({
     }
   }
 
-  const hasSavedOperation = (() => {
-    if (!allowPriceWrite || typeof window === 'undefined') return false;
-    try { return stockReviewIdSchema.safeParse(window.localStorage.getItem(storedKey)).success; }
-    catch { return false; }
-  })();
+  const hasSavedOperation = hasPriceOperation(storedKey);
 
   function receivePriceChange(data: unknown, operationId: string) {
     const change = priceChangeResultSchema.parse(data);
@@ -203,7 +213,7 @@ function LocalPriceReview({
     {!online && <p role="status">{copy('Reconnect to check offers or review a price change.')}</p>}
     {error && <p role="alert" className="break-words text-destructive">{error}</p>}
     {busy && <p role="status">{copy('Working on your price check…')}</p>}
-    {!priceChange && !recovering && <form className="space-y-3" onSubmit={event => {
+    {lookupEnabled && !priceChange && !recovering && <form className="space-y-3" onSubmit={event => {
       event.preventDefault();
       const area = localPriceAreaSchema.safeParse({ state, ...(city.trim() ? { city: city.trim() } : {}) });
       if (!area.success) { setError(copy('Choose a state and check the city name.')); return; }
@@ -259,15 +269,16 @@ function LocalPriceReview({
           onClick={() => void run(preparePrice)}>{copy('Review price change')}</Button>
       </div>}
     </section>}
-    {(recovering || (hasSavedOperation && !priceChange)) && allowPriceWrite &&
+    {(recovering || (hasSavedOperation && !priceChange)) &&
       <Button type="button" variant="outline" disabled={busy || !online}
         onClick={() => void run(fetchPriceStatus)}>{copy('Check original price change status')}</Button>}
     {priceChange && !recovering && <section className="space-y-3" aria-label={copy('Separate price approval')}>
       <p>{copy('This price applies to the product across your business.')}</p>
       <p><strong>₦{decimal(priceChange.oldPriceMinor)} → ₦{decimal(priceChange.newPriceMinor)}</strong></p>
-      {priceChange.status === 'prepared' && <Button type="button" disabled={!online || busy} onClick={() => void run(approvePrice)}>
+      {priceChange.status === 'prepared' && allowPriceWrite && <Button type="button" disabled={!online || busy} onClick={() => void run(approvePrice)}>
         {copy('Approve price change')}
       </Button>}
+      {priceChange.status === 'prepared' && !allowPriceWrite && <p role="status">{copy('Price approval is currently unavailable.')}</p>}
       {priceChange.status === 'completed' && <p role="status">{copy('Selling price change confirmed.')}</p>}
       {(priceChange.status === 'conflict' || priceChange.status === 'expired') && <>
         <p role="status">{copy('This review is no longer current. Review the latest price before approving a change.')}</p>
