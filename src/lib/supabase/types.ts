@@ -80,6 +80,8 @@ export type Database = {
           expires_at: string;
           used_at: string | null;
           sale_id: string | null;
+          checkout_id: string | null;
+          checkout_claimed_at: string | null;
           created_at: string;
         };
         Insert: {
@@ -98,6 +100,8 @@ export type Database = {
           expires_at: string;
           used_at?: string | null;
           sale_id?: string | null;
+          checkout_id?: string | null;
+          checkout_claimed_at?: string | null;
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["discount_requests"]["Insert"]>;
@@ -1109,6 +1113,7 @@ export type Database = {
       apply_sale_stock: { Args: { p_sale_id: string }; Returns: number };
       get_marketing_traction: { Args: Record<string, never>; Returns: Record<string, unknown> };
       request_discount_approval: { Args: { p_cart_snapshot: Record<string, unknown>; p_cart_hash: string; p_cart_subtotal: number; p_discount_amount: number; p_reason: string }; Returns: string };
+      claim_discount_checkout: { Args: { p_request_id: string; p_checkout_id: string; p_cart_hash: string; p_cart_subtotal: number; p_discount_amount: number }; Returns: void };
       decide_discount_request: { Args: { p_request_id: string; p_approve: boolean; p_reason?: string | null }; Returns: Record<string, unknown> };
     };
     Enums: {

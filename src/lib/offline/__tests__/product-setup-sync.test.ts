@@ -71,3 +71,15 @@ it('keeps stock and photo pending when the product is rejected', async () => {
   expect((await db.get('sync_queue', 'queue-product_images')).status).toBe('pending');
   expect(await db.get('pending_product_images', 'photo')).toBeDefined();
 });
+
+it('stops automatically retrying a photo that is missing from this device', async () => {
+  const db = await queueSetup();
+  await db.delete('pending_product_images', 'photo');
+  await (syncEngine as unknown as { pushChanges(): Promise<void> }).pushChanges();
+  expect(await db.get('sync_queue', 'queue-product_images')).toMatchObject({
+    status: 'failed', retry_count: 1,
+  });
+  const attempts = calls.order.length;
+  await (syncEngine as unknown as { pushChanges(): Promise<void> }).pushChanges();
+  expect(calls.order).toHaveLength(attempts);
+});

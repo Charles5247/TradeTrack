@@ -487,9 +487,11 @@ class SyncEngine {
           throw err;
         }
         const subscriptionBlocked = /Trial ended|active subscription|read.only/i.test(errMessage);
+        const missingDevicePhoto = item.table_name === "product_images"
+          && /Offline product photo is missing from this device/.test(errMessage);
         await db.put("sync_queue", {
           ...item,
-          status: subscriptionBlocked ? "pending" : item.retry_count >= 3 ? "failed" : "pending",
+          status: subscriptionBlocked ? "pending" : missingDevicePhoto || item.retry_count >= 3 ? "failed" : "pending",
           retry_count: subscriptionBlocked ? item.retry_count : item.retry_count + 1,
           error: errMessage,
         });
