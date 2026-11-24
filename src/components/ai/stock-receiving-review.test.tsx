@@ -9,21 +9,26 @@ import type { StockExecution, StockSelection, ReviewedStockOperation } from '@/l
 type TestUser = { id: string; role: string; organization_id: string; status: string };
 const mock = vi.hoisted(() => ({
   load: vi.fn(), initialize: vi.fn(), save: vi.fn(), serverSave: vi.fn(), preview: vi.fn(), approve: vi.fn(), execute: vi.fn(), record: vi.fn(),
+  stageLocation: vi.fn(), resolveLocation: vi.fn(), saveWarehouse: vi.fn(), queuedLocation: false,
+  WarehouseCreateRejected: class extends Error {},
+  emptyProducts: false, warehouses: [] as Array<{ id: string; organization_id: string; name: string; is_main: boolean }>,
   catalogFailed: false, user: { id: 'owner', role: 'business_owner', organization_id: 'org', status: 'active' } as TestUser,
   saved: null as StockReviewDraft | null,
 }));
 vi.mock('@/lib/ai/stock-review-draft', () => ({
   loadStockReview: mock.load, initializeStockReviewRows: mock.initialize, saveStockReview: mock.save, saveServerStockReview: mock.serverSave,
   previewStockSelection: mock.preview, approveStockSelection: mock.approve, submitStockReviewReceipt: mock.execute, recordStockExecution: mock.record,
+  stageFirstStockLocation: mock.stageLocation, resolveFirstStockLocation: mock.resolveLocation,
 }));
 vi.mock('@/store', () => ({ useAuthStore: Object.assign((pick: (state: { user: TestUser }) => unknown) => pick({ user: mock.user }), { getState: () => ({ user: mock.user }) }) }));
 vi.mock('@/i18n/text', () => ({ useCopy: () => (value: string) => value, TranslatedText: ({ text }: { text: string }) => text }));
-vi.mock('@/lib/offline/db', () => ({ getDB: async () => ({ getAll: async () => [] }) }));
+vi.mock('@/lib/offline/db', () => ({ getDB: async () => ({ getAll: async () => [], getAllFromIndex: async () => mock.queuedLocation ? [{ status: 'pending' }] : [] }) }));
+vi.mock('@/lib/warehouses/save-warehouse', () => ({ saveWarehouse: mock.saveWarehouse, WarehouseCreateRejected: mock.WarehouseCreateRejected }));
 vi.mock('@/lib/supabase/client', () => ({ createClient: () => ({ from: (table: string) => ({ select: () => ({ eq: () => ({ range: async () => ({
   error: mock.catalogFailed ? new Error('Catalog unavailable') : null,
-  data: table === 'products' ? [{ id: 'product', organization_id: 'org', name: 'Rice', sku: 'RICE', barcode: null, stock_unit: 'bag', cost_price: 100 },
+  data: table === 'products' ? mock.emptyProducts ? [] : [{ id: 'product', organization_id: 'org', name: 'Rice', sku: 'RICE', barcode: null, stock_unit: 'bag', cost_price: 100 },
     { id: 'beans', organization_id: 'org', name: 'Beans', sku: 'BEANS', barcode: null, stock_unit: 'bag', cost_price: 80 }]
-    : [{ id: 'warehouse', organization_id: 'org', name: 'Main', is_main: true }],
+    : mock.warehouses,
 }) }) }) }) }) }));
 import { StockReceivingReview } from './stock-receiving-review';
 const uid = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
@@ -59,6 +64,18 @@ const mounted = new Set<{ host: HTMLDivElement; root: Root }>();
 beforeEach(() => {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
   mock.user = { id: 'owner', role: 'business_owner', organization_id: 'org', status: 'active' }; mock.catalogFailed = false; mock.saved = makeDraft();
+  mock.emptyProducts = false;
+  mock.queuedLocation = false;
+  mock.warehouses = [{ id: 'warehouse', organization_id: 'org', name: 'Main', is_main: true }];
+  mock.stageLocation.mockReset().mockImplementation(async (_scope: StockReviewScope, draft: StockReviewDraft, firstLocation: StockReviewDraft['firstLocation']) =>
+    mock.saved = clone({ ...draft, revision: draft.revision + 1, firstLocation }));
+  mock.resolveLocation.mockReset().mockImplementation(async (_scope: StockReviewScope, draft: StockReviewDraft, warehouseId?: string) =>
+    mock.saved = clone({ ...draft, revision: draft.revision + 1, firstLocation: undefined,
+      rows: draft.rows?.map(row => row.state === 'draft' && !row.warehouseId && warehouseId ? { ...row, warehouseId } : row) ?? null }));
+  mock.saveWarehouse.mockReset().mockImplementation(async ({ id, organizationId, data }) => {
+    mock.warehouses.push({ id, organization_id: organizationId, name: data.name, is_main: data.is_main });
+    return 'confirmed';
+  });
   mock.load.mockReset().mockImplementation(async () => clone(mock.saved));
   mock.initialize.mockReset().mockImplementation(async (_scope: StockReviewScope, draft: StockReviewDraft, rows: StockReviewRow[]) => mock.saved = { ...draft, rows });
   mock.save.mockReset().mockImplementation(async (_scope: StockReviewScope, draft: StockReviewDraft, rows: StockReviewRow[]) => mock.saved = clone({ ...draft, rows, revision: draft.revision + 1, dirty: true, selection: undefined }));
@@ -87,6 +104,87 @@ async function review(host: HTMLElement) { for (const item of includes(host)) aw
 async function apply(host: HTMLElement, count = 1) { await act(async () => { button(host, `Approve and apply ${count} stock receipt${count === 1 ? '' : 's'}`).click(); }); }
 function deferred<T>() { let resolve!: (value: T) => void; const promise = new Promise<T>(done => { resolve = done; }); return { promise, resolve }; }
 async function changeInput(input: HTMLInputElement, value: string) { await act(async () => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input, value); input.dispatchEvent(new Event('input', { bubbles: true })); input.dispatchEvent(new Event('change', { bubbles: true })); }); }
+
+function emptyShop() {
+  mock.emptyProducts = true;
+  mock.warehouses = [];
+  mock.saved = { ...makeDraft(), rows: null, sourceRows: [
+    { name: 'Rice', stock_unit: 'bag', opening_stock: '4', cost_price: '150' },
+    { name: 'Beans', stock_unit: 'bag', opening_stock: '3', cost_price: '80' },
+  ] };
+}
+
+async function submitFirstLocation(host: HTMLElement) {
+  await act(() => button(host, 'Create first stock location').click());
+  const form = host.querySelector('form')!;
+  await act(async () => { form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); });
+}
+
+it('sets up an empty shop and receives only the ready new product after approval', async () => {
+  emptyShop();
+  const { host } = await mount();
+  expect(host.textContent).toContain('Where should this stock go?');
+  expect(host.textContent).toContain('Enter your selling price per unit.');
+  expect(mock.saved?.rows?.[0]).toMatchObject({ mode: 'new', newSku: 'AUTO-job-0', sellingPrice: '', unitCost: '150' });
+  const salePrice = Array.from(host.querySelectorAll<HTMLInputElement>('input')).find(input => input.labels?.[0]?.textContent === 'Selling price per unit')!;
+  await changeInput(salePrice, '225');
+  await submitFirstLocation(host);
+  const location = mock.warehouses[0].id;
+  expect(mock.saved?.rows?.map(row => row.warehouseId)).toEqual([location, location]);
+  expect(mock.saved?.rows?.[0].sellingPrice).toBe('225');
+  expect(includes(host).map(input => input.disabled)).toEqual([false, true]);
+  expect(mock.execute).not.toHaveBeenCalled();
+  await review(host); await apply(host);
+  expect(mock.execute).toHaveBeenCalledOnce();
+  expect(mock.execute.mock.calls[0][1]).toMatchObject({ mode: 'new', row_index: 0, warehouse_id: location, sku: 'AUTO-job-0', selling_price: 225 });
+  expect(mock.saved?.rows?.[1].state).toBe('draft');
+});
+
+it('remembers a pending offline location and verifies it before assigning draft items', async () => {
+  emptyShop();
+  const first = await mount();
+  await act(() => button(first.host, 'Create first stock location').click());
+  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+  await act(() => window.dispatchEvent(new Event('offline')));
+  mock.saveWarehouse.mockResolvedValueOnce('pending');
+  await act(async () => { first.host.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); });
+  expect(first.host.textContent).toContain('Waiting to sync');
+  const staged = mock.saved?.firstLocation;
+  expect(staged?.name).toBe('Main Shop');
+  expect(mock.saved?.rows?.every(row => !row.warehouseId)).toBe(true);
+  await first.unmount();
+  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(true);
+  mock.queuedLocation = true;
+  const { host } = await mount();
+  await act(async () => { button(host, 'Check location').click(); });
+  expect(mock.saveWarehouse).toHaveBeenCalledOnce();
+  expect(host.textContent).toContain('Waiting to sync');
+  mock.warehouses.push({ id: staged!.id, name: staged!.name, is_main: true, organization_id: 'org' });
+  await act(async () => { button(host, 'Check location').click(); });
+  expect(mock.saved?.rows?.map(row => row.warehouseId)).toEqual([staged!.id, staged!.id]);
+  expect(mock.saved?.firstLocation).toBeUndefined();
+  expect(mock.approve).not.toHaveBeenCalled();
+});
+
+it('distinguishes a warehouse lookup failure from a shop with zero locations', async () => {
+  emptyShop();
+  mock.catalogFailed = true;
+  const { host } = await mount();
+  expect(host.textContent).toContain('Reconnect and reload the review');
+  expect(host.textContent).not.toContain('Create first stock location');
+  expect(mock.saveWarehouse).not.toHaveBeenCalled();
+});
+
+it('reopens the editable location form after a definite first-insert rejection', async () => {
+  emptyShop();
+  mock.saveWarehouse.mockRejectedValueOnce(new mock.WarehouseCreateRejected('The location name was rejected.'));
+  const { host } = await mount();
+  await submitFirstLocation(host);
+  expect(host.textContent).toContain('The location name was rejected.');
+  expect(host.querySelector('form')).toBeTruthy();
+  expect(mock.saved?.firstLocation).toBeUndefined();
+  expect(mock.execute).not.toHaveBeenCalled();
+});
 
 it('keeps Gemini source evidence and requires re-entry for a different receiving unit', async () => {
   mock.saved = {

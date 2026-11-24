@@ -85,11 +85,12 @@ stateDiagram-v2
 
 ## Explicit expiry policy
 
-Before preview, the target organisation must configure
-`organizations.settings.ai_stock_review_ttl_seconds`, from 60 to 3,600 seconds.
-Missing/invalid configuration blocks preview. No production default is invented.
-Synthetic tests use 600 seconds only as a fixture. Fresh wall-clock checks follow
-potentially blocking locks. Expiry prevents first execution, not result recovery.
+Stock review approvals default to 600 seconds when the organisation has no
+`ai_stock_review_ttl_seconds` setting. An explicit setting can override this
+with 60 to 3,600 seconds. Invalid overrides block preview. The forward migration
+must be applied for the default to take effect. Fresh wall-clock checks follow
+potentially blocking locks. Expiry prevents first execution. The owner can still
+check the result of an earlier attempt after expiry.
 
 ## Concurrency trade-off
 

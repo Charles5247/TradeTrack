@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { getDB } from '@/lib/offline/db';
 import { loadStockReview, saveStockReview, initializeStockReviewRows, saveServerStockReview,
   previewStockSelection, approveStockSelection, submitStockReviewReceipt, recordStockExecution,
+  resolveFirstStockLocation, stageFirstStockLocation,
   type StockReviewDraft, type StockReviewRow, type StockReviewScope } from '@/lib/ai/stock-review-draft';
 import { useAuthStore } from '@/store';
 import { useCopy } from '@/i18n/text';
@@ -17,11 +18,13 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } 
 import type { ImportRow } from '@/lib/imports/preview';
 import { STOCK_UNITS } from '@/lib/industries';
 import { useOnlineStatus } from '@/hooks/use-online-status';
+import { generateId } from '@/lib/utils/id';
+import { saveWarehouse, WarehouseCreateRejected } from '@/lib/warehouses/save-warehouse';
 import styles from './stock-receiving-review.module.css';
 import { LocalPriceCheck } from './local-price-check';
 
-type Product = { id: string; name: string; sku: string; barcode: string | null; stock_unit: string; cost_price: number; organization_id: string; medical_stock_managed?: boolean | null };
-type Warehouse = { id: string; name: string; is_main: boolean; organization_id: string };
+type Product = { id: string; name: string; sku: string; barcode: string | null; stock_unit: string; cost_price: number; organization_id: string; status?: string | null; medical_stock_managed?: boolean | null };
+type Warehouse = { id: string; name: string; is_main: boolean; organization_id: string; description?: string | null; address?: string | null };
 type ReviewProps = { job: string; rows: ImportRow[]; onBusyChange?: (busy: boolean) => void; onBackToOverview?: () => void; visible?: boolean; localPrices?: boolean; priceWrites?: boolean };
 type RowCorrections = Partial<Pick<StockReviewRow, 'productId' | 'warehouseId' | 'quantity' | 'unitCost' | 'zeroConfirmed' | 'mode' | 'newName' | 'newSku' | 'stockUnit' | 'sellingPrice'>>;
 
@@ -44,12 +47,26 @@ function validCost(value: string) { return /^\d+(?:\.\d{1,2})?$/.test(value.trim
 function validQuantity(value: string) {
   return /^\d+$/.test(value.trim()) && Number(value) > 0 && Number(value) <= 2147483647;
 }
-function ready(row: StockReviewRow) {
-  const target = row.mode === 'existing' ? !!row.productId : !!(row.newName.trim() && row.newSku.trim()
-    && row.newName.trim().length <= 255 && row.newSku.trim().length <= 100
-    && STOCK_UNITS.some(unit => unit === row.stockUnit) && validCost(row.sellingPrice));
-  return row.state === 'draft' && target && !!row.warehouseId && validQuantity(row.quantity) && validCost(row.unitCost)
-    && (Number(row.unitCost) > 0 || row.zeroConfirmed);
+const warehouseColumns = 'id,name,is_main,organization_id,description,address';
+const productColumns = 'id,name,sku,barcode,stock_unit,cost_price,organization_id,status,medical_stock_managed';
+
+function availableProduct(product: Product) { return !product.medical_stock_managed && (!product.status || product.status === 'active'); }
+
+function internalSku(receiptId: string) { return `AUTO-${receiptId.replace(':', '-')}`; }
+
+function rowIssues(row: StockReviewRow, product: Product | undefined, warehouse: Warehouse | undefined) {
+  const issues: string[] = [];
+  if (row.mode === 'new') {
+    if (!row.newName.trim() || row.newName.trim().length > 255) issues.push('Enter a product name up to 255 characters.');
+    if (!row.newSku.trim() || row.newSku.trim().length > 100) issues.push('Enter a SKU up to 100 characters.');
+    if (!STOCK_UNITS.some(unit => unit === row.stockUnit)) issues.push('Choose a stock unit.');
+    if (!validCost(row.sellingPrice)) issues.push('Enter your selling price per unit.');
+  } else if (!product) issues.push('Choose the matching product.');
+  if (!warehouse) issues.push(row.warehouseId ? 'Choose a current stock location.' : 'Choose a receiving location.');
+  if (!validQuantity(row.quantity)) issues.push('Enter the quantity received in whole stock units.');
+  if (!validCost(row.unitCost)) issues.push('Enter the buying cost per unit with at most two decimal places.');
+  else if (Number(row.unitCost) === 0 && !row.zeroConfirmed) issues.push('Confirm the zero buying cost.');
+  return issues;
 }
 function sourceStockUnit(source?: ImportRow): string | undefined {
   return STOCK_UNITS.find(unit => unit === source?.stock_unit)
@@ -59,7 +76,8 @@ function sourceStockUnit(source?: ImportRow): string | undefined {
 function initialRows(
   sourceRows: ImportRow[], products: Product[], warehouses: Warehouse[], job: string, photo: boolean,
 ): StockReviewRow[] {
-  const main = warehouses.find(item => item.is_main)?.id || warehouses[0]?.id || '';
+  const mainLocations = warehouses.filter(item => item.is_main);
+  const main = warehouses.length === 1 ? warehouses[0].id : mainLocations.length === 1 ? mainLocations[0].id : '';
   return sourceRows.map((source, index) => {
     const name = String(source.name || '').trim(), sku = String(source.sku || '').trim(), barcode = String(source.barcode || '').trim();
     const candidates = products.filter(product => !!(barcode && product.barcode?.toLowerCase() === barcode.toLowerCase())
@@ -70,8 +88,9 @@ function initialRows(
     const needsUnitReview = printedUnit === 'unknown'
       || (!!printedUnit && candidates.length > 0 && printedUnit !== product?.stock_unit)
       || (photo && !printedUnit);
-    return { receiptId: `${job}:${index}`, source: name || `Source row ${index + 1}`,
-      mode: candidates.length === 0 ? 'new' : 'existing', newName: name, newSku: sku, stockUnit,
+    const receiptId = `${job}:${index}`;
+    return { receiptId, source: name || `Source row ${index + 1}`,
+      mode: candidates.length === 0 ? 'new' : 'existing', newName: name, newSku: sku || (candidates.length === 0 ? internalSku(receiptId) : ''), stockUnit,
       sellingPrice: String(source.selling_price ?? ''), productId: product?.id ?? '',
       warehouseId: main, quantity: needsUnitReview ? '' : String(source.opening_stock ?? ''),
       unitCost: needsUnitReview ? '' : String(source.cost_price ?? ''),
@@ -164,6 +183,9 @@ function StockReceivingReviewForAccount({ scope, job, onBusyChange, onBackToOver
   const copy = useCopy();
   const isOnline = useOnlineStatus();
   const [products, setProducts] = useState<Product[]>([]), [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [warehouseCatalogKnown, setWarehouseCatalogKnown] = useState(false);
+  const [locationName, setLocationName] = useState('Main Shop'), [showLocationForm, setShowLocationForm] = useState(false);
+  const [locationNotice, setLocationNotice] = useState('');
   const [draft, setDraft] = useState<StockReviewDraft | null>(null), current = useRef<StockReviewDraft | null>(null);
   const mounted = useRef(true), working = useRef(false);
   const corrections = useRef(new Map<string, RowCorrections>());
@@ -200,8 +222,8 @@ function StockReceivingReviewForAccount({ scope, job, onBusyChange, onBackToOver
         const onlineAtOpen = navigator.onLine;
         const scopedDraft = loadStockReview({ ownerId, organizationId });
         const [productResult, warehouseResult, savedResult] = await Promise.allSettled([
-          onlineAtOpen ? loadAll<Product>('products', 'id,name,sku,barcode,stock_unit,cost_price,organization_id,medical_stock_managed', organizationId) : Promise.reject(new Error('Offline')),
-          onlineAtOpen ? loadAll<Warehouse>('warehouses', 'id,name,is_main,organization_id', organizationId) : Promise.reject(new Error('Offline')),
+          onlineAtOpen ? loadAll<Product>('products', productColumns, organizationId) : Promise.reject(new Error('Offline')),
+          onlineAtOpen ? loadAll<Warehouse>('warehouses', warehouseColumns, organizationId) : Promise.reject(new Error('Offline')),
           scopedDraft,
         ]);
         if (cancelled || !sameAccount()) return;
@@ -219,12 +241,17 @@ function StockReceivingReviewForAccount({ scope, job, onBusyChange, onBackToOver
             if (warehouseResult.status === 'rejected') availableWarehouses = cachedWarehouses.filter(item => item.organization_id === organizationId);
           } catch { /* Pending receipts remain recoverable without catalog access. */ }
           setCatalogError('Showing available catalog data from this device. Reconnect and reload the review to check current stock.');
-        }
-        availableProducts = availableProducts.filter(item => item.organization_id === organizationId && !item.medical_stock_managed);
+        } else setCatalogError('');
+        availableProducts = availableProducts.filter(item => item.organization_id === organizationId);
         availableWarehouses = availableWarehouses.filter(item => item.organization_id === organizationId);
         setProducts(availableProducts); setWarehouses(availableWarehouses);
+        setWarehouseCatalogKnown(warehouseResult.status === 'fulfilled');
         if (!saved.rows) saved = await initializeStockReviewRows({ ownerId, organizationId }, saved,
-          initialRows(saved.sourceRows, availableProducts, availableWarehouses, job, saved.source?.kind === 'image'));
+          initialRows(saved.sourceRows, availableProducts.filter(availableProduct), availableWarehouses, job, saved.source?.kind === 'image'));
+        else if (!saved.pendingApproval && !saved.conflict && saved.rows.some(row => row.state === 'draft' && row.mode === 'new' && !row.newSku.trim())) {
+          saved = await saveStockReview({ ownerId, organizationId }, saved, saved.rows.map(row => row.state === 'draft' && row.mode === 'new' && !row.newSku.trim()
+            ? { ...row, newSku: internalSku(row.receiptId) } : row));
+        }
         if (cancelled || !sameAccount()) return;
         accept(saved);
       } catch (cause) { if (!cancelled && sameAccount()) setError(cause instanceof Error ? cause.message : 'Could not open the saved stock review.'); }
@@ -305,10 +332,33 @@ function StockReceivingReviewForAccount({ scope, job, onBusyChange, onBackToOver
     saveCorrections();
   };
   const rows = draft?.rows || [];
-  const canReceive = (row: StockReviewRow) => ready(row) && !catalogError && products.some(item => item.id === row.productId)
-    && warehouses.some(item => item.id === row.warehouseId);
-  // A new shop can have no products yet.
-  const eligible = (row: StockReviewRow) => row.mode === 'new' ? ready(row) && !catalogError && warehouses.some(item => item.id === row.warehouseId) : canReceive(row);
+  const selectableProducts = products.filter(availableProduct);
+  const productById = new Map(selectableProducts.map(product => [product.id, product]));
+  const warehouseById = new Map(warehouses.map(warehouse => [warehouse.id, warehouse]));
+  const productNames = new Set(products.map(product => product.name.trim().toLowerCase()));
+  const productSkus = new Set(products.map(product => product.sku.trim().toLowerCase()));
+  const seen = new Map<string, Set<string>>();
+  const keysByRow = new Map<string, string[]>();
+  for (const row of rows) {
+    const keys = row.mode === 'new'
+      ? [row.newName.trim() && `name:${row.newName.trim().toLowerCase()}`, row.newSku.trim() && `sku:${row.newSku.trim().toLowerCase()}`]
+      : [row.productId && `product:${row.productId}`];
+    if (row.savedProductId) keys.push(`product:${row.savedProductId}`);
+    keysByRow.set(row.receiptId, keys);
+    for (const key of keys.filter(Boolean)) {
+      if (!seen.has(key)) seen.set(key, new Set());
+      seen.get(key)!.add(row.receiptId);
+    }
+  }
+  const issuesByRow = new Map(rows.filter(row => row.state === 'draft').map(row => {
+    const issues = rowIssues(row, productById.get(row.productId), warehouseById.get(row.warehouseId));
+    if (row.mode === 'new' && (productNames.has(row.newName.trim().toLowerCase()) || productSkus.has(row.newSku.trim().toLowerCase())))
+      issues.push('A product with this name or SKU is already in your catalog. Match it before receiving.');
+    if (keysByRow.get(row.receiptId)?.some(key => (seen.get(key)?.size ?? 0) > 1))
+      issues.push('This product appears on multiple lines. Check the quantities and clear the extra product matches before receiving.');
+    return [row.receiptId, issues] as const;
+  }));
+  const eligible = (row: StockReviewRow) => !catalogError && issuesByRow.get(row.receiptId)?.length === 0;
   const selected = rows.filter(row => selectedIds.includes(row.receiptId) && eligible(row));
   const needsAttention = rows.filter(row => row.state === 'draft' && (!eligible(row) || !!row.error));
   const readyRows = rows.filter(row => eligible(row) && !row.error);
@@ -326,9 +376,106 @@ function StockReceivingReviewForAccount({ scope, job, onBusyChange, onBackToOver
   const locked = loading || busy || !!draft?.pendingApproval || !!draft?.conflict;
   const actionsLocked = locked || savingCorrections || correctionError;
   const onlineActionsLocked = actionsLocked || !isOnline;
+  const missingLocation = rows.some(row => row.state === 'draft' && !row.warehouseId);
   useEffect(() => {
     if (!loading && visible) heading.current?.focus();
   }, [loading, stage, visible]);
+
+  const setupFirstLocation = () => run(async () => {
+    const active = current.current;
+    if (!active || active.pendingApproval || active.conflict) return;
+    const online = navigator.onLine;
+    setLocationNotice('');
+    const readLocations = async () => {
+      const locations = (await loadAll<Warehouse>('warehouses', warehouseColumns, organizationId))
+        .filter(item => item.organization_id === organizationId);
+      if (!sameAccount()) throw new Error('The signed-in account changed. Reopen this review.');
+      setWarehouses(locations);
+      setWarehouseCatalogKnown(true);
+      return locations;
+    };
+    const existing = online ? await readLocations() : warehouses;
+    const refreshProducts = async () => {
+      if (!online || !catalogError) return;
+      const confirmedProducts = await loadAll<Product>('products', productColumns, organizationId);
+      if (!sameAccount()) return;
+      setProducts(confirmedProducts.filter(item => item.organization_id === organizationId));
+      setCatalogError('');
+    };
+    let location = active.firstLocation;
+    if (!location) {
+      if (existing.length || !warehouseCatalogKnown) return;
+      const name = locationName.trim();
+      if (!name || name.length > 255) throw new Error('Enter a stock location name up to 255 characters.');
+      const db = await getDB();
+      const cached = (await db.getAll('warehouses')).filter(row => row.organization_id === organizationId);
+      for (const row of cached) {
+        const queued = await db.getAllFromIndex('sync_queue', 'by-queue-key', ['warehouses', row.id, 'INSERT']);
+        if (queued.some(item => item.status !== 'synced')) {
+          setLocationNotice('A stock location is already saved on this device. Check its sync status before creating another.');
+          return;
+        }
+      }
+      if (!sameAccount()) return;
+      location = { id: generateId(), name };
+      accept(await stageFirstStockLocation(scope, active, location));
+    }
+    const { id, name } = location;
+    const confirmLocation = async (locations: Warehouse[]) => {
+      const confirmed = locations.find(item => item.id === id);
+      if (!confirmed) return false;
+      if (confirmed.name !== name || !confirmed.is_main || confirmed.description || confirmed.address) {
+        accept(await resolveFirstStockLocation(scope, current.current!));
+        setLocationNotice('This location changed. Choose the current location before receiving stock.');
+      } else {
+        accept(await resolveFirstStockLocation(scope, current.current!, confirmed.id));
+        setLocationNotice('Stock location confirmed. Check your items and continue.');
+      }
+      setShowLocationForm(false);
+      await refreshProducts();
+      return true;
+    };
+    if (online && await confirmLocation(existing)) return;
+    if (active.firstLocation) {
+      const db = await getDB();
+      const queued = await db.getAllFromIndex('sync_queue', 'by-queue-key', ['warehouses', id, 'INSERT']);
+      if (!sameAccount()) return;
+      if (queued.some(item => item.status !== 'synced')) {
+        setLocationNotice(queued.some(item => item.status === 'failed')
+          ? 'This location could not sync. Use Upload / sync now, then check this location again.'
+          : 'Location saved on this device. Waiting to sync.');
+        return;
+      }
+    }
+    if (existing.length) {
+      accept(await resolveFirstStockLocation(scope, current.current!));
+      setLocationNotice('A stock location is now available. Choose where to receive these items.');
+      await refreshProducts();
+      return;
+    }
+    if (!sameAccount()) return;
+    const outcome = await saveWarehouse({ organizationId, id,
+      data: { name, description: '', address: '', is_main: true } }).catch(async cause => {
+      if (!active.firstLocation && cause instanceof WarehouseCreateRejected && sameAccount()) {
+        accept(await resolveFirstStockLocation(scope, current.current!));
+      }
+      throw cause;
+    });
+    if (!sameAccount()) return;
+    if (outcome === 'pending') {
+      setLocationNotice('Location saved on this device. Waiting to sync.');
+      return;
+    }
+    if (!await confirmLocation(await readLocations())) throw new Error('The location is awaiting server confirmation. Check it again before receiving stock.');
+  });
+
+  const fillLocations = (warehouseId: string) => run(async () => {
+    const active = current.current;
+    if (!active?.rows || !warehouseById.has(warehouseId)) return;
+    accept(await saveStockReview(scope, active, active.rows.map(row => row.state === 'draft' && !row.warehouseId
+      ? { ...row, warehouseId, error: undefined, changes: undefined } : row)));
+    setSelectedIds([]); setPhysicalReceived(false);
+  });
   const prepare = () => run(async () => {
     if (!navigator.onLine) throw new Error('Reconnect to review current stock changes.');
     if (!physicalReceived || !current.current || selected.length === 0) return;
@@ -449,6 +596,32 @@ function StockReceivingReviewForAccount({ scope, job, onBusyChange, onBackToOver
             </div>
             {sourceTotal !== null && <div className={styles.contextTotal}><span>{copy('Extracted total')}</span><strong>{money(sourceTotal)}</strong></div>}
           </div>
+          {draft?.firstLocation ? <div className={styles.recovery}>
+            <div><strong>{copy('Confirm your stock location')}</strong>
+              <p>{draft.firstLocation.name} · {copy(locationNotice || 'Location setup is awaiting confirmation. Your item edits are saved separately.')}</p></div>
+            <Button variant="outline" disabled={actionsLocked || !isOnline} onClick={setupFirstLocation}>{copy('Check location')}</Button>
+          </div> : <>
+            {locationNotice && <p className={styles.notice} role="status">{copy(locationNotice)}</p>}
+            {missingLocation && warehouseCatalogKnown && warehouses.length === 0 && <div className={styles.recovery}>
+              <div><strong>{copy('Where should this stock go?')}</strong><p>{copy('Add your first stock location to receive these items. Your draft stays here.')}</p></div>
+              {showLocationForm ? <form className={styles.locationForm} onSubmit={event => { event.preventDefault(); setupFirstLocation(); }}>
+                <label>{copy('Stock location name')}<Input value={locationName} disabled={actionsLocked}
+                  onChange={event => setLocationName(event.target.value)} required maxLength={255} /></label>
+                <div className={styles.controls}>
+                  <Button type="button" variant="outline" disabled={actionsLocked} onClick={() => setShowLocationForm(false)}>{copy('Cancel')}</Button>
+                  <Button type="submit" disabled={actionsLocked || !locationName.trim()}>{copy('Save stock location')}</Button>
+                </div>
+              </form> : <Button disabled={actionsLocked} onClick={() => setShowLocationForm(true)}>{copy('Create first stock location')}</Button>}
+            </div>}
+            {missingLocation && warehouseCatalogKnown && warehouses.length > 0 && <div className={styles.recovery}>
+              <label className={styles.locationForm}>{copy('Receiving location for items without one')}
+                <NativeSelect value="" disabled={actionsLocked} onChange={event => fillLocations(event.target.value)}>
+                  <option value="">{copy('Choose a receiving location')}</option>
+                  {warehouses.map(warehouse => <option key={warehouse.id} value={warehouse.id}>{warehouse.name}</option>)}
+                </NativeSelect>
+              </label>
+            </div>}
+          </>}
           <div className={styles.columns}>
             <div className={styles.items}>
               {hasOutcome && <div className={styles.returnToResult}>
@@ -475,12 +648,13 @@ function StockReceivingReviewForAccount({ scope, job, onBusyChange, onBackToOver
               <div className={styles.itemStack}>
                 {rows.map((row, index) => {
                   if (!visibleRows.includes(row)) return null;
-                  const product = products.find(item => item.id === row.productId);
-                  const warehouse = warehouses.find(item => item.id === row.warehouseId);
+                  const product = productById.get(row.productId);
+                  const warehouse = warehouseById.get(row.warehouseId);
                   const name = row.mode === 'new' ? row.newName || row.source : product?.name || row.source;
                   const unit = row.mode === 'new' ? row.stockUnit : product?.stock_unit;
                   const sku = row.mode === 'new' ? row.newSku : product?.sku;
-                  const matchNeeded = row.mode === 'new' || !row.productId || !row.warehouseId;
+                  const matchNeeded = row.mode === 'new' || !product || !warehouse;
+                  const fieldIssues = issuesByRow.get(row.receiptId) ?? [];
                   const attention = needsAttention.includes(row);
                   const total = lineTotalMinor(row.quantity, row.unitCost);
                   const printedUnit = sourceStockUnit(draft?.sourceRows[index]);
@@ -504,25 +678,26 @@ function StockReceivingReviewForAccount({ scope, job, onBusyChange, onBackToOver
                           }} />
                         <span className="sr-only">{copy('Include this row')}</span>
                       </label> : <span className={styles.itemSymbol}>{row.state === 'saved' ? <Check aria-hidden="true" /> : <Clock3 aria-hidden="true" />}</span>}
-                      <div className={styles.itemName}><h2>{name}</h2><p>{sku || copy('Product match needed')}</p></div>
+                      <div className={styles.itemName}><h2>{name}</h2><p>{row.state === 'draft' && row.mode === 'new'
+                        ? copy('New product') : sku || copy('Product match needed')}</p></div>
                       <span className={styles.pill} data-tone={row.state === 'saved' ? 'success' : attention || row.state !== 'draft' ? 'warning' : undefined}>{copy(label)}</span>
                     </div>
 
                     {row.state === 'draft' && <>
                       <details className={styles.match} data-attention={matchNeeded} open={matchNeeded || undefined}>
-                        <summary>{copy(matchNeeded ? 'Which product did you receive?' : 'Edit product or warehouse')}</summary>
+                        <summary>{copy(row.mode === 'new' ? 'Check new product details' : matchNeeded ? 'Check product and receiving location' : 'Edit product or warehouse')}</summary>
                         <div className={styles.matchFields}>
                           <label>{copy('Stock destination')}<NativeSelect disabled={locked} value={row.mode === 'new' ? '__new__' : row.productId}
                             onChange={event => {
                               const choice = event.target.value;
-                              const nextUnit = choice === '__new__' ? row.stockUnit : products.find(item => item.id === choice)?.stock_unit;
+                              const nextUnit = choice === '__new__' ? row.stockUnit : productById.get(choice)?.stock_unit;
                               const corrections = (printedUnit || draft?.source?.kind === 'image') && nextUnit !== unit
                                 ? { quantity: '', unitCost: '', zeroConfirmed: false } : {};
-                              edit(row.receiptId, choice === '__new__' ? { ...corrections, mode: 'new', productId: '' }
+                              edit(row.receiptId, choice === '__new__' ? { ...corrections, mode: 'new', productId: '', newSku: row.newSku.trim() || internalSku(row.receiptId) }
                                 : { ...corrections, mode: 'existing', productId: choice }, true);
                             }}>
                             <option value="">{copy('Choose product')}</option><option value="__new__">{copy('Create a new product')}</option>
-                            {products.map(item => <option key={item.id} value={item.id}>{item.name} · {item.sku}</option>)}
+                            {selectableProducts.map(item => <option key={item.id} value={item.id}>{item.name} · {item.sku}</option>)}
                           </NativeSelect></label>
                           <label>{copy('Receiving warehouse')}<NativeSelect disabled={locked} value={row.warehouseId}
                             onChange={event => edit(row.receiptId, { warehouseId: event.target.value }, true)}>
@@ -559,7 +734,7 @@ function StockReceivingReviewForAccount({ scope, job, onBusyChange, onBackToOver
                       </div>
                       {row.unitCost.trim() !== '' && Number(row.unitCost) === 0 && <label className={styles.check}><input type="checkbox" disabled={locked}
                         checked={row.zeroConfirmed} onChange={event => edit(row.receiptId, { zeroConfirmed: event.target.checked }, true)} />{copy('Confirm this stock really has zero buying cost')}</label>}
-                      {row.unitCost.trim() !== '' && !validCost(row.unitCost) && <p className={styles.rowError}>{copy('Enter a buying cost with no more than two decimal places, up to ₦9,999,999,999.99.')}</p>}
+                      {fieldIssues.length > 0 && <ul className={styles.rowError}>{fieldIssues.map(issue => <li key={issue}>{copy(issue)}</li>)}</ul>}
                     </>}
                     {rowWarnings(row)}
                     <footer className={styles.itemFooter}>

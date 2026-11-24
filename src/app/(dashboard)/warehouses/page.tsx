@@ -23,10 +23,10 @@ import { useAuthStore } from '@/store';
 import type { Warehouse as WarehouseType } from '@/types';
 import { useI18n } from '@/i18n';
 import { AccessGuard } from '@/components/shared/access-guard';
-import { addToSyncQueue, getAllFromOfflineDB, saveToOfflineDB } from '@/lib/offline/db';
+import { getAllFromOfflineDB, saveToOfflineDB } from '@/lib/offline/db';
 import { isOffline } from '@/lib/utils/network';
 import { generateId } from '@/lib/utils/id';
-import { withTimeout } from '@/lib/utils/timeout';
+import { saveWarehouse } from '@/lib/warehouses/save-warehouse';
 
 async function fetchWarehouses(organizationId: string) {
   const cached = () => getAllFromOfflineDB<WarehouseType & { inventory: { quantity: number }[] }>('warehouses')
@@ -61,6 +61,7 @@ function WarehousesPageInner() {
   const { user } = useAuthStore();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editWarehouse, setEditWarehouse] = useState<WarehouseType | null>(null);
+  const [createId, setCreateId] = useState('');
   const [formData, setFormData] = useState({ name: '', description: '', address: '', is_main: false });
 
   const { data: warehouses = [], isLoading, error, refetch } = useQuery({
@@ -72,41 +73,18 @@ function WarehousesPageInner() {
 
   const saveMutation = useMutation({
     networkMode: 'always',
-    mutationFn: async (data: typeof formData) => {
-      const orgId = (user as unknown as { organization_id: string })?.organization_id;
-      if (!orgId) throw new Error('No business is selected.');
-      if (!data.name.trim()) throw new Error('Enter a location name.');
-      data = { ...data, name: data.name.trim() };
-      const id = editWarehouse?.id || generateId();
-      const saveOffline = async () => {
-        const row = { ...editWarehouse, ...data, id, organization_id: orgId, inventory: [], updated_at: new Date().toISOString() };
-        await saveToOfflineDB('warehouses', [row]);
-        const { inventory: _inventory, ...payload } = row;
-        await addToSyncQueue('warehouses', editWarehouse ? 'UPDATE' : 'INSERT', id, payload);
-        return true;
-      };
-      if (isOffline()) return saveOffline();
-      const supabase = createClient();
-      try {
-      if (editWarehouse) {
-        const { error } = await withTimeout(Promise.resolve(supabase.from('warehouses').update(data).eq('id', editWarehouse.id).eq('organization_id', orgId)), 5000);
-        if (error) throw error;
-      } else {
-        const { error } = await withTimeout(Promise.resolve(supabase.from('warehouses').insert({ ...data, id, organization_id: orgId })), 5000);
-        if (error) throw error;
-      }
-      } catch (error) {
-        if (error instanceof TypeError || (error instanceof Error && /timed out|fetch failed|failed to fetch/i.test(error.message))) return saveOffline();
-        throw error;
-      }
-      return false;
-    },
-    onSuccess: (offline) => {
+    mutationFn: (data: typeof formData) => saveWarehouse({
+      organizationId: user?.organization_id ?? '',
+      id: editWarehouse?.id ?? createId,
+      existing: editWarehouse ?? undefined,
+      data,
+    }),
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['warehouses-full'] });
       queryClient.invalidateQueries({ queryKey: ['warehouses'] });
       setIsFormOpen(false);
       setEditWarehouse(null);
-      toast.success(offline ? 'Saved offline. This location will upload when you reconnect.' : editWarehouse ? t.warehouse.updated_success : t.warehouse.created_success);
+      toast.success(result === 'pending' ? 'Saved offline. This location will upload when you reconnect.' : editWarehouse ? t.warehouse.updated_success : t.warehouse.created_success);
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : t.warehouse.save_failed),
   });
@@ -126,6 +104,7 @@ function WarehousesPageInner() {
 
   const openCreate = () => {
     setEditWarehouse(null);
+    setCreateId(generateId());
     setFormData({ name: '', description: '', address: '', is_main: false });
     setIsFormOpen(true);
   };
