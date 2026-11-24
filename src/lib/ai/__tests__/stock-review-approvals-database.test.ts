@@ -69,7 +69,7 @@ async function count(table: 'ai_stock_receipts' | 'product_cost_history' | 'inve
 }
 async function expire(selection: StockSelection) {
   // Controlled clock fixture, deliberately bypassing the immutable-payload
-  // trigger as the disposable database administrator. No production TTL default.
+  // trigger as the disposable database administrator.
   await db.exec('ALTER TABLE public.ai_stock_review_selections DISABLE TRIGGER stock_selection_immutable;');
   try { await db.query(`UPDATE public.ai_stock_review_selections SET expires_at=clock_timestamp()-interval '1 second' WHERE id=$1`, [selection.selection_id]); }
   finally { await db.exec('ALTER TABLE public.ai_stock_review_selections ENABLE TRIGGER stock_selection_immutable;'); }
@@ -81,7 +81,7 @@ beforeAll(async () => {
   // The real domain helpers are required: do not substitute a fake receipt.
   for (const migration of ['20261108090000_purchase_cost_history.sql', '20261108160000_ai_owner_access.sql',
     '20261115120000_ai_stock_intake_receipts.sql', '20261115130000_ai_new_product_intake.sql',
-    '20261116080912_ai_stock_review_approvals.sql']) {
+    '20261116080912_ai_stock_review_approvals.sql', '20261124120001_default_ai_stock_review_expiry.sql']) {
     if (migration === '20261116080912_ai_stock_review_approvals.sql') {
       await db.exec('GRANT ALL ON public.ai_jobs,public.ai_stock_receipts TO authenticated,anon;');
     }
@@ -205,10 +205,35 @@ it('uses all locations in average-cost preview while showing destination stock s
   expect(await execute(await approve(selected))).toMatchObject({ status: 'completed', average_cost: 104.55 });
 });
 
-it('requires an explicitly configured bounded expiry and does not invent a default', async () => {
+it.each([
+  { settings: { keep: true }, seconds: 600 },
+  { settings: { ai_stock_review_ttl_seconds: 120, keep: true }, seconds: 120 },
+])('uses a $seconds-second approval window without changing shop settings', async ({ settings, seconds }) => {
+  await db.query('UPDATE public.organizations SET settings=$1 WHERE id=$2', [settings, org]);
+  await makeJob(); await save([newRow()]);
+
+  const beforePreview = (await db.query<{ now: string }>('SELECT clock_timestamp()::text AS now')).rows[0].now;
+  const selection = await preview();
+  const timing = await db.query<{ correct: boolean }>(
+    `SELECT expires_at BETWEEN $1::timestamptz + make_interval(secs => $2)
+      AND clock_timestamp() + make_interval(secs => $2) AS correct
+      FROM public.ai_stock_review_selections WHERE id=$3`,
+    [beforePreview, seconds, selection.selection_id],
+  );
+  expect(timing.rows[0].correct).toBe(true);
+  expect(await count('ai_stock_receipts')).toBe(0);
+  expect(await execute(await approve(selection))).toMatchObject({ status: 'completed' });
+  expect((await snapshot()).receipts).toMatchObject([{ created_product: true }]);
+  expect(await count('ai_stock_receipts')).toBe(1);
+  expect((await db.query('SELECT settings FROM public.organizations WHERE id=$1', [org])).rows[0]).toEqual({ settings });
+});
+
+it.each([null, '', 'abc', 59, 3601])('rejects an invalid explicit approval expiry of %s', async (expiry) => {
+  await db.query('UPDATE public.organizations SET settings=$1 WHERE id=$2',
+    [{ ai_stock_review_ttl_seconds: expiry }, org]);
   await makeJob(); await save([row()]);
-  await db.query(`UPDATE public.organizations SET settings='{}' WHERE id=$1`, [org]);
   await expect(preview()).rejects.toThrow('APPROVAL_POLICY_NOT_CONFIGURED');
+  expect(await count('ai_stock_receipts')).toBe(0);
 });
 
 it('does not execute expired approvals, projects terminal expiry, and safely closes them', async () => {

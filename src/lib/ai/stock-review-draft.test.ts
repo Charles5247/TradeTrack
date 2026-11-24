@@ -7,6 +7,7 @@ import { reviewActionSchema, reviewSnapshotSchema, type StockReviewSnapshot, typ
   type ReviewedStockOperation, type StockExecution } from './stock-review-contract';
 import { clearStockReview, createStockReview, loadStockReview, initializeStockReviewRows, saveStockReview,
   saveServerStockReview, previewStockSelection, approveStockSelection, submitStockReviewReceipt,
+  stageFirstStockLocation, resolveFirstStockLocation,
   recordStockExecution, resumeLegacyStockReview, type StockReviewRow, type StockReviewScope, type StockReviewAttempt } from './stock-review-draft';
 
 const account = vi.hoisted(() => ({ namespace: '' }));
@@ -73,6 +74,21 @@ it('keeps scoped device corrections and their stable row identity offline withou
   vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
   expect(await loadStockReview(scope)).toEqual(changed);
   expect(changed.rows?.[0]).toMatchObject({ receiptId: `${job}:0`, quantity: '7', unitCost: '151.50' });
+  expect(bodies()).toEqual([]);
+});
+it('persists a first-location identity across reloads without sending a receipt or overwriting edits', async () => {
+  const first = await initialized();
+  const unassigned = await saveStockReview(scope, first, [{ ...row(), warehouseId: '', quantity: '9' }]);
+  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+  const location = { id: warehouse, name: 'Main Shop' };
+  await stageFirstStockLocation(scope, unassigned, location);
+  const restored = (await loadStockReview(scope))!;
+  expect(restored.firstLocation).toEqual(location);
+  expect(restored.rows?.[0]).toMatchObject({ warehouseId: '', quantity: '9' });
+  await expect(resolveFirstStockLocation(scope, restored, uid(98))).rejects.toThrow();
+  const confirmed = await resolveFirstStockLocation(scope, restored, warehouse);
+  expect(confirmed.firstLocation).toBeUndefined();
+  expect(confirmed.rows?.[0]).toMatchObject({ warehouseId: warehouse, quantity: '9' });
   expect(bodies()).toEqual([]);
 });
 it('uses device compare-and-swap rather than overwriting corrections from a stale tab', async () => {

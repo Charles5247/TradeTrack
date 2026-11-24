@@ -116,7 +116,11 @@ function AssistantWorkspace({ scope }: { scope: StockReviewScope }) {
   const [question, setQuestion] = useState('');
   const [text, setText] = useState(''); const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
   const [inputSource, setInputSource] = useState<{ kind: 'csv' | 'xlsx'; text: string; file_name: string } | null>(null);
-  const [status, setStatus] = useState<{ stub: boolean; channels: Record<'in_app' | 'email' | 'sms', boolean> } | null>(null); const [preferences, setPreferences] = useState({ in_app: false, email: false, sms: false });
+  const [status, setStatus] = useState<{
+    stub: boolean;
+    channels: Record<'in_app' | 'email' | 'sms', boolean>;
+    capabilities?: { inventoryPhoto: boolean; invoicePhoto: boolean; inventoryVoice: boolean; localPrices: boolean; priceWrites: boolean };
+  } | null>(null); const [preferences, setPreferences] = useState({ in_app: false, email: false, sms: false });
   const [statusError, setStatusError] = useState('');
   const [statusAttempt, setStatusAttempt] = useState(0);
   const [proposal, setProposal] = useState<StockReviewDraft | null>(null);
@@ -284,6 +288,9 @@ function AssistantWorkspace({ scope }: { scope: StockReviewScope }) {
   };
   const serviceLocked = busy || !online || !status || !!statusError;
   const intakeLocked = serviceLocked || draftLoading || !!draftError || !!proposal;
+  const photoSupported = status?.capabilities?.inventoryPhoto ?? (status?.stub === false);
+  const voiceSupported = status?.capabilities?.inventoryVoice ?? (status?.stub === false);
+  const invoiceSupported = status?.capabilities?.invoicePhoto ?? (status?.stub === false);
 
   const screenTitle = screen === 'inventory' && preparingStock ? 'Reading your source' : taskHeadings[screen];
   const sourceLabel = proposal?.source?.kind === 'csv' || proposal?.source?.kind === 'xlsx'
@@ -351,7 +358,7 @@ function AssistantWorkspace({ scope }: { scope: StockReviewScope }) {
             <span className={styles.receiveCopy}>
               <strong>{copy(proposal ? 'Resume stock review' : 'Receive new stock')}</strong>
               <span>{copy(proposal ? 'Check the items from your saved delivery.' : 'Turn a supplier list into items ready to review.')}</span>
-              <small>{copy(status && !status.stub ? 'CSV, Excel, photos, voice or a message' : 'CSV, Excel or a message')}</small>
+              <small>{copy(photoSupported ? 'CSV, Excel, photos or a message' : 'CSV, Excel or a message')}</small>
             </span>
             <ArrowRight aria-hidden="true" className="size-5 self-start text-[var(--workspace-blue)]" />
           </button>
@@ -433,10 +440,10 @@ function AssistantWorkspace({ scope }: { scope: StockReviewScope }) {
             {draftLoading && <p role="status">{copy('Opening your saved stock review...')}</p>}
             <label className={styles.upload}>
               <span className={styles.taskIcon}><Upload aria-hidden="true" /></span>
-              <strong>{inputSource?.file_name ?? copy(status && !status.stub ? 'Choose a photo or file' : 'Choose a spreadsheet')}</strong>
-              <span>{copy(status && !status.stub ? 'Stock photos, CSV or Excel' : 'CSV or Excel stock lists')}</span>
+              <strong>{inputSource?.file_name ?? copy(photoSupported ? 'Choose a photo or file' : 'Choose a spreadsheet')}</strong>
+              <span>{copy(photoSupported ? 'Stock photos, CSV or Excel' : 'CSV or Excel stock lists')}</span>
               <span className={styles.browse}>{copy('Browse files')}</span>
-              <input type="file" aria-label={copy('Stock source file')} accept={status && !status.stub ? '.csv,.xlsx,image/jpeg,image/png,image/webp' : '.csv,.xlsx'}
+              <input type="file" aria-label={copy('Stock source file')} accept={photoSupported ? '.csv,.xlsx,image/jpeg,image/png,image/webp' : '.csv,.xlsx'}
                 onChange={event => {
                   const file = event.target.files?.[0];
                   event.target.value = '';
@@ -455,7 +462,7 @@ function AssistantWorkspace({ scope }: { scope: StockReviewScope }) {
                 placeholder={copy('Example: Rice 4 bags at 15000 each')}
                 onChange={event => { setText(event.target.value); setInputSource(null); }} />
             </label>
-            {status && !status.stub && <details className={styles.voice}>
+            {voiceSupported && <details className={styles.voice}>
               <summary>{copy('Add a voice recording')}</summary>
               <label className={styles.field}><span>{copy('Voice stock list')}</span>
                 <Input type="file" accept="audio/webm,audio/mp4,audio/mpeg,audio/ogg,audio/wav,audio/x-m4a" onChange={event => {
@@ -489,7 +496,8 @@ function AssistantWorkspace({ scope }: { scope: StockReviewScope }) {
 
       {proposal && openedReview && <div id="inventory" hidden={!inReview}>
         <StockReceivingReview key={proposal.job} job={proposal.job} rows={proposal.sourceRows} onBusyChange={setReceiptBusy}
-          visible={inReview} onBackToOverview={() => navigate('overview')} />
+          visible={inReview} localPrices={status?.capabilities?.localPrices}
+          priceWrites={status?.capabilities?.priceWrites} onBackToOverview={() => navigate('overview')} />
         <details className={styles.closeDetails}>
           <summary>{copy('Manage this review')}</summary>
           <p>{copy('Closing a review discards unapplied rows. Check pending receipts first.')}</p>
@@ -599,7 +607,7 @@ function AssistantWorkspace({ scope }: { scope: StockReviewScope }) {
 
       {openedInvoice && (
         <div id="invoice-comparison" hidden={screen !== 'invoice'}>
-          {status && !status.stub ? <fieldset disabled={serviceLocked} className="min-w-0">
+          {invoiceSupported ? <fieldset disabled={serviceLocked} className="min-w-0">
             <legend className="sr-only">{copy('Supplier invoice comparison')}</legend>
             <InvoiceOrderReview enabled={online && !statusError} />
           </fieldset> : <section className="space-y-2 rounded-[var(--radius-lg)] border border-border bg-card p-4 sm:p-6">

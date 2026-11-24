@@ -144,6 +144,13 @@
   flex-direction: column;
 }
 
+.locationForm,
+.locationForm label {
+  display: grid;
+  gap: 8px;
+  width: min(100%, 360px);
+}
+
 .context {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) minmax(0, max-content);

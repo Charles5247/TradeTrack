@@ -1,6 +1,7 @@
 import { apiContext } from '@/lib/auth/api-context';
 import { hasAIEntitlement } from '@/lib/ai/entitlement';
 import { getAIProvider } from '@/lib/ai/provider';
+import { isLocalPriceSearchEnabled } from '@/lib/ai/local-price';
 import { deliveryAdapter } from '@/lib/ai/delivery';
 import { periodComparison, recentAnalysis } from '@/lib/ai/analysis';
 import { z } from 'zod';
@@ -38,7 +39,19 @@ export async function GET() {
     const { db, org, profile } = await context();
     const { data, error } = await db.from('ai_preferences').select('in_app,email,sms').eq('organization_id', org).eq('user_id', profile.id).maybeSingle();
     if (error) throw error;
-    return Response.json({ preferences: data || { in_app: false, email: false, sms: false }, channels: { in_app: true, email: deliveryAdapter('email').enabled, sms: deliveryAdapter('sms').enabled }, provider: getAIProvider().name, stub: getAIProvider().stub });
+    const provider = getAIProvider();
+    return Response.json({
+      preferences: data || { in_app: false, email: false, sms: false },
+      channels: { in_app: true, email: deliveryAdapter('email').enabled, sms: deliveryAdapter('sms').enabled },
+      provider: provider.name, stub: provider.stub,
+      capabilities: {
+        inventoryPhoto: typeof provider.mapInventoryImage === 'function',
+        invoicePhoto: typeof provider.mapInvoiceImage === 'function',
+        inventoryVoice: typeof provider.transcribeInventoryAudio === 'function',
+        localPrices: isLocalPriceSearchEnabled(),
+        priceWrites: process.env.AI_PRICE_WRITES_ENABLED === 'true',
+      },
+    }, { headers: { 'Cache-Control': 'private, no-store' } });
   } catch (e) { return failure(e); }
 }
 export async function POST(request: Request) {

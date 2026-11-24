@@ -23,3 +23,16 @@ it('holds unordered, duplicate and over-delivered rows for review', () => {
   expect(result.matched[1].issues).toContain('This PO line appears more than once on the invoice.');
   expect(result.matched[2].lineId).toBeNull();
 });
+
+it.each(['pack', 'unknown'])('holds mismatched or unknown invoice units (%s) without deriving a shortfall or price difference', stock_unit => {
+  const result = matchInvoiceToOrder([
+    { name: 'Peak Milk', sku: 'PEAK', opening_stock: '2', cost_price: '60', stock_unit },
+  ], lines);
+  expect(result.matched[0]).toMatchObject({
+    lineId: 'l1', quantity: 2, unitCost: 60, costDifference: null, unitComparable: false,
+    issues: ['Confirm the invoice unit and pack size before comparing quantities or costs.'],
+  });
+  expect(result.short).toEqual([]);
+  expect(result.invoiceValue).toBeNull();
+  expect(result.ready).toBe(false);
+});

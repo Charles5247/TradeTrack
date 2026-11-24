@@ -6,6 +6,10 @@ const calls = vi.hoisted(() => ({ order: [] as string[], failProduct: false, fai
 vi.mock('@/lib/supabase/client', () => ({
   createClient: () => ({
     from: (table: string) => ({
+      insert: async () => {
+        calls.order.push(table);
+        return { error: null };
+      },
       upsert: async () => {
         calls.order.push(table);
         return { error: table === 'products' && calls.failProduct ? new Error('Product rejected') : null };
@@ -43,7 +47,7 @@ async function queueSetup() {
     ['inventory', 'stock', { id: 'stock', product_id: 'product', warehouse_id: 'warehouse' }],
     ['product_images', 'photo', { product_id: 'product' }],
     ['products', 'product', { id: 'product' }],
-    ['warehouses', 'warehouse', { id: 'warehouse' }],
+    ['warehouses', 'warehouse', { id: 'warehouse', organization_id: 'org', name: 'Main Shop', is_main: true }],
   ] as const;
   for (const [table_name, record_id, payload] of entries) await db.put('sync_queue', {
     id: `queue-${table_name}`, table_name, record_id, payload, operation: 'INSERT',
@@ -60,6 +64,15 @@ it('uploads location and product before stock and photo, then clears the local p
   expect(calls.order).toEqual(['warehouses', 'products', 'inventory', 'product_images']);
   expect((await db.get('products', 'product')).image_url).toBe('https://example.com/photo.webp');
   expect(await db.get('pending_product_images', 'photo')).toBeUndefined();
+});
+
+it('resumes an interrupted location insert before dependent stock', async () => {
+  const db = await queueSetup();
+  const warehouse = await db.get('sync_queue', 'queue-warehouses') as SyncQueueRecord;
+  await db.put('sync_queue', { ...warehouse, status: 'syncing' });
+  await (syncEngine as unknown as { pushChanges(): Promise<void> }).pushChanges();
+  expect(calls.order).toEqual(['warehouses', 'products', 'inventory', 'product_images']);
+  expect(await db.get('sync_queue', 'queue-warehouses')).toMatchObject({ status: 'synced' });
 });
 
 it('keeps stock and photo pending when the product is rejected', async () => {

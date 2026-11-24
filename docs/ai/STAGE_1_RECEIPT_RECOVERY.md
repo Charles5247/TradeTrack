@@ -85,11 +85,12 @@ stateDiagram-v2
 
 ## Explicit expiry policy
 
-Before preview, the target organisation must configure
-`organizations.settings.ai_stock_review_ttl_seconds`, from 60 to 3,600 seconds.
-Missing/invalid configuration blocks preview. No production default is invented.
-Synthetic tests use 600 seconds only as a fixture. Fresh wall-clock checks follow
-potentially blocking locks. Expiry prevents first execution, not result recovery.
+Stock review approvals default to 600 seconds when the organisation has no
+`ai_stock_review_ttl_seconds` setting. An explicit setting can override this
+with 60 to 3,600 seconds. Invalid overrides block preview. The forward migration
+must be applied for the default to take effect. Fresh wall-clock checks follow
+potentially blocking locks. Expiry prevents first execution. The owner can still
+check the result of an earlier attempt after expiry.
 
 ## Concurrency trade-off
 
@@ -182,3 +183,27 @@ pack conversion, bulk setup, shared physical-delivery lineage, atomic PO partial
 receiving, memo composition or sourced price suggestions. Job/row idempotency
 does not prevent receiving the same physical delivery through a different job.
 These need bounded follow-ups and their own acceptance evidence.
+
+
+## Gemini and local price pilot configuration
+
+Select `AI_PROVIDER=gemini` with a server-side `GEMINI_API_KEY` and a supported
+`GEMINI_MODEL`. The adapter defaults to `gemini-3.8-flash`. The synthetic
+invoice was also tested with `gemini-3.5-flash-lite`. Use `AI_PROVIDER=mock`
+for tests that do not need real extraction. The Assistant advertises photo and
+audio capabilities from the configured adapter.
+
+Local price search stays unavailable unless `AI_LOCAL_PRICE_FEEDS` contains
+approved retailer feeds. Each entry declares `seller`, `url`, and
+`approved: true`. Use an HTTPS JSON feed whose publisher permits processing and
+display in Track Kasuwa. The feed receives only the canonical state. Its
+`offers` supply the product identity, variant and pack, seller area,
+`priceMinor` in NGN, availability, retail terms, store or pickup fulfilment,
+product link and source observation time. The service validates these fields
+and only returns comparable offers in the confirmed area.
+
+The separate price approval migration supports existing-product receipts.
+Leave `AI_PRICE_WRITES_ENABLED=false` during rollout. An offline product
+snapshot can carry an old price, and an offline Cashier sale captured before
+an online price change can still encounter the current-price discount guard.
+Both two-device cases must pass before enabling Assistant price writes.

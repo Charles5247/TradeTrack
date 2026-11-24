@@ -2,6 +2,7 @@ import { beforeEach, expect, it, vi } from 'vitest';
 const mock = vi.hoisted(() => ({ context: vi.fn(), rpc: vi.fn(), from: vi.fn(), provider: vi.fn(), adapter: vi.fn() }));
 vi.mock('@/lib/auth/api-context', () => ({ apiContext: mock.context }));
 vi.mock('@/lib/ai/provider', () => ({ getAIProvider: mock.provider }));
+vi.mock('@/lib/ai/local-price', () => ({ isLocalPriceSearchEnabled: () => false }));
 vi.mock('@/lib/ai/delivery', () => ({ deliveryAdapter: mock.adapter }));
 import { GET, POST } from '@/app/api/ai/route';
 import { PLAN_ORDER } from '../entitlement';

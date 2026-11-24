@@ -51,6 +51,7 @@ export interface StockReviewDraft {
   syncError?: string;
   selection?: StockSelection;
   pendingApproval?: StockSelection;
+  firstLocation?: { id: string; name: string };
 }
 
 const identifier = z.string().refine(value => value.trim().length > 0);
@@ -98,6 +99,7 @@ const draftSchema = z.object({
   serverRows: z.array(reviewRowSchema).optional(), source: sourceSchema.optional(),
   dirty: z.boolean().optional(), conflict: z.boolean().optional(), syncError: z.string().optional(),
   selection: selectionSchema.optional(), pendingApproval: selectionSchema.optional(),
+  firstLocation: z.object({ id: stockReviewIdSchema, name: z.string().trim().min(1).max(255) }).strict().optional(),
 }).strict();
 const storedSchema = z.object({ id: identifier, draft: draftSchema }).strict();
 const scopeError = () => new Error('Your account changed. Reopen the stock review before continuing.');
@@ -329,6 +331,25 @@ export function saveStockReview(scopeInput: StockReviewScope, currentDraft: Stoc
     });
     const changed = !equal(current.rows?.map(toServerRow), rows.map(toServerRow));
     return { ...next, dirty: current.dirty || changed, selection: changed ? undefined : current.selection, syncError: undefined };
+  });
+}
+
+/** Record the location identity before saving it so reloads and retries use the same ID. */
+export function stageFirstStockLocation(scope: StockReviewScope, draft: StockReviewDraft, location: NonNullable<StockReviewDraft['firstLocation']>) {
+  return patch(scope, draft, current => {
+    if (current.pendingApproval || current.conflict || current.firstLocation) throw staleDraft();
+    return { ...current, firstLocation: location };
+  });
+}
+
+export function resolveFirstStockLocation(scope: StockReviewScope, draft: StockReviewDraft, warehouseId?: string) {
+  return patch(scope, draft, current => {
+    if (current.pendingApproval || current.conflict || !current.firstLocation) throw staleDraft();
+    if (!warehouseId) return { ...current, firstLocation: undefined };
+    if (warehouseId !== current.firstLocation.id) throw invalidDraft();
+    const rows = current.rows?.map(row => row.state === 'draft' && !row.warehouseId
+      ? { ...row, warehouseId, changes: undefined, error: undefined } : row) ?? null;
+    return { ...current, firstLocation: undefined, rows, dirty: true, selection: undefined };
   });
 }
 

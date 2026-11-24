@@ -1087,6 +1087,20 @@ export type Database = {
       approve_ai_stock_selection: { Args: { p_job_id: string; p_selection_id: string; p_revision: number; p_review_digest: string }; Returns: unknown };
       execute_ai_stock_selection_row: { Args: { p_job_id: string; p_approval_id: string; p_row_index: number }; Returns: unknown };
       get_ai_stock_review: { Args: { p_job_id?: string | null }; Returns: unknown };
+      manage_ai_price_change: {
+        Args: {
+          p_actor_id: string;
+          p_organization_id: string;
+          p_action: "prepare" | "approve" | "status";
+          p_operation_id: string;
+          p_job_id?: string;
+          p_row_index?: number;
+          p_new_price_minor?: number;
+          p_review_digest?: string;
+          p_access_until?: string;
+        };
+        Returns: unknown;
+      };
       close_ai_stock_review: { Args: { p_job_id: string; p_expected_revision: number | null }; Returns: unknown };
       receive_stock_at_cost: { Args: { p_receipt_id: string; p_product_id: string; p_warehouse_id: string; p_quantity: number; p_unit_cost: number; p_notes?: string | null }; Returns: number };
       create_warehouse_memo: { Args: { p_warehouse: string; p_direction: string; p_reference: string; p_items: Array<{ product_id: string; quantity: number }>; p_send?: boolean }; Returns: string };

@@ -11,6 +11,7 @@ import {
   isAuthSessionMissingError,
 } from "@supabase/supabase-js";
 import { AUTH_CHECK_TIMEOUT_MS, withTimeout } from "@/lib/utils/timeout";
+import { syncWarehouseInsert } from "@/lib/warehouses/save-warehouse";
 import {
   getDB,
   getPendingSyncItems,
@@ -337,12 +338,17 @@ class SyncEngine {
     // An interrupted PATCH may have committed remotely. Never blindly resend
     // it on restart: preserve the entry and ask for a stock check instead.
     const recovery = stockDB.transaction("sync_queue", "readwrite");
-    const stockEntries = await recovery.store.index("by-table").getAll("inventory") as SyncQueueRecord[];
-    for (const entry of stockEntries) {
-      if (entry.stock_sync && entry.status === "syncing" && !this.activeStockWrites.has(entry.id)) {
+    const interrupted = await recovery.store.index("by-status").getAll("syncing") as SyncQueueRecord[];
+    for (const entry of interrupted) {
+      if (entry.table_name === "inventory" && entry.stock_sync && !this.activeStockWrites.has(entry.id)) {
         await recovery.store.put({ ...entry, status: "pending", stock_sync: {
           ...entry.stock_sync, review_reason: "interrupted_write",
         } });
+      }
+      // Warehouse creates verify exact duplicates. An interrupted create can
+      // safely resume without replacing the location if it was already saved.
+      if (entry.table_name === "warehouses" && entry.operation === "INSERT") {
+        await recovery.store.put({ ...entry, status: "pending" });
       }
     }
     await recovery.done;
@@ -597,9 +603,9 @@ class SyncEngine {
    *    by design — it reflects the last state IT knows about, and
    *    reconciles to the server's winning version once back online.
    *
-   * 3. INSERT operations for non-append-only tables have no prior row to
-   *    conflict with, so they upsert-by-id directly (a retried INSERT for
-   *    a record that already made it to the server is idempotent).
+   * 3. Most other INSERT operations use upsert-by-id. Warehouse creates
+   *    use insert and verify exact replays so a retry cannot undo a later
+   *    edit to a location that reached the server before a timeout.
    */
   private async executeSyncOperation(
     supabase: ReturnType<typeof createClient>,
@@ -688,6 +694,10 @@ class SyncEngine {
 
     switch (item.operation) {
       case "INSERT":
+        if (item.table_name === "warehouses") {
+          await syncWarehouseInsert(supabase, item);
+          return { error: null };
+        }
         if (isVendorInsert || item.table_name === "sales" || item.table_name === "sale_items" || item.table_name === "import_batches") {
           return client.from(item.table_name).upsert(serverPayload, {
             onConflict: "id",
