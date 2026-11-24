@@ -1,72 +1,92 @@
+import { z } from 'zod';
 import { apiContext } from '@/lib/auth/api-context';
-import { hasAIEntitlement } from '@/lib/ai/entitlement';
+import type { Database } from '@/lib/supabase/types';
+import { assertExpectedAccount } from '@/lib/auth/expected-account';
+import {
+  reviewActionSchema, reviewSnapshotSchema, serverReviewSchema,
+  selectionSchema, approvalSchema, executionSchema, stockReviewIdSchema,
+} from '@/lib/ai/stock-review-contract';
 
-const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+type ReviewFunction = 'get_ai_stock_review' | 'save_ai_stock_review' | 'preview_ai_stock_selection'
+  | 'approve_ai_stock_selection' | 'execute_ai_stock_selection_row' | 'close_ai_stock_review';
 
-async function context() {
+function sameRequestOrigin(request: Request) {
+  const origin = request.headers.get('origin');
+  if (!origin) return true; // Authenticated non-browser API clients still use the same RPC checks.
+  try {
+    const internal = new URL(request.url);
+    // Next can normalise the internal URL to localhost. Host retains the actual
+    // browser-facing authority. Do not trust a caller's forwarded-host override.
+    const external = new URL(`${internal.protocol}//${request.headers.get('host') || internal.host}`);
+    const supplied = new URL(origin);
+    return !external.username && !external.password && external.pathname === '/' && !external.search && !external.hash
+      && !supplied.username && !supplied.password && supplied.pathname === '/'
+      && !supplied.search && !supplied.hash && supplied.origin === external.origin;
+  } catch { return false; }
+}
+
+async function context(request: Request) {
   const ctx = await apiContext(['business_owner']);
-  // The generated database types lag the AI migrations in this repository.
-  const db = ctx.db as any;
-  const { data, error } = await db.rpc('verify_business_subscription');
-  if (error || !data || !hasAIEntitlement(data)) throw new Error('AI requires an active introductory period or Growth plan and above.');
-  return { ...ctx, db };
+  assertExpectedAccount(request, ctx.profile);
+  const rpc = async <Name extends ReviewFunction>(name: Name, args: Database['public']['Functions'][Name]['Args']) => {
+    const { data, error } = await ctx.db.rpc(name, args);
+    if (error) {
+      if (error.code === 'PGRST202' || error.code === '42883')
+        throw new Error('STOCK_REVIEW_SETUP_REQUIRED: The server review update is not available yet. Keep your draft and contact support.');
+      throw new Error(error.message);
+    }
+    return data;
+  };
+  return { ...ctx, rpc };
 }
 
 export async function GET(request: Request) {
   try {
-    const { db, org, profile } = await context();
+    const { rpc } = await context(request);
     const job = new URL(request.url).searchParams.get('job');
-    if (!job || !uuid.test(job)) throw new Error('Choose a valid stock proposal.');
-    const { data: proposal, error: proposalError } = await db.from('ai_jobs')
-      .select('id,result,status,kind').eq('id', job).eq('organization_id', org)
-      .eq('user_id', profile.id).single();
-    if (proposalError || !proposal || proposal.kind !== 'inventory' || proposal.status !== 'ready')
-      throw new Error('Ready stock proposal not found.');
-    const { data: receipts, error } = await db.from('ai_stock_receipts')
-      .select('row_index,product_id,warehouse_id,quantity,unit_cost,average_cost,created_product,approved_product')
-      .eq('organization_id', org).eq('job_id', job).eq('approved_by', profile.id);
-    if (error) throw error;
-    return Response.json({ rows: proposal.result?.rows || [], receipts: receipts || [] });
+    if (job !== null && !stockReviewIdSchema.safeParse(job).success) throw new Error('INVALID_JOB: Choose a valid stock review.');
+    const data = await rpc('get_ai_stock_review', { p_job_id: job });
+    return Response.json(data === null ? null : reviewSnapshotSchema.parse(data));
   } catch (cause) { return failure(cause); }
 }
 
 export async function POST(request: Request) {
   try {
-    const { db } = await context();
-    const body = await request.json();
-    if (body.confirm !== true || !uuid.test(body.job)
-      || !uuid.test(body.warehouse_id) || !Number.isSafeInteger(body.row_index)
-      || body.row_index < 0 || !Number.isSafeInteger(body.quantity) || body.quantity <= 0
-      || typeof body.unit_cost !== 'number' || !Number.isFinite(body.unit_cost)
-      || body.unit_cost < 0 || body.unit_cost > 9999999999.99) {
-      throw new Error('Review and confirm the exact stock changes first.');
+    if (!sameRequestOrigin(request)) throw new Error('FORBIDDEN: Open the review from this application before applying stock.');
+    const { rpc } = await context(request);
+    const body = reviewActionSchema.parse(await request.json());
+    switch (body.action) {
+      case 'save_review':
+        return Response.json(serverReviewSchema.parse(await rpc('save_ai_stock_review', {
+          p_job_id: body.job, p_expected_revision: body.expected_revision, p_rows: body.rows,
+        })));
+      case 'preview_selection':
+        return Response.json(selectionSchema.parse(await rpc('preview_ai_stock_selection', {
+          p_job_id: body.job, p_revision: body.revision, p_row_indices: body.row_indices, p_physical_received: body.physical_received,
+        })));
+      case 'approve_selection':
+        return Response.json(approvalSchema.parse(await rpc('approve_ai_stock_selection', {
+          p_job_id: body.job, p_selection_id: body.selection_id, p_revision: body.revision, p_review_digest: body.review_digest,
+        })));
+      case 'execute_reviewed':
+        return Response.json(executionSchema.parse(await rpc('execute_ai_stock_selection_row', {
+          p_job_id: body.job, p_approval_id: body.approval_id, p_row_index: body.row_index,
+        })));
+      case 'close_review':
+        await rpc('close_ai_stock_review', { p_job_id: body.job, p_expected_revision: body.expected_revision });
+        return Response.json({ closed: true });
     }
-    if (body.mode === 'new') {
-      if (typeof body.name !== 'string' || !body.name.trim() || body.name.trim().length > 255
-        || typeof body.sku !== 'string' || !body.sku.trim() || body.sku.trim().length > 100
-        || typeof body.stock_unit !== 'string' || typeof body.selling_price !== 'number'
-        || !Number.isFinite(body.selling_price) || body.selling_price < 0
-        || body.selling_price > 9999999999.99) {
-        throw new Error('Review the new product name, SKU, unit and selling price.');
-      }
-      const { data, error } = await db.rpc('apply_ai_new_product_receipt', {
-        p_job_id: body.job, p_row_index: body.row_index, p_name: body.name,
-        p_sku: body.sku, p_stock_unit: body.stock_unit, p_selling_price: body.selling_price,
-        p_warehouse_id: body.warehouse_id, p_quantity: body.quantity, p_unit_cost: body.unit_cost,
-      });
-      if (error) throw error;
-      return Response.json({ saved: true, product_id: data });
-    }
-    if (!uuid.test(body.product_id)) throw new Error('Choose an existing catalog product.');
-    const { data, error } = await db.rpc('apply_ai_stock_receipt', {
-      p_job_id: body.job, p_row_index: body.row_index, p_product_id: body.product_id,
-      p_warehouse_id: body.warehouse_id, p_quantity: body.quantity, p_unit_cost: body.unit_cost,
-    });
-    if (error) throw error;
-    return Response.json({ saved: true, average_cost: data });
   } catch (cause) { return failure(cause); }
 }
 
 function failure(cause: unknown) {
-  return Response.json({ error: cause instanceof Error ? cause.message : 'Stock receipt was not confirmed' }, { status: 400 });
+  if (cause instanceof z.ZodError) return Response.json({
+    code: 'INVALID_REVIEW_REQUEST', error: 'The stock review could not be validated. Reload it before continuing.',
+  }, { status: 400 });
+  const message = cause instanceof Error ? cause.message : 'Stock review was not confirmed. Keep the original review and check its status.';
+  const prefix = /^([A-Z][A-Z_]+):\s*/.exec(message);
+  const code = prefix?.[1] || (message === 'Sign in required' ? 'UNAUTHENTICATED' : message === 'Permission denied' ? 'FORBIDDEN' : 'REVIEW_NOT_CONFIRMED');
+  const status = code === 'UNAUTHENTICATED' ? 401 : ['FORBIDDEN', 'STOCK_REVIEW_FORBIDDEN'].includes(code) ? 403
+    : ['REVISION_CONFLICT', 'STOCK_REVIEW_CONFLICT', 'ACCOUNT_CHANGED'].includes(code) ? 409 : code === 'STOCK_REVIEW_SETUP_REQUIRED' ? 503 : 400;
+  return Response.json({ code, error: prefix ? message.slice(prefix[0].length) : message }, { status });
 }

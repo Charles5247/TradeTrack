@@ -13,6 +13,14 @@ type NoRel = { Relationships: [] };
 export type Database = {
   public: {
     Tables: {
+      ai_jobs: {
+        Row: { id: string; organization_id: string; user_id: string; kind: 'inventory' | 'insights'; result: unknown; status: 'pending' | 'ready' | 'failed'; approved_at: string | null; import_batch_id: string | null; created_at: string };
+        Insert: Record<string, never>; Update: Record<string, never>; Relationships: [];
+      };
+      ai_preferences: {
+        Row: { id: string; organization_id: string; user_id: string; in_app: boolean; email: boolean; sms: boolean; created_at: string };
+        Insert: Record<string, never>; Update: Record<string, never>; Relationships: [];
+      };
       private_subscription_offers: {
         Row: { organization_id: string; plan_id: string; monthly_price: number; is_active: boolean; created_at: string };
         Insert: { organization_id: string; plan_id: string; monthly_price: number; is_active?: boolean; created_at?: string };
@@ -1066,6 +1074,20 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      verify_business_subscription: { Args: Record<string, never>; Returns: { organization_id: string; active: boolean; server_time: string; plan_id: string | null; trial_ends_at: string | null; valid_until: string | null } };
+      reserve_ai_job: { Args: { job_kind: string }; Returns: string };
+      finish_ai_job: { Args: { job: string; output: unknown; failed: boolean }; Returns: undefined };
+      approve_ai_job: { Args: { job: string; batch: string | null }; Returns: undefined };
+      set_ai_preferences: { Args: { in_app_enabled: boolean; email_enabled: boolean; sms_enabled: boolean }; Returns: undefined };
+      reserve_ai_delivery: { Args: { job: string; delivery_channel: string }; Returns: string };
+      complete_ai_delivery: { Args: { delivery: string; succeeded: boolean }; Returns: undefined };
+      attach_ai_stock_source: { Args: { p_job_id: string; p_kind: string; p_content: string; p_metadata: Record<string, unknown> }; Returns: unknown };
+      save_ai_stock_review: { Args: { p_job_id: string; p_expected_revision: number | null; p_rows: unknown }; Returns: unknown };
+      preview_ai_stock_selection: { Args: { p_job_id: string; p_revision: number; p_row_indices: number[]; p_physical_received: boolean }; Returns: unknown };
+      approve_ai_stock_selection: { Args: { p_job_id: string; p_selection_id: string; p_revision: number; p_review_digest: string }; Returns: unknown };
+      execute_ai_stock_selection_row: { Args: { p_job_id: string; p_approval_id: string; p_row_index: number }; Returns: unknown };
+      get_ai_stock_review: { Args: { p_job_id?: string | null }; Returns: unknown };
+      close_ai_stock_review: { Args: { p_job_id: string; p_expected_revision: number | null }; Returns: unknown };
       receive_stock_at_cost: { Args: { p_receipt_id: string; p_product_id: string; p_warehouse_id: string; p_quantity: number; p_unit_cost: number; p_notes?: string | null }; Returns: number };
       create_warehouse_memo: { Args: { p_warehouse: string; p_direction: string; p_reference: string; p_items: Array<{ product_id: string; quantity: number }>; p_send?: boolean }; Returns: string };
       edit_warehouse_memo_draft: { Args: { p_memo: string; p_warehouse: string; p_direction: string; p_reference: string; p_items: Array<{ product_id: string; quantity: number }> }; Returns: void };
