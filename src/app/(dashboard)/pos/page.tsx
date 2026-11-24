@@ -492,8 +492,25 @@ function POSPageInner() {
     // itself doesn't carry (it only has product_id).
     setLastSaleItems([...cart.items]);
 
+    const checkoutId = cart.ensureCheckoutId();
+    if (discountAuthorization.discount_request_id) {
+      // Bind the live owner decision to this immutable checkout ID before the
+      // device can queue it. Upload may happen after the approval expires.
+      const { error } = await createClient().rpc('claim_discount_checkout', {
+        p_request_id: discountAuthorization.discount_request_id,
+        p_checkout_id: checkoutId,
+        p_cart_hash: discountAuthorization.discount_cart_hash!,
+        p_cart_subtotal: cart.getSubtotal(),
+        p_discount_amount: cart.getDiscountAmount(),
+      });
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+    }
+
     await saleMutation.mutateAsync({
-      checkout_id: cart.ensureCheckoutId(),
+      checkout_id: checkoutId,
       cashier_id: user.id,
       organization_id: orgId,
       warehouse_id: cart.warehouse_id,
